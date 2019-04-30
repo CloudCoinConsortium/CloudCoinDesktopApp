@@ -105,6 +105,10 @@ public class AppUI {
         return hex2rgb("#0061E1");
     }
     
+    public Color getWalletColor() {
+        return hex2rgb("#ccFFFFFF");
+    }
+    
     public Color hex2rgb(String colorStr) {
         
         return new Color(
@@ -113,11 +117,21 @@ public class AppUI {
             Integer.valueOf( colorStr.substring( 5, 7 ), 16 ) );
     }
     
+    public void setFont(Component c, int size) {
+        try {
+            Font font = Font.createFont(Font.TRUETYPE_FONT, getClass().getClassLoader().getResourceAsStream("resources/Montserrat-Bold.otf"));
+            c.setFont(font.deriveFont(Font.PLAIN, size));
+            c.setForeground(Color.BLACK);
+        } catch(Exception e){
+            
+        }
+    }
     
     public void setFont(Component c) {
         try {
-            Font font = Font.createFont(Font.TRUETYPE_FONT, getClass().getClassLoader().getResourceAsStream("resources/Raleway-Bold.ttf"));
-            c.setFont(font.deriveFont(Font.PLAIN, 28f));
+            Font font = Font.createFont(Font.TRUETYPE_FONT, getClass().getClassLoader().getResourceAsStream("resources/Montserrat-Bold.otf"));
+            c.setFont(font.deriveFont(Font.PLAIN, 24f));
+      
         } catch(Exception e){
             
         }
@@ -125,11 +139,21 @@ public class AppUI {
     
     public void setRegFont(Component c) {
         try {
-            Font font = Font.createFont(Font.TRUETYPE_FONT, getClass().getClassLoader().getResourceAsStream("resources/Raleway-Regular.ttf"));
+            Font font = Font.createFont(Font.TRUETYPE_FONT, getClass().getClassLoader().getResourceAsStream("resources/Montserrat-Regular.otf"));
             c.setFont(font.deriveFont(Font.PLAIN, 28f));
+           
         } catch(Exception e){
             
         }
+    }
+    
+    public void setRegFont(Component c, int size) {
+        try {
+            Font font = Font.createFont(Font.TRUETYPE_FONT, getClass().getClassLoader().getResourceAsStream("resources/Montserrat-Regular.otf"));
+            c.setFont(font.deriveFont(Font.PLAIN, size));
+        } catch(Exception e){
+            
+        } 
     }
     
     
