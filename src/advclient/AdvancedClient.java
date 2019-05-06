@@ -515,7 +515,7 @@ ui.setSize(g, tw - (int) (tw/5.5f) - 20, (int) (th/1.22f));
         
         comboBox = new RoundedCornerComboBox().makeUI(ui);
         JPanel ct = new JPanel();
-        ui.setSize(ct, 800, 320);
+        ui.setSize(ct, 800, 380);
         ct.setAlignmentY(Component.TOP_ALIGNMENT);
         ct.setOpaque(false);
         //ui.setSize(ct, 600, 100);
@@ -644,6 +644,45 @@ ui.setSize(g, tw - (int) (tw/5.5f) - 20, (int) (th/1.22f));
          gridbag.setConstraints(r, c);
         
         ct.add(r);
+        
+        
+        
+        
+         x= new JLabel("Checkbox: ");
+      
+        ui.setRegFont(x, 20);
+        x.setForeground(Color.BLACK);
+        
+             c.gridx = 0;
+        c.gridy = 4;
+         gridbag.setConstraints(x, c);
+        
+        ct.add(x);
+        
+        
+        
+        
+        JPanel cr = new MyCheckbox().makeUI(ui);
+           //ui.setSize(r, 350, 50);
+              c.gridx = 1;
+        c.gridy = 4;
+        c.gridwidth = GridBagConstraints.REMAINDER;
+        
+        
+         gridbag.setConstraints(cr, c);
+        
+        ct.add(cr);
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         
         
         

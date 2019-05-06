@@ -2,6 +2,10 @@
 package advclient;
 
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.awt.geom.*;
 import java.util.*;
 import javax.accessibility.*;
@@ -42,7 +46,37 @@ public class RoundedCornerComboBox {
       c.setBorder(new RoundedCornerBorder2());
       c.setForeground(FOREGROUND);
       c.setBackground(BACKGROUND);
+    
+      /*        
+              int w = 360;
+            int h = 50;
+            
+            h*=3;
+       c.setPreferredSize(new Dimension(w, h));
+        c.setMinimumSize(new Dimension(w, h));
+        c.setMaximumSize(new Dimension(w, h));
+    */
     }
+    
+    combo1.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
+        System.out.println("xxxxxx = " + e.getActionCommand());
+    //    combo1.setBorder(new RoundedCornerBorder1());
+    }
+    });
+    
+    combo1.addFocusListener(new FocusAdapter() {
+
+   @Override
+   public void focusGained(FocusEvent e) {
+      //comboBox.showPopup();
+       System.out.println("xxx222xxx");
+   }
+});
+    
+    
+    
+    
     int w = 360;
             int h = 50;
        combo1.setPreferredSize(new Dimension(w, h));
@@ -141,24 +175,36 @@ public class RoundedCornerComboBox {
 }
 
 class HeavyWeightContainerListener implements PopupMenuListener {
-  @Override public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
-    EventQueue.invokeLater(new Runnable() {
-      @Override public void run() {
-        JComboBox combo = (JComboBox) e.getSource();
-        Accessible a = combo.getUI().getAccessibleChild(combo, 0);
-        if (a instanceof BasicComboPopup) {
-          BasicComboPopup pop = (BasicComboPopup) a;
-          Container top = pop.getTopLevelAncestor();
-          if (top instanceof JWindow) {
-            //http://ateraimemo.com/Swing/DropShadowPopup.html
-            System.out.println("HeavyWeightContainer");
-            ((JWindow) top).setBackground(new Color(0x0, true));
-          }
-        }
-      }
-    });
-  }
-  @Override public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {}
+    @Override 
+    public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+        JComboBox c = (JComboBox) e.getSource();
+        System.out.println("zzzzzzzzzzzzzz");
+         c.setBorder(new RoundedCornerBorder1());
+        EventQueue.invokeLater(new Runnable() {
+            @Override public void run() {
+                JComboBox combo = (JComboBox) e.getSource();
+                Accessible a = combo.getUI().getAccessibleChild(combo, 0);
+                if (a instanceof BasicComboPopup) {
+                    BasicComboPopup pop = (BasicComboPopup) a;
+                    Container top = pop.getTopLevelAncestor();
+                    if (top instanceof JWindow) {
+                        //http://ateraimemo.com/Swing/DropShadowPopup.html
+                        System.out.println("HeavyWeightContainer");
+                        ((JWindow) top).setBackground(new Color(0x0, true));
+                    }
+                }
+            }
+        });
+    }
+        
+    @Override 
+    public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
+        System.out.println("inv");
+        JComboBox c = (JComboBox) e.getSource();
+         c.setBorder(new RoundedCornerBorder());
+    }
+  
+  //@Override public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {}
   @Override public void popupMenuCanceled(PopupMenuEvent e) {}
 }
 
@@ -225,7 +271,7 @@ class RoundedCornerBorder1 extends RoundedCornerBorder {
       g2.fill(corner);
     }
 
-    g2.setPaint(c.getForeground());
+  //  g2.setPaint(c.getForeground());
     g2.draw(round);
     g2.dispose();
   }
@@ -242,7 +288,7 @@ class RoundedCornerBorder2 extends RoundedCornerBorder {
     int h = height - 1;
 
     Path2D.Float p = new Path2D.Float();
-    p.moveTo(x, y);
+    p.moveTo(x, y );
     p.lineTo(x, y + h - r);
     p.quadTo(x, y + h, x + r, y + h);
     p.lineTo(x + w - r, y + h);
@@ -304,11 +350,16 @@ class ComboBoxRenderer extends JPanel implements ListCellRenderer
     public ComboBoxRenderer(JComboBox combo) {
 
         textPanel = new JPanel();
+        
         textPanel.add(this);
         text = new JLabel();
         text.setOpaque(true);
         text.setFont(combo.getFont());
         textPanel.add(text);
+       
+              text.setPreferredSize(new Dimension(160, 40)); 
+        text.setMinimumSize(new Dimension(160, 40)); 
+        text.setMaximumSize(new Dimension(160, 40)); 
     }
 
     public void setColors(Color[] col)
@@ -343,6 +394,11 @@ class ComboBoxRenderer extends JPanel implements ListCellRenderer
         {
             setBackground(Color.WHITE);
         }
+        
+        
+        
+        System.out.println("xxxxxx111");
+   
 /*
         if (colors.length != strings.length)
         {
@@ -373,6 +429,14 @@ class ComboBoxRenderer extends JPanel implements ListCellRenderer
         if (index>-1) {
             text.setForeground(Color.BLACK);
         }
+        
+        if (isSelected) {
+        System.out.println("xxx="+index + " isSel" + isSelected + " has="+cellHasFocus);
+            text.setBackground(Color.RED);
+        } else {
+            text.setBackground(getBackground());
+        }
+        
         return text;
     }
 }

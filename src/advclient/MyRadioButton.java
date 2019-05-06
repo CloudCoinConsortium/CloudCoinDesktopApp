@@ -44,7 +44,7 @@ public class MyRadioButton {
         
         
          try {
-    Image img = ImageIO.read(getClass().getClassLoader().getResource("resources/arrow.png"));
+    Image img = ImageIO.read(getClass().getClassLoader().getResource("resources/radio1.png"));
     radio.setIcon(new ImageIcon(img));
   } catch (Exception ex) {
     System.out.println(ex);
