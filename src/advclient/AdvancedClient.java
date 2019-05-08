@@ -23,6 +23,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
@@ -61,43 +63,288 @@ import javax.swing.event.ChangeListener;
  */
 public class AdvancedClient implements ActionListener, ComponentListener {
 
-    AppUI ui;
+    String version = "2.0.0";
+
+    JPanel headerPanel;
     JPanel mainPanel;
+    JPanel corePanel;
     JPanel wpanel;
     
     int tw = 1208;
     int th = 726;
     
+    int headerHeight;
+    
+    
+    
+    
+    
+    ProgramState ps;
+    
     public AdvancedClient() {
-        ui = new AppUI(tw, th);
+        AppUI.init(tw, th);
         System.out.println("HELLO");
         
+        ps = new ProgramState();
+
+        
+        headerHeight = th / 10;
+        
+        initMainScreen();
+        initHeaderPanel();
+        initCorePanel();
+        
+        
+        mainPanel.add(headerPanel);
+        mainPanel.add(corePanel);
+        
+        //showScreen();
+        //addHeader();
+ 
         showScreen();
-        addHeader();
-        //addHeader();
-        //addHeader();
-     //     addHeader();
-        mainPanel.add(ui.hr(10));
-        showCore();
+//        mainPanel.add(AppUI.hr(10));
+        //showCore();
     }
 
     
-    
-    
-    public void showScreen() {
+    public void initMainScreen() {
         mainPanel = new JPanel();
        
-        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.PAGE_AXIS));
-        ui.setSize(mainPanel, tw, th);
-        //ui.align(mainPanel);
-        mainPanel.setBackground(ui.getBgColor());
-        mainPanel.setBorder(BorderFactory.createLineBorder(Color.black));
-      //   mainPanel.setAlignmentX(Component.RIGHT_ALIGNMENT);
+        AppUI.setBoxLayout(mainPanel, true);
+        AppUI.setSize(mainPanel, tw, th);
+        AppUI.setBackground(mainPanel, AppUI.getColor1());
+
+        //mainPanel.setBorder(BorderFactory.createLineBorder(Color.black));
+
         
-        JFrame mainFrame = ui.getMainFrame();
-        //mainFrame.add(mainPanel, BorderLayout.EAST);
+        JFrame mainFrame = AppUI.getMainFrame();
         mainFrame.setContentPane(mainPanel);
     }
+    
+    public void initHeaderPanel() {
+        
+        // Init header
+        headerPanel = new JPanel();
+        AppUI.setBoxLayout(headerPanel, false);
+        AppUI.setSize(headerPanel, tw, headerHeight);
+        AppUI.setBackground(headerPanel, AppUI.getColor0());
+        AppUI.alignLeft(headerPanel);
+        AppUI.alignTop(headerPanel);
+        
+        // Space
+        AppUI.vr(headerPanel, tw * 0.0082 * 2);
+        
+        // Add Logo
+        ImageJPanel logoPanel = new ImageJPanel("CloudCoinLogo2.png");
+        AppUI.noOpaque(logoPanel);
+        AppUI.setSize(logoPanel, tw / 22.37);        
+        headerPanel.add(logoPanel);
+        
+        // Space
+        AppUI.vr(headerPanel, tw * 0.0082 * 2);
+        
+        // Init Label
+        JLabel titleText = new JLabel("CloudCoin Wallet " + version);
+        AppUI.setTitleSemiBoldFont(titleText, 32);
+        headerPanel.add(titleText);
+        
+        
+        if (ps.currentScreen == ProgramState.SCREEN_AGREEMENT) {
+            // Pad 
+            JPanel jpad = new JPanel();
+            AppUI.noOpaque(jpad);
+            headerPanel.add(jpad);
+        } else {
+            // Space
+            AppUI.vr(headerPanel, tw * 0.0082 * 12);
+     
+            // Deposit Button
+            JLabel dp = new JLabel("Deposit");      
+            AppUI.setTitleBoldFont(dp, 28);
+            //dp.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            headerPanel.add(dp);
+
+            // Space
+            AppUI.vr(headerPanel, tw * 0.0082 * 10);
+            
+            // Transfer Button
+            dp = new JLabel("Transfer");
+            AppUI.setTitleBoldFont(dp, 28);
+            //dp.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            headerPanel.add(dp);
+        
+            // Space
+            AppUI.vr(headerPanel, tw * 0.0082 * 20);
+        }
+
+        // Icon Support
+        ImageJPanel icon = new ImageJPanel("Help_Support Icon.png");
+        AppUI.setSize(icon, tw / 30.51);
+        AppUI.noOpaque(icon);
+        headerPanel.add(icon);
+        
+        // Space
+        AppUI.vr(headerPanel, tw * 0.0082 * 2);
+        
+        // Icon Gear
+        icon = new ImageJPanel("Gear icon.png");
+        AppUI.setSize(icon, tw / 34.51);
+        AppUI.noOpaque(icon);
+        headerPanel.add(icon);
+        
+         // Space
+        AppUI.vr(headerPanel, tw * 0.0082 * 2);
+            
+        // Icon Flag Wrapper
+        JPanel flagWrapper = new JPanel();
+        AppUI.noOpaque(flagWrapper);
+        AppUI.setBoxLayout(flagWrapper, true);
+        AppUI.hr(flagWrapper, 14);       
+        icon = new ImageJPanel( "Brithish flag.png");
+        AppUI.setSize(icon, tw / 28.23);
+        AppUI.noOpaque(icon);
+        flagWrapper.add(icon);
+        headerPanel.add(flagWrapper);
+                      
+        // Space
+        AppUI.vr(headerPanel, tw * 0.0082 * 2);       
+    }
+    
+    
+    public void initCorePanel() {
+        corePanel = new JPanel();
+        
+        AppUI.setBoxLayout(corePanel, false);
+        AppUI.noOpaque(corePanel);
+        AppUI.alignLeft(corePanel);
+    }
+    
+    public void showScreen() {
+        if (ps.currentScreen == ProgramState.SCREEN_AGREEMENT) {
+            showAgreementScreen();
+        }
+    }
+    
+    public JPanel createRoundedPanel(JPanel parent) {
+        JPanel p = new JPanel();
+        
+        AppUI.setBoxLayout(p, true);
+        AppUI.alignTop(p);
+        AppUI.alignCenter(p);
+        AppUI.roundCorners(p, AppUI.getColor2(), 20);
+        AppUI.noOpaque(p);
+       // AppUI.setSize(p, tw - 40, th - headerHeight - 70);
+        
+        JPanel subInnerCore = new JPanel();
+        AppUI.setBoxLayout(subInnerCore, true);
+        AppUI.alignTop(subInnerCore);
+        AppUI.alignCenter(subInnerCore);
+        AppUI.noOpaque(subInnerCore);
+        AppUI.setMargin(subInnerCore, 0, 60, 20, 60);
+        p.add(subInnerCore);
+        
+        
+        parent.add(p);
+        
+        return subInnerCore;
+    }
+    
+    public void showAgreementScreen() {
+        AppUI.setMargin(corePanel, 20);
+        
+        JPanel subInnerCore = createRoundedPanel(corePanel);
+        
+        // Title
+        JLabel text = new JLabel("CloudCoin Wallet");
+        AppUI.alignCenter(text);
+        AppUI.setBoldFont(text, 24);
+        subInnerCore.add(text);
+ 
+        // Agreement Panel        
+        JPanel agreementPanel = createRoundedPanel(subInnerCore);
+        AppUI.roundCorners(agreementPanel, AppUI.getColor3(), 20);
+        AppUI.alignCenter(agreementPanel);
+             
+        // Title 
+        text = new JLabel("Terms and Conditions");
+        AppUI.alignCenter(text);
+        AppUI.setBoldFont(text, 24);
+        agreementPanel.add(text);
+        
+        // Space
+        AppUI.hr(agreementPanel,  tw * 0.0082 * 2);
+                
+        // Text
+        text = new JLabel("<html><div style='padding-right: 20px; width:" + (tw / 1.6) + "px'>" + AppUI.getAgreementText() + "</div></html>");
+        AppUI.alignCenter(text);
+        AppUI.setFont(text, 18);
+              
+        JPanel wrapperAgreement = new JPanel();
+        AppUI.setBoxLayout(wrapperAgreement, true);
+        AppUI.alignCenter(wrapperAgreement);
+        AppUI.noOpaque(wrapperAgreement);
+        wrapperAgreement.add(text);
+        
+        // Checkbox
+        MyCheckBox cb = new MyCheckBox("I have read and agree with the Terms and Conditions");
+        wrapperAgreement.add(cb.getCheckBox());
+        
+        // Space
+        AppUI.hr(wrapperAgreement, 20);
+        
+        // JButton
+        MyButton button = new MyButton("Continue");
+        button.disable();
+        wrapperAgreement.add(button.getButton());
+        
+        
+        cb.addListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+                if (cb.isChecked()) {
+                    button.enable();
+                } else {
+                    button.disable();
+                }  
+            }
+        });
+        
+        button.addListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                System.out.println("xxx action");
+            }
+        });
+                
+        // ScrollBlock
+        JScrollPane scrollPane = new JScrollPane(wrapperAgreement);
+        JScrollBar scrollBar = new JScrollBar(JScrollBar.VERTICAL) {
+            @Override
+            public boolean isVisible() {
+                return true;
+            }
+        };
+
+        scrollPane.setVerticalScrollBar(scrollBar);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(42);
+        scrollPane.getViewport().setOpaque(false);
+        scrollPane.setOpaque(false);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);     
+        agreementPanel.add(scrollPane);
+     
+        
+        
+        
+
+        
+        
+        subInnerCore.add(agreementPanel);
+
+    }
+    
+    
+    /*
+   
     
     public void addHeader() {
         JPanel headerPanel = new JPanel();
@@ -321,12 +568,7 @@ addBtn.setBounds(0,10,200,120);
         //inner.add(ui.vr(tw * 0.0082 * 2));
         
        
-        /*
-        icon = new ImageJPanel("Envelope Icon.png");
-        ui.setSize(icon, tw / 34.51);
-        icon.setOpaque(false);
-        inner.add(icon);
-        */
+      
       //  inner.setBackground(Color.RED);   
         cx.add(inner);
         
@@ -380,12 +622,12 @@ addBtn.setBounds(0,10,200,120);
         wpanel = new JPanel();
         wpanel.setLayout(new BoxLayout(wpanel, BoxLayout.PAGE_AXIS));
         wpanel.setOpaque(false);
-       /* for (int i = 0; i < 10; i++) {
-            panel.add(new JButton("Hello-" + i));
-            panel.add(ui.hr(4));
-        }
+       // for (int i = 0; i < 10; i++) {
+         //   panel.add(new JButton("Hello-" + i));
+           // panel.add(ui.hr(4));
+        //}
        
-        */
+        
       
        showWallet();
     //    showWallet();
@@ -462,19 +704,19 @@ ui.setSize(g, tw - (int) (tw/5.5f) - 20, (int) (th/1.22f));
         
         JPanel comboBox = new RoundedCornerComboBox().makeUI(ui);
         //ui.setSize(comboBox, 300, 50);
-        /*
-        JComboBox comboBox = new JComboBox();
-        ui.setSize(comboBox, 300, 50);
-  //      comboBox.setRenderer(new IconListRenderer(icons));
-        comboBox.addItem("None");
-        comboBox.addItem("None1");
-        comboBox.addItem("None2");
-        comboBox.setBounds(0,10,1200,120);
+       
+       // JComboBox comboBox = new JComboBox();
+      //  ui.setSize(comboBox, 300, 50);
+  
+  //      comboBox.addItem("None");
+    //    comboBox.addItem("None1");
+      //  comboBox.addItem("None2");
+//        comboBox.setBounds(0,10,1200,120);
         
-        comboBox.setOpaque(false);
-        comboBox.setBackground(new Color(0x775FA8FF));
-        //comboBox.setBorder(new RoundedBorder(20));
-        */
+  //      comboBox.setOpaque(false);
+    //    comboBox.setBackground(new Color(0x775FA8FF));
+        
+        
         g.setAlignmentX(Component.CENTER_ALIGNMENT);
         // g.setAlignmentY(Component.TOP_ALIGNMENT);
         JLabel l = new JLabel("Wallet 2 - 100 CC");
@@ -765,7 +1007,7 @@ ui.setSize(g, tw - (int) (tw/5.5f) - 20, (int) (th/1.22f));
             return;
         
     
-        
+        */
      
       /*  
        JScrollPane scrollPane = new JScrollPane(panel);
@@ -803,7 +1045,7 @@ ui.setSize(g, tw - (int) (tw/5.5f) - 20, (int) (th/1.22f));
         
         
       //  mainPanel.add(corePanel, Component.LEFT_ALIGNMENT);
-    }
+    //}
     
     
     public void actionPerformed(ActionEvent e) {

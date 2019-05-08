@@ -9,8 +9,10 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.GraphicsEnvironment;
 import java.io.InputStream;
 import java.net.URL;
 import javax.swing.BorderFactory;
@@ -18,6 +20,7 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
@@ -38,54 +41,255 @@ import javax.swing.event.ChangeListener;
  */
 public class AppUI {
     
-    int tw, th;
-    double ratio;
+    static int tw, th;
+    static double ratio;
     
-    public AppUI(int tw, int th) {
-        this.tw = tw;
-        this.th = th;
+    
+    static Font regFont, semiBoldFont, boldFont;
+    
+    public static void init(int tw, int th) {
+        AppUI.tw = tw;
+        AppUI.th = th;
         
-        ratio = tw / th;
+        AppUI.ratio = tw / th;
+        
+        try {
+            ClassLoader cl;
+            
+            cl = AppUI.class.getClassLoader();
+            
+            semiBoldFont = Font.createFont(Font.TRUETYPE_FONT, cl.getResourceAsStream("resources/Montserrat-SemiBold.otf"));
+            boldFont = Font.createFont(Font.TRUETYPE_FONT, cl.getResourceAsStream("resources/Montserrat-Bold.otf"));
+            regFont = Font.createFont(Font.TRUETYPE_FONT, cl.getResourceAsStream("resources/Montserrat-Regular.otf"));
+            
+            GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(regFont);
+        } catch(Exception e){
+            System.out.println("Failed to load font: " + e.getMessage());
+        }
+        
+        
     }
     
-    public void setSize(Component c, double w) {
+    public static String getAgreementText() {
+        String agreement = "<br><p>Please read these terms and conditions carefully before using this application "
+                + "distributed by the CloudCoin Consortium.</p><br>"
+                + "<p>Conditions of Use</p><br>"
+                + "<p>The CloudCoin Consortium provides this software free of cost, and as is. "
+                + "Every time you utilize this application or its services you accept the following conditions. "
+                + "This is why the CloudCoin Consortium urges you to read them carefully.</p>"
+                + "<p>Privacy Policy</p><br>"
+                + "<p>The CloudCoin consortium does not collect or store any user data. "
+                + "All transactions are anonymous and no user information is ever collected "
+                + "by the RAIDA or the CloudCoin Consortium.</p><br>"
+                + "<p>Copyright</p><br>"
+                + "Content provided to you by the CloudCoin Consortium is developed by our partner RAIDAtech. "
+                + "All graphics, logos, images, and text herein is considered property of the "
+                + "CloudCoin Consortium and protected by international copyright laws. "
+                + "This software is considered open source and not owned by either "
+                + "the CloudCoin Consortium, RAIDAtech, or any of its affiliates.</p><br>"
+                + "<p>Communications</p><br>"
+                + "<p>All communication with the CloudCoin Consortium, RAIDA, or RAIDAtech "
+                + "affiliates is electronic. Any time you use the RAIDA to pown, send, or transfer coins"
+                + " you are going to be communicating with us. If you subscribe to the newsletter "
+                + "through the consortium you are going to receive regular emails from us. "
+                + "We will continue to communicate with you by posting newsletters and notices "
+                + "by sending you emails. You also agree that all notices, disclosures, "
+                + "agreements, and other communications we provide to you electronically meet "
+                + "the legal requirements that such communications be in writing.</p><br>"
+                + "<p>Emails</p><br>"
+                + "<p>Users may send emails to the support staff for this software as long "
+                + "as it is not obscene, illegal, defamatory, threatening, infringing of "
+                + "intellectual property rights, invasive of privacy or injurious in "
+                + "any other way to third parties.</p><br>"
+                + "<p>We reserve all rights to refuse service to individuals involved in such transmission.</p><br>"
+                + "<p>Ability to Accept Terms of Service</p><br>"
+                + "<p>You affirm that you are either more than 18 years of age, or an emancipated minor,"
+                + " or possess legal parental or guardian consent, and are fully able and competent "
+                + "to enter into the terms, conditions, obligations, affirmations, and representations "
+                + "set forth in these Terms of Service, and to abide by and comply with "
+                + "these Terms of Service. In any case, you affirm that you are over "
+                + "the age of 18 years of age. If you are under 18 years of age, "
+                + "then please do not use this service.</p><br>"
+                + "<p>NO WARRANTY</p><br>"
+                + "<p>You expressly acknowledge and agree that the use of this application "
+                + "is at your sole risk. To the maximum extent permitted by applicable law, "
+                + "the CloudCoin Advanced Client Software and any services performed "
+                + "or provided by the CloudCoin Consortium are provided “as is” and “as available,” "
+                + "with all faults and without warranty of any kind, and the CloudCoin Consortium "
+                + "hereby disclaims all warranties and conditions with respect "
+                + "to the CloudCoin Advanced Client Software and any services, "
+                + "either express, implied, or statutory, including, but not limited to, "
+                + "the implied warranties and/or conditions of satisfactory quality, "
+                + "of fitness for a particular purpose, of accuracy, of quiet enjoyment, "
+                + "and of non infringement of third-party rights. </p><br><p>No oral or written "
+                + "information or advice given by the CloudCoin Consortium or any authorized "
+                + "representative of the CloudCoin Consortium shall create a warranty of any kind. "
+                + "Should the application or services prove defective, you as the user assume the "
+                + "entire cost of any loss, broken coins, or correction of. Some jurisdictions do not allow "
+                + "the exclusion of implied warranties or limitations on applicable statutory rights of a consumer, "
+                + "so the above exclusion and limitations may not apply to you.</p><br> "
+                + "<p>Limitation of Liability</p><br>"
+                + "<p>In no event shall the CloudCoin Consortium, nor any of its officers,"
+                + " directors, or members be liable to you for anything arising out of or in any "
+                + "way connected with your use of this service, whether such liability is under contract, "
+                + "tort or otherwise, and the CloudCoin Consortium, including its officers, directors, "
+                + "and members shall not be liable for any indirect, consequential or special "
+                + "liability arising out of or in any way related to your use of this service.</p><br>"
+                + "<p>Indemnification</p><br>"
+                + "<p>You hereby indemnify to the fullest extent the CloudCoin Consortium "
+                + "from and against any and all liabilities, costs, demands, causes of action, "
+                + "damages, and expenses (including reasonable attorney’s fees) arising out of or in any "
+                + "way related to your breach of any of the provisions of these Terms.</p><br>"
+                + "<p>Variation of Terms</p><br>"
+                + "<p>The CloudCoin Consortium is permitted to revise these Terms at any time "
+                + "as it sees fit, and by using this software you are expected to review such "
+                + "Terms on a regular basis to ensure you understand all terms and conditions "
+                + "governing use of this software.</p><br>"
+                + "<p>Assignment</p><br>"
+                + "<p>The CloudCoin Consortium shall be permitted to assign, transfer, "
+                + "and subcontract its rights and/or obligations under these Terms without "
+                + "any notification or consent required. However, you shall not be permitted "
+                + "to assign, transfer, or subcontract any of your rights "
+                + "and/or obligations under these Terms.</p><br>"
+                + "<p>Entire Agreement</p><br>"
+                + "<p>These Terms, including any legal notices and disclaimers contained "
+                + "in this software, constitute the entire agreement between "
+                + "the CloudCoin Consortium and you in relation to your use of this "
+                + "software, and supersede all prior agreements and understandings "
+                + "with respect to the same.<br><br>";
+        
+        return agreement;
+    }
+    
+    
+    public static void setSize(Component c, double w) {
         int h = (int) (w * ratio);
         
         setSize(c, (int) w, h);
     }
     
-    public void setSize(Component c, int w, int h) {
+    public static void setSize(Component c, int w, int h) {
         c.setPreferredSize(new Dimension(w, h));
         c.setMinimumSize(new Dimension(w, h));
         c.setMaximumSize(new Dimension(w, h));
     }
     
-    public void align(JPanel c) {
-        c.setAlignmentX(Component.CENTER_ALIGNMENT);
-        c.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+    public static Color getColor0() {
+        return new Color(0x0061E1);
     }
     
-    public Component hr(int size) {
+    public static Color getColor1() {
+        return new Color(0xC9DBEE);
+    }
+    
+    public static Color getColor2() {
+        return new Color(0xDFEAF5);
+    }
+    
+    public static Color getColor3() {
+        //return new Color(0xFF, 0xFF, 0xFF, 75);
+        return new Color(0xBFFFFFFF);
+    }
+    
+    public static Color getDisabledColor() {
+        return new Color(0xCCCCCC);
+    }
+    
+    public static void setBoxLayout(Component c, boolean isVertical) {
+        int direction = isVertical ? BoxLayout.PAGE_AXIS : BoxLayout.LINE_AXIS;
+        
+        ((Container) c).setLayout(new BoxLayout((Container) c, direction));
+    }
+    
+    public static void setBackground(JComponent c, Color color) {
+        c.setBackground(color);
+    }
+    
+    public static void alignLeft(JComponent c) {
+        c.setAlignmentX(Component.LEFT_ALIGNMENT);
+    }
+    
+    public static void alignCenter(JComponent c) {
+        c.setAlignmentX(Component.CENTER_ALIGNMENT);
+    }
+    
+    
+    public static void alignTop(JComponent c) {
+        c.setAlignmentY(Component.TOP_ALIGNMENT);
+    }
+    
+    
+    public static void noOpaque(JComponent c) {
+        c.setOpaque(false);
+    }
+    
+    public static void vr(JComponent c, double size) {
+        Component bc = Box.createRigidArea(new Dimension((int) size, 0));
+        c.add(bc);
+    }
+    
+    public static void hr(Component c, double size) {
+        Component bc = Box.createRigidArea(new Dimension(0, (int) size));
+        ((Container) c).add(bc);
+    }
+    
+    public static void setMargin(JComponent c, int margin) {
+        c.setBorder(BorderFactory.createEmptyBorder(margin, margin, margin, margin));
+    }
+    
+    public static void setMargin(JComponent c, int top, int left, int bottom, int right) {
+        c.setBorder(BorderFactory.createEmptyBorder(top, left, bottom, right));
+    }
+    
+    
+    public static void roundCorners(JComponent c, Color color, int radius) {
+        c.setBorder(new RoundedBorder(radius, color));
+    }
+    
+    public static void roundCorners(JComponent c, Color color, int radius, UICallBack cb) {
+        c.setBorder(new RoundedBorder(radius, color, cb));
+    }
+    
+    public static void setTitleFont(Component c, int size) {
+        c.setFont(regFont.deriveFont(Font.PLAIN, size));
+        c.setForeground(Color.WHITE);
+    }
+    
+    public static void setTitleBoldFont(Component c, int size) {
+        c.setFont(boldFont.deriveFont(Font.BOLD, size));
+        c.setForeground(Color.WHITE);
+    }
+    
+    public static void setTitleSemiBoldFont(Component c, int size) {
+        c.setFont(semiBoldFont.deriveFont(Font.PLAIN, size));
+        c.setForeground(Color.WHITE);
+    }
+    
+    public static void setFont(Component c, int size) {
+        c.setFont(regFont.deriveFont(Font.PLAIN, size));
+    }
+    
+    public static void setBoldFont(Component c, int size) {
+        c.setFont(boldFont.deriveFont(Font.BOLD, size));
+    }
+    
+    public static Component hr(int size) {
         return Box.createRigidArea(new Dimension(0, size));
     }
     
-    public Component vr(int size) {
-        return Box.createRigidArea(new Dimension(size, 0));
-    }
-    
-    public Component vr(double size) {
+    public static Component vr(double size) {
         return Box.createRigidArea(new Dimension((int) size, 0));
     }
     
+    public static void setHandCursor(Component c) {
+        c.setCursor(new Cursor(Cursor.HAND_CURSOR));
+    }
     
-    
-    
-    public JFrame getMainFrame() {
+    public static JFrame getMainFrame() {
         JFrame frame = new JFrame();
         
         frame.setTitle("CloudCoin Bank");
         frame.setLayout(new BorderLayout());
-        //frame.add(mainPanel, BorderLayout.CENTER);
         frame.setSize(new Dimension(tw, th));
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
@@ -95,71 +299,7 @@ public class AppUI {
         return frame;
     }
     
-    
-    
-    public Color getBgColor() {
-        return hex2rgb("#C9DBEE");
-    }
-    
-    public Color getHeaderBgColor() {
-        return hex2rgb("#0061E1");
-    }
-    
-    public Color getWalletColor() {
-        return hex2rgb("#ccFFFFFF");
-    }
-    
-    public Color hex2rgb(String colorStr) {
-        
-        return new Color(
-            Integer.valueOf( colorStr.substring( 1, 3 ), 16 ),
-            Integer.valueOf( colorStr.substring( 3, 5 ), 16 ),
-            Integer.valueOf( colorStr.substring( 5, 7 ), 16 ) );
-    }
-    
-    public void setFont(Component c, int size) {
-        try {
-            Font font = Font.createFont(Font.TRUETYPE_FONT, getClass().getClassLoader().getResourceAsStream("resources/Montserrat-Bold.otf"));
-            c.setFont(font.deriveFont(Font.PLAIN, size));
-            c.setForeground(Color.BLACK);
-        } catch(Exception e){
-            
-        }
-    }
-    
-    public void setFont(Component c) {
-        try {
-            Font font = Font.createFont(Font.TRUETYPE_FONT, getClass().getClassLoader().getResourceAsStream("resources/Montserrat-Bold.otf"));
-            c.setFont(font.deriveFont(Font.PLAIN, 24f));
-      
-        } catch(Exception e){
-            
-        }
-    }
-    
-    public void setRegFont(Component c) {
-        try {
-            Font font = Font.createFont(Font.TRUETYPE_FONT, getClass().getClassLoader().getResourceAsStream("resources/Montserrat-Regular.otf"));
-            c.setFont(font.deriveFont(Font.PLAIN, 28f));
-           
-        } catch(Exception e){
-            
-        }
-    }
-    
-    public void setRegFont(Component c, int size) {
-        try {
-            Font font = Font.createFont(Font.TRUETYPE_FONT, getClass().getClassLoader().getResourceAsStream("resources/Montserrat-Regular.otf"));
-            c.setFont(font.deriveFont(Font.PLAIN, size));
-        } catch(Exception e){
-            
-        } 
-    }
-    
-    
-    public void setMargins(JPanel c, int top, int left, int bottom, int right) {
-        c.setBorder(BorderFactory.createEmptyBorder(top, left, bottom, right));
-    }
+ 
     
     
     /*
