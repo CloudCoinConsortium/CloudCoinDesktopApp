@@ -71,8 +71,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
     JPanel wpanel;
     
     int tw = 1208;
-    int th = 726;
-    
+    int th = 726;    
     int headerHeight;
     
     
@@ -83,11 +82,9 @@ public class AdvancedClient implements ActionListener, ComponentListener {
     
     public AdvancedClient() {
         AppUI.init(tw, th);
-        System.out.println("HELLO");
         
         ps = new ProgramState();
 
-        
         headerHeight = th / 10;
         
         initMainScreen();
@@ -97,15 +94,15 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         
         mainPanel.add(headerPanel);
         mainPanel.add(corePanel);
-        
-        //showScreen();
-        //addHeader();
- 
+
         showScreen();
-//        mainPanel.add(AppUI.hr(10));
-        //showCore();
     }
 
+    public void clear() {
+        corePanel.removeAll();
+        corePanel.repaint();
+        corePanel.revalidate();
+    }
     
     public void initMainScreen() {
         mainPanel = new JPanel();
@@ -113,10 +110,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         AppUI.setBoxLayout(mainPanel, true);
         AppUI.setSize(mainPanel, tw, th);
         AppUI.setBackground(mainPanel, AppUI.getColor1());
-
-        //mainPanel.setBorder(BorderFactory.createLineBorder(Color.black));
-
-        
+    
         JFrame mainFrame = AppUI.getMainFrame();
         mainFrame.setContentPane(mainPanel);
     }
@@ -217,42 +211,210 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         AppUI.setBoxLayout(corePanel, false);
         AppUI.noOpaque(corePanel);
         AppUI.alignLeft(corePanel);
+        AppUI.setMargin(corePanel, 20);
     }
     
     public void showScreen() {
-        if (ps.currentScreen == ProgramState.SCREEN_AGREEMENT) {
-            showAgreementScreen();
+        
+        clear();
+        showCreateWalletScreen();
+        if (1==1)             return;
+        switch (ps.currentScreen) {
+            case ProgramState.SCREEN_AGREEMENT:
+                showAgreementScreen();
+                break;
+            case ProgramState.SCREEN_CREATE_FIRST_WALLET:
+                showCreateWalletScreen();
+                break;
         }
     }
     
-    public JPanel createRoundedPanel(JPanel parent) {
-        JPanel p = new JPanel();
+    public void showCreateWalletScreen() {
+        showLeftScreen();
         
-        AppUI.setBoxLayout(p, true);
-        AppUI.alignTop(p);
-        AppUI.alignCenter(p);
-        AppUI.roundCorners(p, AppUI.getColor2(), 20);
-        AppUI.noOpaque(p);
-       // AppUI.setSize(p, tw - 40, th - headerHeight - 70);
+        JPanel rightPanel = getRightPanel();
         
-        JPanel subInnerCore = new JPanel();
-        AppUI.setBoxLayout(subInnerCore, true);
-        AppUI.alignTop(subInnerCore);
+
+        //subInnerCore.setAlignmentY(Component.CENTER_ALIGNMENT);
+        
+        
+
+        
+        JPanel xpanel = new JPanel(new GridBagLayout());
+        AppUI.noOpaque(xpanel);
+        rightPanel.add(xpanel);
+        
+        
+        JPanel subInnerCore = AppUI.createRoundedPanel(xpanel, Color.WHITE, 20);
+        AppUI.setSize(subInnerCore, tw/2, th/2);
         AppUI.alignCenter(subInnerCore);
-        AppUI.noOpaque(subInnerCore);
-        AppUI.setMargin(subInnerCore, 0, 60, 20, 60);
-        p.add(subInnerCore);
+ 
+    }
+    
+    public JPanel getRightPanel() {
+        JPanel mwrapperPanel = new JPanel();
         
+        AppUI.setBoxLayout(mwrapperPanel, true);
+        AppUI.noOpaque(mwrapperPanel);
+        AppUI.alignLeft(mwrapperPanel);
+        AppUI.alignTop(mwrapperPanel);
+        AppUI.setSize(mwrapperPanel, tw - 260, th);
+
+        JPanel subInnerCore = AppUI.createRoundedPanel(mwrapperPanel);
+        AppUI.setSize(subInnerCore, tw - 260, th - headerHeight - 120);
         
-        parent.add(p);
+        corePanel.add(mwrapperPanel);
         
         return subInnerCore;
     }
     
-    public void showAgreementScreen() {
-        AppUI.setMargin(corePanel, 20);
+    public void showLeftScreen() {
+        JPanel lwrapperPanel = new JPanel();
         
-        JPanel subInnerCore = createRoundedPanel(corePanel);
+        AppUI.setBoxLayout(lwrapperPanel, true);
+        AppUI.noOpaque(lwrapperPanel);
+        AppUI.alignLeft(lwrapperPanel);
+        AppUI.alignTop(lwrapperPanel);
+        
+        // Panel with wallets
+        wpanel = new JPanel();
+        AppUI.alignTop(wpanel);
+        AppUI.noOpaque(wpanel);
+        AppUI.setBoxLayout(wpanel, true);
+ 
+    
+        JLayeredPane wallet = getWallet();
+      
+        wpanel.add(wallet);
+        wallet = getWallet();
+      
+        wpanel.add(wallet);
+        
+            wallet = getWallet();
+      
+        wpanel.add(wallet);
+        
+        wallet = getWallet();
+      
+        wpanel.add(wallet);
+        
+        wallet = getWallet();
+      
+        wpanel.add(wallet);
+
+        // Padding from the bottom
+        AppUI.hr(wpanel, 120);
+
+        JScrollPane scrollPane = new JScrollPane(wpanel);
+        JScrollBar scrollBar = new JScrollBar(JScrollBar.VERTICAL) {
+            @Override
+            public boolean isVisible() {
+                return true;
+            }
+        };
+
+        scrollPane.setVerticalScrollBar(scrollBar);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(42);
+        scrollPane.getViewport().setOpaque(false);
+        scrollPane.setOpaque(false);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
+        lwrapperPanel.add(scrollPane);  
+        
+        corePanel.add(lwrapperPanel);
+    }
+    
+    public JLayeredPane getWallet() {
+        // Pane
+        JLayeredPane lpane = new JLayeredPane();
+        AppUI.noOpaque(lpane);
+        AppUI.setSize(lpane, 200, 140);
+        AppUI.alignLeft(lpane);
+
+        // Rounded Background
+        JButton addBtn = new JButton("");
+        addBtn.setBorder(new RoundedBorder(40));
+        addBtn.setFocusPainted(false);
+        addBtn.setContentAreaFilled(false);
+        addBtn.setBounds(0, 0, 200, 120);
+
+        // Wrapper for label
+        JPanel cx = new JPanel();
+        AppUI.noOpaque(cx);
+        AppUI.setBoxLayout(cx, true);
+        AppUI.alignTop(cx);
+        cx.setBounds(0,10,200,100);
+
+        // Space
+        AppUI.hr(cx, 10);
+        
+        // Label
+        JLabel l = new JLabel("Default Wallet");
+        AppUI.setFont(l, 22);
+        AppUI.alignCenter(l);
+        cx.add(l);
+          
+        // Space
+        AppUI.hr(cx, 12);
+        
+        // Line wrapper (2 icons + string of coins)
+        JPanel inner = new JPanel();
+        AppUI.setBoxLayout(inner, false);
+        AppUI.noOpaque(inner);
+       
+        // Icon wrapper
+        JPanel jc = new JPanel();
+        AppUI.setBoxLayout(jc, true);
+        AppUI.noOpaque(jc);
+
+        // Space
+        AppUI.hr(jc, 18);
+        
+        // Icon
+        ImageJPanel icon = new ImageJPanel("Cloud Icon.png");
+        AppUI.setSize(icon, tw /34.51f);
+        AppUI.noOpaque(icon);        
+        jc.add(icon);
+        
+        inner.add(jc);
+        
+        // Space 
+        AppUI.vr(inner, 18);
+        
+        // Amout of coins
+        JLabel jxl = new JLabel("100,02");
+        AppUI.setFont(jxl, 20);
+        inner.add(jxl);
+
+        // Space
+        AppUI.vr(inner, 18);
+
+        // Icon wrapper
+        jc = new JPanel();
+        AppUI.setBoxLayout(jc, true);
+        AppUI.noOpaque(jc);
+        AppUI.hr(jc, 2);
+        
+        // Icon
+        icon = new ImageJPanel("Envelope.png");
+        AppUI.setSize(icon, tw /38.51f);
+        AppUI.noOpaque(icon);
+        jc.add(icon);
+        
+        inner.add(jc);
+
+        cx.add(inner);        
+        
+        lpane.add(addBtn, new Integer(1));
+        lpane.add(cx, new Integer(2));
+
+        return lpane;
+    }
+    
+    public void showAgreementScreen() {
+        
+        JPanel subInnerCore = AppUI.createRoundedPanel(corePanel);
         
         // Title
         JLabel text = new JLabel("CloudCoin Wallet");
@@ -261,7 +423,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         subInnerCore.add(text);
  
         // Agreement Panel        
-        JPanel agreementPanel = createRoundedPanel(subInnerCore);
+        JPanel agreementPanel = AppUI.createRoundedPanel(subInnerCore);
         AppUI.roundCorners(agreementPanel, AppUI.getColor3(), 20);
         AppUI.alignCenter(agreementPanel);
              
@@ -297,20 +459,26 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         button.disable();
         wrapperAgreement.add(button.getButton());
         
-        
+        final MyButton fbutton = button;
         cb.addListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {
-                if (cb.isChecked()) {
-                    button.enable();
-                } else {
-                    button.disable();
-                }  
+                Object o = e.getSource();
+                
+                if (o instanceof JCheckBox) {
+                    JCheckBox cb = (JCheckBox) o;
+                    if (cb.isSelected()) {
+                        fbutton.enable();
+                    } else {
+                        fbutton.disable();
+                    }  
+                }
             }
         });
         
         button.addListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                System.out.println("xxx action");
+                ps.currentScreen = ProgramState.SCREEN_CREATE_FIRST_WALLET;
+                showScreen();
             }
         });
                 
@@ -331,15 +499,8 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);     
         agreementPanel.add(scrollPane);
-     
-        
-        
-        
-
-        
-        
+      
         subInnerCore.add(agreementPanel);
-
     }
     
     

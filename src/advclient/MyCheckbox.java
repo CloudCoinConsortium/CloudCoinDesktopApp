@@ -56,10 +56,10 @@ public class MyCheckBox {
         try {
             Image img;
             
-            img = ImageIO.read(getClass().getClassLoader().getResource("resources/radio.png"));
+            img = ImageIO.read(getClass().getClassLoader().getResource("resources/checkbox.png"));
             imgUnchecked = new ImageIcon(img);
             
-            img = ImageIO.read(getClass().getClassLoader().getResource("resources/radio1.png"));
+            img = ImageIO.read(getClass().getClassLoader().getResource("resources/checkboxChecked.png"));
             imgChecked = new ImageIcon(img);
         } catch (Exception ex) {
 

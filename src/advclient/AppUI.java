@@ -298,8 +298,35 @@ public class AppUI {
         
         return frame;
     }
-    
- 
+   
+    public static JPanel createRoundedPanel(JPanel parent) {
+        return createRoundedPanel(parent, AppUI.getColor2(), 60);
+    }
+   
+    public static JPanel createRoundedPanel(JPanel parent, Color color, int sideMargin) {
+        JPanel p = new JPanel();
+        
+        AppUI.setBoxLayout(p, true);
+        //AppUI.alignTop(p);
+        AppUI.alignCenter(p);
+        AppUI.roundCorners(p, color, 20);
+        AppUI.noOpaque(p);
+        
+        JPanel subInnerCore = new JPanel();
+        AppUI.setBoxLayout(subInnerCore, true);
+       // AppUI.alignTop(subInnerCore);
+        AppUI.alignCenter(subInnerCore);
+        AppUI.noOpaque(subInnerCore);
+        AppUI.setMargin(subInnerCore, 0, sideMargin, 20, sideMargin);
+        p.add(subInnerCore);
+           
+        parent.add(p);
+        
+        p.setAlignmentY(Component.CENTER_ALIGNMENT);
+        subInnerCore.setAlignmentY(Component.CENTER_ALIGNMENT);
+        
+        return subInnerCore;
+    }
     
     
     /*

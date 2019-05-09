@@ -105,7 +105,7 @@ public class RoundedCornerComboBox {
     
     
     
-    String NOT_SELECTABLE_OPTION = " - Select an Option - ";
+    final String NOT_SELECTABLE_OPTION = " - Select an Option - ";
     
     combo1.setModel(new DefaultComboBoxModel<String>() {
       private static final long serialVersionUID = 1L;
@@ -180,9 +180,10 @@ class HeavyWeightContainerListener implements PopupMenuListener {
         JComboBox c = (JComboBox) e.getSource();
         System.out.println("zzzzzzzzzzzzzz");
          c.setBorder(new RoundedCornerBorder1());
+         final PopupMenuEvent fe = e;
         EventQueue.invokeLater(new Runnable() {
             @Override public void run() {
-                JComboBox combo = (JComboBox) e.getSource();
+                JComboBox combo = (JComboBox) fe.getSource();
                 Accessible a = combo.getUI().getAccessibleChild(combo, 0);
                 if (a instanceof BasicComboPopup) {
                     BasicComboPopup pop = (BasicComboPopup) a;
@@ -225,7 +226,8 @@ class RoundedCornerBorder extends AbstractBorder {
       g2.fill(round);
     } else {
       Container parent = c.getParent();
-      if (Objects.nonNull(parent)) {
+    //  if (Objects.nonNull(parent)) {
+      if (parent != null) {
         g2.setPaint(parent.getBackground());
         g2.setPaint(new Color(0x5FA8FF));
         Area corner = new Area(new Rectangle2D.Float(x, y, width, height));
@@ -264,7 +266,8 @@ class RoundedCornerBorder1 extends RoundedCornerBorder {
     round.add(new Area(b));
 
     Container parent = c.getParent();
-    if (Objects.nonNull(parent)) {
+    //if (Objects.nonNull(parent)) {
+    if (parent != null) {
       g2.setPaint(parent.getBackground());
       Area corner = new Area(new Rectangle2D.Float(x, y, width, height));
       corner.subtract(round);

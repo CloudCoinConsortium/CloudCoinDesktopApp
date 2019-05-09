@@ -58,15 +58,16 @@ public class MyButton {
     private JPanel makeUI(String text) {
         button = new JButton(text);
     
+        final String ftext = text;
         UICallBack cb = new UICallBack() {
             public boolean doWork(Graphics g, JComponent c) {
-                int width = g.getFontMetrics().stringWidth(text);
+                int width = g.getFontMetrics().stringWidth(ftext);
                 int cWidth = c.getWidth();
                 int cHeight = c.getHeight();
                               
                 int x = (cWidth - width) / 2;
                 g.setColor(Color.WHITE);     
-                g.drawChars(text.toCharArray(), 0, text.length(), x, cHeight/2 + 6);
+                g.drawChars(ftext.toCharArray(), 0, ftext.length(), x, cHeight/2 + 6);
                 
                 return true;
             }

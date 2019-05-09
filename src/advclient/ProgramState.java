@@ -10,7 +10,8 @@ package advclient;
  * @author Alexander
  */
 public class ProgramState {
-    public static int SCREEN_AGREEMENT = 0x1;
+    final public static int SCREEN_AGREEMENT = 0x1;
+    final public static int SCREEN_CREATE_FIRST_WALLET = 0x2;
     
     public int currentScreen;
     
