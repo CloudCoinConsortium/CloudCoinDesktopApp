@@ -9,6 +9,7 @@ import global.cloudcoin.ccbank.FrackFixer.FrackFixer;
 import global.cloudcoin.ccbank.FrackFixer.FrackFixerResult;
 import global.cloudcoin.ccbank.Grader.Grader;
 import global.cloudcoin.ccbank.Grader.GraderResult;
+import global.cloudcoin.ccbank.ServantManager.ServantManager;
 import global.cloudcoin.ccbank.ShowCoins.ShowCoins;
 import global.cloudcoin.ccbank.ShowCoins.ShowCoinsResult;
 import global.cloudcoin.ccbank.Unpacker.Unpacker;
@@ -72,22 +73,36 @@ public class AdvancedClient implements ActionListener, ComponentListener {
     
     int tw = 1208;
     int th = 726;    
+    
+ //   int tw = 870;
+ //   int th = 524;
+    
+    
     int headerHeight;
-    
-    
-    
-    
-    
+        
     ProgramState ps;
+    ServantManager sm;
+    WLogger wl;
+    
+    
+    MyButton continueButton;
     
     public AdvancedClient() {
+        initSystem();
+                
         AppUI.init(tw, th);
         
-        ps = new ProgramState();
-
         headerHeight = th / 10;
         
+        
+        
         initMainScreen();
+        
+        if (!ps.errText.equals("")) {
+            mainPanel.add(new JLabel("Failed to init app: " + ps.errText));
+            return;
+        }
+        
         initHeaderPanel();
         initCorePanel();
         
@@ -95,9 +110,24 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         mainPanel.add(headerPanel);
         mainPanel.add(corePanel);
 
+        
+        
         showScreen();
     }
 
+    public void initSystem() {
+        wl = new WLogger();
+        ps = new ProgramState();
+
+        String home = System.getProperty("user.home");
+        home += "\\DebugX";
+        
+        sm = new ServantManager(wl, home);
+        if (!sm.init()) 
+            ps.errText = "Failed to init ServantManager";
+        
+    }
+    
     public void clear() {
         corePanel.removeAll();
         corePanel.repaint();
@@ -217,7 +247,12 @@ public class AdvancedClient implements ActionListener, ComponentListener {
     public void showScreen() {
         
         clear();
-        showCreateWalletScreen();
+        showWalletCreatedScreen();
+     //   showSetEmailScreen();
+     //   showUnderstandPasswordScreen();
+        //ps.isDefaultWalletBeingCreated = true;
+        //showCreateWalletScreen();
+        //showSetPasswordScreen();
         if (1==1)             return;
         switch (ps.currentScreen) {
             case ProgramState.SCREEN_AGREEMENT:
@@ -226,29 +261,473 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             case ProgramState.SCREEN_CREATE_FIRST_WALLET:
                 showCreateWalletScreen();
                 break;
+            case ProgramState.SCREEN_DEFAULT:
+                showDefaultScreen();
+                break;
+            case ProgramState.SCREEN_SET_PASSWORD:
+                showSetPasswordScreen();
+                break;
+            case ProgramState.SCREEN_UNDERSTAND_PASSWORD:
+                showUnderstandPasswordScreen();
+                break;
+            case ProgramState.SCREEN_SET_EMAIL:
+                showSetEmailScreen();
+                break;
+            case ProgramState.SCREEN_WALLET_CREATED:
+                showWalletCreatedScreen();
+                break;
+        }
+    }
+  
+    public void maybeShowError(JPanel p) {
+        if (!ps.errText.isEmpty()) {
+            AppUI.hr(p, 10);
+            
+            JLabel err = new JLabel(ps.errText);
+            AppUI.setFont(err, 16);
+            AppUI.setColor(err, AppUI.getErrorColor());
+            AppUI.alignCenter(err);
+            
+            AppUI.hr(p, 2);
+            p.add(err);
+            
+            ps.errText = "";
         }
     }
     
-    public void showCreateWalletScreen() {
+    public void showSetEmailScreen() {
+        JPanel subInnerCore = getModalJPanel("Type Coin Recovery Email");
+        maybeShowError(subInnerCore);
+        
+           // Container
+        JPanel ct = new JPanel();
+        AppUI.noOpaque(ct);
+        subInnerCore.add(ct);
+        
+        GridBagLayout gridbag = new GridBagLayout();
+        GridBagConstraints c = new GridBagConstraints();      
+        ct.setLayout(gridbag);
+        
+        // Password Label
+        JLabel x = new JLabel("Email");
+        AppUI.setCommonFont(x);
+        c.anchor = GridBagConstraints.WEST;
+        c.insets = new Insets(0, 0, 4, 0); 
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = 0;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+
+        MyTextField tf0 = new MyTextField("Email", false);
+        c.insets = new Insets(0, 0, 16, 0);
+        c.gridx = 0;
+        c.gridy = 1;
+        gridbag.setConstraints(tf0.getTextField(), c);
+        ct.add(tf0.getTextField());
+        
+        
+        // Confirm Password Label
+        x = new JLabel("Confirm Email");
+        AppUI.setCommonFont(x);
+        c.insets = new Insets(0, 0, 4, 0);
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = 2;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+        
+        MyTextField tf1 = new MyTextField("Confirm Email", false);
+        c.gridx = GridBagConstraints.RELATIVE;;
+        c.gridy = 3;
+        gridbag.setConstraints(tf1.getTextField(), c);
+        ct.add(tf1.getTextField());
+                        
+        // Buttons
+        final MyTextField ftf0 = tf0;
+        final MyTextField ftf1 = tf1;
+        JPanel bp = getTwoButtonPanel(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                String p0 = ftf0.getText();
+                String p1 = ftf1.getText();
+   
+                if (p0.isEmpty() || p1.isEmpty()) {
+                    ps.errText = "Please fill out both fields";
+                    showScreen();
+                    return;
+                }
+                
+                if (!p0.equals(p1)) { 
+                    ps.errText = "Emails do not match";
+                    showScreen();
+                    return;
+                }    
+                
+                ps.typedEmail = p0;
+                ps.currentScreen = ProgramState.SCREEN_WALLET_CREATED;
+                
+                showScreen();                
+            }
+        });
+  
+        
+        subInnerCore.add(bp);    
+    }
+    
+    public void showWalletCreatedScreen() {
+        JPanel subInnerCore = getModalJPanel("Wallet created");
+        maybeShowError(subInnerCore);
+        
+        // if not ok return
+        //if (ps.typedPassword)
+        
+        JLabel res = new JLabel("Wallet was set with password encryption and email for coin recovery was set as Recovery@email.com");
+        
+    }
+    
+    
+    public void showUnderstandPasswordScreen() {
+        JPanel subInnerCore = getModalJPanel("Confirmation");
+
+        // Container
+        JPanel ct = new JPanel();
+        AppUI.noOpaque(ct);
+        subInnerCore.add(ct);
+        
+        GridBagLayout gridbag = new GridBagLayout();
+        GridBagConstraints c = new GridBagConstraints();      
+        ct.setLayout(gridbag);
+        
+        // Checkbox
+        MyCheckBox cb0 = new MyCheckBox("<html>I understand that I will lose access to my<br>CloudCoins if I lose my password</html>");
+        c.anchor = GridBagConstraints.WEST;
+        c.insets = new Insets(0, 0, 12, 0); 
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = 0;
+        gridbag.setConstraints(cb0.getCheckBox(), c);       
+        ct.add(cb0.getCheckBox());
+        
+        MyCheckBox cb1 = new MyCheckBox("<html>I understand that no one can recover my password if<br>I lose or forget it</html>");
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = 1;
+        gridbag.setConstraints(cb1.getCheckBox(), c);       
+        ct.add(cb1.getCheckBox());
+        
+        MyCheckBox cb2 = new MyCheckBox("<html>I have written down or otherwise stored<br>my password</html>");
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = 2;
+        gridbag.setConstraints(cb2.getCheckBox(), c);       
+        ct.add(cb2.getCheckBox());
+        
+        JPanel bp = getTwoButtonPanel(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                if (ps.cwalletRecoveryRequested) {
+                    ps.currentScreen = ProgramState.SCREEN_SET_EMAIL;
+                } else {
+                    ps.currentScreen = ProgramState.SCREEN_WALLET_CREATED;
+                }
+                    
+                showScreen();
+            }
+        });
+        
+        continueButton.disable();
+        
+        final MyCheckBox fcb0 = cb0;
+        final MyCheckBox fcb1 = cb1;
+        final MyCheckBox fcb2 = cb2;
+               
+        ItemListener il = new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+                if (fcb0.isChecked() && fcb1.isChecked() && fcb2.isChecked()) {
+                    continueButton.enable();
+                } else {
+                    continueButton.disable();
+                }
+            }
+        };
+        
+        cb0.addListener(il);
+        cb1.addListener(il);
+        cb2.addListener(il);
+                
+        subInnerCore.add(bp);
+      //  final MyButton fbutton = button;
+       
+        
+        
+        
+        
+        
+        
+        
+        System.out.println("tp="+ps.typedPassword);
+        
+    }
+    
+    public void showSetPasswordScreen() {
+        JPanel subInnerCore = getModalJPanel("Create Wallet Password");
+        maybeShowError(subInnerCore);
+        
+        // Container
+        JPanel ct = new JPanel();
+        AppUI.noOpaque(ct);
+        subInnerCore.add(ct);
+        
+        GridBagLayout gridbag = new GridBagLayout();
+        GridBagConstraints c = new GridBagConstraints();      
+        ct.setLayout(gridbag);
+        
+        // Password Label
+        JLabel x = new JLabel("Password");
+        AppUI.setCommonFont(x);
+        c.anchor = GridBagConstraints.WEST;
+        c.insets = new Insets(0, 0, 4, 0); 
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = 0;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+
+        MyTextField tf0 = new MyTextField("Password");
+        c.insets = new Insets(0, 0, 16, 0);
+        c.gridx = 0;
+        c.gridy = 1;
+        gridbag.setConstraints(tf0.getTextField(), c);
+        ct.add(tf0.getTextField());
+        
+        
+        // Confirm Password Label
+        x = new JLabel("Confirm Password");
+        AppUI.setCommonFont(x);
+        c.insets = new Insets(0, 0, 4, 0);
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = 2;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+        
+        MyTextField tf1 = new MyTextField("Confirm Password");
+        c.gridx = GridBagConstraints.RELATIVE;;
+        c.gridy = 3;
+        gridbag.setConstraints(tf1.getTextField(), c);
+        ct.add(tf1.getTextField());
+                        
+        // Buttons
+        final MyTextField ftf0 = tf0;
+        final MyTextField ftf1 = tf1;
+        JPanel bp = getTwoButtonPanel(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                String p0 = ftf0.getText();
+                String p1 = ftf1.getText();
+   
+                if (p0.isEmpty() || p1.isEmpty()) {
+                    ps.errText = "Please fill out both fields";
+                    showScreen();
+                    return;
+                }
+                
+                if (!p0.equals(p1)) { 
+                    ps.errText = "Passwords do not match";
+                    showScreen();
+                    return;
+                }    
+                
+                ps.typedPassword = p0;
+                ps.currentScreen = ProgramState.SCREEN_UNDERSTAND_PASSWORD;
+                
+                showScreen();                
+            }
+        });
+  
+        
+        subInnerCore.add(bp); 
+        
+    }
+    
+    public void showDefaultScreen() {
         showLeftScreen();
         
         JPanel rightPanel = getRightPanel();
+    }
+    
+    
+    
+    public void showCreateWalletScreen() {
+        JLabel x;
+        String str;
+        MyTextField walletName = null;
+              
+        if (!ps.isDefaultWalletBeingCreated) {
+            str = "Create Wallet";
+        } else {
+            str = "Create Default Wallet";
+        }
         
+        JPanel subInnerCore = getModalJPanel(str);
+        maybeShowError(subInnerCore);
+        
+        // Outer Container
+        JPanel oct = new JPanel();
+        AppUI.setBoxLayout(oct, true);
+        AppUI.noOpaque(oct);
+        subInnerCore.add(oct);
+        
+        // Space
+        AppUI.hr(oct, 22);
+        
+        if (!ps.isDefaultWalletBeingCreated) {
+            // Horizontal Container for Wallet name
+            JPanel hct = new JPanel();
+            AppUI.setBoxLayout(hct, false);
+            AppUI.setMargin(hct, 0, 28, 0, 0);
+            AppUI.noOpaque(hct);
+            oct.add(hct);
+            AppUI.setSize(hct, tw / 2, 50);
+        
+            // Name Label        
+            x = new JLabel("Name");
+            AppUI.setCommonFont(x);
+            hct.add(x);
+        
+            AppUI.vr(hct, 50);
+        
+            walletName = new MyTextField("Wallet Name", false);
+            hct.add(walletName.getTextField());
+        }
 
-        //subInnerCore.setAlignmentY(Component.CENTER_ALIGNMENT);
+        // GridHolder Container
+        JPanel ct = new JPanel();
+        AppUI.noOpaque(ct);
+        oct.add(ct);
         
-        
-
-        
-        JPanel xpanel = new JPanel(new GridBagLayout());
-        AppUI.noOpaque(xpanel);
-        rightPanel.add(xpanel);
-        
-        
-        JPanel subInnerCore = AppUI.createRoundedPanel(xpanel, Color.WHITE, 20);
-        AppUI.setSize(subInnerCore, tw/2, th/2);
-        AppUI.alignCenter(subInnerCore);
+        GridBagLayout gridbag = new GridBagLayout();
+        GridBagConstraints c = new GridBagConstraints();      
+        ct.setLayout(gridbag);
  
+        
+        int y = 0;
+        
+        
+        // Empty Label before "Yes/No"
+        x = new JLabel();
+        c.gridwidth = 1;
+        c.anchor = GridBagConstraints.WEST;
+        c.insets = new Insets(18, 18, 0, 0);    
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y + 1;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+          
+        x = new JLabel("Yes");
+        gridbag.setConstraints(x, c);
+        AppUI.setCommonFont(x);
+        ct.add(x);
+        
+        x = new JLabel(" No");
+        AppUI.setCommonFont(x);
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+        
+        // Y
+        x = new JLabel("Password Protected Wallet");
+        AppUI.setCommonFont(x);
+        c.gridx = 0;
+        c.gridy = y + 2;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+        
+        ButtonGroup passwordGroup = new ButtonGroup();
+        MyRadioButton rb0 = new MyRadioButton();
+        c.gridx = GridBagConstraints.RELATIVE;;
+        c.gridy = y + 2;
+        gridbag.setConstraints(rb0.getRadioButton(), c);
+        ct.add(rb0.getRadioButton());
+        rb0.attachToGroup(passwordGroup);
+        rb0.select();
+        
+        MyRadioButton rb1 = new MyRadioButton();
+        c.gridx = GridBagConstraints.RELATIVE;;
+        c.gridy = y + 2;
+        gridbag.setConstraints(rb1.getRadioButton(), c);
+        ct.add(rb1.getRadioButton());
+        rb1.attachToGroup(passwordGroup);
+      
+        // Next Y
+        x = new JLabel("Enable Coin Recovery by Email");
+        AppUI.setCommonFont(x);
+        c.gridx = 0;
+        c.gridy = y + 3;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+           
+        ButtonGroup recoveryGroup = new ButtonGroup();
+        MyRadioButton rb2 = new MyRadioButton();
+        c.gridx = GridBagConstraints.RELATIVE;;
+        c.gridy = y + 3;
+        gridbag.setConstraints(rb2.getRadioButton(), c);
+        ct.add(rb2.getRadioButton());
+        rb2.attachToGroup(recoveryGroup);
+        rb2.select();
+        
+        MyRadioButton rb3 = new MyRadioButton();
+        c.gridx = GridBagConstraints.RELATIVE;;
+        c.gridy = y + 3;
+        gridbag.setConstraints(rb3.getRadioButton(), c);
+        ct.add(rb3.getRadioButton());
+        rb3.attachToGroup(recoveryGroup);
+              
+        // Buttons
+        final MyRadioButton frb0 = rb0;
+        final MyRadioButton frb2 = rb2;
+        final MyTextField fwalletName = walletName;
+        
+        JPanel bp = getTwoButtonPanel(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                ps.cwalletPasswordRequested = frb0.isSelected();
+                ps.cwalletRecoveryRequested = frb2.isSelected();
+                if (!ps.isDefaultWalletBeingCreated && fwalletName != null) {
+                    if (fwalletName.getText().isEmpty()) {
+                        ps.errText = "Wallet name is empty";
+                        showScreen();
+                        return;
+                    }
+                    
+                    ps.typedWalletName = fwalletName.getText();
+                }
+                
+                if (ps.cwalletPasswordRequested) {
+                    ps.currentScreen = ProgramState.SCREEN_SET_PASSWORD;
+                    showScreen();
+                } 
+                
+                System.out.println("Continue = " + frb0.isSelected() + " x=" +frb2.isSelected());
+            }
+        });
+        
+        AppUI.hr(subInnerCore, 20);
+        subInnerCore.add(bp); 
+    }
+    
+    public JPanel getTwoButtonPanel(ActionListener al) {
+        JPanel bp = new JPanel();
+        AppUI.setBoxLayout(bp, false);
+        AppUI.noOpaque(bp);
+        
+        MyButton cb = new MyButton("Cancel");
+        cb.addListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                showScreen();
+            }
+        });
+        
+        bp.add(cb.getButton());           
+        AppUI.vr(bp, 26);
+
+        cb = new MyButton("Continue");
+        cb.addListener(al);
+        bp.add(cb.getButton());
+        
+        continueButton = cb;
+        
+        return bp;
     }
     
     public JPanel getRightPanel() {
@@ -449,6 +928,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         
         // Checkbox
         MyCheckBox cb = new MyCheckBox("I have read and agree with the Terms and Conditions");
+        cb.setBoldFont();
         wrapperAgreement.add(cb.getCheckBox());
         
         // Space
@@ -503,7 +983,26 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         subInnerCore.add(agreementPanel);
     }
     
-    
+    public JPanel getModalJPanel(String title) {
+        showLeftScreen();
+        
+        JPanel rightPanel = getRightPanel();
+
+        JPanel xpanel = new JPanel(new GridBagLayout());
+        AppUI.noOpaque(xpanel);
+        rightPanel.add(xpanel);
+        
+        
+        JPanel subInnerCore = AppUI.createRoundedPanel(xpanel, Color.WHITE, 20);
+        AppUI.setSize(subInnerCore, tw/2, (int) (th/1.8));
+      //  AppUI.alignCenter(subInnerCore);
+        
+        // Title
+        JLabel ltitle = AppUI.getTitle(title);
+        subInnerCore.add(ltitle);
+        
+        return subInnerCore;
+    }
     /*
    
     

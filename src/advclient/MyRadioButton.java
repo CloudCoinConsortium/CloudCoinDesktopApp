@@ -12,8 +12,14 @@ import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.geom.RoundRectangle2D;
 import javax.imageio.ImageIO;
+import javax.swing.ButtonGroup;
+import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
@@ -26,48 +32,89 @@ import javax.swing.plaf.basic.BasicRadioButtonUI;
  * @author Alexander
  */
 public class MyRadioButton {
-     private static final Color BACKGROUND = Color.WHITE;
-  private static final Color FOREGROUND = new Color(0x5FA8FF);
-    public JPanel makeUI(AppUI ui) {
-      
+
+  
+    Icon imgUnchecked, imgChecked;
+    boolean isChecked;
+    
+    JPanel core;
+    JRadioButton rb;
+  
+    
+    public MyRadioButton() {
+        core = makeUI();
+    }
+    
+    public JPanel getRadioButton() {
+        return core;
+    }
+    
+    public void addListener(ItemListener i) {
+        rb.addItemListener(i);
+    }
+    
+    public void attachToGroup(ButtonGroup bg) {
+        bg.add(rb);
+    }
+  
+    public boolean isSelected() {
+        return rb.isSelected();
+    }
+    
+    public void select() {
+        rb.setIcon(imgChecked);
+        rb.setSelected(true);
+    }
+    
+    public void deselect() {
+        rb.setIcon(imgUnchecked);
+        rb.setSelected(false);
+    }
+    
+    public JPanel makeUI() {              
+        rb = new JRadioButton();
+        AppUI.noOpaque(rb);
+
+        try {
+            Image img;
+            
+            img = ImageIO.read(getClass().getClassLoader().getResource("resources/radio.png"));
+            imgUnchecked = new ImageIcon(img);
+            
+            img = ImageIO.read(getClass().getClassLoader().getResource("resources/radioChecked.png"));
+            imgChecked = new ImageIcon(img);
+        } catch (Exception ex) {
+
+        }
         
-        JRadioButton radio = new JRadioButton();
-   
+        deselect();
+        //rb.setActionCommand(birdString);
+        //rb.setSelected(true);
+        /*
+        rb.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                JRadioButton rb = (JRadioButton) e.getSource();
+                System.out.println("xxx"+e.getActionCommand() + " e=" + e.getSource());
+            } 
+        });*/
         
-         int w = 360;
-            int h =50;
-     //  radio.setPreferredSize(new Dimension(w, h));
-       // radio.setMinimumSize(new Dimension(w, h));
-        //radio.setMaximumSize(new Dimension(w, h));
+        rb.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+                Icon img;
+
+                img = (e.getStateChange() != ItemEvent.SELECTED) ? imgUnchecked : imgChecked;                     
+                rb.setIcon(img);
+            }
+        });
+         
+        JPanel p = new JPanel();
+        AppUI.setBoxLayout(p, false);
+        AppUI.noOpaque(p);
         
-        // radio.setUI(new myUI());
-        
-        
-         try {
-    Image img = ImageIO.read(getClass().getClassLoader().getResource("resources/radio1.png"));
-    radio.setIcon(new ImageIcon(img));
-  } catch (Exception ex) {
-    System.out.println(ex);
-  }
-        
+        p.add(rb);
          
          
-          JRadioButton radio2 = new JRadioButton();
-   
-       
-     //  radio2.setPreferredSize(new Dimension(w, h));
-     //   radio2.setMinimumSize(new Dimension(w, h));
-    //    radio2.setMaximumSize(new Dimension(w, h));
-        
-        // radio.setUI(new myUI());
-        
-        
-         try {
-    Image img = ImageIO.read(getClass().getClassLoader().getResource("resources/radio.png"));
-    radio2.setIcon(new ImageIcon(img));
-  } catch (Exception ex) {
-    System.out.println(ex);
-  }
+        return p;
          
          
          
@@ -76,11 +123,7 @@ public class MyRadioButton {
          
          
          
-         
-         
-         
-         
-         
+      /*   
          radio.setOpaque(false);
            radio2.setOpaque(false);
          
@@ -98,20 +141,6 @@ public class MyRadioButton {
     p.setBackground(new Color(0x775FA8FF));
     
     return p;
+    */
     }
-}
-class myUI extends BasicRadioButtonUI {
-     public void paint(Graphics g) {
-        Graphics2D g2 = (Graphics2D) g;
-
-        g2.setPaint(Color.RED);
-        g2.setStroke(new BasicStroke(2.0f));
-
-        double x = 50;
-        double y = 50;
-        double w = x + 250;
-        double h = y + 100;
-        g2.draw(new RoundRectangle2D.Double(x, y, w, h, 50, 50));
-    }
-
 }

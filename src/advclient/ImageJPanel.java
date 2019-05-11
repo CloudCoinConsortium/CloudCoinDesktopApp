@@ -50,7 +50,6 @@ public class ImageJPanel extends JPanel {
   }
   
   public void init(String res) {
-      System.out.println("res="+res);
       URL u = getClass().getClassLoader().getResource(res);
 
       try {
@@ -61,8 +60,6 @@ public class ImageJPanel extends JPanel {
         width = bimg.getWidth();
         
         ratio = (double) width / (double) height;
-        
-        System.out.println("w="+width+ " h="+height);
       }catch (IOException e) {
           System.out.println("error");
       }
@@ -78,9 +75,7 @@ public class ImageJPanel extends JPanel {
   
   public void setImageSize(int x) {
       int newHeight = (int) (x / ratio);
-              
-      System.out.println("xxx="+x+ " v="+ratio+" vv="+newHeight+ " h="+height);
-      
+
       width = x;
       height = newHeight;
       
@@ -103,7 +98,6 @@ public class ImageJPanel extends JPanel {
     //g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.3f));
     //g2d.setColor(Color.yellow);
         //g2d.fillOval(point.x, point.y, 120, 60);
-    g.drawImage(backgroundImage, 0, 0, this);
-    
+    g.drawImage(backgroundImage, 0, 0, this); 
   }
 }

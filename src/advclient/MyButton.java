@@ -85,15 +85,7 @@ public class MyButton {
         AppUI.noOpaque(p);
 
         p.add(button);
-        
-    
-        return p;
-        
-        
+            
+        return p;       
     }
-    
-    
-    
-
 }
-

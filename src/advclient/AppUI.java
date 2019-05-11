@@ -191,9 +191,22 @@ public class AppUI {
         return new Color(0xBFFFFFFF);
     }
     
+    public static Color getColor4() {
+        return new Color(0x665FA8FF);
+    }
+    
     public static Color getDisabledColor() {
         return new Color(0xCCCCCC);
     }
+    
+    public static Color getDisabledColor2() {
+        return new Color(0x999999);
+    }
+    
+    public static Color getErrorColor() {
+        return Color.RED;
+    }
+    
     
     public static void setBoxLayout(Component c, boolean isVertical) {
         int direction = isVertical ? BoxLayout.PAGE_AXIS : BoxLayout.LINE_AXIS;
@@ -273,6 +286,10 @@ public class AppUI {
         c.setFont(boldFont.deriveFont(Font.BOLD, size));
     }
     
+    public static void setCommonFont(Component c) {
+        AppUI.setFont(c, 25);
+    }
+    
     public static Component hr(int size) {
         return Box.createRigidArea(new Dimension(0, size));
     }
@@ -283,6 +300,10 @@ public class AppUI {
     
     public static void setHandCursor(Component c) {
         c.setCursor(new Cursor(Cursor.HAND_CURSOR));
+    }
+    
+    public static void setColor(Component c, Color color) {
+        c.setForeground(color);
     }
     
     public static JFrame getMainFrame() {
@@ -307,14 +328,12 @@ public class AppUI {
         JPanel p = new JPanel();
         
         AppUI.setBoxLayout(p, true);
-        //AppUI.alignTop(p);
         AppUI.alignCenter(p);
         AppUI.roundCorners(p, color, 20);
         AppUI.noOpaque(p);
         
         JPanel subInnerCore = new JPanel();
         AppUI.setBoxLayout(subInnerCore, true);
-       // AppUI.alignTop(subInnerCore);
         AppUI.alignCenter(subInnerCore);
         AppUI.noOpaque(subInnerCore);
         AppUI.setMargin(subInnerCore, 0, sideMargin, 20, sideMargin);
@@ -327,6 +346,17 @@ public class AppUI {
         
         return subInnerCore;
     }
+    
+    
+    public static JLabel getTitle(String s) {
+        JLabel str = new JLabel(s);
+        AppUI.alignCenter(str);
+        AppUI.setBoldFont(str, 30);
+        
+        return str;
+    }
+    
+    
     
     
     /*

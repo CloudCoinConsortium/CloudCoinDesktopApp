@@ -33,6 +33,7 @@ public class MyCheckBox {
     
     JPanel core;
     JCheckBox cb;
+    JLabel txt;
     
     public MyCheckBox(String text) {
         core = makeUI(text);
@@ -48,6 +49,10 @@ public class MyCheckBox {
     
     public boolean isChecked() {
         return cb.isSelected();
+    }
+    
+    public void setBoldFont() {
+        AppUI.setBoldFont(txt, 18);
     }
     
     public JPanel makeUI(String text) {
@@ -85,9 +90,9 @@ public class MyCheckBox {
         
         AppUI.vr(p, 20);
         
-        JLabel txt = new JLabel(text);
+        txt = new JLabel(text);
         AppUI.alignLeft(txt);
-        AppUI.setBoldFont(txt, 18);
+        AppUI.setFont(txt, 18);
  
         p.add(txt);
     
