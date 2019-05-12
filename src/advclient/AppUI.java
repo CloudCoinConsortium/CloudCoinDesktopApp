@@ -188,12 +188,17 @@ public class AppUI {
     
     public static Color getColor3() {
         //return new Color(0xFF, 0xFF, 0xFF, 75);
-        return new Color(0xBFFFFFFF);
+        return new Color(0xBFFFFFFF, true);
     }
     
     public static Color getColor4() {
-        return new Color(0x665FA8FF);
+        return new Color(0x665FA8FF, true);
     }
+    
+    public static Color getColor5() {
+        return Color.WHITE;
+    }
+    
     
     public static Color getDisabledColor() {
         return new Color(0xCCCCCC);
@@ -321,15 +326,19 @@ public class AppUI {
     }
    
     public static JPanel createRoundedPanel(JPanel parent) {
-        return createRoundedPanel(parent, AppUI.getColor2(), 60);
+        return createRoundedPanel(parent, AppUI.getColor2(), 60, 20);
+    }
+    
+    public static JPanel createRoundedPanel(JPanel parent, Color color, int sideMargin) {
+        return createRoundedPanel(parent, color, sideMargin, 20);
     }
    
-    public static JPanel createRoundedPanel(JPanel parent, Color color, int sideMargin) {
+    public static JPanel createRoundedPanel(JPanel parent, Color color, int sideMargin, int radius) {
         JPanel p = new JPanel();
         
         AppUI.setBoxLayout(p, true);
         AppUI.alignCenter(p);
-        AppUI.roundCorners(p, color, 20);
+        AppUI.roundCorners(p, color, radius);
         AppUI.noOpaque(p);
         
         JPanel subInnerCore = new JPanel();
@@ -356,7 +365,21 @@ public class AppUI {
         return str;
     }
     
+    public static JLabel getCommonLabel(String s) {
+        JLabel res = new JLabel(s);
+        AppUI.setCommonFont(res);
+        AppUI.alignCenter(res);
+        
+        return res;
+    }
     
+    public static JLabel getCommonBoldLabel(String s) {
+        JLabel res = new JLabel(s);
+        AppUI.setBoldFont(res, 25);
+        AppUI.alignCenter(res);
+        
+        return res;
+    }
     
     
     /*

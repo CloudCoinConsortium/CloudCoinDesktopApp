@@ -60,7 +60,8 @@ public class RoundedBorder implements Border {
         Graphics2D g2 = (Graphics2D) g.create();
         
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        //g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.3f));
+        //System.out.println("x="+color.getAlpha());
+        //g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, color.getAlpha()));
         g2.setColor(this.color);
         g2.setStroke(new BasicStroke(1));
         g2.drawRoundRect(x, y, width-1, height-1, radius-1, radius-1);
@@ -68,7 +69,6 @@ public class RoundedBorder implements Border {
         g2.fillRoundRect(x+1, y+1, width -2, height-2, radius, radius);
  
         if (cb != null)
-            cb.doWork(g2, (JComponent) c);
-        
+            cb.doWork(g2, (JComponent) c);       
     }
 }
