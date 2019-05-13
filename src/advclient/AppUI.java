@@ -198,6 +198,12 @@ public class AppUI {
     public static Color getColor5() {
         return Color.WHITE;
     }
+    public static Color getColor6() {
+        return new Color(0x5FA8FF);
+    }
+    public static Color getColor7() {
+        return new Color(0x90C1FE);
+    }
     
     
     public static Color getDisabledColor() {

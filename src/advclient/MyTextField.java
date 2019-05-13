@@ -17,7 +17,7 @@ import javax.swing.border.*;
 import javax.swing.plaf.ComboBoxUI;
 import javax.swing.plaf.basic.*;
 
-public class MyTextField extends JTextField {
+public class MyTextField  {
     
     
     JPanel core;
@@ -25,20 +25,42 @@ public class MyTextField extends JTextField {
     ImageIcon imgEye;
     RoundedTextField tf;
     
-    boolean isPassword;
+    JLabel label;
+    
+    boolean isPassword, isFilepicker;
     
     public MyTextField(String placeholder) {
         isPassword = true;
+        isFilepicker = false;
         core = makeUI(placeholder);
     }
     
     public MyTextField(String placeholder, boolean isPassword) {
         this.isPassword = isPassword;
+        isFilepicker = false;
+        core = makeUI(placeholder);
+    }
+    
+    public MyTextField(String placeholder, boolean isPassword, boolean isFilepicker) {
+        this.isPassword = isPassword;
+        this.isFilepicker = isFilepicker;
         core = makeUI(placeholder);
     }
     
     public JPanel getTextField() {
         return core;
+    }
+    
+    public void disable() {
+        tf.setEditable(false);
+    }
+
+    public void setFilepickerListener(MouseAdapter ma) {
+        label.addMouseListener(ma);
+    }
+    
+    public void setData(String text) {
+        tf.setText(text);
     }
     
     public JPanel makeUI(String placeholder) {
@@ -76,7 +98,7 @@ public class MyTextField extends JTextField {
 
             }        
             
-            JLabel label = new JLabel(imgEye);
+            label = new JLabel(imgEye);
             tf.add(label, BorderLayout.EAST);
         
             label.addMouseListener(new MouseAdapter() {
@@ -86,6 +108,20 @@ public class MyTextField extends JTextField {
                 }
             });
 
+            AppUI.setHandCursor(label);
+        } else if (isFilepicker) {
+            try {
+                Image img;
+            
+                img = ImageIO.read(getClass().getClassLoader().getResource("resources/lg0.png"));       
+                imgEye = new ImageIcon(img);
+            } catch (Exception ex) {
+
+            }        
+            
+            label = new JLabel(imgEye);
+            tf.add(label, BorderLayout.EAST);
+            
             AppUI.setHandCursor(label);
         }
         

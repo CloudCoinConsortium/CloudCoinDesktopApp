@@ -21,6 +21,7 @@ public class ProgramState {
     final public static int SCREEN_WALLET_CREATED = 0x7;
     final public static int SCREEN_PREPARE_TO_ADD_WALLET = 0x8;
     final public static int SCREEN_CREATE_SKY_WALLET = 0x9;
+    final public static int SCREEN_SHOW_TRANSACTIONS = 0x10;
     
     
     final static int CB_STATE_INIT = 1;
@@ -45,6 +46,8 @@ public class ProgramState {
     boolean isDefaultWalletBeingCreated;
     boolean isAddingWallet;
     
+    String chosenFile;
+    
     public ProgramState() {
         currentScreen = SCREEN_AGREEMENT;
         cwalletRecoveryRequested = cwalletPasswordRequested = false;
@@ -56,6 +59,7 @@ public class ProgramState {
         counters = null;
         cbState = CB_STATE_INIT;
         currentWalletIdx = -1;
+        chosenFile = "";
         
         isDefaultWalletBeingCreated = false;
         isAddingWallet = false;
