@@ -18,7 +18,15 @@ import javax.swing.JButton;
  * @author Alexander
  */
 class TriangleButton extends JButton {
-    private Shape triangle = createTriangle();
+    private boolean isReversed;
+    private Shape triangle;
+    
+    public TriangleButton(boolean isReversed) {
+        super();
+        this.isReversed = isReversed;
+        this.triangle = createTriangle();
+    }
+  
 
     public void paintBorder( Graphics g ) {
         ((Graphics2D)g).draw(triangle);
@@ -27,18 +35,30 @@ class TriangleButton extends JButton {
         g.setColor(Color.WHITE);
         ((Graphics2D)g).fill(triangle);
     }
+    
     public Dimension getPreferredSize() {
-        return new Dimension(20,10);
+        return new Dimension(20, 18);
     }
+   
     public boolean contains(int x, int y) {
         return triangle.contains(x, y);
     }
 
     private Shape createTriangle() {
         Polygon p = new Polygon();
-        p.addPoint( 0   , 10 );
-        p.addPoint( 10 , 0   );
-        p.addPoint( 20 ,10  );
+        
+        if (isReversed) {
+            System.out.println("rev");
+            p.addPoint( 4 ,4  );
+            p.addPoint( 12 , 4   );
+            p.addPoint( 8   , 12 );
+            
+        } else {
+            p.addPoint( 4   , 12 );
+            p.addPoint( 8 , 4   );
+            p.addPoint( 12 ,12  );
+        }
+        
         return p;
     }
 }

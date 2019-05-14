@@ -17,24 +17,24 @@ import javax.swing.plaf.ComboBoxUI;
 import javax.swing.plaf.basic.*;
 
 public class RoundedCornerComboBox {
-    AppUI ui;
-  private static final Color BACKGROUND = Color.WHITE;
-  private static final Color FOREGROUND = new Color(0x5FA8FF);
- //   private static final Color FOREGROUND = new Color(0x33000000);
-  private static final Color SELECTIONFOREGROUND = Color.BLACK;
-  public JPanel makeUI(AppUI ui) {
-      this.ui = ui;
-    UIManager.put("ComboBox.foreground", FOREGROUND);
-    UIManager.put("ComboBox.background", BACKGROUND);
-    UIManager.put("ComboBox.selectionForeground", SELECTIONFOREGROUND);
-    UIManager.put("ComboBox.selectionBackground", BACKGROUND);
+    public Color outerBgColor;
+    private static final Color BACKGROUND = AppUI.getColor9();
+    private static final Color FOREGROUND = AppUI.getColor9();
+    private static final Color SELECTIONFOREGROUND = Color.BLACK;
+    public JPanel makeUI(Color outerBgColor) {
+        this.outerBgColor = outerBgColor;
+     
+        UIManager.put("ComboBox.foreground", FOREGROUND);
+        UIManager.put("ComboBox.background", BACKGROUND);
+        UIManager.put("ComboBox.selectionForeground", SELECTIONFOREGROUND);
+        UIManager.put("ComboBox.selectionBackground", BACKGROUND);
 
-    UIManager.put("ComboBox.buttonDarkShadow", BACKGROUND);
-    UIManager.put("ComboBox.buttonBackground", FOREGROUND);
-    UIManager.put("ComboBox.buttonHighlight",  FOREGROUND);
-    UIManager.put("ComboBox.buttonShadow",     FOREGROUND);
+        UIManager.put("ComboBox.buttonDarkShadow", BACKGROUND);
+        UIManager.put("ComboBox.buttonBackground", FOREGROUND);
+        UIManager.put("ComboBox.buttonHighlight",  FOREGROUND);
+        UIManager.put("ComboBox.buttonShadow",     FOREGROUND);
 
-    UIManager.put("ComboBox.border", new RoundedCornerBorder());
+        UIManager.put("ComboBox.border", new RoundedCornerBorder());
     JComboBox<String> combo1 = new JComboBox<>(makeModel());
     
     //combo1.setPromptText("xxx");
@@ -46,6 +46,7 @@ public class RoundedCornerComboBox {
       c.setBorder(new RoundedCornerBorder2());
       c.setForeground(FOREGROUND);
       c.setBackground(BACKGROUND);
+      //c.setBackground(Color.YELLOW);
     
       /*        
               int w = 360;
@@ -83,17 +84,12 @@ public class RoundedCornerComboBox {
         combo1.setMinimumSize(new Dimension(w, h));
         combo1.setMaximumSize(new Dimension(w, h));
     
-    combo1.addPopupMenuListener(new HeavyWeightContainerListener());
+    //combo1.addPopupMenuListener(new HeavyWeightContainerListener());
 
-    
-    
-      try {
-            Font font = Font.createFont(Font.TRUETYPE_FONT, getClass().getClassLoader().getResourceAsStream("resources/Montserrat-Regular.otf"));
-            combo1.setFont(font.deriveFont(Font.PLAIN, 18f));
-             combo1.setForeground(Color.BLACK);
-        } catch(Exception e){
-            System.out.println("xxxxxx " + e.getMessage());
-        }
+    AppUI.setFont(combo1, 18);
+    AppUI.setColor(combo1, Color.BLACK);
+ 
+ 
     
     
     
@@ -126,12 +122,10 @@ public class RoundedCornerComboBox {
     combo1.addItem(NOT_SELECTABLE_OPTION);
     combo1.addItem("xxx1");
     combo1.addItem("xxx2");
-    Color[] colors = {Color.BLUE, Color.GRAY, Color.RED};
-    String[] strings = {"Test1", "Test2", "Test3"};
+
     
     ComboBoxRenderer renderer = new ComboBoxRenderer(combo1);
-         renderer.setColors(colors);
-        renderer.setStrings(strings);
+
 
         combo1.setRenderer(renderer);
     
@@ -141,27 +135,14 @@ public class RoundedCornerComboBox {
     
     
     
-    
-    UIManager.put("ComboBox.border", new RoundedCornerBorder1());
-    JComboBox<String> combo2 = new JComboBox<>(makeModel());
-    combo2.setUI(new BasicComboBoxUI());
-    o = combo2.getAccessibleContext().getAccessibleChild(0);
-    if (o instanceof JComponent) {
-      JComponent c = (JComponent) o;
-      c.setBorder(new RoundedCornerBorder2());
-      c.setForeground(FOREGROUND);
-      c.setBackground(BACKGROUND);
-    }
-    combo2.addPopupMenuListener(new HeavyWeightContainerListener());
+  
 
     JPanel p = new JPanel();
-    ui.setSize(p, w + 20, h + 10);
+    AppUI.setSize(p, w + 20, h + 10);
     p.add(combo1);
-   // p.add(combo2);
+
     p.setOpaque(false);
-    p.setBackground(new Color(0x775FA8FF));
-    //p.setBackground(Color.RED);
-   // p.setAlignmentY(Component.TOP_ALIGNMENT);
+
     return p;
   }
   private static DefaultComboBoxModel<String> makeModel() {
@@ -229,15 +210,18 @@ class RoundedCornerBorder extends AbstractBorder {
     //  if (Objects.nonNull(parent)) {
       if (parent != null) {
         g2.setPaint(parent.getBackground());
-        g2.setPaint(new Color(0x5FA8FF));
+      //  g2.setPaint(new Color(0x11FFFFFF, true));
+        
+        // Must match background Color
+        g2.setPaint(Color.RED);
         Area corner = new Area(new Rectangle2D.Float(x, y, width, height));
         corner.subtract(round);
         g2.fill(corner);
       }
     }
-   // g2.setPaint(c.getForeground());
-    g2.setPaint(new Color(0x5FA8FF));
-    g2.draw(round);
+    //g2.setPaint(c.getForeground());
+   // g2.setPaint(new Color(0x5FA8FF));
+    //g2.draw(round);
     g2.dispose();
   }
   @Override public Insets getBorderInsets(Component c) {
@@ -248,6 +232,7 @@ class RoundedCornerBorder extends AbstractBorder {
     return insets;
   }
 }
+
 
 class RoundedCornerBorder1 extends RoundedCornerBorder {
   //http://ateraimemo.com/Swing/RoundedComboBox.html
@@ -274,11 +259,13 @@ class RoundedCornerBorder1 extends RoundedCornerBorder {
       g2.fill(corner);
     }
 
-  //  g2.setPaint(c.getForeground());
+    g2.setPaint(c.getForeground());
     g2.draw(round);
     g2.dispose();
   }
 }
+
+
 
 class RoundedCornerBorder2 extends RoundedCornerBorder {
   @Override public void paintBorder(
@@ -313,131 +300,58 @@ class RoundedCornerBorder2 extends RoundedCornerBorder {
   
 }
 
- class ColorArrowUI extends BasicComboBoxUI {
+class ColorArrowUI extends BasicComboBoxUI {
+    @Override 
+    protected JButton createArrowButton() {
+        JButton button = new JButton();
+        button.setOpaque(false);
+        button.setContentAreaFilled(false);
+        AppUI.setHandCursor(button);
+        AppUI.setMargin(button, 0);
 
+        try {
+            Image img = ImageIO.read(getClass().getClassLoader().getResource("resources/arrow.png"));
+            button.setIcon(new ImageIcon(img));
+        } catch (Exception ex) {
     
+        }
 
-    @Override protected JButton createArrowButton() {
-        //JButton j;
-         JButton button = new JButton();
-         button.setOpaque(false);
-         button.setBackground(Color.WHITE);
-         button.setBorder(BorderFactory.createEmptyBorder(0,0,0,0));
-  try {
-    Image img = ImageIO.read(getClass().getClassLoader().getResource("resources/arrow.png"));
-    button.setIcon(new ImageIcon(img));
-  } catch (Exception ex) {
-    System.out.println(ex);
-  }
-    //    j = new JButton("")
         return button;
-        /*
-        return new BasicArrowButton(
-            BasicArrowButton.SOUTH,
-            Color.cyan, Color.magenta,
-            Color.yellow, Color.blue);
-                */
     }
 }
 
-class ComboBoxRenderer extends JPanel implements ListCellRenderer
-{
-
-    private static final long serialVersionUID = -1L;
-    private Color[] colors;
-    private String[] strings;
-
+class ComboBoxRenderer extends JPanel implements ListCellRenderer {
     JPanel textPanel;
     JLabel text;
 
     public ComboBoxRenderer(JComboBox combo) {
-
-        textPanel = new JPanel();
-        
+        textPanel = new JPanel();      
         textPanel.add(this);
         text = new JLabel();
         text.setOpaque(true);
         text.setFont(combo.getFont());
         textPanel.add(text);
        
-              text.setPreferredSize(new Dimension(160, 40)); 
+        text.setPreferredSize(new Dimension(160, 40)); 
         text.setMinimumSize(new Dimension(160, 40)); 
         text.setMaximumSize(new Dimension(160, 40)); 
     }
 
-    public void setColors(Color[] col)
-    {
-        colors = col;
-    }
-
-    public void setStrings(String[] str)
-    {
-        strings = str;
-    }
-
-    public Color[] getColors()
-    {
-        return colors;
-    }
-
-    public String[] getStrings()
-    {
-        return strings;
-    }
 
     @Override
     public Component getListCellRendererComponent(JList list, Object value,
             int index, boolean isSelected, boolean cellHasFocus) {
-
-        if (isSelected)
-        {
-            setBackground(list.getSelectionBackground());
-        }
-        else
-        {
-            setBackground(Color.WHITE);
-        }
         
-        
-        
-        System.out.println("xxxxxx111");
-   
-/*
-        if (colors.length != strings.length)
-        {
-            System.out.println("colors.length does not equal strings.length");
-            return this;
-        }
-        else if (colors == null)
-        {
-            System.out.println("use setColors first.");
-            return this;
-        }
-        else if (strings == null)
-        {
-            System.out.println("use setStrings first.");
-            return this;
-        }
-        */
-        try {
-            Font font = Font.createFont(Font.TRUETYPE_FONT, getClass().getClassLoader().getResourceAsStream("resources/Montserrat-Regular.otf"));
-            text.setFont(font.deriveFont(Font.PLAIN, 18f));
-        } catch(Exception e){
-            System.out.println("xxxxxx " + e.getMessage());
-        }
-        
-        text.setBackground(getBackground());
-
+        AppUI.setFont(text, 18);
         text.setText(value.toString());
-        if (index>-1) {
+        if (index > -1) {
             text.setForeground(Color.BLACK);
         }
         
         if (isSelected) {
-        System.out.println("xxx="+index + " isSel" + isSelected + " has="+cellHasFocus);
-            text.setBackground(Color.RED);
+            text.setBackground(AppUI.getColor3());
         } else {
-            text.setBackground(getBackground());
+            text.setBackground(AppUI.getColor9());
         }
         
         return text;

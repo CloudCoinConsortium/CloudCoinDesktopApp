@@ -42,6 +42,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
+import java.awt.print.PrinterException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -61,6 +62,7 @@ import javax.imageio.spi.ServiceRegistry;
 import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.EtchedBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -68,6 +70,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.plaf.ColorUIResource;
 import javax.swing.plaf.basic.BasicScrollBarUI;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 
 
@@ -86,6 +89,9 @@ public class AdvancedClient implements ActionListener, ComponentListener {
     JPanel mainPanel;
     JPanel corePanel;
     JPanel wpanel;
+    
+    
+    JLabel totalText;
     
     int tw = 1208;
     int th = 726;    
@@ -122,13 +128,10 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         
         initHeaderPanel();
         initCorePanel();
-        
-        
+      
         mainPanel.add(headerPanel);
         mainPanel.add(corePanel);
-
-        
-        
+    
         showScreen();
     }
 
@@ -173,13 +176,17 @@ public class AdvancedClient implements ActionListener, ComponentListener {
     public void showCoinsGoNext() {
         if (wallets.length > ps.currentWalletIdx + 1) {
             ps.currentWalletIdx++;
-            sm.setActiveWallet(wallets[ps.currentWalletIdx].getName());
+            sm.setActiveWalletObj(wallets[ps.currentWalletIdx]);
             if (!sm.getActiveWallet().isSkyWallet()) {
                 sm.startShowCoinsService(new ShowCoinsCb());
             } else {
-              System.out.println("new service sky");
+                System.out.println("new service sky");
+                //showCoinsGoNext();
             }       
-        }      
+        } else {
+            System.out.println("xxxxxx111");
+            totalText.setText("X");
+        }
     }
     
     public void setCounters(int[][] counters) {
@@ -203,16 +210,25 @@ public class AdvancedClient implements ActionListener, ComponentListener {
     }
     
     public boolean isActiveWallet(Wallet wallet) {
-        return ps.currentWalletName.equals(wallet.getName());
+        if (ps.currentWallet == null)
+            return false;
+        
+        return ps.currentWallet.getName().equals(wallet.getName());
     }
     
-    public void setActiveWallet(String walletName) {    
-        ps.currentWalletName = walletName;
+    public void setActiveWallet(Wallet wallet) {    
+        ps.currentWallet = wallet;
         
-        sm.setActiveWallet(walletName);
+        sm.setActiveWalletObj(wallet);
     }
     
     public void clear() {
+        headerPanel.removeAll();
+        fillHeaderPanel();
+        headerPanel.repaint();
+        headerPanel.revalidate();
+        
+        
         corePanel.removeAll();
         corePanel.repaint();
         corePanel.revalidate();
@@ -239,6 +255,25 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         AppUI.alignLeft(headerPanel);
         AppUI.alignTop(headerPanel);
         
+        fillHeaderPanel();
+    }
+    
+    public boolean isDepositing() {
+        if (ps.currentScreen == ProgramState.SCREEN_DEPOSIT)
+            return true;
+        
+        return false;
+    }
+    
+    public boolean isWithdrawing() {
+        if (ps.currentScreen == ProgramState.SCREEN_WITHDRAW)
+            return true;
+        
+        return false;
+    }
+    
+    public void fillHeaderPanel() {
+        
         // Space
         AppUI.vr(headerPanel, tw * 0.0082 * 2);
         
@@ -250,39 +285,130 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         
         // Space
         AppUI.vr(headerPanel, tw * 0.0082 * 2);
-        
-        // Init Label
-        JLabel titleText = new JLabel("CloudCoin Wallet " + version);
-        AppUI.setTitleSemiBoldFont(titleText, 32);
-        headerPanel.add(titleText);
-        
-        
+            
         if (ps.currentScreen == ProgramState.SCREEN_AGREEMENT) {
+             // Init Label
+            JLabel titleText = new JLabel("CloudCoin Wallet " + version);
+            AppUI.setTitleSemiBoldFont(titleText, 32);
+            headerPanel.add(titleText);
+            
             // Pad 
             JPanel jpad = new JPanel();
             AppUI.noOpaque(jpad);
             headerPanel.add(jpad);
         } else {
+            
+            //String strCnt = AppCore.formatNumber(totalCnt);
+            
+            JLabel titleText = new JLabel("Total Coins:  ");
+            AppUI.setTitleSemiBoldFont(titleText, 32);
+            headerPanel.add(titleText);
+            
+            totalText = new JLabel("0");
+            AppUI.setTitleFont(totalText, 28);
+            headerPanel.add(totalText);
+            
+            titleText = new JLabel("cc");
+            AppUI.alignBottom(titleText);
+            AppUI.setTitleFont(titleText, 16);
+            headerPanel.add(titleText);
+            
+            // Pad 
+            JPanel jpad0 = new JPanel();
+            AppUI.noOpaque(jpad0);
+            headerPanel.add(jpad0);  
+            
             // Space
             AppUI.vr(headerPanel, tw * 0.0082 * 12);
      
-            // Deposit Button
-            JLabel dp = new JLabel("Deposit");      
-            AppUI.setTitleBoldFont(dp, 28);
-            //dp.setCursor(new Cursor(Cursor.HAND_CURSOR));
-            headerPanel.add(dp);
+            // Deposit Button 
+            final JButton b0 = new JButton("Deposit");
+            b0.setContentAreaFilled(false);
+            b0.setFocusPainted(false);
+            AppUI.setTitleBoldFont(b0, 26);
+            AppUI.setHandCursor(b0);
+            if (isDepositing()) {
+                AppUI.underLine(b0);
+            } else {
+                AppUI.noUnderLine(b0);
+            }
+            headerPanel.add(b0);
 
             // Space
-            AppUI.vr(headerPanel, tw * 0.0082 * 10);
+            AppUI.vr(headerPanel, tw * 0.0082 * 8);
             
             // Transfer Button
-            dp = new JLabel("Transfer");
-            AppUI.setTitleBoldFont(dp, 28);
-            //dp.setCursor(new Cursor(Cursor.HAND_CURSOR));
-            headerPanel.add(dp);
-        
+            final JButton b1 = new JButton("Withdraw");
+            b1.setContentAreaFilled(false);
+            b1.setFocusPainted(false);
+            AppUI.setTitleBoldFont(b1, 26);
+            AppUI.setHandCursor(b1);
+            if (isWithdrawing()) {
+                AppUI.underLine(b1);
+            } else {
+                AppUI.noUnderLine(b1);
+            }
+            headerPanel.add(b1);
+                      
+            ActionListener al0 = new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    JButton b = (JButton) e.getSource();
+                    
+                    ps.currentScreen = ProgramState.SCREEN_DEPOSIT;
+                    showScreen();
+                }
+            };
+            
+            ActionListener al1 = new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    JButton b = (JButton) e.getSource();
+                    
+                    ps.currentScreen = ProgramState.SCREEN_WITHDRAW;
+                    showScreen();
+                }
+            };
+            
+            MouseAdapter ma0 = new MouseAdapter() {
+                public void mouseEntered(MouseEvent e) {
+                    JButton b = (JButton) e.getSource();
+                    
+                    AppUI.underLine(b);
+                }
+                public void mouseExited(MouseEvent e) {
+                    JButton b = (JButton) e.getSource();
+                    
+                    if (!isDepositing())
+                        AppUI.noUnderLine(b);
+                }
+            };
+            
+            MouseAdapter ma1 = new MouseAdapter() {
+                public void mouseEntered(MouseEvent e) {
+                    JButton b = (JButton) e.getSource();
+                    
+                    AppUI.underLine(b);
+                }
+                public void mouseExited(MouseEvent e) {
+                    JButton b = (JButton) e.getSource();
+                    
+                    if (!isWithdrawing())
+                        AppUI.noUnderLine(b);
+                }
+            };
+                   
+            b0.addActionListener(al0);
+            b1.addActionListener(al1);
+            b0.addMouseListener(ma0);
+            b1.addMouseListener(ma1);
+                    
+            // Pad 
+            JPanel jpad = new JPanel();
+            AppUI.noOpaque(jpad);
+            headerPanel.add(jpad);  
             // Space
-            AppUI.vr(headerPanel, tw * 0.0082 * 20);
+          //  AppUI.vr(headerPanel, tw * 0.0082 * 8);
         }
 
         // Icon Support
@@ -335,7 +461,8 @@ public class AdvancedClient implements ActionListener, ComponentListener {
     public void showScreen() {
         
         clear();
-        showTransactionsScreen();
+        showDepositScreen();
+    //    showTransactionsScreen();
     //    showCreateSkyWalletScreen();
      //   showPrepareToAddWalletScreen();
     //    showDefaultScreen();
@@ -379,7 +506,18 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             case ProgramState.SCREEN_SHOW_TRANSACTIONS:
                 showTransactionsScreen();
                 break;
+            case ProgramState.SCREEN_DEPOSIT:
+                ps.currentWallet = null;
+                showDepositScreen();
+               //   ps.currentScreen = ProgramState.SCREEN_DEPOSIT;  
+                break;
+            case ProgramState.SCREEN_WITHDRAW:
+                ps.currentWallet = null;
+                //showTransactionsScreen();
+                break;
         }
+        
+        System.out.println("EXIT " + ps.currentScreen);
     }
   
     public void maybeShowError(JPanel p) {
@@ -700,11 +838,235 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         JPanel rightPanel = getRightPanel();     
     }
     
+    public void showDepositScreen() {
+        
+        showLeftScreen();
+
+        JPanel rightPanel = getRightPanel();    
+    
+        JPanel ct = new JPanel();
+        AppUI.setBoxLayout(ct, true);
+        //AppUI.noOpaque(ct);
+        rightPanel.add(ct);
+        
+        JLabel ltitle = AppUI.getTitle("Deposit");   
+        ct.add(ltitle);
+        AppUI.alignTop(ct);
+        AppUI.alignTop(ltitle);
+        
+        AppUI.hr(ct, 20);
+        
+        maybeShowError(ct);
+        
+        
+        
+        
+        
+        
+        
+                
+        
+        // Outer Container
+        JPanel oct = new JPanel();
+        //AppUI.setBoxLayout(oct, true);
+        AppUI.noOpaque(oct);
+        
+        int y = 0;
+        
+        GridBagLayout gridbag = new GridBagLayout();
+        GridBagConstraints c = new GridBagConstraints(); 
+        c.gridwidth = 1;
+        c.anchor = GridBagConstraints.EAST;
+        c.insets = new Insets(18, 18, 0, 0); 
+        oct.setLayout(gridbag);
+        
+           
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y + 1;   
+        JLabel x = new JLabel("Name");
+        gridbag.setConstraints(x, c);
+        AppUI.setCommonFont(x);
+        oct.add(x);
+        
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y + 1;     
+        MyTextField walletName = new MyTextField("Wallet Name", false);
+        gridbag.setConstraints(walletName.getTextField(), c);
+        oct.add(walletName.getTextField());
+        
+        
+        
+        
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y + 2;   
+        x = new JLabel("Name s");
+        gridbag.setConstraints(x, c);
+        AppUI.setCommonFont(x);
+        oct.add(x);
+        
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y + 2;     
+        walletName = new MyTextField("Wallet Name", false);
+        gridbag.setConstraints(walletName.getTextField(), c);
+        oct.add(walletName.getTextField());
+        
+        
+      
+        
+        
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y + 3;   
+        x = new JLabel("Name srewrew");
+        gridbag.setConstraints(x, c);
+        AppUI.setCommonFont(x);
+        oct.add(x);
+        
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y + 3;     
+       // walletName = new MyTextField("Wallet Name", false);
+        JPanel r = new RoundedCornerComboBox().makeUI(AppUI.getColor2());
+        gridbag.setConstraints(r, c);
+        oct.add(r);
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        rightPanel.add(oct);
+        
+        // Space
+        AppUI.hr(oct, 22);
+        
+     
+            // Horizontal Container for Wallet name
+        /*
+            JPanel hct = new JPanel();
+            AppUI.setBoxLayout(hct, false);
+            AppUI.setMargin(hct, 0, 28, 0, 0);
+            AppUI.noOpaque(hct);
+            oct.add(hct);
+            AppUI.setSize(hct, tw / 2, 50);
+        
+            // Name Label        
+            JLabel x = new JLabel("Name");
+            AppUI.setCommonFont(x);
+            hct.add(x);
+        
+            AppUI.vr(hct, 50);
+        
+            MyTextField walletName = new MyTextField("Wallet Name", false);
+            hct.add(walletName.getTextField());
+       */
+            
+        /*
+            JPanel hct = AppUI.getTextBox("Name", "Wallet Name");
+            oct.add(hct);
+            
+              JPanel hct2 = AppUI.getTextBox("Name222", "Wallet Name");
+            oct.add(hct2);
+            */
+        
+        JPanel bp = getTwoButtonPanel(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                System.out.println("ssss!!!!");
+            }
+        });
+        
+        AppUI.hr(rightPanel, 20);
+        rightPanel.add(bp);  
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+            
+           if (1==1)
+            return;   
+        // GridHolder Container
+        JPanel gct = new JPanel();
+        AppUI.noOpaque(gct);
+        oct.add(gct);
+        
+
+ 
+        
+        y = 0;
+        
+        
+        // Empty Label before "Yes/No"
+        x = new JLabel();
+        c.gridwidth = 1;
+        c.anchor = GridBagConstraints.WEST;
+        c.insets = new Insets(18, 18, 0, 0);    
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y + 1;
+        gridbag.setConstraints(x, c);
+        gct.add(x);
+          
+  
+        
+        
+        
+        
+        
+        ct.add(gct);
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    }
+    
+    
     public void showTransactionsScreen() {
         showLeftScreen();
-        
-        setActiveWallet("Default Wallet");
-        
+   
         Wallet w = sm.getActiveWallet();
         
         JPanel rightPanel = getRightPanel();    
@@ -712,76 +1074,35 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         JPanel ct = new JPanel();
         AppUI.setBoxLayout(ct, true);
         AppUI.noOpaque(ct);
-        
+        rightPanel.add(ct);
         
         JLabel ltitle = AppUI.getTitle(w.getName() + " - " + w.getTotal() + " CC");   
         ct.add(ltitle);
         AppUI.hr(ct, 20);
         
-        JLabel trLabel = new JLabel("Transaction History");
+        // Create transactions
+        JLabel trLabel;
+        String[][] trs = sm.getActiveWallet().getTransactions();
+        
+        if (trs == null || trs.length != 0) {
+            trLabel = new JLabel("No transactions");
+            AppUI.setFont(trLabel, 18);
+            AppUI.alignCenter(trLabel);
+            ct.add(trLabel);
+            return;
+        }
+        
+        trLabel = new JLabel("Transaction History");
         AppUI.setFont(trLabel, 18);
         AppUI.alignCenter(trLabel);
         ct.add(trLabel);
                 
         AppUI.hr(ct, 20);
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-       /*
-        
-         UIManager.put("ScrollBar.thumb", new ColorUIResource(Color.black));
-        
-        
-        UIManager.put("ScrollBar.track", new ColorUIResource(Color.black));
-        
-        
-        UIManager.put("ScrollBar.trackHighlight", new ColorUIResource(Color.black));
-        UIManager.put("ScrollPane.background", new ColorUIResource(Color.black));
-        UIManager.put("ScrollPane.foreground", new ColorUIResource(Color.black));
-        */
-        
+ 
+        // Scrollbar & Table
         UIManager.put("ScrollBar.background", new ColorUIResource(AppUI.getColor0()));
-        UIManager.put("ScrollBar.foreground", new ColorUIResource(Color.YELLOW));
+
         /*
-        ScrollBar.background
-ScrollBar.foreground
-ScrollBar.thumb
-ScrollBar.thumbDarkShadow
-ScrollBar.thumbHighlight
-ScrollBar.thumbShadow
-ScrollBar.track
-ScrollBar.trackHighlight
-ScrollPane.background
-ScrollPane.foreground
-        */
-        
-        
-        
-        
-        
-        
-        
-        
-        
          Object[][] data = {
 	    {"Kathy", "Smith",
 	     "Snowboarding", new Integer(5), new Boolean(false)},
@@ -794,13 +1115,7 @@ ScrollPane.foreground
 	    {"Joe", "Brown",
 	     "Pool", new Integer(10), new Boolean(false)}
         };
-        
-        String[] columnNames = {"Memo (note)",
-                                "Date",
-                                "Deposit",
-                                "Withdraw",
-                                "Total"};
-        
+         */
         
         DefaultTableCellRenderer r = new DefaultTableCellRenderer() {
             @Override
@@ -808,79 +1123,83 @@ ScrollPane.foreground
                 value, boolean isSelected, boolean hasFocus, int row, int column) {
                 super.getTableCellRendererComponent(
                     table, value, isSelected, hasFocus, row, column);
-                setForeground(Color.blue);
-                setHorizontalAlignment(JLabel.CENTER);
-                setFont(getFont().deriveFont(50f));
-                setBorder(BorderFactory.createEmptyBorder(50, 50, 50, 50));
+                if (row % 2 == 0) {
+                    AppUI.setBackground(this, AppUI.getColor3());
+                } else {
+                    AppUI.setBackground(this, AppUI.getColor4());
+                }
+                
+                AppUI.setMargin(this, 8);
+
                 return this;
             }
         };
+  
+        DefaultTableModel model = new DefaultTableModel(trs.length, trs[0].length) {
+            String[] columnNames = {
+                "Memo (note)",
+                "Date",
+                "Deposit",
+                "Withdraw",
+                "Total"
+            };
+            
+            @Override
+            public String getColumnName(int col) {
+                return columnNames[col];
+            }
+            
+            @Override
+            public Class<?> getColumnClass(int columnIndex) {
+                return String.class;
+            }
+        };
         
-        final JTable table = new JTable(data, columnNames);
-                table.setRowHeight(table.getRowHeight() + 150);
-      //  table.getColumnModel().getColumn(1).setCellRenderer(r);
-        //table.setIntercellSpacing(new Dimension (101,201));
+        final JTable table = new JTable(model);
+         //final JTable table = new JTable(data, columnNames);
+        for (int row = 0; row < model.getRowCount(); row++) {
+            for (int col = 0; col < model.getColumnCount(); col++) {
+                model.setValueAt(trs[row][col], row, col);
+            }
+        }
+ 
+        table.setRowHeight(table.getRowHeight() + 15);
+        table.setDefaultRenderer(String.class, r);
+        table.setIntercellSpacing(new Dimension(1, 1));
+        table.setFocusable(false);
+        table.setRowSelectionAllowed(false);
+        table.setBorder(BorderFactory.createLineBorder(AppUI.getColor0()));
+        table.setGridColor(AppUI.getColor0());
+        
+        
+        // Header
         JTableHeader header = table.getTableHeader();
         AppUI.setBackground(header, AppUI.getColor0());
         AppUI.setColor(header, Color.WHITE);
-        AppUI.setMargin(header, 12);
         AppUI.noOpaque(header);
         AppUI.setFont(table, 14);
         AppUI.setBoldFont(header, 14);
-        //table.setPreferredScrollableViewportSize(new Dimension(500, 10));
-        //table.setFillsViewportHeight(true);
-    
-        
-        JPanel p = new JPanel();
-        AppUI.setBoxLayout(p, true);
-        AppUI.setMargin(p, 0);
-        //p.add(table);
-        
-                 
-        
-        JScrollPane scrollPane = new JScrollPane(table);
 
-        Image img;
-          try {
-               
-            
-                img = ImageIO.read(getClass().getClassLoader().getResource("resources/Envelope.png"));
-                
-            } catch (Exception ex) {
-               return;
-            }
- 
-        
-        scrollPane.getVerticalScrollBar().setUI(new BasicScrollBarUI() {   
-        
+        // ScrollPane
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.getVerticalScrollBar().setUI(new BasicScrollBarUI() {       
             @Override
             protected JButton createDecreaseButton(int orientation) {
-                TriangleButton jbutton = new TriangleButton();
-               // AppUI.noOpaque(jbutton);
-                //AppUI.setBackground(jbutton, AppUI.getColor0());
-               // AppUI.setSize(jbutton, 20);
-               // AppUI.setMargin(jbutton, 0);
-               // jbutton.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
-
-               // return jbutton;
-                //JButton jbutton = new JButton(new ImageIcon(img));
-               //  JButton jbutton = new JButton("^");
-                AppUI.setSize(jbutton, 30);
-                //AppUI.setBackground(jbutton, AppUI.getColor1());
-                //AppUI.noOpaque(jbutton);
-                
+                TriangleButton jbutton = new TriangleButton(false);
+                AppUI.setHandCursor(jbutton);
                 jbutton.setContentAreaFilled(false);
-             
                 jbutton.setFocusPainted(false);
-                
-                
+            
                 return jbutton;
             }
 
             @Override    
             protected JButton createIncreaseButton(int orientation) {
-                JButton jbutton = new JButton();
-
+                TriangleButton jbutton = new TriangleButton(true);
+                AppUI.setHandCursor(jbutton);
+                jbutton.setContentAreaFilled(false);
+                jbutton.setFocusPainted(false);
+            
                 return jbutton;
             }
             
@@ -891,41 +1210,40 @@ ScrollPane.foreground
             }
         });
         
-        
-        
-        
-        
-        
-        
-        
-        
-      //  scrollPane.getVerticalScrollBar().setOpaque(false);
-       // scrollPane.getVerticalScrollBar().setUnitIncrement(42);
-       
         scrollPane.getViewport().setOpaque(false);
         scrollPane.setOpaque(false);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
-       // scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-       // scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER); 
-     //   scrollPane.setVerticalScrollBar(scrollBar);
-        
-        //Add the scroll pane to this panel.
+
         ct.add(scrollPane);
+
+
         
-         
-          JButton jbutton = new JButton(new ImageIcon(img));
-              //  AppUI.setSize(jbutton, 140);
-               // AppUI.setBackground(jbutton, Color.BLACK);
-               // AppUI.noOpaque(jbutton);
-             //   jbutton.setOpaque(true);
-                //jbutton.setBackground(Color.RED);
-                
-         
-        //addBtn.setContentAreaFilled(false);
-       
-        rightPanel.add(ct);
-      //  rightPanel.add(new TriangleButton());
-      //  rightPanel.add(new JButton());
+        
+
+        JPanel bp = getTwoButtonPanelCustom("Export", "Print", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                Wallet w = sm.getActiveWallet();
+                JFileChooser c = new JFileChooser();
+                c.setSelectedFile(new File(w.getName() + "-transactions.csv"));
+
+                int rVal = c.showSaveDialog(null);
+                if (rVal == JFileChooser.APPROVE_OPTION) {
+                    w.saveTransations(c.getSelectedFile().getAbsolutePath());
+                }
+            }
+        },  new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    try {
+                        table.print();
+                    } catch (PrinterException pe) {
+                        System.out.println("Failed to print");
+                    }
+                }
+            }  
+        );
+        
+        AppUI.hr(rightPanel, 20);
+        rightPanel.add(bp);     
     }
     
     
@@ -1065,8 +1383,7 @@ ScrollPane.foreground
         AppUI.setBoxLayout(oct, true);
         AppUI.noOpaque(oct);
         subInnerCore.add(oct);
-        
-        
+               
         // Container
         JPanel ct = new JPanel();
         AppUI.noOpaque(ct);
@@ -1113,32 +1430,18 @@ ScrollPane.foreground
             @Override
             public void mouseReleased(MouseEvent e) {
                 int returnVal = chooser.showOpenDialog(null);
-                if (returnVal == JFileChooser.APPROVE_OPTION) {
-                 //   System.out.println("You chose to open this file: " +
-                   //     chooser.getSelectedFile().getName());        
+                if (returnVal == JFileChooser.APPROVE_OPTION) {       
                     ps.chosenFile = chooser.getSelectedFile().getAbsolutePath();
                     tf1.setData(chooser.getSelectedFile().getName());
                 }
             }
         });
-        /*
-        tf1.addListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                System.out.println("ggg");
-                int returnVal = chooser.showOpenDialog(null);
-                if (returnVal == JFileChooser.APPROVE_OPTION) {
-                     System.out.println("You chose to open this file: " +
-                         chooser.getSelectedFile().getName());
-                    
-                }
-            }
-        });*/
+
         c.gridx = 0;
         c.gridy = 3;
         gridbag.setConstraints(tf1.getTextField(), c);
         ct.add(tf1.getTextField());
-        
-        
+             
         JPanel bp = getTwoButtonPanel(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 if (ps.chosenFile.isEmpty()) {
@@ -1161,13 +1464,13 @@ ScrollPane.foreground
                 }
                 
                 DNSSn d = new DNSSn(domain, wl);
-                
+                /*
                 if (d.recordExists()) {
                     ps.errText = "Wallet is already taken";
                     showScreen();
                     return;
                 }
-                
+                */
                 if (!d.setRecord(ps.chosenFile, sm.getSR())) {
                     ps.errText = "Failed to set record. Check if the coin is valid";
                     showScreen();
@@ -1214,23 +1517,8 @@ ScrollPane.foreground
         AppUI.hr(oct, 22);
         
         if (!ps.isDefaultWalletBeingCreated) {
-            // Horizontal Container for Wallet name
-            JPanel hct = new JPanel();
-            AppUI.setBoxLayout(hct, false);
-            AppUI.setMargin(hct, 0, 28, 0, 0);
-            AppUI.noOpaque(hct);
+            JPanel hct = AppUI.getTextBox("Name", "Wallet Name");
             oct.add(hct);
-            AppUI.setSize(hct, tw / 2, 50);
-        
-            // Name Label        
-            x = new JLabel("Name");
-            AppUI.setCommonFont(x);
-            hct.add(x);
-        
-            AppUI.vr(hct, 50);
-        
-            walletName = new MyTextField("Wallet Name", false);
-            hct.add(walletName.getTextField());
         }
 
         // GridHolder Container
@@ -1379,6 +1667,31 @@ ScrollPane.foreground
 
         cb = new MyButton("Continue");
         cb.addListener(al);
+        bp.add(cb.getButton(), gbc);
+        
+        continueButton = cb;
+        
+        return bp;
+    }
+    
+    public JPanel getTwoButtonPanelCustom(String name0, String name1, ActionListener al0, ActionListener al1) {
+        JPanel bp = new JPanel();
+        AppUI.noOpaque(bp);
+       
+        bp.setLayout(new GridBagLayout());
+        
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.anchor = GridBagConstraints.SOUTH;
+        gbc.weighty = 1;
+        
+        MyButton cb = new MyButton(name0);
+        cb.addListener(al0);
+        
+        bp.add(cb.getButton(), gbc);           
+        AppUI.vr(bp, 26);
+
+        cb = new MyButton(name1);
+        cb.addListener(al1);
         bp.add(cb.getButton(), gbc);
         
         continueButton = cb;
@@ -1596,7 +1909,7 @@ ScrollPane.foreground
             MouseAdapter ma = new MouseAdapter() {
                 @Override
                 public void mouseReleased(MouseEvent e) {
-                    setActiveWallet(wallet.getName());
+                    setActiveWallet(wallet);
                     ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
                     showScreen();
                 }   
@@ -1624,6 +1937,7 @@ ScrollPane.foreground
             MouseAdapter ma = new MouseAdapter() {
                 @Override
                 public void mouseReleased(MouseEvent e) {
+                    ps.currentWallet = null;
                     ps.currentScreen = ProgramState.SCREEN_PREPARE_TO_ADD_WALLET;
                     ps.isAddingWallet = true;
                     showScreen();

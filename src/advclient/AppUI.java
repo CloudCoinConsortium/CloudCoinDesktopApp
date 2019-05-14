@@ -13,8 +13,10 @@ import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GraphicsEnvironment;
+import java.awt.font.TextAttribute;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Map;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -187,7 +189,6 @@ public class AppUI {
     }
     
     public static Color getColor3() {
-        //return new Color(0xFF, 0xFF, 0xFF, 75);
         return new Color(0xBFFFFFFF, true);
     }
     
@@ -203,6 +204,14 @@ public class AppUI {
     }
     public static Color getColor7() {
         return new Color(0x90C1FE);
+    }
+    
+    public static Color getColor8() {
+        return new Color(0xE5E5E5);
+    }
+    
+    public static Color getColor9() {
+        return new Color(0x5FA8FF);
     }
     
     
@@ -242,6 +251,9 @@ public class AppUI {
         c.setAlignmentY(Component.TOP_ALIGNMENT);
     }
     
+    public static void alignBottom(JComponent c) {
+        c.setAlignmentY(Component.BOTTOM_ALIGNMENT);
+    }
     
     public static void noOpaque(JComponent c) {
         c.setOpaque(false);
@@ -273,6 +285,21 @@ public class AppUI {
     public static void roundCorners(JComponent c, Color color, int radius, UICallBack cb) {
         c.setBorder(new RoundedBorder(radius, color, cb));
     }
+    
+    public static void underLine(Component label) {
+        Font font = label.getFont();
+        Map attributes = font.getAttributes();
+        attributes.put(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_ON);
+        label.setFont(font.deriveFont(attributes));
+    }
+    
+    public static void noUnderLine(Component label) {
+        Font font = label.getFont();
+        Map attributes = font.getAttributes();
+        attributes.put(TextAttribute.UNDERLINE, null);
+        label.setFont(font.deriveFont(attributes));
+    }
+    
     
     public static void setTitleFont(Component c, int size) {
         c.setFont(regFont.deriveFont(Font.PLAIN, size));
@@ -385,6 +412,28 @@ public class AppUI {
         AppUI.alignCenter(res);
         
         return res;
+    }
+    
+    public static JPanel getTextBox(String name, String title) {
+        JPanel hct = new JPanel();
+        
+        AppUI.setBoxLayout(hct, false);
+        AppUI.setMargin(hct, 0, 28, 0, 0);
+        AppUI.noOpaque(hct);
+         
+        AppUI.setSize(hct, tw / 2, 50);
+        
+        // Name Label        
+        JLabel x = new JLabel(name);
+        AppUI.setCommonFont(x);
+        hct.add(x);
+        
+        AppUI.vr(hct, 50);
+        
+        MyTextField walletName = new MyTextField(title, false);
+        hct.add(walletName.getTextField());
+         
+        return hct;
     }
     
     
