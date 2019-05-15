@@ -67,7 +67,7 @@ public class MyTextField  {
         tf = new RoundedTextField(placeholder);
 
         AppUI.noOpaque(tf);
-        AppUI.setSize(tf, AppUI.tw / 3, AppUI.th / 16);
+        AppUI.setSize(tf, (int) AppUI.getBoxWidth(), (int) AppUI.getBoxHeight());
         AppUI.setBackground(tf, AppUI.getColor4());
         AppUI.setFont(tf, 18);
         AppUI.setMargin(tf, 10);
@@ -78,11 +78,13 @@ public class MyTextField  {
             @Override
             public void focusGained(FocusEvent e) {
                 ftf.clearPlaceholder();
+                ftf.repaint();
             }
             @Override
             public void focusLost(FocusEvent e) {
                 if (ftf.getText().isEmpty()) {
                     ftf.restorePlaceholder();
+                    ftf.repaint();
                 }
             }
         });

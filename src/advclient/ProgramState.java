@@ -6,6 +6,7 @@
 package advclient;
 
 import global.cloudcoin.ccbank.core.Wallet;
+import java.util.ArrayList;
 
 /**
  *
@@ -24,6 +25,7 @@ public class ProgramState {
     final public static int SCREEN_SHOW_TRANSACTIONS = 10;
     final public static int SCREEN_DEPOSIT = 11;
     final public static int SCREEN_WITHDRAW = 12;
+    final public static int SCREEN_IMPORTING = 13;
     
     
     final static int CB_STATE_INIT = 1;
@@ -48,8 +50,13 @@ public class ProgramState {
     boolean isDefaultWalletBeingCreated;
     boolean isAddingWallet;
 
+    ArrayList<String> files;
     
     String chosenFile;
+    String typedMemo;
+    
+    Wallet dstWallet;
+    Wallet srcWallet;
     
     public ProgramState() {
         currentScreen = SCREEN_AGREEMENT;
@@ -63,6 +70,9 @@ public class ProgramState {
         cbState = CB_STATE_INIT;
         currentWalletIdx = -1;
         chosenFile = "";
+        typedMemo = "";
+        files = new ArrayList<String>();
+        dstWallet = srcWallet = null;
         
         isDefaultWalletBeingCreated = false;
         isAddingWallet = false;

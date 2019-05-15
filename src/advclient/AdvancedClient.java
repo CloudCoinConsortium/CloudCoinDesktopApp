@@ -41,6 +41,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.geom.Point2D;
+import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
 import java.awt.print.PrinterException;
 import java.io.File;
@@ -68,6 +70,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.plaf.ColorUIResource;
+import javax.swing.plaf.basic.BasicProgressBarUI;
 import javax.swing.plaf.basic.BasicScrollBarUI;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
@@ -109,6 +112,8 @@ public class AdvancedClient implements ActionListener, ComponentListener {
     Wallet[] wallets;
     
     MyButton continueButton;
+    
+    JProgressBar pbar;
     
     public AdvancedClient() {
         initSystem();
@@ -461,7 +466,8 @@ public class AdvancedClient implements ActionListener, ComponentListener {
     public void showScreen() {
         
         clear();
-        showDepositScreen();
+        //showDepositScreen();
+        showImportingScreen();
     //    showTransactionsScreen();
     //    showCreateSkyWalletScreen();
      //   showPrepareToAddWalletScreen();
@@ -509,11 +515,13 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             case ProgramState.SCREEN_DEPOSIT:
                 ps.currentWallet = null;
                 showDepositScreen();
-               //   ps.currentScreen = ProgramState.SCREEN_DEPOSIT;  
                 break;
             case ProgramState.SCREEN_WITHDRAW:
                 ps.currentWallet = null;
                 //showTransactionsScreen();
+                break;
+            case ProgramState.SCREEN_IMPORTING:
+                showImportingScreen();
                 break;
         }
         
@@ -534,6 +542,135 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             
             ps.errText = "";
         }
+    }
+    
+    private void setRAIDAProgress(int raidaProcessed, int totalFilesProcessed, int totalFiles) {
+        pbar.setValue(raidaProcessed);
+     //   setJraida(totalFilesProcessed, totalFiles);
+    }
+    
+    public void showImportingScreen() {
+        JPanel subInnerCore = getModalJPanel("Deposit in Progress");
+        maybeShowError(subInnerCore);
+        
+        JPanel ct = new JPanel();
+        AppUI.noOpaque(ct);
+        subInnerCore.add(ct);
+        
+        GridBagLayout gridbag = new GridBagLayout();
+        GridBagConstraints c = new GridBagConstraints();      
+        ct.setLayout(gridbag);
+        
+        // Password Label
+        JLabel x = new JLabel("Do not close the application until all CloudCoins are deposited!");
+        AppUI.setBoldFont(x, 16);
+        AppUI.setColor(x, AppUI.getErrorColor());
+        c.anchor = GridBagConstraints.CENTER;
+        c.insets = new Insets(0, 0, 4, 0); 
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = 0;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+        
+        x = new JLabel("5/100 Deposited");
+        AppUI.setCommonFont(x);
+        c.insets = new Insets(40, 20, 4, 0);
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = 1;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+        
+        
+        
+        
+        
+        UIManager.put("ProgressBar.selectionBackground", Color.BLACK);
+        
+        UIManager.put("ProgressBar.selectionForeground", Color.BLACK);
+      //  UIManager.put("ProgressBar.foreground", AppUI.getColor4());
+       // UIManager.put("ProgressBar.background", AppUI.getColor3());
+        pbar = new JProgressBar();
+        AppUI.setSize(pbar, 320, 30);
+        pbar.setStringPainted(true);
+        pbar.setBackground(Color.BLACK);
+        AppUI.setMargin(pbar, 0);
+       // pbar.setBorder(new FlexRoundedBorder());
+        AppUI.setSize(pbar, 400, 60);
+        pbar.setMinimum(0);
+        pbar.setMaximum(24);
+        pbar.setValue(10);
+        pbar.setUI(new FancyProgressBar());
+        AppUI.noOpaque(pbar);
+        c.insets = new Insets(40, 20, 4, 0);
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = 2;
+        gridbag.setConstraints(pbar, c);
+        ct.add(pbar);
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        JPanel bp = getOneButtonPanelCustom("Cancel", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                showScreen();
+            }
+        });
+  
+        
+        subInnerCore.add(bp);   
     }
     
     public void showSetEmailScreen() {
@@ -846,7 +983,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
     
         JPanel ct = new JPanel();
         AppUI.setBoxLayout(ct, true);
-        //AppUI.noOpaque(ct);
+        AppUI.noOpaque(ct);
         rightPanel.add(ct);
         
         JLabel ltitle = AppUI.getTitle("Deposit");   
@@ -858,17 +995,8 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         
         maybeShowError(ct);
         
-        
-        
-        
-        
-        
-        
-                
-        
         // Outer Container
         JPanel oct = new JPanel();
-        //AppUI.setBoxLayout(oct, true);
         AppUI.noOpaque(oct);
         
         int y = 0;
@@ -880,195 +1008,150 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         c.insets = new Insets(18, 18, 0, 0); 
         oct.setLayout(gridbag);
         
+        
+        // Deposit To
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;   
+        JLabel x = new JLabel("Deposit To");
+        gridbag.setConstraints(x, c);
+        AppUI.setCommonFont(x);
+        oct.add(x);
+        
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;     
+ 
+        int nonSkyCnt = 0;
+        for (int i = 0; i < wallets.length; i++)
+            if (!wallets[i].isSkyWallet())
+                nonSkyCnt++;
            
+        String[] options = new String[nonSkyCnt];
+         for (int i = 0; i < wallets.length; i++)
+            if (!wallets[i].isSkyWallet())
+                options[i] = wallets[i].getName();
+
+        
+        RoundedCornerComboBox cbox = new RoundedCornerComboBox(AppUI.getColor2(), "Select Destination", options);
+        gridbag.setConstraints(cbox.getComboBox(), c);
+        oct.add(cbox.getComboBox());
+        
+        // Memo
         c.gridx = GridBagConstraints.RELATIVE;
         c.gridy = y + 1;   
-        JLabel x = new JLabel("Name");
+        x = new JLabel("Memo (Note)");
         gridbag.setConstraints(x, c);
         AppUI.setCommonFont(x);
         oct.add(x);
         
         c.gridx = GridBagConstraints.RELATIVE;
         c.gridy = y + 1;     
-        MyTextField walletName = new MyTextField("Wallet Name", false);
-        gridbag.setConstraints(walletName.getTextField(), c);
-        oct.add(walletName.getTextField());
-        
-        
-        
-        
+        MyTextField memo = new MyTextField("Optional", false);
+        gridbag.setConstraints(memo.getTextField(), c);
+        oct.add(memo.getTextField());
+
+        // Total files selected
+        final JLabel tl = new JLabel("Total files selected: 0");
+        AppUI.setCommonFont(tl);
+        c.insets = new Insets(28, 18, 0, 0); 
         c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = y + 2;   
-        x = new JLabel("Name s");
-        gridbag.setConstraints(x, c);
-        AppUI.setCommonFont(x);
-        oct.add(x);
+        c.gridwidth = 2;
+        c.anchor = GridBagConstraints.CENTER;
+        c.gridy = y + 2;  
+        gridbag.setConstraints(tl, c);
+        oct.add(tl);
+
+        // Drag and Drop
+        JPanel ddPanel = new JPanel();
+        ddPanel.setLayout(new GridBagLayout());
         
+        JLabel l = new JLabel("Drop files here or click to select files");
+        AppUI.setColor(l, AppUI.getColor10());
+        AppUI.setBoldFont(l, 22);
+        AppUI.noOpaque(ddPanel);
+        AppUI.setHandCursor(ddPanel);
+        ddPanel.setBorder(new DashedBorder(40, AppUI.getColor10()));
+        ddPanel.add(l);
+        
+        c.insets = new Insets(28, 18, 0, 0); 
         c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = y + 2;     
-        walletName = new MyTextField("Wallet Name", false);
-        gridbag.setConstraints(walletName.getTextField(), c);
-        oct.add(walletName.getTextField());
+        c.gridwidth = 2;
+        c.anchor = GridBagConstraints.CENTER;
+        c.gridy = y + 3;  
         
+        AppUI.setSize(ddPanel, (int) (tw / 2.2), 160);
+        gridbag.setConstraints(ddPanel, c);
+        new FileDrop( System.out, ddPanel, new FileDrop.Listener() {
+            public void filesDropped( java.io.File[] files ) {   
+                for( int i = 0; i < files.length; i++ ) {
+                    ps.files.add(files[i].getAbsolutePath());
+                }
+                
+                tl.setText("Total files selected: " + ps.files.size());            
+            } 
+        }); 
         
-      
+        final JFileChooser chooser = new JFileChooser();
+        FileNameExtensionFilter filter = new FileNameExtensionFilter(
+                "CloudCoins", "jpg", "jpeg", "stack", "json", "txt");
+        chooser.setFileFilter(filter);
+        chooser.setMultiSelectionEnabled(true);
         
-        
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = y + 3;   
-        x = new JLabel("Name srewrew");
-        gridbag.setConstraints(x, c);
-        AppUI.setCommonFont(x);
-        oct.add(x);
-        
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = y + 3;     
-       // walletName = new MyTextField("Wallet Name", false);
-        JPanel r = new RoundedCornerComboBox().makeUI(AppUI.getColor2());
-        gridbag.setConstraints(r, c);
-        oct.add(r);
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+        ddPanel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                int returnVal = chooser.showOpenDialog(null);
+                if (returnVal == JFileChooser.APPROVE_OPTION) {
+                    File[] files = chooser.getSelectedFiles();
+                    for (int i = 0; i < files.length; i++) {
+                        ps.files.add(files[i].getAbsolutePath());
+                    }
+                    
+                    tl.setText("Total files selected: " + ps.files.size());   
+                }
+            }   
+        });
+
+        oct.add(ddPanel);
         rightPanel.add(oct);
         
         // Space
         AppUI.hr(oct, 22);
         
-     
-            // Horizontal Container for Wallet name
-        /*
-            JPanel hct = new JPanel();
-            AppUI.setBoxLayout(hct, false);
-            AppUI.setMargin(hct, 0, 28, 0, 0);
-            AppUI.noOpaque(hct);
-            oct.add(hct);
-            AppUI.setSize(hct, tw / 2, 50);
-        
-            // Name Label        
-            JLabel x = new JLabel("Name");
-            AppUI.setCommonFont(x);
-            hct.add(x);
-        
-            AppUI.vr(hct, 50);
-        
-            MyTextField walletName = new MyTextField("Wallet Name", false);
-            hct.add(walletName.getTextField());
-       */
-            
-        /*
-            JPanel hct = AppUI.getTextBox("Name", "Wallet Name");
-            oct.add(hct);
-            
-              JPanel hct2 = AppUI.getTextBox("Name222", "Wallet Name");
-            oct.add(hct2);
-            */
-        
         JPanel bp = getTwoButtonPanel(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                System.out.println("ssss!!!!");
+                String walletName = cbox.getSelectedValue();
+                Wallet w;
+                
+                w = sm.getWalletByName(walletName);
+                if (w == null) {
+                    ps.errText = "Wallet is not selected";
+                    showScreen();
+                    return;
+                }
+                
+                if (ps.files.size() == 0) {
+                    ps.errText = "No files selected";
+                    showScreen();
+                    return;
+                }
+                
+                ps.dstWallet = w;
+                ps.typedMemo = memo.getText();
+                ps.currentScreen = ProgramState.SCREEN_IMPORTING;
+                
+                showScreen();
             }
         });
         
         AppUI.hr(rightPanel, 20);
-        rightPanel.add(bp);  
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-            
-           if (1==1)
-            return;   
-        // GridHolder Container
-        JPanel gct = new JPanel();
-        AppUI.noOpaque(gct);
-        oct.add(gct);
-        
-
- 
-        
-        y = 0;
-        
-        
-        // Empty Label before "Yes/No"
-        x = new JLabel();
-        c.gridwidth = 1;
-        c.anchor = GridBagConstraints.WEST;
-        c.insets = new Insets(18, 18, 0, 0);    
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = y + 1;
-        gridbag.setConstraints(x, c);
-        gct.add(x);
-          
-  
-        
-        
-        
-        
-        
-        ct.add(gct);
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+        rightPanel.add(bp);       
     }
     
     
     public void showTransactionsScreen() {
         showLeftScreen();
    
-        Wallet w = sm.getActiveWallet();
-        
+        Wallet w = sm.getActiveWallet();     
         JPanel rightPanel = getRightPanel();    
         
         JPanel ct = new JPanel();
@@ -1101,22 +1184,6 @@ public class AdvancedClient implements ActionListener, ComponentListener {
  
         // Scrollbar & Table
         UIManager.put("ScrollBar.background", new ColorUIResource(AppUI.getColor0()));
-
-        /*
-         Object[][] data = {
-	    {"Kathy", "Smith",
-	     "Snowboarding", new Integer(5), new Boolean(false)},
-	    {"John", "Doe",
-	     "Rowing", new Integer(3), new Boolean(true)},
-	    {"Sue", "Black",
-	     "Knitting", new Integer(2), new Boolean(false)},
-	    {"Jane", "White",
-	     "Speed reading", new Integer(20), new Boolean(true)},
-	    {"Joe", "Brown",
-	     "Pool", new Integer(10), new Boolean(false)}
-        };
-         */
-        
         DefaultTableCellRenderer r = new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object
@@ -1420,10 +1487,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         c.gridy = 2;
         gridbag.setConstraints(txt, c);
         ct.add(txt);
-        
-        // Space
-        //AppUI.hr(oct, 22);
-        
+              
         final MyTextField tf1 = new MyTextField("", false, true);
         tf1.disable();
         tf1.setFilepickerListener(new MouseAdapter() {
@@ -1695,6 +1759,25 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         bp.add(cb.getButton(), gbc);
         
         continueButton = cb;
+        
+        return bp;
+    }
+    
+    public JPanel getOneButtonPanelCustom(String name0, ActionListener al0) {
+        JPanel bp = new JPanel();
+        AppUI.noOpaque(bp);
+        
+        bp.setLayout(new GridBagLayout());
+        
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.anchor = GridBagConstraints.SOUTH;
+        gbc.weighty = 1;
+
+        MyButton cb = new MyButton(name0);
+        cb.addListener(al0);
+        
+        bp.add(cb.getButton(), gbc);           
+        AppUI.vr(bp, 26);
         
         return bp;
     }
@@ -2461,3 +2544,78 @@ public class AdvancedClient implements ActionListener, ComponentListener {
     }
    */
 }
+
+
+class FancyProgressBar extends BasicProgressBarUI {
+
+    @Override
+    protected Dimension getPreferredInnerVertical() {
+        return new Dimension(20, 146);
+    }
+
+    @Override
+    protected Dimension getPreferredInnerHorizontal() {
+        return new Dimension(146, 20);
+    }
+
+
+
+    @Override
+    protected void paintDeterminate(Graphics g, JComponent c) {
+
+        Graphics2D g2d = (Graphics2D) g.create();
+
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        int iStrokWidth = 3;
+        g2d.setStroke(new BasicStroke(iStrokWidth, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        g2d.setColor(Color.RED);
+        g2d.setBackground(Color.BLUE);
+
+        int width = progressBar.getWidth();
+        int height = progressBar.getHeight();
+
+        RoundRectangle2D outline = new RoundRectangle2D.Double((iStrokWidth / 2), (iStrokWidth / 2),
+                width - iStrokWidth, height - iStrokWidth,
+                height, height);
+
+        g2d.draw(outline);
+
+        int iInnerHeight = height - (iStrokWidth * 4);
+        int iInnerWidth = width - (iStrokWidth * 4);
+
+        double dProgress = progressBar.getPercentComplete();
+        if (dProgress < 0) {
+            dProgress = 0;
+        } else if (dProgress > 1) {
+            dProgress = 1;
+        }
+
+        iInnerWidth = (int) Math.round(iInnerWidth * dProgress);
+
+        int x = iStrokWidth * 2;
+        int y = iStrokWidth * 2;
+
+        Point2D start = new Point2D.Double(x, y);
+        Point2D end = new Point2D.Double(x, y + iInnerHeight);
+
+        float[] dist = {0.0f, 0.25f, 1.0f};
+        Color[] colors = {Color.RED, Color.YELLOW, Color.GREEN};
+        LinearGradientPaint p = new LinearGradientPaint(start, end, dist, colors);
+
+        g2d.setPaint(p);
+
+        RoundRectangle2D fill = new RoundRectangle2D.Double(iStrokWidth * 2, iStrokWidth * 2,
+                iInnerWidth, iInnerHeight, iInnerHeight, iInnerHeight);
+
+        g2d.fill(fill);
+
+        g2d.dispose();
+    }
+
+    @Override
+    protected void paintIndeterminate(Graphics g, JComponent c) {
+        super.paintIndeterminate(g, c); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    }

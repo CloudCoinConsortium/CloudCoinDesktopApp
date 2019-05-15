@@ -214,6 +214,9 @@ public class AppUI {
         return new Color(0x5FA8FF);
     }
     
+    public static Color getColor10() {
+        return new Color(0x777777);
+    }
     
     public static Color getDisabledColor() {
         return new Color(0xCCCCCC);
@@ -227,6 +230,38 @@ public class AppUI {
         return Color.RED;
     }
     
+    public static Color blendColors(Color c0, Color c1) {  
+        double r0 = (double) c0.getRed() / 255.0;
+        double g0 = (double) c0.getGreen()  / 255.0;
+        double b0 = (double) c0.getBlue() / 255.0;
+        double a0 = (double) c0.getAlpha() / 255.0;
+                
+        double r1 = (double) c1.getRed() / 255.0;
+        double g1 = (double) c1.getGreen()  / 255.0;
+        double b1 = (double) c1.getBlue() / 255.0;
+        
+        
+        double r = (r0 * a0) + (r1 * (1 - a0));
+        double g = (g0 * a0) + (g1 * (1 - a0));
+        double b = (b0 * a0) + (b1 * (1 - a0));
+     
+        int ir = (int) (r * 255.0);
+        int ig = (int) (g * 255.0);
+        int ib = (int) (b * 255.0);
+         
+        Color nc = new Color(ir,ig,ib);
+       
+        return nc;
+    }
+    
+    
+    public static double getBoxWidth() {
+        return AppUI.tw / 3;
+    }
+    
+    public static double getBoxHeight() {
+        return AppUI.th / 16;
+    }
     
     public static void setBoxLayout(Component c, boolean isVertical) {
         int direction = isVertical ? BoxLayout.PAGE_AXIS : BoxLayout.LINE_AXIS;
