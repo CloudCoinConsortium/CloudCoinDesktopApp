@@ -48,6 +48,7 @@ public class AppUI {
     
     
     static Font regFont, semiBoldFont, boldFont;
+    static Font osRegFont, osSemiBoldFont;
     
     public static void init(int tw, int th) {
         AppUI.tw = tw;
@@ -65,6 +66,13 @@ public class AppUI {
             regFont = Font.createFont(Font.TRUETYPE_FONT, cl.getResourceAsStream("resources/Montserrat-Regular.otf"));
             
             GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(regFont);
+            GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(boldFont);
+            GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(semiBoldFont);
+            
+            
+            osRegFont = Font.createFont(Font.TRUETYPE_FONT, cl.getResourceAsStream("resources/OpenSans-Regular.ttf"));
+            osSemiBoldFont = Font.createFont(Font.TRUETYPE_FONT, cl.getResourceAsStream("resources/OpenSans-Semibold.ttf"));
+            
         } catch(Exception e){
             System.out.println("Failed to load font: " + e.getMessage());
         }
@@ -355,13 +363,32 @@ public class AppUI {
         c.setFont(regFont.deriveFont(Font.PLAIN, size));
     }
     
-    public static void setBoldFont(Component c, int size) {
-        c.setFont(boldFont.deriveFont(Font.BOLD, size));
+    public static void setSemiBoldFont(Component c, int size) {
+        c.setFont(semiBoldFont.deriveFont(Font.PLAIN, size));
     }
+    
+    public static void setBoldFont(Component c, int size) {
+        c.setFont(boldFont.deriveFont(Font.PLAIN, size));
+    }
+    
+    
     
     public static void setCommonFont(Component c) {
         AppUI.setFont(c, 25);
     }
+    
+    public static void setCommonBoldFont(Component c) {
+        AppUI.setBoldFont(c, 25);
+    }
+    
+    public static void setCommonTableFont(Component c) {
+        c.setFont(osRegFont.deriveFont(Font.PLAIN, 14));
+    }
+    
+    public static void setCommonBoldTableFont(Component c) {
+        c.setFont(osSemiBoldFont.deriveFont(Font.PLAIN, 14));
+    }
+    
     
     public static Component hr(int size) {
         return Box.createRigidArea(new Dimension(0, size));

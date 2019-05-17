@@ -61,6 +61,8 @@ public class MyTextField  {
     
     public void setData(String text) {
         tf.setText(text);
+        tf.clearPlaceholder();
+        tf.repaint();
     }
     
     public JPanel makeUI(String placeholder) {

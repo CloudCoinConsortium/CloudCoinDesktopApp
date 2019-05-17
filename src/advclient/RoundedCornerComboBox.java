@@ -54,7 +54,6 @@ public class RoundedCornerComboBox {
         foreground = background;
         
         UIManager.put("ComboBox.foreground", foreground);
-        UIManager.put("ComboBox.background", background);
         UIManager.put("ComboBox.selectionForeground", Color.BLACK);
         UIManager.put("ComboBox.selectionBackground", background);
         UIManager.put("ComboBox.border", new RoundedCornerBorder(this.outerBgColor));
@@ -62,6 +61,7 @@ public class RoundedCornerComboBox {
         combo1 = new JComboBox<>();
         AppUI.setSize(combo1, (int) AppUI.getBoxWidth(), (int) AppUI.getBoxHeight());  
         AppUI.setFont(combo1, 18);
+        AppUI.setBackground(combo1, background);
         AppUI.setColor(combo1, AppUI.getDisabledColor2());
         combo1.setUI(new ColorArrowUI());
         
@@ -154,10 +154,15 @@ class HeavyWeightContainerListener implements PopupMenuListener {
         System.out.println("inv");
         JComboBox c = (JComboBox) e.getSource();
         c.setBorder(new RoundedCornerBorder(this.outerBgColor));
+        //AppUI.setColor(c, AppUI.getDisabledColor2());
+        //c.repaint();
     }
     
     @Override 
-    public void popupMenuCanceled(PopupMenuEvent e) {}
+    public void popupMenuCanceled(PopupMenuEvent e) {
+        JComboBox combo1 = (JComboBox) e.getSource();
+        
+    }
 }
 
 class RoundedCornerBorder extends AbstractBorder {
@@ -244,6 +249,9 @@ class RoundedCornerBorder1 extends RoundedCornerBorder {
         g2.draw(round);
         g2.dispose();
     }
+    
+   
+    
 }
 
 class RoundedCornerBorder2 extends RoundedCornerBorder {
@@ -260,11 +268,14 @@ class RoundedCornerBorder2 extends RoundedCornerBorder {
         int w = width  - 1 + 1;
         int h = height - 1;
 
+        
         g2.setPaint(outerBgColor);
-        //g2.setPaint(Color.RED);
+        //g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.0f));
         Area corner = new Area(new Rectangle2D.Float(x, y, width, height));
         g2.fill(corner);
-        
+   //     g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));
+       
+
         Path2D.Float p = new Path2D.Float();
         p.moveTo(x, y );
         p.lineTo(x, y + h - r);
@@ -276,6 +287,7 @@ class RoundedCornerBorder2 extends RoundedCornerBorder {
         Area round = new Area(p);
 
         g2.setPaint(c.getBackground());
+       // g2.setPaint(Color.RED);
         g2.fill(round);
 
         //g2.setPaint(c.getForeground());
@@ -285,6 +297,21 @@ class RoundedCornerBorder2 extends RoundedCornerBorder {
                 //g2.setPaint(Color.RED);
         g2.drawLine(x + 1, y, x + width - 2, y);
         g2.dispose();
+    }
+    
+    
+    @Override 
+    public Insets getBorderInsets(Component c) {
+        return new Insets(4, 8, 4, 8);
+        //return new Insets(0, 0, 0, 0);
+
+    }
+    
+    @Override 
+    public Insets getBorderInsets(Component c, Insets insets) {
+        insets.set(4, 8, 4, 8);
+
+        return insets;
     }
 }
 
@@ -344,7 +371,7 @@ class ComboBoxRenderer extends JPanel implements ListCellRenderer {
         }
             
         if (isSelected) {
-            text.setBackground(AppUI.getColor3());
+            text.setBackground(AppUI.getColor9());
         } else {
             text.setBackground(color);
         }

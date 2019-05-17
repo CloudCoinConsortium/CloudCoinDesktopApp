@@ -73,11 +73,11 @@ public class MyButton {
             }
         };
         
-        AppUI.roundCorners(button, AppUI.getColor0(), 20, cb);
+        AppUI.roundCorners(button, AppUI.getColor0(), 18, cb);
         AppUI.noOpaque(button);
         button.setContentAreaFilled(false);
         AppUI.setSize(button, 224, 50);
-        AppUI.setBoldFont(button, 18);
+        AppUI.setBoldFont(button, 20);
         AppUI.setHandCursor(button);
  
         JPanel p = new JPanel();

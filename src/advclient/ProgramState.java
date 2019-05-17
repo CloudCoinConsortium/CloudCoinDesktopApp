@@ -26,6 +26,7 @@ public class ProgramState {
     final public static int SCREEN_DEPOSIT = 11;
     final public static int SCREEN_WITHDRAW = 12;
     final public static int SCREEN_IMPORTING = 13;
+    final public static int SCREEN_IMPORT_DONE = 14;
     
     
     final static int CB_STATE_INIT = 1;
@@ -58,6 +59,13 @@ public class ProgramState {
     Wallet dstWallet;
     Wallet srcWallet;
     
+    boolean isEchoFinished;
+    boolean isShowCoinsFinished;
+    
+    int statToBankValue, statToBank, statFailed;
+    
+    String receiptId;
+    
     public ProgramState() {
         currentScreen = SCREEN_AGREEMENT;
         cwalletRecoveryRequested = cwalletPasswordRequested = false;
@@ -73,9 +81,14 @@ public class ProgramState {
         typedMemo = "";
         files = new ArrayList<String>();
         dstWallet = srcWallet = null;
+        isEchoFinished = false;
+        isShowCoinsFinished = false;
+        statToBankValue = statToBank = statFailed = 0;
         
         isDefaultWalletBeingCreated = false;
         isAddingWallet = false;
+        
+        receiptId = "";
     }
     
 }
