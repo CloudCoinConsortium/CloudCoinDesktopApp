@@ -402,6 +402,10 @@ public class AppUI {
         c.setCursor(new Cursor(Cursor.HAND_CURSOR));
     }
     
+    public static void setDefaultCursor(Component c) {
+        c.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+    }
+    
     public static void setColor(Component c, Color color) {
         c.setForeground(color);
     }

@@ -1438,34 +1438,53 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         // Scrollbar & Table
         UIManager.put("ScrollBar.background", new ColorUIResource(AppUI.getColor0()));
         DefaultTableCellRenderer r = new DefaultTableCellRenderer() {
+            JLabel lbl;
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                 super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                if (row % 2 == 0) {
-                    AppUI.setBackground(this, AppUI.getColor3());
+                
+                lbl = (JLabel) this;
+                
+                
+               
+                
+                if (column == 0) {
+                    AppUI.setColor(lbl, AppUI.getColor0());
+                    AppUI.underLine(lbl);
+                    //AppUI.setHandCursor();
+                   
+                    
                 } else {
-                    AppUI.setBackground(this, AppUI.getColor4());
+                    AppUI.setColor(lbl, Color.BLACK);
+                }
+                
+                if (row % 2 == 0) {
+                    AppUI.setBackground(lbl, AppUI.getColor3());
+                } else {
+                    AppUI.setBackground(lbl, AppUI.getColor4());
                 }
                 
                 if (column == 0) {
-                    setHorizontalAlignment(JLabel.LEFT);
+                    
+                    lbl.setHorizontalAlignment(JLabel.LEFT);
                 } else if (column == 1) {
-                    setHorizontalAlignment(JLabel.CENTER);
+                    lbl.setHorizontalAlignment(JLabel.CENTER);
                 } else {
                     String d = (String) value;
                     try {
                         String total = AppCore.formatNumber(Integer.parseInt(d));
-                        setText(total);
+                        lbl.setText(total);
                     } catch (NumberFormatException e) {
                         
                     }
                   
-                    setHorizontalAlignment(JLabel.RIGHT);
+                    lbl.setHorizontalAlignment(JLabel.RIGHT);
                 }
                 
-                AppUI.setMargin(this, 8);
-
-                return this;
+                AppUI.setHandCursor(lbl);
+                AppUI.setMargin(lbl, 8);
+  
+                return lbl;
             }
         };
   
@@ -1480,8 +1499,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             };
             
             @Override
-            public String getColumnName(int col) {
-                
+            public String getColumnName(int col) {        
                 return columnNames[col];
             }
             
@@ -1489,9 +1507,14 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             public Class<?> getColumnClass(int columnIndex) {
                 return String.class;
             }
+            
+            public boolean isCellEditable(int row, int column){  
+               return false;  
+            }
         };
         
         final JTable table = new JTable(model);
+    //    table.setCellSelectionEnabled(true);
          //final JTable table = new JTable(data, columnNames);
         for (int row = 0; row < model.getRowCount(); row++) {
             for (int col = 0; col < model.getColumnCount(); col++) {
@@ -1509,14 +1532,78 @@ public class AdvancedClient implements ActionListener, ComponentListener {
        // table.setAutoResizeMode(JTable.AUTO_RESIZE_ON);
         table.getColumnModel().getColumn(0).setPreferredWidth(240);
         table.getColumnModel().getColumn(1).setPreferredWidth(100);
+        
+        
+        
+        MouseAdapter ma = new MouseAdapter() {
+            private int prevcolumn = -1;
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+              //  ps.isDefaultWalletBeingCreated = false;
+               // ps.currentScreen = ProgramState.SCREEN_CREATE_WALLET;
+                //showScreen();
+                int column = table.columnAtPoint(e.getPoint());
+                int row = table.rowAtPoint(e.getPoint());
+                System.out.println("xxx=" + row + "," + column + " x=" + trs[row][5]);
+                
+                
+                
+            }   
+            
+            public void mouseMoved(MouseEvent e) {
+
+                
+              //  AppUI.setHandCursor(table);
+              
+                int column = table.columnAtPoint(e.getPoint());
+               
+                System.out.println("prev="+prevcolumn + " c="+column);
+                if (prevcolumn == column)
+                    return;
+               
+                prevcolumn = column;
+                
+                if (column == 0) {
+                    AppUI.setHandCursor(table);
+                } else {
+                    AppUI.setDefaultCursor(table);
+                }
+                
+                
+                
+             //   table.revalidate();
+               // table.repaint();
+              //  int row = table.rowAtPoint(e.getPoint());
+           //     table.getColumnModel().getColumn(0).
+                //System.out.println("xx=" + column + " r=" + row);
+                //JPanel p = (JPanel) e.getSource();
+                //p = (JPanel) p.getParent();
+                //AppUI.roundCorners(p, AppUI.getColor5(), 40);
+            }
+            
+            public void mouseExited(MouseEvent e) {
+                
+                //AppUI.setDefaultCursor(table);
+                //JPanel p = (JPanel) e.getSource();
+                //p = (JPanel) p.getParent();
+                //AppUI.roundCorners(p, AppUI.getColor3(), 40);
+            }
+        };
+        
+        
+        table.addMouseListener(ma);
+        table.addMouseMotionListener(ma);
+        
+        
+        
         //table.setIntercellSpacing(new Dimension(20, 20));
         //table.setPreferredScrollableViewportSize(table.getPreferredSize());
         
         //table.setPreferredScrollableViewportSize(new Dimension(500, 200));
         
         // Header
-        JTableHeader header = table.getTableHeader();
-       
+        JTableHeader header = table.getTableHeader();    
         AppUI.setColor(header, Color.WHITE);
         AppUI.noOpaque(header);
         //AppUI.setFont(table, 14);
