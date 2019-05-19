@@ -542,9 +542,6 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 
                 public void mouseReleased(MouseEvent evt) {
                     JMenuItem jMenuItem = (JMenuItem) evt.getSource();
-                   // AppUI.setBackground(ficon, savedColor);
-                   // ficon.setOpaque(false);
-                  //  ficon.repaint();
                     popupMenu.setVisible(false);
                     ps.currentScreen = ProgramState.SCREEN_BACKUP;
                     showScreen();

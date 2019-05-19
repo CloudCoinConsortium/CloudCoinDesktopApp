@@ -86,7 +86,7 @@ public class RoundedCornerComboBox {
         AppUI.setBackground(combo1, background);
         AppUI.setColor(combo1, AppUI.getDisabledColor2());
         combo1.setBorder(new RoundedCornerBorder(this.outerBgColor));
-        combo1.setUI(new ColorArrowUI());
+        combo1.setUI(new ColorArrowUI(background));
         
         Object o = combo1.getAccessibleContext().getAccessibleChild(0);
         if (o instanceof JComponent) {
@@ -95,9 +95,7 @@ public class RoundedCornerComboBox {
             c.setForeground(foreground);
             c.setBackground(background);
         }
-    
-        
-        
+
         combo1.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
             }
@@ -345,6 +343,12 @@ class RoundedCornerBorder2 extends RoundedCornerBorder {
 }
 
 class ColorArrowUI extends BasicComboBoxUI {
+    Color background;
+    
+    ColorArrowUI(Color background) {
+        this.background = background;
+    }
+    
     @Override 
     protected JButton createArrowButton() {
         JButton button = new JButton();
@@ -357,9 +361,12 @@ class ColorArrowUI extends BasicComboBoxUI {
         AppUI.setHandCursor(button);
         AppUI.setMargin(button, 0);
 
+        //button.setBounds(100,100,100,100);
         try {
             Image img = ImageIO.read(getClass().getClassLoader().getResource("resources/arrow.png"));
             button.setIcon(new ImageIcon(img));
+            button.setForeground(background);
+            button.setText(" ");
         } catch (Exception ex) {
     
         }
