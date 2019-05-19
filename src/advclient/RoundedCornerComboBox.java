@@ -118,33 +118,11 @@ public class RoundedCornerComboBox {
         
         
         combo1.setModel(cbm);
-        /*
-        combo1.setModel(new DefaultComboBoxModel<String>() {
-            private static final long serialVersionUID = 1L;
-            boolean selectionAllowed = true;
 
-            public void xx() {
-                System.out.println("xxx");
-            }
-            
-            @Override
-            public void setSelectedItem(Object anObject) {
-
-                if (!placeholder.equals(anObject)) {
-                    AppUI.setColor(combo1, Color.BLACK);
-                    super.setSelectedItem(anObject);
-                } else if (selectionAllowed) {
-                    selectionAllowed = false;
-                    super.setSelectedItem(anObject);
-                }
-            }
-        });*/
     
         
         setOptions(this.options);
 
-        
-       // combo1.setSelectedItem(null);
         
         JPanel p = new JPanel();
         AppUI.setBoxLayout(p, false);
@@ -264,19 +242,7 @@ class RoundedCornerBorder extends AbstractBorder {
         g2.draw(round);
         g2.dispose();
     }
-   /* 
-    @Override 
-    public Insets getBorderInsets(Component c) {
-        return new Insets(4, 8, 4, 8);
 
-    }
-   
-    @Override 
-    public Insets getBorderInsets(Component c, Insets insets) {
-        insets.set(4, 8, 4, 8);
-
-        return insets;
-    }*/
     
 }
 
