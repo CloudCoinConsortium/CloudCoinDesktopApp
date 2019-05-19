@@ -81,6 +81,8 @@ public class ProgramState {
     
     int sendType;
     
+    boolean isUpdatedWallets;
+    
     public ProgramState() {
         currentScreen = SCREEN_AGREEMENT;
         cwalletRecoveryRequested = cwalletPasswordRequested = false;
@@ -112,6 +114,8 @@ public class ProgramState {
         typedRemoteWallet = "";
         
         sendType = SEND_TYPE_WALLET;
+        
+        isUpdatedWallets = false;
     }
     
 }

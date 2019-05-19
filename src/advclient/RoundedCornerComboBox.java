@@ -208,7 +208,6 @@ class HeavyWeightContainerListener implements PopupMenuListener {
                     Container top = pop.getTopLevelAncestor();
                     if (top instanceof JWindow) {
                         //http://ateraimemo.com/Swing/DropShadowPopup.html
-                        System.out.println("HeavyWeightContainer");
                         //((JWindow) top).setBackground(new Color(0x0, true));
                     }
                 }
@@ -218,7 +217,6 @@ class HeavyWeightContainerListener implements PopupMenuListener {
         
     @Override 
     public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
-        System.out.println("inv");
         JComboBox c = (JComboBox) e.getSource();
         c.setBorder(new RoundedCornerBorder(this.outerBgColor));
         cbm.drop();

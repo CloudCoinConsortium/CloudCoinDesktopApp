@@ -18,6 +18,8 @@ import global.cloudcoin.ccbank.Sender.SenderResult;
 import global.cloudcoin.ccbank.ServantManager.ServantManager;
 import global.cloudcoin.ccbank.ShowCoins.ShowCoins;
 import global.cloudcoin.ccbank.ShowCoins.ShowCoinsResult;
+import global.cloudcoin.ccbank.ShowEnvelopeCoins.ShowEnvelopeCoins;
+import global.cloudcoin.ccbank.ShowEnvelopeCoins.ShowEnvelopeCoinsResult;
 import global.cloudcoin.ccbank.Unpacker.Unpacker;
 import global.cloudcoin.ccbank.Unpacker.UnpackerResult;
 import global.cloudcoin.ccbank.Vaulter.Vaulter;
@@ -78,6 +80,8 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * 
@@ -111,6 +115,8 @@ public class AdvancedClient implements ActionListener, ComponentListener {
     JProgressBar pbar;
     JLabel depositText;
     
+    JFrame mainFrame;
+    
     public AdvancedClient() {
         initSystem();
                 
@@ -138,7 +144,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         ps = new ProgramState();
 
         String home = System.getProperty("user.home");
-        home += "\\DebugX";
+        home += File.separator + "DebugX";
         
         sm = new ServantManager(wl, home);
         if (!sm.init()) {
@@ -159,9 +165,8 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         
     }
     
+    
     public void showCoinsDone(int[][] counters) {
-        System.out.println("ShowCoins DONE");
-        
         Wallet w = wallets[ps.currentWalletIdx];
         JLabel cntLabel = (JLabel) w.getuiRef();
      
@@ -184,21 +189,32 @@ public class AdvancedClient implements ActionListener, ComponentListener {
     }
     
     
+    public void setTotalCoins() {
+        int total = 0;
+        for (int i = 0; i < wallets.length; i++) {
+            total += wallets[i].getTotal();
+            totalText.setText("" + total);
+        }
+        
+        totalText.repaint();
+    }
+    
     public void showCoinsGoNext() {
         if (wallets.length > ps.currentWalletIdx + 1) {
             ps.currentWalletIdx++;
-            sm.changeServantUser("ShowCoins", wallets[ps.currentWalletIdx].getName());
+            
             if (!wallets[ps.currentWalletIdx].isSkyWallet()) {
+                sm.changeServantUser("ShowCoins", wallets[ps.currentWalletIdx].getName());
                 sm.startShowCoinsService(new ShowCoinsCb());
             } else {
-                JLabel cntLabel = (JLabel) wallets[ps.currentWalletIdx].getuiRef();
-                cntLabel.setText("25,500");
-                showCoinsGoNext();
-            }       
+                sm.changeServantUser("ShowEnvelopeCoins", wallets[ps.currentWalletIdx].getParent().getName());
+                sm.startShowSkyCoinsService(new ShowEnvelopeCoinsCb(), wallets[ps.currentWalletIdx].getIDCoin().sn);
+            }         
         } else {
-            totalText.setText("25,500");
             ps.isShowCoinsFinished = true;
         }
+        
+        setTotalCoins();
     }
     
     public void setCounters(int[][] counters) {
@@ -213,7 +229,6 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         if (ps.isDefaultWalletBeingCreated)
             ps.typedWalletName = Config.DIR_DEFAULT_USER;
         
-        System.out.println("typed=" + ps.typedWalletName);
         if (!sm.initUser(ps.typedWalletName, ps.typedEmail, ps.typedPassword)) {
             ps.errText = "Failed to init Wallet"; 
             return;
@@ -254,7 +269,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         AppUI.setSize(mainPanel, tw, th);
         AppUI.setBackground(mainPanel, AppUI.getColor1());
     
-        JFrame mainFrame = AppUI.getMainFrame();
+        mainFrame = AppUI.getMainFrame();
         mainFrame.setContentPane(mainPanel);
     }
     
@@ -374,12 +389,14 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             final JButton b0 = new JButton("Deposit");
             b0.setContentAreaFilled(false);
             b0.setFocusPainted(false);
+            b0.setBorderPainted(false);
+            AppUI.noOpaque(b0);
             AppUI.setTitleBoldFont(b0, 32);
             AppUI.setHandCursor(b0);
             if (isDepositing()) {
-                AppUI.underLine(b0);
+           //     AppUI.underLine(b0);
             } else {
-                AppUI.noUnderLine(b0);
+          //      AppUI.noUnderLine(b0);
             }
             
             gridbag.setConstraints(b0, c);
@@ -389,6 +406,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             // Transfer Button
             final JButton b1 = new JButton("Transfer");
             b1.setContentAreaFilled(false);
+            b1.setBorderPainted(false);
             b1.setFocusPainted(false);
             AppUI.setTitleBoldFont(b1, 32);
             AppUI.setHandCursor(b1);
@@ -510,23 +528,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
     }
     
     public void showScreen() {
-    //    ps.currentScreen = ProgramState.SCREEN_IMPORTING;  
         clear();
-      //    showImportDoneScreen();
-       // showDepositScreen();
-   //     System.out.println("show");
-       //   showImportingScreen();
-    //    showTransactionsScreen();
-    //    showCreateSkyWalletScreen();
-     //   showPrepareToAddWalletScreen();
-    //    showDefaultScreen();
-      //  showWalletCreatedScreen();
-      //  showSetEmailScreen();
-     //   showUnderstandPasswordScreen();
-        //ps.isDefaultWalletBeingCreated = true;
-        //showCreateWalletScreen();
-     //   showSetPasswordScreen();
-    //    if (1==1)             return;
         switch (ps.currentScreen) {
             case ProgramState.SCREEN_AGREEMENT:
                 resetState();
@@ -549,6 +551,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 showSetEmailScreen();
                 break;
             case ProgramState.SCREEN_WALLET_CREATED:
+                ps.isUpdatedWallets = false;
                 showWalletCreatedScreen();
                 break;
             case ProgramState.SCREEN_PREPARE_TO_ADD_WALLET:
@@ -572,6 +575,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 showImportingScreen();
                 break;
             case ProgramState.SCREEN_IMPORT_DONE:
+                ps.isUpdatedWallets = false;
                 showImportDoneScreen();
                 break;
             case ProgramState.SCREEN_SUPPORT:
@@ -582,12 +586,12 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 showConfirmTransferScreen();
                 break;
             case ProgramState.SCREEN_TRANSFER_DONE:
+                ps.isUpdatedWallets = false;
                 showTransferDoneScreen();
                 break;
                 
         }
         
-        System.out.println("EXIT " + ps.currentScreen);
         headerPanel.repaint();
         headerPanel.revalidate();
 
@@ -691,30 +695,24 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 }
                 
                 wl.debug(ltag, "Going here");
-                System.out.println("Go here");
                 while (!ps.isEchoFinished || !ps.isShowCoinsFinished) {
                     try {
                         Thread.sleep(500);
                     } catch (InterruptedException e) {}
-                    System.out.println("Not " + ps.isEchoFinished + " " + ps.isShowCoinsFinished);
+
                 }
                 
-                System.out.println("Go here2");
                 ps.dstWallet.setPassword(ps.typedPassword);
                 sm.setActiveWalletObj(ps.dstWallet);
                 
-                System.out.println("Go here3");
                 depositText.setText("Moving coins ...");
                 for (String filename : ps.files) {
                     AppCore.moveToFolder(filename, Config.DIR_IMPORT, sm.getActiveWallet().getName());
                 }
-                
-                System.out.println("Go here4");
+
                 depositText.setText("Unpacking coins ...");
+                depositText.repaint();
                 sm.startUnpackerService(new UnpackerCb());
-                
-                 System.out.println("Go here5");
-              //  showCoinsGoNext();
             }
         });
         
@@ -859,6 +857,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         
         JPanel bp = getTwoButtonPanelCustom("Next Deposit", "Continue", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+                resetState();
                 ps.currentScreen = ProgramState.SCREEN_DEPOSIT;
                 showScreen();
             }
@@ -1011,7 +1010,6 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 ps.srcWallet.setPassword(ps.typedSrcPassword);
                 ps.dstWallet.setPassword(ps.typedDstPassword);
                 
-                System.out.println("zzzDST=" +  ps.dstWallet.getPassword());
                 if (ps.sendType == ProgramState.SEND_TYPE_FOLDER) {
                     
                     sm.setActiveWalletObj(ps.srcWallet);
@@ -1021,14 +1019,9 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                         sm.startExporterService(Config.TYPE_STACK, ps.typedAmount, Config.DEFAULT_TAG, new ExporterCb());
                     }
                 } else if (ps.sendType == ProgramState.SEND_TYPE_WALLET) {
-                    System.out.println("Send wallet...");
                     sm.setActiveWalletObj(ps.srcWallet);
-
-                    System.out.println("zzppasz=" + sm.getActiveWallet().getName());
                     sm.transferCoins(ps.srcWallet.getName(), ps.dstWallet.getName(), null, ps.typedAmount, ps.typedMemo,  new SenderCb(), new ReceiverCb());
                 }
-                //ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
-                //showScreen();
             }
         });
   
@@ -1320,21 +1313,30 @@ public class AdvancedClient implements ActionListener, ComponentListener {
     }
     
     public void updateWalletAmount() {
-        System.out.println("zssa");
-   
         if (wallets == null)
             wallets = sm.getWallets();
+       
+        if (ps.isUpdatedWallets) {
+            for (int i = 0; i < wallets.length; i++) {
+                JLabel cntLabel = (JLabel) wallets[i].getuiRef();
+                String strCnt = AppCore.formatNumber(wallets[i].getTotal());
+                cntLabel.setText(strCnt);
+            }
+            
+            setTotalCoins();
+            return;
+        }
 
+        ps.isUpdatedWallets = true;
+        
         if (wallets.length > 0) {
             ps.currentWalletIdx = 0;
-            System.out.println("start " +wallets[ps.currentWalletIdx].getName());
-            //sm.setActiveWallet(wallets[ps.currentWalletIdx].getName());
-            sm.changeServantUser("ShowCoins", wallets[ps.currentWalletIdx].getName());
-            System.out.println("finish " +wallets[ps.currentWalletIdx].getName());
             if (!wallets[ps.currentWalletIdx].isSkyWallet()) {
+                sm.changeServantUser("ShowCoins", wallets[ps.currentWalletIdx].getName());
                 sm.startShowCoinsService(new ShowCoinsCb());
             } else {
-                //
+                sm.changeServantUser("ShowEnvelopeCoins", wallets[ps.currentWalletIdx].getParent().getName());
+                sm.startShowSkyCoinsService(new ShowEnvelopeCoinsCb(), wallets[ps.currentWalletIdx].getIDCoin().sn);
             }      
         }
     }
@@ -1697,7 +1699,6 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 int srcIdx = cboxfrom.getSelectedIndex() - 1;
                 int dstIdx = cboxto.getSelectedIndex() - 1;
                 
-                System.out.println("srcI=" + srcIdx +  " ds=" + dstIdx);
                 if (srcIdx < 0 || srcIdx >= wallets.length || dstIdx < 0 || dstIdx >= wallets.length + 2) {
                     ps.errText = "Please select from and to Wallet";
                     showScreen();
@@ -1751,7 +1752,6 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                     ps.typedSrcPassword = passwordSrc.getText();
                 }
                 
-                System.out.println("ss=" + ps.typedAmount + " total=" + srcWallet.getTotal() + " name=" + srcWallet.getName());
                 if (ps.typedAmount > srcWallet.getTotal()) {
                     ps.errText = "Insufficient funds";
                     showScreen();
@@ -1782,7 +1782,6 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                     // Wallet
                     Wallet dstWallet = wallets[dstIdx];
                     if (dstWallet.isEncrypted()) {
-                        System.out.println("sss=" + dpText.getText() + " n="+dstWallet.getName());
                         if (passwordDst.getText().isEmpty()) {
                             ps.errText = "To Password is empty";
                             showScreen();
@@ -1920,7 +1919,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         c.gridy = y;     
         final MyTextField memo = new MyTextField("Optional", false);
         gridbag.setConstraints(memo.getTextField(), c);
-        System.out.println("m="+ps.typedMemo);
+
         if (!ps.typedMemo.isEmpty())
             memo.setData(ps.typedMemo);
         oct.add(memo.getTextField());
@@ -2062,7 +2061,6 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                     String wHash = w.getPasswordHash();
                     String providedHash = AppCore.getMD5(password.getText());
                     
-                    System.out.println("xxxpass=" + w.getPasswordHash() + " n="+w.getName() + " p=" + providedHash);
                     if (wHash == null) {
                         ps.errText = "Wallet is corrupted";
                         showScreen();
@@ -2205,6 +2203,9 @@ public class AdvancedClient implements ActionListener, ComponentListener {
     
     
     public void showTransactionsScreen() {
+        
+       // sm.startFrackFixerService(new FrackFixerCb());
+        
         showLeftScreen();
  
         Wallet w = sm.getActiveWallet();     
@@ -2335,6 +2336,41 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             public void mouseReleased(MouseEvent e) {
                 int column = table.columnAtPoint(e.getPoint());
                 int row = table.rowAtPoint(e.getPoint());
+                
+                if (column != 0)
+                    return;
+                
+                String hash = trs[row][5];
+                
+                String html = AppCore.getReceiptHtml(hash, ps.currentWallet.getName());
+                if (html == null)
+                    return;
+                
+                
+                final JDialog f = new JDialog(mainFrame, "Receipt", true);
+                AppUI.setBackground((JComponent) f.getContentPane(), Color.RED);
+                AppUI.noOpaque((JComponent) f.getContentPane());
+                AppUI.setSize(f, (int) (tw / 1.6), (int) (th / 1.6)); 
+
+                JTextPane tp = new JTextPane();
+                
+                AppUI.setFont(tp, 12);
+                String fontfamily = tp.getFont().getFamily();
+
+                tp.setContentType("text/html"); 
+                tp.setText("<html><div style=' font-family:"+fontfamily+"; font-size: 12px'>" + html + "</div></html>"); 
+                tp.setEditable(false); 
+                tp.setBackground(null);
+
+                JScrollPane scrollPane = new JScrollPane(tp);
+
+                f.add(scrollPane);
+                f.pack();
+                f.setLocationRelativeTo(mainFrame);
+                f.setVisible(true);
+                
+ 
+                
             }   
             
             public void mouseMoved(MouseEvent e) {
@@ -2658,13 +2694,6 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 }
                 
                 DNSSn d = new DNSSn(domain, wl);
-                /*
-                if (d.recordExists()) {
-                    ps.errText = "Wallet is already taken";
-                    showScreen();
-                    return;
-                }
-                */
                 if (!d.setRecord(ps.chosenFile, sm.getSR())) {
                     ps.errText = "Failed to set record. Check if the coin is valid";
                     showScreen();
@@ -2677,6 +2706,8 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                     showScreen();
                     return;
                 }
+                
+                sm.initWallets();
                 
                 ps.currentScreen = ProgramState.SCREEN_DEFAULT;
                 showScreen();
@@ -2972,10 +3003,8 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         AppUI.setSize(subInnerCore, tw - 260, th - headerHeight - 120);
         
         corePanel.add(mwrapperPanel);
-        
-        //System.out.println("DATA= " + ps.isShowCoinsFinished + " / " + ps.isEchoFinished);
         updateWalletAmount();
-        
+     
         sm.startEchoService(new EchoCb());
         
         return subInnerCore;
@@ -3059,7 +3088,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         cx.setBounds(0,12,200,100);
 
         // Space
-        AppUI.hr(cx, 10);
+        //AppUI.hr(cx, 10);
         
         // Label
         String name = (wallet == null) ? "Add Wallet" : wallet.getName();
@@ -3148,7 +3177,6 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             MouseAdapter ma = new MouseAdapter() {
                 @Override
                 public void mouseReleased(MouseEvent e) {
-                    System.out.println("set wallet " + fwallet);
                     setActiveWallet(fwallet);
                     ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
                     showScreen();
@@ -3532,12 +3560,10 @@ public class AdvancedClient implements ActionListener, ComponentListener {
     class UnpackerCb implements CallbackInterface {
 	public void callback(Object result) {
             wl.debug(ltag, "Unpacker finisheed");
-            System.out.println("unpacker fffinish");
             
             final Object fresult = result;
             UnpackerResult ur = (UnpackerResult) fresult;
 
-            System.out.println("="+ ur.status);
             if (ur.status == UnpackerResult.STATUS_ERROR) {
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {
@@ -3605,7 +3631,17 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             if (ps.statToBankValue != 0) {
                 sm.getActiveWallet().appendTransaction(ps.typedMemo, ps.statToBankValue, ps.receiptId);
             }
- 
+            
+            EventQueue.invokeLater(new Runnable() {         
+                public void run() {
+                    depositText.setText("Fixing fracked coins ...");
+                    depositText.repaint();
+                }
+            });
+
+            
+            sm.startFrackFixerService(new FrackFixerCb());
+            /*
             if (!sm.getActiveWallet().isEncrypted()) {
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {
@@ -3613,12 +3649,13 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                         showScreen();
                     }
                 });
-               // importState = IMPORT_STATE_DONE;
                 
-
+             //   sm.startFrackFixerService(new FrackFixerCb());
             } else {
                 sm.startVaulterService(new VaulterCb());
-            }       
+            } 
+            */
+            
 	}
     }
 
@@ -3628,16 +3665,23 @@ public class AdvancedClient implements ActionListener, ComponentListener {
 
             if (fr.status == FrackFixerResult.STATUS_ERROR) {
                 wl.error(ltag, "Failed to fix");
-		return;
+		//return;
             }
 
             if (fr.status == FrackFixerResult.STATUS_FINISHED) {
 		if (fr.fixed + fr.failed > 0) {
                     wl.debug(ltag, "Fracker fixed: " + fr.fixed + ", failed: " + fr.failed);
-                    return;
+                 //   return;
 		}
             }
-            
+
+            EventQueue.invokeLater(new Runnable() {         
+                public void run() {
+                    depositText.setText("Fixing lost coins ...");
+                    depositText.repaint();
+                }
+            });
+    
             sm.startLossFixerService(new LossFixerCb());
         }
     }
@@ -3691,15 +3735,11 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             if (vresult.status != VaulterResult.STATUS_FINISHED)
                 ps.errText = "Failed to decrypt/encrypt coins";
             
-            System.out.println("Vaulter finished " + vresult.status);
             EventQueue.invokeLater(new Runnable() {         
                 public void run() {
-                    System.out.println("xxxzCur = " +ps.currentScreen);
                     if (isDepositing()) {
-                        System.out.println("xxxz1 = " + isDepositing());
                         ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
                     } else if (isWithdrawing()) {
-                         System.out.println("xxxz2 = " + isWithdrawing());
                         ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
                     }
                     
@@ -3714,7 +3754,24 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             LossFixerResult lr = (LossFixerResult) result;
             
             wl.debug(ltag, "LossFixer finished");
-            sm.startEraserService(new EraserCb());
+
+            if (sm.getActiveWallet().isEncrypted()) {
+                EventQueue.invokeLater(new Runnable() {         
+                    public void run() {
+                        depositText.setText("Encrypting coins ...");
+                        depositText.repaint();
+                    }
+                });
+                
+                sm.startVaulterService(new VaulterCb());
+            } else {
+                EventQueue.invokeLater(new Runnable() {         
+                    public void run() {
+                        ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
+                        showScreen();
+                    }
+                });
+            }
         }
     }
 				
@@ -3739,17 +3796,13 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             SenderResult sr = (SenderResult) result;
             
             wl.debug(ltag, "Sender finished: " + sr.status);
-            System.out.println("Finished sender " + sr.amount);
-          //  cbState = CB_STATE_DONE;
-
             if (sr.amount > 0) {
                 //sm.getActiveWallet().appendTransaction(sr.memo, sr.amount * -1);
+                Wallet srcWallet = ps.srcWallet;
                 Wallet dstWallet = ps.dstWallet;
-                System.out.println("dst wallet " + dstWallet.getName() + " passw=" + dstWallet.getPassword());
                 if (dstWallet != null) {
                     //dstWallet.appendTransaction(sr.memo, sr.amount);
                     if (dstWallet.isEncrypted()) {
-                        System.out.println("dst wallet Encrypted " + dstWallet.getName());
                         //wl.debug(ltag, "Set wallet to " + currentDstWallet);
                         sm.changeServantUser("Vaulter", dstWallet.getName());
                         sm.startVaulterService(new VaulterCb(), dstWallet.getPassword());          
@@ -3772,6 +3825,16 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             }        
 	}
     }
+    
+    
+    class ShowEnvelopeCoinsCb implements CallbackInterface {
+	public void callback(Object result) {
+            ShowEnvelopeCoinsResult er = (ShowEnvelopeCoinsResult) result;
+ 
+            showCoinsDone(er.counters);
+        }
+    }
+    
     
     class ReceiverCb implements CallbackInterface {
 	public void callback(Object result) {
