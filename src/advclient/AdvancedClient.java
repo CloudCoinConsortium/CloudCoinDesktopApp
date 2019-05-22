@@ -85,7 +85,7 @@ import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.openide.awt.DropDownButtonFactory;
+
 
 
 
@@ -120,7 +120,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
     MyButton continueButton;
     
     JProgressBar pbar;
-    JLabel depositText;
+    JLabel depositText, transferText;
     
     JFrame mainFrame;
     
@@ -167,11 +167,13 @@ public class AdvancedClient implements ActionListener, ComponentListener {
     public void echoDone() {
         ps.isEchoFinished = true;
     }
+       
     
-    public void unpackerDone() {
+    public void setSNs(int[] sns) {
+        Wallet w = wallets[ps.currentWalletIdx];
         
+        w.setSNs(sns);
     }
-    
     
     public void showCoinsDone(int[][] counters) {
         Wallet w = wallets[ps.currentWalletIdx];
@@ -722,6 +724,9 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 resetState();
                 showBackupScreen();
                 break;
+            case ProgramState.SCREEN_SENDING:
+                showSendingScreen();
+                break;
                 
         }
         
@@ -753,8 +758,100 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         pbar.setValue(raidaProcessed);
         
         depositText.setText(totalFilesProcessed + " / " + totalFiles + " Deposited");
-     //   setJraida(totalFilesProcessed, totalFiles);
     }
+    
+    private void setRAIDATransferProgress(int raidaProcessed, int totalFilesProcessed, int totalFiles) {
+        pbar.setVisible(true);
+        pbar.setValue(raidaProcessed);
+        
+        transferText.setText(totalFilesProcessed + " / " + totalFiles + " Deposited");
+    }
+    
+    public void showSendingScreen() {
+        JPanel subInnerCore = getModalJPanel("Transfer in Progress");
+        maybeShowError(subInnerCore);
+
+        JPanel ct = new JPanel();
+        AppUI.noOpaque(ct);
+        subInnerCore.add(ct);
+        
+        GridBagLayout gridbag = new GridBagLayout();
+        GridBagConstraints c = new GridBagConstraints();      
+        ct.setLayout(gridbag);
+        
+        // Password Label
+        JLabel x = new JLabel("Do not close the application until all CloudCoins are transferred!");
+        AppUI.setBoldFont(x, 16);
+        AppUI.setColor(x, AppUI.getErrorColor());
+        c.anchor = GridBagConstraints.CENTER;
+        c.insets = new Insets(20, 0, 4, 0); 
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = 0;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+        
+        transferText = new JLabel("");
+        AppUI.setCommonFont(transferText);
+        c.insets = new Insets(40, 20, 4, 0);
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = 1;
+        gridbag.setConstraints(transferText, c);
+        ct.add(transferText);
+        
+        // ProgressBar
+        pbar = new JProgressBar();
+        pbar.setStringPainted(true);
+        AppUI.setMargin(pbar, 0);
+        AppUI.setSize(pbar, (int) (tw / 2.6f) , 50);
+        pbar.setMinimum(0);
+        pbar.setMaximum(24);
+        pbar.setValue(0);
+        pbar.setUI(new FancyProgressBar());
+        AppUI.noOpaque(pbar);
+        
+        c.insets = new Insets(20, 20, 4, 0);
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = 2;
+        gridbag.setConstraints(pbar, c);
+        ct.add(pbar);
+        
+        JPanel bp = getOneButtonPanelCustom("Cancel", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                sm.cancel("Sender");
+
+                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                showScreen();
+            }
+        });
+       
+        subInnerCore.add(bp);  
+        
+        Thread t = new Thread(new Runnable() {
+            public void run(){
+                pbar.setVisible(false);
+                if (!ps.isEchoFinished) {
+                    transferText.setText("Checking RAIDA ...");
+                    transferText.repaint();
+                }
+                
+                while (!ps.isEchoFinished) {
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException e) {}
+                }
+                
+
+                String dstName =  (ps.foundSN == 0) ? ps.dstWallet.getName() : "" + ps.foundSN;
+
+                wl.debug(ltag, "Sending to dst " + dstName);
+                sm.transferCoins(ps.srcWallet.getName(), dstName, 
+                        ps.typedAmount, ps.typedMemo,  new SenderCb(), new ReceiverCb());
+            }
+        });
+        
+        t.start();
+    }
+    
     
     public void showImportingScreen() {
         JPanel subInnerCore = getModalJPanel("Deposit in Progress");
@@ -891,7 +988,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         
         
         JLabel x = new JLabel("<html><div style='width:400px; text-align:center'>"
-                + "<b>100 CC</b> have been transferred to <b>" + to + "</b> from <b>"
+                + "<b>" + AppCore.formatNumber(ps.typedAmount) + " CC</b> have been transferred to <b>" + to + "</b> from <b>"
                 + ps.srcWallet.getName() + "</b></div></html>");
         AppUI.setCommonFont(x);
  
@@ -1008,11 +1105,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
     
     public void showConfirmTransferScreen() {
         JPanel subInnerCore = getModalJPanel("Transfer Confirmation");
-
-        
-        
-        
-        
+     
         // Container
         JPanel ct = new JPanel();
         AppUI.noOpaque(ct);
@@ -1141,19 +1234,33 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         JPanel bp = getTwoButtonPanel(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 ps.srcWallet.setPassword(ps.typedSrcPassword);
-                ps.dstWallet.setPassword(ps.typedDstPassword);
                 
-                if (ps.sendType == ProgramState.SEND_TYPE_FOLDER) {
+                sm.setActiveWalletObj(ps.srcWallet);
+                if (ps.sendType == ProgramState.SEND_TYPE_FOLDER) {                
                     
-                    sm.setActiveWalletObj(ps.srcWallet);
                     if (ps.srcWallet.isEncrypted()) {
-                        sm.startSecureExporterService(Config.TYPE_STACK, ps.typedAmount, Config.DEFAULT_TAG, new ExporterCb());
+                        sm.startSecureExporterService(Config.TYPE_STACK, ps.typedAmount, Config.DEFAULT_TAG, ps.chosenFile, new ExporterCb());
                     } else {
-                        sm.startExporterService(Config.TYPE_STACK, ps.typedAmount, Config.DEFAULT_TAG, new ExporterCb());
+                        sm.startExporterService(Config.TYPE_STACK, ps.typedAmount, Config.DEFAULT_TAG, ps.chosenFile, new ExporterCb());
                     }
                 } else if (ps.sendType == ProgramState.SEND_TYPE_WALLET) {
-                    sm.setActiveWalletObj(ps.srcWallet);
-                    sm.transferCoins(ps.srcWallet.getName(), ps.dstWallet.getName(), null, ps.typedAmount, ps.typedMemo,  new SenderCb(), new ReceiverCb());
+                    ps.dstWallet.setPassword(ps.typedDstPassword);              
+                    ps.currentScreen = ProgramState.SCREEN_SENDING;
+                    showScreen();
+                } else if (ps.sendType == ProgramState.SEND_TYPE_REMOTE) {              
+                    DNSSn d = new DNSSn(ps.typedRemoteWallet, wl);
+                    int sn = d.getSN();
+                    if (sn < 0) {
+                        ps.errText = "Failed to set record. Check if the coin is valid";
+                        ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                        showScreen();
+                        return;
+                    }
+                    
+                    ps.foundSN = sn;
+                    
+                    ps.currentScreen = ProgramState.SCREEN_SENDING;
+                    showScreen();
                 }
             }
         });
@@ -1802,25 +1909,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 */
             }
         });
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+
         // Space
         AppUI.hr(oct, 22);
         
@@ -1828,6 +1917,8 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             public void actionPerformed(ActionEvent e) {
                 
                 ps.typedMemo = memo.getText();
+                if (ps.typedMemo.isEmpty())
+                    ps.typedMemo = "Transfer";
                 
                 int srcIdx = cboxfrom.getSelectedIndex() - 1;
                 int dstIdx = cboxto.getSelectedIndex() - 1;
@@ -1857,9 +1948,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                     showScreen();
                     return;  
                 }
-                 
-                
-                
+                          
                 Wallet srcWallet = wallets[srcIdx];
                 if (srcWallet.isEncrypted()) {
                     if (passwordSrc.getText().isEmpty()) {
@@ -1885,14 +1974,13 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                     ps.typedSrcPassword = passwordSrc.getText();
                 }
                 
-                if (ps.typedAmount > srcWallet.getTotal()) {
+            /*    if (ps.typedAmount > srcWallet.getTotal()) {
                     ps.errText = "Insufficient funds";
                     showScreen();
                     return;
                 }
-                      
-                ps.srcWallet = srcWallet;
-                
+             */         
+                ps.srcWallet = srcWallet;              
                 if (dstIdx == wallets.length) {
                     // Remote User
                     if (remoteWalledId.getText().isEmpty()) {
@@ -3905,8 +3993,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 
                 return;
             }
-                   
-            unpackerDone();
+
             setRAIDAProgress(0, 0, AppCore.getFilesCount(Config.DIR_SUSPECT, sm.getActiveWallet().getName()));
             sm.startAuthenticatorService(new AuthenticatorCb());
         }
@@ -4044,7 +4131,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                     });
                 }
                 
-               // sm.getActiveWallet().appendTransaction(ps.typedMemo, er.totalExported * -1);
+                sm.getActiveWallet().appendTransaction(ps.typedMemo, er.totalExported * -1, er.receiptId);
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {
                         ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
@@ -4126,23 +4213,22 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             SenderResult sr = (SenderResult) result;
             
             wl.debug(ltag, "Sender finished: " + sr.status);
-            if (sr.amount > 0) {
-                //sm.getActiveWallet().appendTransaction(sr.memo, sr.amount * -1);
-                Wallet srcWallet = ps.srcWallet;
-                Wallet dstWallet = ps.dstWallet;
-                if (dstWallet != null) {
-                    //dstWallet.appendTransaction(sr.memo, sr.amount);
-                    if (dstWallet.isEncrypted()) {
-                        //wl.debug(ltag, "Set wallet to " + currentDstWallet);
-                        sm.changeServantUser("Vaulter", dstWallet.getName());
-                        sm.startVaulterService(new VaulterCb(), dstWallet.getPassword());          
-                    } else {
+            if (sr.status == SenderResult.STATUS_PROCESSING) {
+                setRAIDATransferProgress(sr.totalRAIDAProcessed, sr.totalFilesProcessed, sr.totalFiles);
+                return;
+            }
+            
+            
+            if (sr.status == SenderResult.STATUS_CANCELLED) {
+                EventQueue.invokeLater(new Runnable() {         
+                    public void run() {
+                        ps.errText = "Operation Cancelled";
                         ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
                         showScreen();
                     }
-                }            
+                });
             }
-            
+      
             if (sr.status == SenderResult.STATUS_ERROR) {
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {
@@ -4152,7 +4238,42 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                     }
                 });
 		return;
-            }        
+            }   
+            
+            if (sr.amount > 0) {
+                wl.debug(ltag, "sramount " + sr.amount + " typed " + ps.typedAmount);
+                if (ps.typedAmount != sr.amount) {
+                    ps.typedAmount = sr.amount;
+                    ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                    ps.errText = "Not all coins were sent. Please check the logs";
+                    showScreen();
+                    return;
+                }
+                ps.typedAmount = sr.amount;
+                sm.getActiveWallet().appendTransaction(ps.typedMemo, sr.amount * -1, sr.receiptId);
+                Wallet srcWallet = ps.srcWallet;
+                Wallet dstWallet = ps.dstWallet;
+                if (dstWallet != null) {
+                    dstWallet.appendTransaction(ps.typedMemo, sr.amount, sr.receiptId);
+                    if (dstWallet.isEncrypted()) {
+                        //wl.debug(ltag, "Set wallet to " + currentDstWallet);
+                        sm.changeServantUser("Vaulter", dstWallet.getName());
+                        sm.startVaulterService(new VaulterCb(), dstWallet.getPassword());          
+                    } else {
+                        ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                        showScreen();
+                    }
+                }      
+                
+                return;
+            } else {
+                ps.typedAmount = 0;
+                ps.errText = "Coins were not sent. Please check the logs";     
+            }
+            
+            ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+            showScreen();
+                 
 	}
     }
     
@@ -4161,6 +4282,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
 	public void callback(Object result) {
             ShowEnvelopeCoinsResult er = (ShowEnvelopeCoinsResult) result;
  
+            setSNs(er.coins);
             showCoinsDone(er.counters);
         }
     }
