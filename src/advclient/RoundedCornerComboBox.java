@@ -28,7 +28,7 @@ public class RoundedCornerComboBox {
     
     JPanel core;
     JComboBox<String> combo1;
-    
+    MyComboBoxModel cbm;
     
     
     public RoundedCornerComboBox(Color outerBgColor, String placeholder, String[] options) {
@@ -47,23 +47,46 @@ public class RoundedCornerComboBox {
         return String.valueOf(combo1.getSelectedItem());
     }
     
+    public int getSelectedIndex() {
+        return combo1.getSelectedIndex();
+    }
+    
+    public void addActionListener(ActionListener al) {
+        combo1.addActionListener(al);
+    }
+    
+    public void setOptions(String[] options) {
+        this.options = options;
+        
+        combo1.removeAllItems();
+        combo1.addItem(placeholder);
+        for (int i = 0; i < options.length; i++)
+            combo1.addItem(options[i]);
+        
+        cbm.drop();
+    }
+    
+    public void addOption(String option) {
+        combo1.addItem(option);
+    }
+    
+    
     public JPanel makeUI() {
         
      
         background = AppUI.blendColors(AppUI.getColor4(), outerBgColor);
         foreground = background;
-        
-        UIManager.put("ComboBox.foreground", foreground);
+
         UIManager.put("ComboBox.selectionForeground", Color.BLACK);
         UIManager.put("ComboBox.selectionBackground", background);
-        UIManager.put("ComboBox.border", new RoundedCornerBorder(this.outerBgColor));
         
         combo1 = new JComboBox<>();
         AppUI.setSize(combo1, (int) AppUI.getBoxWidth(), (int) AppUI.getBoxHeight());  
         AppUI.setFont(combo1, 18);
         AppUI.setBackground(combo1, background);
         AppUI.setColor(combo1, AppUI.getDisabledColor2());
-        combo1.setUI(new ColorArrowUI());
+        combo1.setBorder(new RoundedCornerBorder(this.outerBgColor));
+        combo1.setUI(new ColorArrowUI(background));
         
         Object o = combo1.getAccessibleContext().getAccessibleChild(0);
         if (o instanceof JComponent) {
@@ -72,12 +95,9 @@ public class RoundedCornerComboBox {
             c.setForeground(foreground);
             c.setBackground(background);
         }
-    
-        
-        
+
         combo1.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                System.out.println("xxxxxx = " + e.getActionCommand());
             }
         });
     
@@ -87,30 +107,21 @@ public class RoundedCornerComboBox {
             }
         });
    
-        combo1.addPopupMenuListener(new HeavyWeightContainerListener(this.outerBgColor));   
+        cbm = new MyComboBoxModel(this.placeholder, combo1);
+        
+        combo1.addPopupMenuListener(new HeavyWeightContainerListener(this.outerBgColor, cbm));   
         ComboBoxRenderer renderer = new ComboBoxRenderer(combo1, background);
         combo1.setRenderer(renderer);
         
-        combo1.setModel(new DefaultComboBoxModel<String>() {
-            private static final long serialVersionUID = 1L;
-            boolean selectionAllowed = true;
+        
+        
+        combo1.setModel(cbm);
 
-            @Override
-            public void setSelectedItem(Object anObject) {
-                if (!placeholder.equals(anObject)) {
-                    AppUI.setColor(combo1, Color.BLACK);
-                    super.setSelectedItem(anObject);
-                } else if (selectionAllowed) {
-                    selectionAllowed = false;
-                    super.setSelectedItem(anObject);
-                }
-            }
-        });
     
-        combo1.addItem(placeholder);
-        for (int i = 0; i < options.length; i++)
-            combo1.addItem(options[i]);
+        
+        setOptions(this.options);
 
+        
         JPanel p = new JPanel();
         AppUI.setBoxLayout(p, false);
         AppUI.noOpaque(p);
@@ -120,11 +131,43 @@ public class RoundedCornerComboBox {
     }
 }
 
+class MyComboBoxModel extends DefaultComboBoxModel {
+    private static final long serialVersionUID = 1L;
+    boolean selectionAllowed = true;
+    String placeholder;
+    JComboBox<String> combo1;
+
+    public MyComboBoxModel(String placeholder, JComboBox<String> combo1) {
+        this.placeholder = placeholder;
+        this.combo1 = combo1;
+    }
+    
+    public void drop() {
+        selectionAllowed = true;
+    }
+            
+    @Override
+    public void setSelectedItem(Object anObject) {
+        if (!placeholder.equals(anObject)) {
+            AppUI.setColor(combo1, Color.BLACK);
+            super.setSelectedItem(anObject);
+        } else if (selectionAllowed) {
+            AppUI.setColor(combo1, AppUI.getDisabledColor2());
+            selectionAllowed = false;
+            super.setSelectedItem(anObject);
+        }
+    }
+    
+    
+}
+
 class HeavyWeightContainerListener implements PopupMenuListener {
     Color outerBgColor;
+    MyComboBoxModel cbm;
     
-    public HeavyWeightContainerListener(Color outerBgColor) {
+    public HeavyWeightContainerListener(Color outerBgColor, MyComboBoxModel cbm) {
         this.outerBgColor = outerBgColor;
+        this.cbm = cbm;
     }
     
     @Override
@@ -141,7 +184,6 @@ class HeavyWeightContainerListener implements PopupMenuListener {
                     Container top = pop.getTopLevelAncestor();
                     if (top instanceof JWindow) {
                         //http://ateraimemo.com/Swing/DropShadowPopup.html
-                        System.out.println("HeavyWeightContainer");
                         //((JWindow) top).setBackground(new Color(0x0, true));
                     }
                 }
@@ -151,23 +193,20 @@ class HeavyWeightContainerListener implements PopupMenuListener {
         
     @Override 
     public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
-        System.out.println("inv");
         JComboBox c = (JComboBox) e.getSource();
         c.setBorder(new RoundedCornerBorder(this.outerBgColor));
-        //AppUI.setColor(c, AppUI.getDisabledColor2());
-        //c.repaint();
+        cbm.drop();
     }
     
     @Override 
     public void popupMenuCanceled(PopupMenuEvent e) {
         JComboBox combo1 = (JComboBox) e.getSource();
-        
     }
 }
 
 class RoundedCornerBorder extends AbstractBorder {
     protected Color outerBgColor;
-    protected static final int ARC = 18;
+    protected static final int ARC = 12;
     
     public RoundedCornerBorder(Color outerBgColor) {
         this.outerBgColor = outerBgColor;
@@ -201,19 +240,7 @@ class RoundedCornerBorder extends AbstractBorder {
         g2.draw(round);
         g2.dispose();
     }
-    
-    @Override 
-    public Insets getBorderInsets(Component c) {
-        return new Insets(4, 8, 4, 8);
 
-    }
-    
-    @Override 
-    public Insets getBorderInsets(Component c, Insets insets) {
-        insets.set(4, 8, 4, 8);
-
-        return insets;
-    }
     
 }
 
@@ -263,7 +290,7 @@ class RoundedCornerBorder2 extends RoundedCornerBorder {
     public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        
+       
         int r = ARC;
         int w = width  - 1 + 1;
         int h = height - 1;
@@ -287,14 +314,14 @@ class RoundedCornerBorder2 extends RoundedCornerBorder {
         Area round = new Area(p);
 
         g2.setPaint(c.getBackground());
-       // g2.setPaint(Color.RED);
+        //g2.setPaint(Color.RED);
         g2.fill(round);
 
         //g2.setPaint(c.getForeground());
         //        g2.setPaint(Color.RED);
       //  g2.draw(round);
         g2.setPaint(c.getBackground());
-                //g2.setPaint(Color.RED);
+              //  g2.setPaint(Color.RED);
         g2.drawLine(x + 1, y, x + width - 2, y);
         g2.dispose();
     }
@@ -302,20 +329,26 @@ class RoundedCornerBorder2 extends RoundedCornerBorder {
     
     @Override 
     public Insets getBorderInsets(Component c) {
-        return new Insets(4, 8, 4, 8);
-        //return new Insets(0, 0, 0, 0);
+      //  return new Insets(4, 8, 4, 8);
+        return new Insets(0, 0, 12, 0);
 
     }
-    
+    /*
     @Override 
     public Insets getBorderInsets(Component c, Insets insets) {
         insets.set(4, 8, 4, 8);
 
         return insets;
-    }
+    }*/
 }
 
 class ColorArrowUI extends BasicComboBoxUI {
+    Color background;
+    
+    ColorArrowUI(Color background) {
+        this.background = background;
+    }
+    
     @Override 
     protected JButton createArrowButton() {
         JButton button = new JButton();
@@ -328,9 +361,12 @@ class ColorArrowUI extends BasicComboBoxUI {
         AppUI.setHandCursor(button);
         AppUI.setMargin(button, 0);
 
+        //button.setBounds(100,100,100,100);
         try {
             Image img = ImageIO.read(getClass().getClassLoader().getResource("resources/arrow.png"));
             button.setIcon(new ImageIcon(img));
+            button.setForeground(background);
+            button.setText(" ");
         } catch (Exception ex) {
     
         }
@@ -353,17 +389,17 @@ class ComboBoxRenderer extends JPanel implements ListCellRenderer {
         text = new JLabel();
         text.setOpaque(true);
         textPanel.add(text);
-       
-        AppUI.setSize(text, (int) AppUI.getBoxWidth(), (int) AppUI.getBoxHeight());
+        AppUI.setMargin(text, 10, 10, 10, 10);
     }
 
 
     @Override
     public Component getListCellRendererComponent(JList list, Object value,
             int index, boolean isSelected, boolean cellHasFocus) {
-   
+
         AppUI.setFont(text, 18);
-        text.setText(value.toString());
+        if (value != null)
+            text.setText(value.toString());
         if (index == 0) {
             text.setForeground(AppUI.getDisabledColor2());
         } else if (index > -1) {
@@ -374,6 +410,12 @@ class ComboBoxRenderer extends JPanel implements ListCellRenderer {
             text.setBackground(AppUI.getColor9());
         } else {
             text.setBackground(color);
+        }
+        
+        if (index == 0) {
+            AppUI.setSize(text, 0, 0);
+        } else {
+            AppUI.setSize(text, (int) AppUI.getBoxWidth(), (int) AppUI.getBoxHeight());
         }
         
         

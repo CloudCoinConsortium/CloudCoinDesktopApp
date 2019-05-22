@@ -27,11 +27,20 @@ public class ProgramState {
     final public static int SCREEN_WITHDRAW = 12;
     final public static int SCREEN_IMPORTING = 13;
     final public static int SCREEN_IMPORT_DONE = 14;
+    final public static int SCREEN_SUPPORT = 15;
+    final public static int SCREEN_CONFIRM_TRANSFER = 16;
+    final public static int SCREEN_TRANSFER_DONE = 17;
+    final public static int SCREEN_TRANSFERRING = 18;
+    final public static int SCREEN_BACKUP = 19;
     
     
     final static int CB_STATE_INIT = 1;
     final static int CB_STATE_RUNNING = 2;
     final static int CB_STATE_DONE = 3;
+    
+    final static int SEND_TYPE_WALLET = 1;
+    final static int SEND_TYPE_REMOTE = 2;
+    final static int SEND_TYPE_FOLDER = 3;
     
     public int currentScreen;
     
@@ -41,7 +50,7 @@ public class ProgramState {
     String typedPassword;
     String typedEmail;
     String typedWalletName;
-    //String currentWallet;
+
     int currentWalletIdx;
     Wallet currentWallet;
     
@@ -66,6 +75,15 @@ public class ProgramState {
     
     String receiptId;
     
+    boolean isSrcBoxFull, isDstBoxFull;
+    
+    String typedSrcPassword, typedDstPassword, typedRemoteWallet;
+    int typedAmount;
+    
+    int sendType;
+    
+    boolean isUpdatedWallets;
+    
     public ProgramState() {
         currentScreen = SCREEN_AGREEMENT;
         cwalletRecoveryRequested = cwalletPasswordRequested = false;
@@ -89,6 +107,16 @@ public class ProgramState {
         isAddingWallet = false;
         
         receiptId = "";
+        
+        
+        isDstBoxFull = isSrcBoxFull = true;
+        typedSrcPassword = typedDstPassword = "";
+        typedAmount = 0;
+        typedRemoteWallet = "";
+        
+        sendType = SEND_TYPE_WALLET;
+        
+        isUpdatedWallets = false;
     }
     
 }

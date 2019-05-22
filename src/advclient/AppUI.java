@@ -197,7 +197,8 @@ public class AppUI {
     }
     
     public static Color getColor3() {
-        return new Color(0xBFFFFFFF, true);
+        //return new Color(0xBFFFFFFF, true);
+        return new Color(0xE9F0F8);
     }
     
     public static Color getColor4() {
@@ -226,6 +227,19 @@ public class AppUI {
         return new Color(0x777777);
     }
     
+    public static Color getColor11() {
+        return new Color(0xF2F6FB);
+    }
+    
+    public static Color getColor12() {
+        return new Color(0xF7F9FC);
+    }
+       
+    public static Color getColor13() {
+        return new Color(0x919396);
+    }
+    
+    
     public static Color getDisabledColor() {
         return new Color(0xCCCCCC);
     }
@@ -233,6 +247,8 @@ public class AppUI {
     public static Color getDisabledColor2() {
         return new Color(0x999999);
     }
+    
+    
     
     public static Color getErrorColor() {
         return Color.RED;
@@ -502,6 +518,13 @@ public class AppUI {
         return hct;
     }
     
+    public static String getRemoteUserOption() {
+        return "- To Remote User";
+    }
+    
+    public static String getLocalFolderOption() {
+        return "- To Local Folder";
+    }
     
     /*
     

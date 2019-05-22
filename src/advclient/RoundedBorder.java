@@ -52,7 +52,6 @@ public class RoundedBorder implements Border {
     }
 
     public void setColor(Color color) {
-        System.out.println("xcolor" + color);
         this.color = color;
     }
 
@@ -60,7 +59,6 @@ public class RoundedBorder implements Border {
         Graphics2D g2 = (Graphics2D) g.create();
         
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        //System.out.println("x="+color.getAlpha());
         //g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, color.getAlpha()));
         g2.setColor(this.color);
         g2.setStroke(new BasicStroke(1));

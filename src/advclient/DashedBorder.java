@@ -44,14 +44,21 @@ public class DashedBorder implements Border {
         
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         float dash1[] = { 10.0f };
-        final BasicStroke dashed = new BasicStroke(1.0f, BasicStroke.CAP_BUTT, 
+        final BasicStroke dashed = new BasicStroke(5.0f, BasicStroke.CAP_BUTT, 
                 BasicStroke.JOIN_MITER, 10.0f, dash1, 0.0f);
         
+        // final BasicStroke dashed = new BasicStroke(3.0f, BasicStroke.CAP_SQUARE, 
+        //        BasicStroke.JOIN_ROUND, 1.0f, dash1, 0.0f);
+        
+         g2.setColor(AppUI.getColor3());
+        g2.fillRoundRect(x, y, width, height, radius, radius);
         
         g2.setColor(this.color);
         g2.setStroke(dashed);
-        g2.drawRoundRect(x, y, width-1, height-1, radius-1, radius-1);
-
-     
+        g2.drawRoundRect(x, y, width-1, height-1, radius, radius);  
+        
+        
+       
+        
     }
 }
