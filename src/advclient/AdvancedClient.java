@@ -1545,7 +1545,8 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 //showScreen();
                 int column = table.columnAtPoint(e.getPoint());
                 int row = table.rowAtPoint(e.getPoint());
-                System.out.println("xxx=" + row + "," + column + " x=" + trs[row][5]);
+                
+                String  hash = trs[row][5];
                 
                 
                 
