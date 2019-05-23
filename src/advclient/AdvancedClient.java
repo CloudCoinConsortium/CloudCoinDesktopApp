@@ -2867,12 +2867,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         final JTable table = new JTable();
         final JScrollPane scrollPane = AppUI.setupTable(table, new String[] {"Serial Number", "Denomination"}, serials, r);
         AppUI.setSize(scrollPane, 260, 325);
-    //    table.getColumnModel().getColumn(0).setPreferredWidth(240);
-      //  table.getColumnModel().getColumn(1).setPreferredWidth(100);
  
-        
-   
-
         ct.add(scrollPane);
         
         
