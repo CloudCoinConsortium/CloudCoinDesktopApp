@@ -26,6 +26,7 @@ import global.cloudcoin.ccbank.Vaulter.Vaulter;
 import global.cloudcoin.ccbank.Vaulter.VaulterResult;
 import global.cloudcoin.ccbank.core.AppCore;
 import global.cloudcoin.ccbank.core.CallbackInterface;
+import global.cloudcoin.ccbank.core.CloudCoin;
 import global.cloudcoin.ccbank.core.Config;
 import global.cloudcoin.ccbank.core.DNSSn;
 import global.cloudcoin.ccbank.core.GLogger;
@@ -547,7 +548,6 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                     popupMenu.setVisible(false);
                     
                     String action = jMenuItem.getActionCommand();
-                    System.out.println("ac="+action);
                     if (action.equals("0")) {
                         ps.currentScreen = ProgramState.SCREEN_BACKUP;
                     } else if (action.equals("1")) {
@@ -742,6 +742,9 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 break;
             case ProgramState.SCREEN_CLEAR:
                 showClearScreen();
+                break;
+            case ProgramState.SCREEN_LIST_SERIALS_DONE:
+                showListSerialsDone();
                 break;
                 
         }
@@ -2564,9 +2567,9 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 }
 
                 Wallet srcWallet = wallets[srcIdx];
-                ps.srcWallet = srcWallet;              
+                ps.srcWallet = srcWallet;            
                 
-                ps.currentScreen = ProgramState.SCREEN_BACKUP_DONE;
+                ps.currentScreen = ProgramState.SCREEN_LIST_SERIALS_DONE;
                 showScreen();
             }
         });
@@ -2800,6 +2803,124 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         rightPanel.add(bp); 
     }
     
+    public void showListSerialsDone() {
+        showLeftScreen();
+ 
+        Wallet w = ps.srcWallet;     
+
+        JPanel rightPanel = getRightPanel(AppUI.getColor4());    
+        JPanel ct = new JPanel();
+        AppUI.setBoxLayout(ct, true);
+        AppUI.noOpaque(ct);
+        rightPanel.add(ct);
+        
+             
+        JLabel ltitle = AppUI.getTitle("List Serials - " + w.getName() + " - " + w.getTotal() + " CC");   
+        ct.add(ltitle);
+        AppUI.hr(ct, 20);
+        
+        int[] sns = w.getSNs();
+        if (sns.length == 0) {
+            JLabel trLabel = new JLabel("No Serials");
+            AppUI.setSemiBoldFont(trLabel, 20);
+            AppUI.alignCenter(trLabel);
+            ct.add(trLabel);
+            return;
+        }
+        
+        
+        // Scrollbar & Table  
+        DefaultTableCellRenderer r = new DefaultTableCellRenderer() {
+            JLabel lbl;
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                
+                lbl = (JLabel) this;
+                if (row % 2 == 0) {
+                    AppUI.setBackground(lbl, AppUI.getColor3());
+                } else {
+                    AppUI.setBackground(lbl, AppUI.getColor4());
+                }
+
+                lbl.setHorizontalAlignment(JLabel.CENTER);
+                AppUI.setMargin(lbl, 8);
+  
+                return lbl;
+            }
+        };
+  
+        
+        
+        String[][] serials = new String[sns.length][];
+        for (int i = 0; i < sns.length; i++) {
+            CloudCoin cc = new CloudCoin(Config.DEFAULT_NN, sns[i]);
+            
+            serials[i] = new String[3];
+            serials[i][0] = "" + sns[i];
+            serials[i][1] = "" + cc.getDenomination();
+            serials[i][2] = ""; // We need it
+        }
+        
+        
+     
+        final JTable table = new JTable();
+        final JScrollPane scrollPane = AppUI.setupTable(table, new String[] {"Serial Number", "Denomination"}, serials, r);
+        AppUI.setSize(scrollPane, 260, 325);
+    //    table.getColumnModel().getColumn(0).setPreferredWidth(240);
+      //  table.getColumnModel().getColumn(1).setPreferredWidth(100);
+ 
+        
+   
+
+        ct.add(scrollPane);
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        JPanel bp = getTwoButtonPanelCustom("Print", "Export History", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                /*
+                    try {
+                   //     table.print();
+                    } catch (PrinterException pe) {
+                        System.out.println("Failed to print");
+                    }*/
+                }
+            }, new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                Wallet w = sm.getActiveWallet();
+                JFileChooser c = new JFileChooser();
+                c.setSelectedFile(new File(w.getName() + "-transactions.csv"));
+
+                int rVal = c.showSaveDialog(null);
+                if (rVal == JFileChooser.APPROVE_OPTION) {
+                    w.saveTransations(c.getSelectedFile().getAbsolutePath());
+                }
+            }
+        });
+        
+        AppUI.hr(rightPanel, 20);
+        rightPanel.add(bp);     
+    }
+    
     public void showTransactionsScreen() {
         
        // sm.startFrackFixerService(new FrackFixerCb());
@@ -2840,8 +2961,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 
         AppUI.hr(ct, 20);
  
-        // Scrollbar & Table
-        UIManager.put("ScrollBar.background", new ColorUIResource(AppUI.getColor0()));
+        // Scrollbar & Table  
         DefaultTableCellRenderer r = new DefaultTableCellRenderer() {
             JLabel lbl;
             @Override
@@ -2885,45 +3005,16 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 return lbl;
             }
         };
-  
-        DefaultTableModel model = new DefaultTableModel(trs.length, trs[0].length - 1) {
-            String[] columnNames = {
-                "Memo (note)",
-                "Date",
-                "Deposit",
-                "Withdraw",
-                "Total",
-                //    ""
-            };
-            
-            @Override
-            public String getColumnName(int col) {        
-                return columnNames[col];
-            }
-            
-            @Override
-            public Class<?> getColumnClass(int columnIndex) {
-                return String.class;
-            }
-            
-            public boolean isCellEditable(int row, int column){  
-               return false;  
-            }
-        };
+     
+        final JTable table = new JTable();
+        final JScrollPane scrollPane = AppUI.setupTable(table, new String[] {
+            "Memo (note)",
+            "Date",
+            "Deposit",
+            "Withdraw",
+            "Total"
+        }, trs, r);
         
-        final JTable table = new JTable(model);
-        for (int row = 0; row < model.getRowCount(); row++) {
-            for (int col = 0; col < model.getColumnCount(); col++) {
-                model.setValueAt(trs[row][col], row, col);
-            }
-        }
- 
-        table.setRowHeight(table.getRowHeight() + 15);
-        table.setDefaultRenderer(String.class, r);
-        table.setIntercellSpacing(new Dimension(1, 1));
-        table.setFocusable(false);
-        table.setRowSelectionAllowed(false);
-        table.setGridColor(AppUI.getColor7());
         table.getColumnModel().getColumn(0).setPreferredWidth(240);
         table.getColumnModel().getColumn(1).setPreferredWidth(100);
         
@@ -2941,7 +3032,6 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 String hash = trs[row][5];
                 
                 String html = AppCore.getReceiptHtml(hash, ps.currentWallet.getName());
-                System.out.println("h="+html + " h="+hash);
                 if (html == null)
                     return;
                 
@@ -2966,10 +3056,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 f.add(scrollPane);
                 f.pack();
                 f.setLocationRelativeTo(mainFrame);
-                f.setVisible(true);
-                
- 
-                
+                f.setVisible(true);       
             }   
             
             public void mouseMoved(MouseEvent e) {
@@ -2994,64 +3081,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         
         table.addMouseListener(ma);
         table.addMouseMotionListener(ma);
-        
-        // Header
-        JTableHeader header = table.getTableHeader();    
-        AppUI.setColor(header, Color.WHITE);
-        AppUI.noOpaque(header);
-        //AppUI.setFont(table, 14);
-        AppUI.setCommonTableFont(table);
-        AppUI.setCommonTableFont(header);
-        
-        final TableCellRenderer hr = table.getTableHeader().getDefaultRenderer();
-        header.setDefaultRenderer(new TableCellRenderer() {
-            private JLabel lbl;
-            @Override
-            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-                lbl = (JLabel) hr.getTableCellRendererComponent(table, value, true, true, row, column);
-                lbl.setHorizontalAlignment(SwingConstants.LEFT);
-
-                AppUI.setMargin(lbl, 2, 10, 2, 2);
-                AppUI.setBackground(lbl, AppUI.getColor0());
-                return lbl;
-            }
-        });
-
-        // ScrollPane
-        JScrollPane scrollPane = new JScrollPane(table);
-        AppUI.setSize(scrollPane, 660, 325);
-        scrollPane.getVerticalScrollBar().setUI(new BasicScrollBarUI() {       
-            @Override
-            protected JButton createDecreaseButton(int orientation) {
-                TriangleButton jbutton = new TriangleButton(false);
-                AppUI.setHandCursor(jbutton);
-                jbutton.setContentAreaFilled(false);
-                jbutton.setFocusPainted(false);
-            
-                return jbutton;
-            }
-
-            @Override    
-            protected JButton createIncreaseButton(int orientation) {
-                TriangleButton jbutton = new TriangleButton(true);
-                AppUI.setHandCursor(jbutton);
-                jbutton.setContentAreaFilled(false);
-                jbutton.setFocusPainted(false);
-            
-                return jbutton;
-            }
-            
-            @Override 
-            protected void configureScrollBarColors(){
-                this.trackColor = AppUI.getColor6();
-                this.thumbColor = AppUI.getColor7();
-            }
-        });
-        
-        scrollPane.getViewport().setOpaque(false);
-        scrollPane.setOpaque(false);
-        scrollPane.setBorder(BorderFactory.createEmptyBorder());
-
+ 
         ct.add(scrollPane);
 
         JPanel bp = getTwoButtonPanelCustom("Print", "Export History", new ActionListener() {
@@ -4265,6 +4295,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         }*/
         
         try {
+           
            boolean isSet = false;
            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
                 if ("Windows".equals(info.getName())) {
@@ -4290,6 +4321,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
       
         }
 
+        UIManager.put("ScrollBar.background", new ColorUIResource(AppUI.getColor0()));
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 new AdvancedClient();
