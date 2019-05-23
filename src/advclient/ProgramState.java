@@ -33,6 +33,9 @@ public class ProgramState {
     final public static int SCREEN_TRANSFERRING = 18;
     final public static int SCREEN_BACKUP = 19;
     final public static int SCREEN_SENDING = 20;
+    final public static int SCREEN_BACKUP_DONE = 21;
+    final public static int SCREEN_CLEAR = 22;
+    final public static int SCREEN_LIST_SERIALS = 23;
     
     
     final static int CB_STATE_INIT = 1;

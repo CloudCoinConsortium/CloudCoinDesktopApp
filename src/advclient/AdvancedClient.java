@@ -307,7 +307,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
     public boolean isWithdrawing() {
         if (ps.currentScreen == ProgramState.SCREEN_WITHDRAW ||
                 ps.currentScreen == ProgramState.SCREEN_CONFIRM_TRANSFER ||
-                ps.currentScreen == ProgramState.SCREEN_TRANSFERRING ||
+                ps.currentScreen == ProgramState.SCREEN_SENDING ||
                 ps.currentScreen == ProgramState.SCREEN_TRANSFER_DONE)
             return true;
         
@@ -545,9 +545,17 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 public void mouseReleased(MouseEvent evt) {
                     JMenuItem jMenuItem = (JMenuItem) evt.getSource();
                     popupMenu.setVisible(false);
-                    ps.currentScreen = ProgramState.SCREEN_BACKUP;
+                    
+                    String action = jMenuItem.getActionCommand();
+                    System.out.println("ac="+action);
+                    if (action.equals("0")) {
+                        ps.currentScreen = ProgramState.SCREEN_BACKUP;
+                    } else if (action.equals("1")) {
+                        ps.currentScreen = ProgramState.SCREEN_LIST_SERIALS;
+                    } else if (action.equals("2")) {
+                        ps.currentScreen = ProgramState.SCREEN_CLEAR;
+                    }
                     showScreen();
-                    System.out.println("ac=" + jMenuItem.getActionCommand());
                 }
             };
             
@@ -721,11 +729,19 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 showTransferDoneScreen();
                 break;
             case ProgramState.SCREEN_BACKUP:
-                resetState();
                 showBackupScreen();
                 break;
             case ProgramState.SCREEN_SENDING:
                 showSendingScreen();
+                break;
+            case ProgramState.SCREEN_BACKUP_DONE:
+                showBackupDoneScreen();
+                break;
+            case ProgramState.SCREEN_LIST_SERIALS:
+                showListSerialsScreen();
+                break;
+            case ProgramState.SCREEN_CLEAR:
+                showClearScreen();
                 break;
                 
         }
@@ -764,7 +780,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         pbar.setVisible(true);
         pbar.setValue(raidaProcessed);
         
-        transferText.setText(totalFilesProcessed + " / " + totalFiles + " Deposited");
+        transferText.setText(totalFilesProcessed + " / " + totalFiles + " Transferred");
     }
     
     public void showSendingScreen() {
@@ -780,8 +796,8 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         ct.setLayout(gridbag);
         
         // Password Label
-        JLabel x = new JLabel("Do not close the application until all CloudCoins are transferred!");
-        AppUI.setBoldFont(x, 16);
+        JLabel x = new JLabel("<html><div style='width:480px;text-align:center'>Do not close the application until all CloudCoins are transferred!</div></html>");
+        AppUI.setCommonFont(x);
         AppUI.setColor(x, AppUI.getErrorColor());
         c.anchor = GridBagConstraints.CENTER;
         c.insets = new Insets(20, 0, 4, 0); 
@@ -834,9 +850,13 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                     transferText.repaint();
                 }
                 
+                try {
+                    Thread.sleep(200);
+                } catch (InterruptedException e) {}
+                
                 while (!ps.isEchoFinished) {
                     try {
-                        Thread.sleep(500);
+                        Thread.sleep(300);
                     } catch (InterruptedException e) {}
                 }
                 
@@ -868,8 +888,10 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         ct.setLayout(gridbag);
         
         // Password Label
-        JLabel x = new JLabel("Do not close the application until all CloudCoins are deposited!");
-        AppUI.setBoldFont(x, 16);
+        //JLabel x = new JLabel("Do not close the application until all CloudCoins are deposited!");
+        JLabel x = new JLabel("<html><div style='width:480px;text-align:center'>Do not close the application until all CloudCoins are deposited!</div></html>");
+        AppUI.setCommonFont(x);
+        //AppUI.setBoldFont(x, 16);
         AppUI.setColor(x, AppUI.getErrorColor());
         c.anchor = GridBagConstraints.CENTER;
         c.insets = new Insets(20, 0, 4, 0); 
@@ -947,6 +969,60 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         });
         
         t.start();
+        
+    }
+    
+    public void showBackupDoneScreen() {
+        boolean isError = !ps.errText.equals("");
+        JPanel subInnerCore;
+        
+        if (isError) {
+            subInnerCore = getModalJPanel("Error");
+            AppUI.hr(subInnerCore, 32);
+            maybeShowError(subInnerCore);
+            return;
+        }
+        
+        subInnerCore = getModalJPanel("Backup Complete");
+        maybeShowError(subInnerCore);
+        
+        JPanel ct = new JPanel();
+        AppUI.noOpaque(ct);
+        subInnerCore.add(ct);
+        
+        GridBagLayout gridbag = new GridBagLayout();
+        GridBagConstraints c = new GridBagConstraints();      
+        ct.setLayout(gridbag);
+        
+        
+        JLabel x = new JLabel("<html><div style='width:400px; text-align:center'>" +
+            "Your CloudCoins from " + ps.srcWallet.getName() + " have been backed up into" +
+            " " + ps.chosenFile + "</div></html>");
+          
+        AppUI.setCommonFont(x);
+ 
+        c.insets = new Insets(0, 0, 4, 0);
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = 0;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+        
+        JPanel bp = getTwoButtonPanelCustom("Show Folder", "Continue", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                resetState();
+                ps.currentScreen = ProgramState.SCREEN_WITHDRAW;
+                showScreen();
+            }
+        },  new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                showScreen();
+            }
+        });
+  
+        
+        subInnerCore.add(bp);  
+        
         
     }
     
@@ -1251,7 +1327,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                     DNSSn d = new DNSSn(ps.typedRemoteWallet, wl);
                     int sn = d.getSN();
                     if (sn < 0) {
-                        ps.errText = "Failed to set record. Check if the coin is valid";
+                        ps.errText = "Failed get receiver. Check that the name is valid";
                         ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
                         showScreen();
                         return;
@@ -1801,11 +1877,6 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             memo.setData(ps.typedMemo);
         oct.add(memo.getTextField());   
         y++;
-        
-
-        
-
-        
 
         rightPanel.add(oct);
         
@@ -1876,10 +1947,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                     
                     return;
                 }
-                    
-
-                
-                
+   
                 if (dstIdx < 0 || dstIdx >= wallets.length) 
                     return;
                            
@@ -1974,12 +2042,12 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                     ps.typedSrcPassword = passwordSrc.getText();
                 }
                 
-            /*    if (ps.typedAmount > srcWallet.getTotal()) {
+                if (ps.typedAmount > srcWallet.getTotal()) {
                     ps.errText = "Insufficient funds";
                     showScreen();
                     return;
                 }
-             */         
+                      
                 ps.srcWallet = srcWallet;              
                 if (dstIdx == wallets.length) {
                     // Remote User
@@ -2185,20 +2253,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 }
             } 
         });
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+
         int ddWidth = 701;
         
         // Drag and Drop
@@ -2428,6 +2483,113 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         
         
     }
+    
+    public void showClearScreen() {
+        
+    }
+    
+    public void showListSerialsScreen() {
+        showLeftScreen();
+        
+        JPanel rightPanel = getRightPanel();    
+        JPanel ct = new JPanel();
+        AppUI.setBoxLayout(ct, true);
+        AppUI.noOpaque(ct);
+        rightPanel.add(ct);
+        
+        JLabel ltitle = AppUI.getTitle("List Serials");   
+        ct.add(ltitle);
+        AppUI.hr(ct, 20);
+        
+        maybeShowError(ct);
+
+        // GridHolder Container
+        JPanel gct = new JPanel();
+        AppUI.noOpaque(gct);
+   
+        GridBagLayout gridbag = new GridBagLayout();
+        gct.setLayout(gridbag);   
+        GridBagConstraints c = new GridBagConstraints();    
+        
+        int y = 0;
+        
+        // Text
+        c.anchor = GridBagConstraints.CENTER;
+        c.insets = new Insets(0, 0, 80, 0); 
+        c.gridx = 0;
+        c.gridy = y;
+        c.gridwidth = 2;
+
+        JLabel l = new JLabel("List Serials will show you Serial Numbers of your CloudCoins");
+        AppUI.setCommonFont(l);
+        gridbag.setConstraints(l, c); 
+        gct.add(l);
+        
+        y++;
+        c.gridwidth = 1;
+        c.insets = new Insets(0, 16, 10, 0); 
+        c.anchor = GridBagConstraints.EAST;
+         // Transfer from
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;   
+        JLabel x = new JLabel("         From Wallet");
+        gridbag.setConstraints(x, c);
+        AppUI.setCommonFont(x);
+        gct.add(x);
+        
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;     
+        c.anchor = GridBagConstraints.WEST;
+ 
+        final String[] options = new String[wallets.length];
+        for (int i = 0; i < wallets.length; i++) {
+            options[i] = wallets[i].getName() + " - " + AppCore.formatNumber(wallets[i].getTotal()) + " CC";       
+        }
+
+        final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(AppUI.getColor2(), "Make Selection", options);
+        gridbag.setConstraints(cboxfrom.getComboBox(), c);
+        gct.add(cboxfrom.getComboBox());
+
+        y++;
+        
+        rightPanel.add(gct); 
+
+        JPanel bp = getTwoButtonPanel(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {              
+                int srcIdx = cboxfrom.getSelectedIndex() - 1;              
+                if (srcIdx < 0 || srcIdx >= wallets.length) {
+                    ps.errText = "Please select Wallet";
+                    showScreen();
+                    return;
+                }
+
+                Wallet srcWallet = wallets[srcIdx];
+                ps.srcWallet = srcWallet;              
+                
+                ps.currentScreen = ProgramState.SCREEN_BACKUP_DONE;
+                showScreen();
+            }
+        });
+        
+        AppUI.hr(rightPanel, 20);
+        rightPanel.add(bp); 
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    }
+    
+    
+    
+    
+    
+    
+    
     public void showBackupScreen() {
         showLeftScreen();
         
@@ -2441,17 +2603,196 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         ct.add(ltitle);
         AppUI.hr(ct, 20);
         
+
+        maybeShowError(ct);
+
+        // GridHolder Container
+        JPanel gct = new JPanel();
+        AppUI.noOpaque(gct);
+   
+        GridBagLayout gridbag = new GridBagLayout();
+        gct.setLayout(gridbag);   
+        GridBagConstraints c = new GridBagConstraints();    
         
+        int y = 0;
         
+        // Text
+        c.anchor = GridBagConstraints.CENTER;
+        c.insets = new Insets(0, 0, 80, 0); 
+        c.gridx = 0;
+        c.gridy = y;
+        c.gridwidth = 2;
+
+        JLabel l = new JLabel("Backup will allow you to create Backup of your CloudCoins");
+        AppUI.setCommonFont(l);
+        gridbag.setConstraints(l, c); 
+        gct.add(l);
         
+        y++;
+        c.gridwidth = 1;
+        c.insets = new Insets(0, 16, 10, 0); 
+        c.anchor = GridBagConstraints.EAST;
+         // Transfer from
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;   
+        JLabel x = new JLabel("         From Wallet");
+        gridbag.setConstraints(x, c);
+        AppUI.setCommonFont(x);
+        gct.add(x);
         
-        JPanel bp = getTwoButtonPanelCustom("Print", "Export History", new ActionListener() {
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;     
+        c.anchor = GridBagConstraints.WEST;
+ 
+        int nonSkyCnt = 0;
+        for (int i = 0; i < wallets.length; i++)
+            if (!wallets[i].isSkyWallet())
+                nonSkyCnt++;
+             
+        final String[] nonSkyOptions = new String[nonSkyCnt];
+        final int[] idxs = new int[nonSkyCnt];
+        int j = 0;
+        for (int i = 0; i < wallets.length; i++) {
+            if (!wallets[i].isSkyWallet()) {
+                nonSkyOptions[j] = wallets[i].getName() + " - " + AppCore.formatNumber(wallets[i].getTotal()) + " CC";
+                idxs[j] = i;
+                j++;
+            }
+        }
+
+        final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(AppUI.getColor2(), "Make Selection", nonSkyOptions);
+        gridbag.setConstraints(cboxfrom.getComboBox(), c);
+        gct.add(cboxfrom.getComboBox());
+
+        y++;
+
+        // Password From
+        c.anchor = GridBagConstraints.EAST;
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;   
+        final JLabel spText = new JLabel("Password");
+        gridbag.setConstraints(spText, c);
+        AppUI.setCommonFont(spText);
+        gct.add(spText);
+        
+        c.anchor = GridBagConstraints.WEST;
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;     
+        final MyTextField passwordSrc = new MyTextField("Wallet Password", true);
+        gridbag.setConstraints(passwordSrc.getTextField(), c);
+        gct.add(passwordSrc.getTextField());     
+        y++;
+        
+        passwordSrc.getTextField().setVisible(false);
+        spText.setVisible(false);
+              
+        cboxfrom.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                 
-                }
-            }, new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
+                int srcIdx = cboxfrom.getSelectedIndex() - 1;              
+                if (srcIdx < 0 || srcIdx >= idxs.length) 
+                    return;
                 
+
+                srcIdx = idxs[srcIdx];
+                
+                Wallet srcWallet = wallets[srcIdx];
+                if (srcWallet == null)
+                    return;
+
+                if (srcWallet.isEncrypted()) {                 
+                    passwordSrc.getTextField().setVisible(true);
+                    spText.setVisible(true);
+                } else {
+                    passwordSrc.getTextField().setVisible(false);
+                    spText.setVisible(false);
+                }
+            }
+        });
+        
+        // Backup folder
+        JLabel txt = new JLabel("Backup Folder");
+        AppUI.setCommonFont(txt);
+        AppUI.alignCenter(txt);
+        c.anchor = GridBagConstraints.EAST;
+        c.gridx = 0;
+        c.gridy = y;
+        
+        gridbag.setConstraints(txt, c);
+        gct.add(txt);
+              
+        
+        final JFileChooser chooser = new JFileChooser();
+        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        chooser.setAcceptAllFileFilterUsed(false);
+        final MyTextField tf1 = new MyTextField("", false, true);
+        tf1.disable();
+        tf1.setFilepickerListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                int returnVal = chooser.showOpenDialog(null);
+                if (returnVal == JFileChooser.APPROVE_OPTION) {       
+                    ps.chosenFile = chooser.getSelectedFile().getAbsolutePath();
+                    tf1.setData(chooser.getSelectedFile().getName());
+                }
+            }
+        });
+
+        c.anchor = GridBagConstraints.WEST;
+        c.gridx = GridBagConstraints.RELATIVE;;
+        c.gridy = y;
+        gridbag.setConstraints(tf1.getTextField(), c);
+        gct.add(tf1.getTextField());
+        
+
+        
+        rightPanel.add(gct); 
+
+        JPanel bp = getTwoButtonPanel(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {              
+                int srcIdx = cboxfrom.getSelectedIndex() - 1;              
+                System.out.println("sss="+srcIdx);
+                if (srcIdx < 0 || srcIdx >= idxs.length) {
+                    ps.errText = "Please select Wallet";
+                    showScreen();
+                    return;
+                }
+
+                srcIdx = idxs[srcIdx];
+   
+                Wallet srcWallet = wallets[srcIdx];
+                if (srcWallet.isEncrypted()) {
+                    if (passwordSrc.getText().isEmpty()) {
+                        ps.errText = "Password is empty";
+                        showScreen();
+                        return;
+                    }
+                    
+                    String wHash = srcWallet.getPasswordHash();
+                    String providedHash = AppCore.getMD5(passwordSrc.getText());
+                    if (wHash == null) {
+                        ps.errText = "Wallet is corrupted";
+                        showScreen();
+                        return;
+                    }
+                    
+                    if (!wHash.equals(providedHash)) {
+                        ps.errText = "Password is incorrect";
+                        showScreen();
+                        return;
+                    } 
+                    
+                    ps.typedPassword = passwordSrc.getText();
+                }
+                     
+                ps.srcWallet = srcWallet;              
+                if (ps.chosenFile.isEmpty()) {
+                    ps.errText = "Folder is not chosen";
+                    showScreen();
+                    return;
+                }
+                    
+                ps.currentScreen = ProgramState.SCREEN_BACKUP_DONE;
+                showScreen();
             }
         });
         
@@ -2600,6 +2941,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 String hash = trs[row][5];
                 
                 String html = AppCore.getReceiptHtml(hash, ps.currentWallet.getName());
+                System.out.println("h="+html + " h="+hash);
                 if (html == null)
                     return;
                 
@@ -2949,6 +3291,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                     showScreen();
                     return;
                 }
+                
                 
                 DNSSn d = new DNSSn(domain, wl);
                 if (!d.setRecord(ps.chosenFile, sm.getSR())) {
@@ -4079,6 +4422,11 @@ public class AdvancedClient implements ActionListener, ComponentListener {
     class FrackFixerCb implements CallbackInterface {
 	public void callback(Object result) {
             FrackFixerResult fr = (FrackFixerResult) result;
+            
+            if (fr.status == FrackFixerResult.STATUS_PROCESSING) {
+                wl.debug(ltag, "Processing coin");
+		return;
+            }
 
             if (fr.status == FrackFixerResult.STATUS_ERROR) {
                 wl.error(ltag, "Failed to fix");
@@ -4110,7 +4458,11 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {
                         ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
-                        ps.errText = "Failed to export coins";
+                        if (!er.errText.isEmpty())
+                            ps.errText = er.errText;
+                        else
+                            ps.errText = "Failed to export coins";
+                        
                         showScreen();
                     }
                 });
@@ -4170,6 +4522,11 @@ public class AdvancedClient implements ActionListener, ComponentListener {
 	public void callback(final Object result) {
             LossFixerResult lr = (LossFixerResult) result;
             
+            if (lr.status == LossFixerResult.STATUS_PROCESSING) {
+                wl.debug(ltag, "Processing lossfixer");
+                return;
+            }
+            
             wl.debug(ltag, "LossFixer finished");
 
             if (sm.getActiveWallet().isEncrypted()) {
@@ -4227,13 +4584,18 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                         showScreen();
                     }
                 });
+                return;
             }
       
             if (sr.status == SenderResult.STATUS_ERROR) {
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {
                         ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
-                        ps.errText = "Error occurred. Please check the logs";
+                        if (!sr.errText.isEmpty())
+                            ps.errText = sr.errText;
+                        else  
+                            ps.errText = "Error occurred. Please check the logs";
+                        
                         showScreen();
                     }
                 });
@@ -4249,6 +4611,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                     showScreen();
                     return;
                 }
+                
                 ps.typedAmount = sr.amount;
                 sm.getActiveWallet().appendTransaction(ps.typedMemo, sr.amount * -1, sr.receiptId);
                 Wallet srcWallet = ps.srcWallet;
@@ -4256,7 +4619,6 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 if (dstWallet != null) {
                     dstWallet.appendTransaction(ps.typedMemo, sr.amount, sr.receiptId);
                     if (dstWallet.isEncrypted()) {
-                        //wl.debug(ltag, "Set wallet to " + currentDstWallet);
                         sm.changeServantUser("Vaulter", dstWallet.getName());
                         sm.startVaulterService(new VaulterCb(), dstWallet.getPassword());          
                     } else {
@@ -4290,9 +4652,90 @@ public class AdvancedClient implements ActionListener, ComponentListener {
     
     class ReceiverCb implements CallbackInterface {
 	public void callback(Object result) {
-            ReceiverResult sr = (ReceiverResult) result;
+            ReceiverResult rr = (ReceiverResult) result;
+            
+            wl.debug(ltag, "Receiver finished: " + rr.status);
+            if (rr.status == ReceiverResult.STATUS_PROCESSING) {
+                setRAIDATransferProgress(rr.totalRAIDAProcessed, rr.totalFilesProcessed, rr.totalFiles);
+                return;
+            }
+            
             
             wl.debug(ltag, "Receiver finished");
+            if (rr.status == ReceiverResult.STATUS_CANCELLED) {
+                EventQueue.invokeLater(new Runnable() {         
+                    public void run() {
+                        ps.errText = "Operation Cancelled";
+                        ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                        showScreen();
+                    }
+                });
+                return;
+            }
+      
+            if (rr.status == ReceiverResult.STATUS_ERROR) {
+                EventQueue.invokeLater(new Runnable() {         
+                    public void run() {
+                        ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                        if (!rr.errText.isEmpty())
+                            ps.errText = rr.errText;
+                        else  
+                            ps.errText = "Error occurred. Please check the logs";
+                        
+                        showScreen();
+                    }
+                });
+		return;
+            } 
+            
+            if (rr.amount > 0) {
+                wl.debug(ltag, "rramount " + rr.amount + " typed " + ps.typedAmount);
+                if (ps.typedAmount != rr.amount) {
+                    ps.typedAmount = rr.amount;
+                    ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                    ps.errText = "Not all coins were received. Please check the logs";
+                    showScreen();
+                    return;
+                }
+                
+                ps.typedAmount = rr.amount;
+                
+                Wallet srcWallet = ps.srcWallet;
+                Wallet dstWallet = ps.dstWallet;
+                
+                srcWallet.appendTransaction(ps.typedMemo, rr.amount * -1, rr.receiptId);
+                if (dstWallet != null) {
+                    dstWallet.appendTransaction(ps.typedMemo, rr.amount, rr.receiptId);
+                    if (dstWallet.isEncrypted()) {
+                        sm.changeServantUser("Vaulter", dstWallet.getName());
+                        sm.startVaulterService(new VaulterCb(), dstWallet.getPassword());          
+                    } else {
+                        ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                        showScreen();
+                    }
+                }      
+                
+                return;
+            } else {
+                ps.typedAmount = 0;
+                ps.errText = "Coins were not sent. Please check the logs";     
+            }
+            
+            ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+            showScreen();
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
             /*
             currentWallet = currentDstWallet;
             if (!sm.getActiveWallet().isEncrypted()) {
