@@ -48,7 +48,6 @@ class TriangleButton extends JButton {
         Polygon p = new Polygon();
         
         if (isReversed) {
-            System.out.println("rev");
             p.addPoint( 4 ,4  );
             p.addPoint( 12 , 4   );
             p.addPoint( 8   , 12 );

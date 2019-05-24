@@ -171,13 +171,13 @@ public class AdvancedClient implements ActionListener, ComponentListener {
        
     
     public void setSNs(int[] sns) {
-        Wallet w = wallets[ps.currentWalletIdx];
+        Wallet w = wallets[ps.currentWalletIdx - 1];
         
         w.setSNs(sns);
     }
     
     public void showCoinsDone(int[][] counters) {
-        Wallet w = wallets[ps.currentWalletIdx];
+        Wallet w = wallets[ps.currentWalletIdx - 1];
         JLabel cntLabel = (JLabel) w.getuiRef();
      
         int totalCnt = AppCore.getTotal(counters[Config.IDX_FOLDER_BANK]) +
@@ -210,16 +210,15 @@ public class AdvancedClient implements ActionListener, ComponentListener {
     }
     
     public void showCoinsGoNext() {
-        if (wallets.length > ps.currentWalletIdx + 1) {
-            ps.currentWalletIdx++;
-            
+        if (wallets.length > ps.currentWalletIdx) {     
             if (!wallets[ps.currentWalletIdx].isSkyWallet()) {
                 sm.changeServantUser("ShowCoins", wallets[ps.currentWalletIdx].getName());
                 sm.startShowCoinsService(new ShowCoinsCb());
             } else {
                 sm.changeServantUser("ShowEnvelopeCoins", wallets[ps.currentWalletIdx].getParent().getName());
                 sm.startShowSkyCoinsService(new ShowEnvelopeCoinsCb(), wallets[ps.currentWalletIdx].getIDCoin().sn);
-            }         
+            }      
+            ps.currentWalletIdx++;
         } else {
             ps.isShowCoinsFinished = true;
         }
@@ -746,6 +745,13 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             case ProgramState.SCREEN_LIST_SERIALS_DONE:
                 showListSerialsDone();
                 break;
+            case ProgramState.SCREEN_CONFIRM_CLEAR:
+                showConfirmClearScreen();
+                break;
+            case ProgramState.SCREEN_CLEAR_DONE:
+                showClearDoneScreen();
+                break;
+                
                 
         }
         
@@ -1179,6 +1185,121 @@ public class AdvancedClient implements ActionListener, ComponentListener {
   
         
         subInnerCore.add(bp);  
+        
+    }
+    
+    public void showClearDoneScreen() {
+        boolean isError = !ps.errText.equals("");      
+        JPanel subInnerCore;
+        
+        if (isError) {
+            subInnerCore = getModalJPanel("Error");
+            AppUI.hr(subInnerCore, 32);
+            maybeShowError(subInnerCore);
+            return;
+        }
+        
+        subInnerCore = getModalJPanel("Confirmation");
+        
+        // Container
+        JPanel ct = new JPanel();
+        AppUI.noOpaque(ct);
+        subInnerCore.add(ct);
+   
+        GridBagLayout gridbag = new GridBagLayout();
+        GridBagConstraints c = new GridBagConstraints();      
+        ct.setLayout(gridbag);
+        
+        int y = 0;
+
+
+        String txt;
+        
+        if (ps.needBackup)
+            txt = "Your Log Files and Transaction History have been permanently deleted.";
+        else 
+            txt = "Your Log Files and Transaction History have been backed up to \\path\\LogTransactionBackup<br><br>They have been permanently deleted from Advanced Client.";
+        
+        y++;
+        // Q
+        JLabel x = new JLabel("<html><div style='width:460px;text-align:center'>" + txt + "</div></html>");
+        AppUI.setCommonBoldFont(x);
+        c.insets = new Insets(42, 0, 4, 0);
+        c.anchor = GridBagConstraints.CENTER;
+        c.gridx = GridBagConstraints.RELATIVE;;
+        c.gridy = y;
+        c.gridwidth = 2;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+               
+        y++; 
+             
+        JPanel bp = getOneButtonPanel();
+        subInnerCore.add(bp);       
+    }
+    
+    public void showConfirmClearScreen() {
+        JPanel subInnerCore = getModalJPanel("Confirmation");
+     
+        // Container
+        JPanel ct = new JPanel();
+        AppUI.noOpaque(ct);
+        subInnerCore.add(ct);
+        
+
+        
+        
+        GridBagLayout gridbag = new GridBagLayout();
+        GridBagConstraints c = new GridBagConstraints();      
+        ct.setLayout(gridbag);
+        
+        int y = 0;
+        // From Label
+        JLabel x = new JLabel("<html><div style='width:460px;text-align:center'>This is permanent and irreversible!</div></html>");
+        AppUI.setCommonFont(x);
+        c.anchor = GridBagConstraints.EAST;
+        c.insets = new Insets(0, 0, 4, 0); 
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+        c.gridwidth = 2;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+
+        String txt;
+        
+        if (ps.needBackup)
+            txt = "Are you sure you want to delete Log files and Transaction history?";
+        else 
+            txt = "Are you sure you want to delete Log files and Transaction history without backup?";
+        
+        y++;
+        // Q
+        x = new JLabel("<html><div style='width:460px;text-align:center'><b>" + txt + "</b></div></html>");
+        AppUI.setCommonBoldFont(x);
+        c.insets = new Insets(42, 0, 4, 0);
+        c.anchor = GridBagConstraints.CENTER;
+        c.gridx = GridBagConstraints.RELATIVE;;
+        c.gridy = y;
+        c.gridwidth = 2;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+               
+        y++; 
+             
+        JPanel bp = getTwoButtonPanel(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                
+             //   if (!AppCore.eraseSync)
+                
+                launchErasers();
+                
+              //  ps.currentScreen = ProgramState.SCREEN_CLEAR_DONE;
+               // showScreen();
+            }
+        });
+  
+        
+        subInnerCore.add(bp);    
         
     }
     
@@ -1647,18 +1768,54 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         }
 
         ps.isUpdatedWallets = true;
+        ps.currentWalletIdx = 0;
         
-        if (wallets.length > 0) {
-            ps.currentWalletIdx = 0;
+        showCoinsGoNext();
+        setTotalCoins();
+      
+    }
+    
+    public void eraserGoNext() {
+        if (wallets.length > ps.currentWalletIdx) {
             if (!wallets[ps.currentWalletIdx].isSkyWallet()) {
-                sm.changeServantUser("ShowCoins", wallets[ps.currentWalletIdx].getName());
-                sm.startShowCoinsService(new ShowCoinsCb());
+                sm.changeServantUser("Eraser", wallets[ps.currentWalletIdx].getName());
+                sm.startEraserService(new EraserCb(), ps.needBackup);
+                ps.currentWalletIdx++;
             } else {
-                sm.changeServantUser("ShowEnvelopeCoins", wallets[ps.currentWalletIdx].getParent().getName());
-                sm.startShowSkyCoinsService(new ShowEnvelopeCoinsCb(), wallets[ps.currentWalletIdx].getIDCoin().sn);
-            }      
+                ps.currentWalletIdx++;
+                eraserGoNext();
+            }
+            
+        } else {
+            ps.currentScreen = ProgramState.SCREEN_CLEAR_DONE;
+            
+            if (ps.needBackup) {
+                if (!wl.copyMe()) {
+                    ps.errText = "Failed to copy main logs";
+                    showScreen();
+                    return;
+                } 
+            }
+            
+            wl.killMe();
+            showScreen();
         }
     }
+    
+    public void launchErasers() {
+        if (wallets.length  == 0) 
+            return;
+        
+        while (!ps.isShowCoinsFinished) {
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {}
+        }
+        
+        ps.currentWalletIdx = 0;
+        eraserGoNext();   
+    }
+    
     
     public void showDefaultScreen() {
         showLeftScreen();
@@ -2488,7 +2645,127 @@ public class AdvancedClient implements ActionListener, ComponentListener {
     }
     
     public void showClearScreen() {
+        showLeftScreen();
         
+        JPanel rightPanel = getRightPanel();    
+        JPanel ct = new JPanel();
+        AppUI.setBoxLayout(ct, true);
+        AppUI.noOpaque(ct);
+        rightPanel.add(ct);
+        
+        JLabel ltitle = AppUI.getTitle("Clear History");   
+        ct.add(ltitle);
+        AppUI.hr(ct, 12);
+        
+        maybeShowError(ct);
+        
+        JLabel ntext = new JLabel("Clearing history will ensure your privacy if somebody gains access to your computer");
+        AppUI.setFont(ntext, 15);
+        AppUI.alignCenter(ntext);
+        ct.add(ntext);
+        
+        // Space
+        AppUI.hr(ct, 34);
+        
+        ntext = new JLabel("WARNING!");
+        AppUI.setBoldFont(ntext, 21);
+        AppUI.alignCenter(ntext);
+        ct.add(ntext);
+        
+        // Space
+        AppUI.hr(ct, 4);
+        
+        ntext = new JLabel("Clearing the History is a permanent and irreversible process");
+        AppUI.setBoldFont(ntext, 21);
+        AppUI.alignCenter(ntext);
+        ct.add(ntext);
+        
+          // Space
+        AppUI.hr(ct, 28);
+        
+        ntext = new JLabel("Do not proceed unless these files will never be needed again.");
+        AppUI.setFont(ntext, 20);
+        AppUI.alignCenter(ntext);
+        ct.add(ntext);
+        
+        ntext = new JLabel("Otherwise, copy the history and store it elsewhere before deleting.");
+        AppUI.setFont(ntext, 20);
+        AppUI.alignCenter(ntext);
+        ct.add(ntext);
+        
+        // Space
+        AppUI.hr(ct, 20);
+        
+        ntext = new JLabel("No coins will be deleted, only transaction history and log files.");            
+        AppUI.setFont(ntext, 20);
+        AppUI.alignCenter(ntext);
+        ct.add(ntext);
+        
+        
+        // GridHolder Container
+        JPanel gct = new JPanel();
+        AppUI.noOpaque(gct);
+   
+        GridBagLayout gridbag = new GridBagLayout();
+        gct.setLayout(gridbag);   
+        GridBagConstraints c = new GridBagConstraints();    
+        
+        int y = 0;
+        
+        
+        // Checkbox
+        MyCheckBox cb0 = new MyCheckBox("I have read and understand the Warning");
+        cb0.setBoldFontSize(21);
+        c.anchor = GridBagConstraints.WEST;
+        c.insets = new Insets(0, 0, 6, 0); 
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = 0;
+        gridbag.setConstraints(cb0.getCheckBox(), c);       
+        gct.add(cb0.getCheckBox());
+        
+        y++;
+        final MyCheckBox cb1 = new MyCheckBox("Create Backup of History and Log files");
+        cb1.setBoldFontSize(21);
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+        gridbag.setConstraints(cb1.getCheckBox(), c);       
+        gct.add(cb1.getCheckBox());
+
+           
+        ct.add(gct);
+  
+        // Space
+        AppUI.hr(ct, 20);
+
+        JPanel bp = getTwoButtonPanel(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {    
+
+                ps.needBackup = cb1.isChecked();
+                ps.currentScreen = ProgramState.SCREEN_CONFIRM_CLEAR;
+                showScreen();
+            }
+        });
+        
+        
+        continueButton.disable();
+        
+        cb0.addListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+                Object o = e.getSource();
+                
+                if (o instanceof JCheckBox) {
+                    JCheckBox cb = (JCheckBox) o;
+                    if (cb.isSelected()) {
+                        continueButton.enable();
+                    } else {
+                        continueButton.disable();
+                    }  
+                }
+            }
+        });
+       
+        AppUI.hr(rightPanel, 20);
+        rightPanel.add(bp); 
     }
     
     public void showListSerialsScreen() {
@@ -2806,7 +3083,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
     public void showListSerialsDone() {
         showLeftScreen();
  
-        Wallet w = ps.srcWallet;     
+        final Wallet w = ps.srcWallet;     
 
         JPanel rightPanel = getRightPanel(AppUI.getColor4());    
         JPanel ct = new JPanel();
@@ -2892,22 +3169,20 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         
         JPanel bp = getTwoButtonPanelCustom("Print", "Export History", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                /*
                     try {
-                   //     table.print();
+                        table.print();
                     } catch (PrinterException pe) {
                         System.out.println("Failed to print");
-                    }*/
+                    }
                 }
             }, new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                Wallet w = sm.getActiveWallet();
                 JFileChooser c = new JFileChooser();
-                c.setSelectedFile(new File(w.getName() + "-transactions.csv"));
+                c.setSelectedFile(new File(w.getName() + "-serials.csv"));
 
                 int rVal = c.showSaveDialog(null);
                 if (rVal == JFileChooser.APPROVE_OPTION) {
-                    w.saveTransations(c.getSelectedFile().getAbsolutePath());
+                    w.saveSerials(c.getSelectedFile().getAbsolutePath());
                 }
             }
         });
@@ -2964,10 +3239,13 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
                 
                 lbl = (JLabel) this;
-                if (column == 0) {
-                    AppUI.setColor(lbl, AppUI.getColor0());
-                    AppUI.underLine(lbl);
-                    //AppUI.setHandCursor();
+                if (column == 0) {                          
+                    String hash = trs[row][5];                
+                    String html = AppCore.getReceiptHtml(hash, ps.currentWallet.getName());
+                    if (html != null) {
+                        AppUI.setColor(lbl, AppUI.getColor0());
+                        AppUI.underLine(lbl);
+                    }
                 } else {
                     AppUI.setColor(lbl, Color.BLACK);
                 }
@@ -3024,8 +3302,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 if (column != 0)
                     return;
                 
-                String hash = trs[row][5];
-                
+                String hash = trs[row][5];                
                 String html = AppCore.getReceiptHtml(hash, ps.currentWallet.getName());
                 if (html == null)
                     return;
@@ -4340,7 +4617,8 @@ public class AdvancedClient implements ActionListener, ComponentListener {
 	public void callback(final Object result) {
             final Object fresult = result;
             ShowCoinsResult scresult = (ShowCoinsResult) fresult;
-                 
+            
+            setSNs(scresult.coins);
             showCoinsDone(scresult.counters);
         }
     }
@@ -4427,22 +4705,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             });
 
             
-            sm.startFrackFixerService(new FrackFixerCb());
-            /*
-            if (!sm.getActiveWallet().isEncrypted()) {
-                EventQueue.invokeLater(new Runnable() {         
-                    public void run() {
-                        ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
-                        showScreen();
-                    }
-                });
-                
-             //   sm.startFrackFixerService(new FrackFixerCb());
-            } else {
-                sm.startVaulterService(new VaulterCb());
-            } 
-            */
-            
+            sm.startFrackFixerService(new FrackFixerCb());           
 	}
     }
 
@@ -4588,7 +4851,25 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         public void callback(final Object result) {
             EraserResult er = (EraserResult) result;
 
-            wl.debug(ltag, "Eraser finished");
+            if (er.status == EraserResult.STATUS_ERROR) {
+                
+                EventQueue.invokeLater(new Runnable() {         
+                    public void run() {
+                        ps.errText = "Erasing failed. Please check the logs";
+                        ps.currentScreen = ProgramState.SCREEN_CLEAR_DONE;
+                        showScreen();
+                    }
+                }); 
+                
+                return;
+            }
+            
+            System.out.println("Eraser cb");
+            EventQueue.invokeLater(new Runnable() {         
+                public void run() {
+                    eraserGoNext();
+                }
+            });         
 	}
     }
     

@@ -37,6 +37,8 @@ public class ProgramState {
     final public static int SCREEN_CLEAR = 22;
     final public static int SCREEN_LIST_SERIALS = 23;
     final public static int SCREEN_LIST_SERIALS_DONE = 24;
+    final public static int SCREEN_CONFIRM_CLEAR = 25;
+    final public static int SCREEN_CLEAR_DONE = 26;
     
     
     final static int CB_STATE_INIT = 1;
@@ -91,6 +93,8 @@ public class ProgramState {
     
     int foundSN;
     
+    boolean needBackup;
+    
     public ProgramState() {
         currentScreen = SCREEN_AGREEMENT;
         cwalletRecoveryRequested = cwalletPasswordRequested = false;
@@ -125,6 +129,8 @@ public class ProgramState {
         sendType = SEND_TYPE_WALLET;
         
         isUpdatedWallets = false;
+        
+        needBackup = false;
     }
     
 }

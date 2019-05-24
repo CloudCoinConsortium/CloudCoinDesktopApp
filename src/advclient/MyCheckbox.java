@@ -55,6 +55,10 @@ public class MyCheckBox {
         AppUI.setBoldFont(txt, 18);
     }
     
+    public void setBoldFontSize(int size) {
+        AppUI.setBoldFont(txt, size);
+    }
+    
     public JPanel makeUI(String text) {
         cb = new JCheckBox();
         
