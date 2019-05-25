@@ -535,10 +535,11 @@ public class AppUI {
     }
 
     public static JScrollPane setupTable(JTable table, String[] columnNames, String[][] data, DefaultTableCellRenderer r) {
+        final String[] fcolumnNames = columnNames;
         DefaultTableModel model = new DefaultTableModel(data.length, data[0].length - 1) {
             @Override
             public String getColumnName(int col) {        
-                return columnNames[col];
+                return fcolumnNames[col];
             }
             
             @Override
