@@ -7,6 +7,7 @@ package advclient;
 
 import global.cloudcoin.ccbank.core.Wallet;
 import java.util.ArrayList;
+import java.util.Hashtable;
 
 /**
  *
@@ -95,6 +96,8 @@ public class ProgramState {
     
     boolean needBackup;
     
+    public Hashtable<String, String[]> envelopes;
+    
     public ProgramState() {
         currentScreen = SCREEN_AGREEMENT;
         cwalletRecoveryRequested = cwalletPasswordRequested = false;
@@ -131,6 +134,8 @@ public class ProgramState {
         isUpdatedWallets = false;
         
         needBackup = false;
+        
+        envelopes = null;
     }
     
 }

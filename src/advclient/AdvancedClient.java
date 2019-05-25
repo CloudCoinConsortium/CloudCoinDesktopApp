@@ -3193,6 +3193,8 @@ public class AdvancedClient implements ActionListener, ComponentListener {
     
     public void showTransactionsScreen() {
         
+        boolean isSky = sm.getActiveWallet().isSkyWallet() ? true : false;
+        
        // sm.startFrackFixerService(new FrackFixerCb());
         
         showLeftScreen();
@@ -3213,18 +3215,67 @@ public class AdvancedClient implements ActionListener, ComponentListener {
 
         
         // Create transactions
+        final String[][] trs;
         JLabel trLabel;
-        final String[][] trs = sm.getActiveWallet().getTransactions();
+        String[] headers;
         
-        if (trs == null || trs.length == 0) {
-            trLabel = new JLabel("No transactions");
-            AppUI.setSemiBoldFont(trLabel, 20);
-            AppUI.alignCenter(trLabel);
-            ct.add(trLabel);
-            return;
+        if (isSky) {
+            trLabel = new JLabel("Wallet Info");
+            if (ps.envelopes == null) {
+                trLabel = new JLabel("No transactions");
+                AppUI.setSemiBoldFont(trLabel, 20);
+                AppUI.alignCenter(trLabel);
+                ct.add(trLabel);
+                return;
+            }
+ 
+            Enumeration<String> enumeration = ps.envelopes.keys();
+
+            trs = new String[ps.envelopes.size()][];
+            int i = 0;
+            while (enumeration.hasMoreElements()) {
+                String key = enumeration.nextElement();
+                String[] data = ps.envelopes.get(key);
+
+                System.out.println("get " + i + " k=" + key + " d[0]"+data[0] + " d[1]" + data[1] + " d[2]" + data[2]);
+                trs[i] = new String[4];
+                trs[i][0] = data[0];
+                trs[i][1] = data[2];
+                trs[i][2] = data[1];
+                trs[i][3] = "";
+       
+                i++;
+            }
+                    
+            headers = new String[] {
+                "Memo (note)",
+                "Date",
+                "Amount"
+            };        
+                    
+                    
+                    
+        } else {
+            trs = sm.getActiveWallet().getTransactions();
+        
+            if (trs == null || trs.length == 0) {
+                trLabel = new JLabel("No transactions");
+                AppUI.setSemiBoldFont(trLabel, 20);
+                AppUI.alignCenter(trLabel);
+                ct.add(trLabel);
+                return;
+            }
+        
+            trLabel = new JLabel("Transaction History");
+            
+            headers = new String[] {
+                "Memo (note)",
+                "Date",
+                "Deposit",
+                "Withdraw",
+                "Total"
+            };
         }
-        
-        trLabel = new JLabel("Transaction History");
         AppUI.setSemiBoldFont(trLabel, 20);
         AppUI.alignCenter(trLabel);
         ct.add(trLabel);
@@ -3240,7 +3291,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 
                 lbl = (JLabel) this;
                 if (column == 0) {                          
-                    String hash = trs[row][5];                
+                    String hash = trs[row][trs[0].length - 1];                
                     String html = AppCore.getReceiptHtml(hash, ps.currentWallet.getName());
                     if (html != null) {
                         AppUI.setColor(lbl, AppUI.getColor0());
@@ -3280,13 +3331,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         };
      
         final JTable table = new JTable();
-        final JScrollPane scrollPane = AppUI.setupTable(table, new String[] {
-            "Memo (note)",
-            "Date",
-            "Deposit",
-            "Withdraw",
-            "Total"
-        }, trs, r);
+        final JScrollPane scrollPane = AppUI.setupTable(table, headers, trs, r);
         
         table.getColumnModel().getColumn(0).setPreferredWidth(240);
         table.getColumnModel().getColumn(1).setPreferredWidth(100);
@@ -3302,7 +3347,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 if (column != 0)
                     return;
                 
-                String hash = trs[row][5];                
+                String hash = trs[row][trs[0].length - 1];                
                 String html = AppCore.getReceiptHtml(hash, ps.currentWallet.getName());
                 if (html == null)
                     return;
@@ -4743,7 +4788,9 @@ public class AdvancedClient implements ActionListener, ComponentListener {
          
     class ExporterCb implements CallbackInterface {
 	public void callback(Object result) {
-            ExporterResult er = (ExporterResult) result;
+            final Object eresult = result;
+            final ExporterResult er = (ExporterResult) eresult;
+            
             if (er.status == ExporterResult.STATUS_ERROR) {
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {
@@ -4875,7 +4922,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
     
     class SenderCb implements CallbackInterface {
 	public void callback(Object result) {
-            SenderResult sr = (SenderResult) result;
+            final SenderResult sr = (SenderResult) result;
             
             wl.debug(ltag, "Sender finished: " + sr.status);
             if (sr.status == SenderResult.STATUS_PROCESSING) {
@@ -4952,6 +4999,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
 	public void callback(Object result) {
             ShowEnvelopeCoinsResult er = (ShowEnvelopeCoinsResult) result;
  
+            ps.envelopes = er.envelopes;
             setSNs(er.coins);
             showCoinsDone(er.counters);
         }
@@ -4960,7 +5008,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
     
     class ReceiverCb implements CallbackInterface {
 	public void callback(Object result) {
-            ReceiverResult rr = (ReceiverResult) result;
+            final ReceiverResult rr = (ReceiverResult) result;
             
             wl.debug(ltag, "Receiver finished: " + rr.status);
             if (rr.status == ReceiverResult.STATUS_PROCESSING) {
