@@ -32,6 +32,13 @@ public class ProgramState {
     final public static int SCREEN_TRANSFER_DONE = 17;
     final public static int SCREEN_TRANSFERRING = 18;
     final public static int SCREEN_BACKUP = 19;
+    final public static int SCREEN_SENDING = 20;
+    final public static int SCREEN_BACKUP_DONE = 21;
+    final public static int SCREEN_CLEAR = 22;
+    final public static int SCREEN_LIST_SERIALS = 23;
+    final public static int SCREEN_LIST_SERIALS_DONE = 24;
+    final public static int SCREEN_CONFIRM_CLEAR = 25;
+    final public static int SCREEN_CLEAR_DONE = 26;
     
     
     final static int CB_STATE_INIT = 1;
@@ -84,6 +91,10 @@ public class ProgramState {
     
     boolean isUpdatedWallets;
     
+    int foundSN;
+    
+    boolean needBackup;
+    
     public ProgramState() {
         currentScreen = SCREEN_AGREEMENT;
         cwalletRecoveryRequested = cwalletPasswordRequested = false;
@@ -108,6 +119,7 @@ public class ProgramState {
         
         receiptId = "";
         
+        foundSN = 0;
         
         isDstBoxFull = isSrcBoxFull = true;
         typedSrcPassword = typedDstPassword = "";
@@ -117,6 +129,8 @@ public class ProgramState {
         sendType = SEND_TYPE_WALLET;
         
         isUpdatedWallets = false;
+        
+        needBackup = false;
     }
     
 }
