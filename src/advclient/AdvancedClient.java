@@ -3250,7 +3250,9 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 "Memo (note)",
                 "Date",
                 "Amount"
-            };                     
+
+            };        
+                      
         } else {
             trs = sm.getActiveWallet().getTransactions();
         
