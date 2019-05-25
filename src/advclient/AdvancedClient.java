@@ -1018,9 +1018,12 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         
         JPanel bp = getTwoButtonPanelCustom("Show Folder", "Continue", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                resetState();
-                ps.currentScreen = ProgramState.SCREEN_WITHDRAW;
-                showScreen();
+                File file = new File(ps.chosenFile);
+                Desktop desktop = Desktop.getDesktop();
+                try {
+                    desktop.open(file);
+                } catch (IOException ex){ }
+                
             }
         },  new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -1439,9 +1442,9 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 if (ps.sendType == ProgramState.SEND_TYPE_FOLDER) {                
                     
                     if (ps.srcWallet.isEncrypted()) {
-                        sm.startSecureExporterService(Config.TYPE_STACK, ps.typedAmount, Config.DEFAULT_TAG, ps.chosenFile, new ExporterCb());
+                        sm.startSecureExporterService(Config.TYPE_STACK, ps.typedAmount, Config.DEFAULT_TAG, ps.chosenFile, false, new ExporterCb());
                     } else {
-                        sm.startExporterService(Config.TYPE_STACK, ps.typedAmount, Config.DEFAULT_TAG, ps.chosenFile, new ExporterCb());
+                        sm.startExporterService(Config.TYPE_STACK, ps.typedAmount, Config.DEFAULT_TAG, ps.chosenFile, false, new ExporterCb());
                     }
                 } else if (ps.sendType == ProgramState.SEND_TYPE_WALLET) {
                     ps.dstWallet.setPassword(ps.typedDstPassword);              
@@ -3030,7 +3033,6 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         JPanel bp = getTwoButtonPanel(new ActionListener() {
             public void actionPerformed(ActionEvent e) {              
                 int srcIdx = cboxfrom.getSelectedIndex() - 1;              
-                System.out.println("sss="+srcIdx);
                 if (srcIdx < 0 || srcIdx >= idxs.length) {
                     ps.errText = "Please select Wallet";
                     showScreen();
@@ -3070,9 +3072,17 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                     showScreen();
                     return;
                 }
-                    
-                ps.currentScreen = ProgramState.SCREEN_BACKUP_DONE;
-                showScreen();
+                
+                sm.changeServantUser("Exporter", ps.srcWallet.getName());
+                int total = ps.srcWallet.getTotal();
+                if (ps.srcWallet.isEncrypted()) {
+                    sm.startSecureExporterService(Config.TYPE_STACK, total, Config.BACKUP_TAG, ps.chosenFile, true, new ExporterBackupCb());
+                } else {
+                    sm.startExporterService(Config.TYPE_STACK, total, Config.BACKUP_TAG, ps.chosenFile, true, new ExporterBackupCb());
+                }
+            
+            //    ps.currentScreen = ProgramState.SCREEN_BACKUP_DONE;
+            //    showScreen();
             }
         });
         
@@ -4806,8 +4816,6 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             }
 
             if (er.status == ExporterResult.STATUS_FINISHED) {
-		//exportedFilenames = er.exportedFileNames;
-
                 if (er.totalExported != ps.typedAmount) {
                     EventQueue.invokeLater(new Runnable() {         
                         public void run() {
@@ -4822,6 +4830,40 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {
                         ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                        showScreen();
+                    }
+                });
+                
+		return;
+            }
+	}
+    }
+    
+    class ExporterBackupCb implements CallbackInterface {
+	public void callback(Object result) {
+            final Object eresult = result;
+            final ExporterResult er = (ExporterResult) eresult;
+            
+            if (er.status == ExporterResult.STATUS_ERROR) {
+                EventQueue.invokeLater(new Runnable() {         
+                    public void run() {
+                        ps.currentScreen = ProgramState.SCREEN_BACKUP_DONE;
+                        if (!er.errText.isEmpty())
+                            ps.errText = er.errText;
+                        else
+                            ps.errText = "Failed to backup coins";
+                        
+                        showScreen();
+                    }
+                });
+                
+                return;
+            }
+
+            if (er.status == ExporterResult.STATUS_FINISHED) {
+                EventQueue.invokeLater(new Runnable() {         
+                    public void run() {
+                        ps.currentScreen = ProgramState.SCREEN_BACKUP_DONE;
                         showScreen();
                     }
                 });
@@ -5077,27 +5119,6 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             
             ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
             showScreen();
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            /*
-            currentWallet = currentDstWallet;
-            if (!sm.getActiveWallet().isEncrypted()) {
-                cbState = IMPORT_STATE_DONE;
-            } else {
-                sm.startVaulterService(new VaulterCb());
-            }  
-           */ 
 	}
     }
    
