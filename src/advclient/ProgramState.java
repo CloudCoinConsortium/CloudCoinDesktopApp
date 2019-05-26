@@ -40,6 +40,9 @@ public class ProgramState {
     final public static int SCREEN_LIST_SERIALS_DONE = 24;
     final public static int SCREEN_CONFIRM_CLEAR = 25;
     final public static int SCREEN_CLEAR_DONE = 26;
+    final public static int SCREEN_FIX_FRACKED = 27;
+    final public static int SCREEN_FIXING_FRACKED = 28;
+    final public static int SCREEN_FIX_DONE = 29;
     
     
     final static int CB_STATE_INIT = 1;
@@ -80,6 +83,8 @@ public class ProgramState {
     boolean isShowCoinsFinished;
     
     int statToBankValue, statToBank, statFailed;
+    
+    int statTotalFracked, statTotalFixed, statFailedToFix;
     
     String receiptId;
     
@@ -136,6 +141,8 @@ public class ProgramState {
         needBackup = false;
         
         envelopes = null;
+        
+        statTotalFracked = statTotalFixed = statFailedToFix = 0;
     }
     
 }

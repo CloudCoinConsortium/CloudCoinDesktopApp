@@ -121,7 +121,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
     MyButton continueButton;
     
     JProgressBar pbar;
-    JLabel depositText, transferText;
+    JLabel pbarText;
     
     JFrame mainFrame;
     
@@ -153,6 +153,8 @@ public class AdvancedClient implements ActionListener, ComponentListener {
 
         String home = System.getProperty("user.home");
         home += File.separator + "DebugX";
+        
+
         
         sm = new ServantManager(wl, home);
         if (!sm.init()) {
@@ -314,6 +316,15 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         return false;
     }
     
+    public boolean isFixing() {
+        if (ps.currentScreen == ProgramState.SCREEN_FIX_FRACKED ||
+                ps.currentScreen == ProgramState.SCREEN_FIXING_FRACKED ||
+                ps.currentScreen == ProgramState.SCREEN_FIX_DONE)
+            return true;
+        
+        return false;
+    }
+    
     public void fillHeaderPanel() {
         JPanel p = new JPanel();
         AppUI.noOpaque(p);
@@ -405,9 +416,9 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             AppUI.setTitleBoldFont(b0, 32);
             AppUI.setHandCursor(b0);
             if (isDepositing()) {
-           //     AppUI.underLine(b0);
+                AppUI.underLine(b0);
             } else {
-          //      AppUI.noUnderLine(b0);
+                AppUI.noUnderLine(b0);
             }
             
             gridbag.setConstraints(b0, c);
@@ -526,7 +537,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             } 
         };
  
-        String[] items = {"Backup", "List serials", "Clear History" };
+        String[] items = {"Backup", "List serials", "Clear History", "Fix Fracked" };
         for (int i = 0; i < items.length; i++) {
             JMenuItem menuItem = new JMenuItem(items[i]);
             menuItem.setActionCommand("" + i);
@@ -553,6 +564,8 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                         ps.currentScreen = ProgramState.SCREEN_LIST_SERIALS;
                     } else if (action.equals("2")) {
                         ps.currentScreen = ProgramState.SCREEN_CLEAR;
+                    } else if (action.equals("3")) {
+                        ps.currentScreen = ProgramState.SCREEN_FIX_FRACKED;
                     }
                     showScreen();
                 }
@@ -610,12 +623,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 ficon.repaint();
             }
         });
-        
-        
-        
-        
-        
-        
+
         icon0.addMouseListener(new MouseAdapter() {
             public void mouseReleased(MouseEvent e) {
                 ficon.setOpaque(true);
@@ -751,7 +759,15 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             case ProgramState.SCREEN_CLEAR_DONE:
                 showClearDoneScreen();
                 break;
-                
+            case ProgramState.SCREEN_FIX_FRACKED:
+                showFixfrackedScreen();
+                break;
+            case ProgramState.SCREEN_FIXING_FRACKED:
+                showFixingfrackedScreen();
+                break;
+            case ProgramState.SCREEN_FIX_DONE:
+                showFixDoneScreen();
+                break;
                 
         }
         
@@ -782,15 +798,107 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         pbar.setVisible(true);
         pbar.setValue(raidaProcessed);
         
-        depositText.setText(totalFilesProcessed + " / " + totalFiles + " Deposited");
+        pbarText.setText(totalFilesProcessed + " / " + totalFiles + " Deposited");
+        pbarText.repaint();
     }
     
     private void setRAIDATransferProgress(int raidaProcessed, int totalFilesProcessed, int totalFiles) {
         pbar.setVisible(true);
         pbar.setValue(raidaProcessed);
         
-        transferText.setText(totalFilesProcessed + " / " + totalFiles + " Transferred");
+        pbarText.setText(totalFilesProcessed + " / " + totalFiles + " Transferred");
+        pbarText.repaint();
     }
+    
+    private void setRAIDAFixingProgress(int raidaProcessed, int totalFilesProcessed, int totalFiles, int fixingRAIDA) {
+        pbar.setVisible(true);
+        pbar.setValue(raidaProcessed);
+        
+        pbarText.setText("<html><div style='text-align:center'>Fixing on RAIDA " + 
+                fixingRAIDA + "<br>" + totalFilesProcessed + " / " + totalFiles + " Fixed</div></html>");
+        pbarText.repaint();
+    }
+    
+    
+    public void showFixingfrackedScreen() {
+        JPanel subInnerCore = getModalJPanel("Fixing in Progress");
+        maybeShowError(subInnerCore);
+
+        JPanel ct = new JPanel();
+        AppUI.noOpaque(ct);
+        subInnerCore.add(ct);
+        
+        GridBagLayout gridbag = new GridBagLayout();
+        GridBagConstraints c = new GridBagConstraints();      
+        ct.setLayout(gridbag);
+        
+        int y = 0;
+        // Password Label
+        pbarText = new JLabel("");
+        AppUI.setCommonFont(pbarText);
+        c.insets = new Insets(40, 20, 4, 0);
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+        gridbag.setConstraints(pbarText, c);
+        ct.add(pbarText);
+        
+        y++;
+        // ProgressBar
+        pbar = new JProgressBar();
+        pbar.setStringPainted(true);
+        AppUI.setMargin(pbar, 0);
+        AppUI.setSize(pbar, (int) (tw / 2.6f) , 50);
+        pbar.setMinimum(0);
+        pbar.setMaximum(24);
+        pbar.setValue(0);
+        pbar.setUI(new FancyProgressBar());
+        AppUI.noOpaque(pbar);
+        
+        c.insets = new Insets(20, 20, 4, 0);
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+        gridbag.setConstraints(pbar, c);
+        ct.add(pbar);
+        
+        JPanel bp = getOneButtonPanelCustom("Cancel", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                sm.cancel("FrackFixer");
+
+                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                showScreen();
+            }
+        });
+       
+        subInnerCore.add(bp);  
+        
+        Thread t = new Thread(new Runnable() {
+            public void run(){
+                if (!ps.isEchoFinished) {
+                    pbarText.setText("Checking RAIDA ...");
+                    pbarText.repaint();
+                }
+                
+                try {
+                    Thread.sleep(200);
+                } catch (InterruptedException e) {}
+                
+                while (!ps.isEchoFinished) {
+                    try {
+                        Thread.sleep(300);
+                    } catch (InterruptedException e) {}
+                }
+
+                wl.debug(ltag, "Fixing coins in " + ps.srcWallet.getName());
+                
+                
+                sm.setActiveWalletObj(ps.srcWallet);                
+                sm.startFrackFixerService(new FrackFixerOnPurposeCb());
+            }
+        });
+        
+        t.start();
+    }
+    
     
     public void showSendingScreen() {
         JPanel subInnerCore = getModalJPanel("Transfer in Progress");
@@ -815,13 +923,13 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         gridbag.setConstraints(x, c);
         ct.add(x);
         
-        transferText = new JLabel("");
-        AppUI.setCommonFont(transferText);
+        pbarText = new JLabel("");
+        AppUI.setCommonFont(pbarText);
         c.insets = new Insets(40, 20, 4, 0);
         c.gridx = GridBagConstraints.RELATIVE;
         c.gridy = 1;
-        gridbag.setConstraints(transferText, c);
-        ct.add(transferText);
+        gridbag.setConstraints(pbarText, c);
+        ct.add(pbarText);
         
         // ProgressBar
         pbar = new JProgressBar();
@@ -855,8 +963,8 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             public void run(){
                 pbar.setVisible(false);
                 if (!ps.isEchoFinished) {
-                    transferText.setText("Checking RAIDA ...");
-                    transferText.repaint();
+                    pbarText.setText("Checking RAIDA ...");
+                    pbarText.repaint();
                 }
                 
                 try {
@@ -909,13 +1017,13 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         gridbag.setConstraints(x, c);
         ct.add(x);
         
-        depositText = new JLabel("");
-        AppUI.setCommonFont(depositText);
+        pbarText = new JLabel("");
+        AppUI.setCommonFont(pbarText);
         c.insets = new Insets(40, 20, 4, 0);
         c.gridx = GridBagConstraints.RELATIVE;
         c.gridy = 1;
-        gridbag.setConstraints(depositText, c);
-        ct.add(depositText);
+        gridbag.setConstraints(pbarText, c);
+        ct.add(pbarText);
         
         // ProgressBar
         pbar = new JProgressBar();
@@ -951,8 +1059,8 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             public void run(){
                 pbar.setVisible(false);
                 if (!ps.isEchoFinished) {
-                    depositText.setText("Checking RAIDA ...");
-                    depositText.repaint();
+                    pbarText.setText("Checking RAIDA ...");
+                    pbarText.repaint();
                 }
                 
                 wl.debug(ltag, "Going here");
@@ -966,19 +1074,122 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 ps.dstWallet.setPassword(ps.typedPassword);
                 sm.setActiveWalletObj(ps.dstWallet);
                 
-                depositText.setText("Moving coins ...");
+                pbarText.setText("Moving coins ...");
                 for (String filename : ps.files) {
                     AppCore.moveToFolder(filename, Config.DIR_IMPORT, sm.getActiveWallet().getName());
                 }
 
-                depositText.setText("Unpacking coins ...");
-                depositText.repaint();
+                pbarText.setText("Unpacking coins ...");
+                pbarText.repaint();
                 sm.startUnpackerService(new UnpackerCb());
             }
         });
         
         t.start();
         
+    }
+    
+    public void showFixDoneScreen() {
+        boolean isError = !ps.errText.equals("");
+        JPanel subInnerCore;
+        
+        if (isError) {
+            subInnerCore = getModalJPanel("Error");
+            AppUI.hr(subInnerCore, 32);
+            maybeShowError(subInnerCore);
+            return;
+        }
+        
+        String total = AppCore.formatNumber(ps.statTotalFracked);
+        String totalFixed = AppCore.formatNumber(ps.statTotalFixed);
+        String totalFailedToFix = AppCore.formatNumber(ps.statFailedToFix);
+        
+        subInnerCore = getModalJPanel("Fix Complete");
+        maybeShowError(subInnerCore);
+        
+        JPanel ct = new JPanel();
+        AppUI.noOpaque(ct);
+        subInnerCore.add(ct);
+        
+        GridBagLayout gridbag = new GridBagLayout();
+        GridBagConstraints c = new GridBagConstraints();      
+        ct.setLayout(gridbag);
+        
+        
+        JLabel x = new JLabel("<html><div style='width:400px; text-align:center'>" +
+            "Your CloudCoins from " + ps.srcWallet.getName() + " have been fixed</div></html>");
+          
+        AppUI.setCommonFont(x);
+ 
+        c.insets = new Insets(0, 0, 4, 0);
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = 0;
+        c.gridwidth = 2;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+ 
+        x = new JLabel("Total Fracked Coins:");
+        AppUI.setCommonFont(x);
+        
+        c.weightx = 1;
+        c.anchor = GridBagConstraints.EAST;
+        c.insets = new Insets(50, 0, 4, 10);
+        c.gridx = 0;
+        c.gridy = 1;
+        c.gridwidth = 1;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+        
+        x = new JLabel(total);
+        AppUI.setCommonBoldFont(x);
+        
+        c.anchor = GridBagConstraints.WEST;
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = 1;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+        
+        x = new JLabel("Total Fixed Coins:");
+        AppUI.setCommonFont(x);
+        c.anchor = GridBagConstraints.EAST;
+        c.insets = new Insets(10, 0, 4, 10);
+        c.gridx = 0;
+        c.gridy = 2;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+        
+        x = new JLabel(totalFixed);
+        AppUI.setCommonBoldFont(x);
+        c.anchor = GridBagConstraints.WEST;
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = 2;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        JPanel bp = getOneButtonPanel();
+  
+        
+        subInnerCore.add(bp);       
     }
     
     public void showBackupDoneScreen() {
@@ -1033,9 +1244,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         });
   
         
-        subInnerCore.add(bp);  
-        
-        
+        subInnerCore.add(bp);     
     }
     
     public void showTransferDoneScreen() {
@@ -1132,7 +1341,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         gridbag.setConstraints(x, c);
         ct.add(x);
         
-        
+        // Auth
         x = new JLabel("Total Authentic Coins:");
         AppUI.setCommonFont(x);
         
@@ -1147,7 +1356,6 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         
         x = new JLabel(totalBank);
         AppUI.setCommonBoldFont(x);
-       // c.fill = GridBagConstraints.HORIZONTAL;
         
         c.anchor = GridBagConstraints.WEST;
         c.gridx = GridBagConstraints.RELATIVE;
@@ -2440,7 +2648,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         
         AppUI.setSize(ddPanel, (int) ddWidth, 179);
         gridbag.setConstraints(ddPanel, c);
-        new FileDrop( System.out, ddPanel, new FileDrop.Listener() {
+        new FileDrop(null, ddPanel, new FileDrop.Listener() {
             public void filesDropped( java.io.File[] files ) {   
                 for( int i = 0; i < files.length; i++ ) {
                     ps.files.add(files[i].getAbsolutePath());
@@ -2868,11 +3076,174 @@ public class AdvancedClient implements ActionListener, ComponentListener {
     }
     
     
+    public void showFixfrackedScreen() {
+        showLeftScreen();
+        
+        JPanel rightPanel = getRightPanel();    
+        JPanel ct = new JPanel();
+        AppUI.setBoxLayout(ct, true);
+        AppUI.noOpaque(ct);
+        rightPanel.add(ct);
+        
+        JLabel ltitle = AppUI.getTitle("Fix Fracked");   
+        ct.add(ltitle);
+        AppUI.hr(ct, 20);
+        
+
+        maybeShowError(ct);
+
+        // GridHolder Container
+        JPanel gct = new JPanel();
+        AppUI.noOpaque(gct);
+   
+        GridBagLayout gridbag = new GridBagLayout();
+        gct.setLayout(gridbag);   
+        GridBagConstraints c = new GridBagConstraints();    
+        
+        int y = 0;
+        
+        // Text
+        c.anchor = GridBagConstraints.CENTER;
+        c.insets = new Insets(0, 0, 80, 0); 
+        c.gridx = 0;
+        c.gridy = y;
+        c.gridwidth = 2;
+
+        JLabel l = new JLabel("Fix Fracked CloudCoins");
+        AppUI.setCommonFont(l);
+        gridbag.setConstraints(l, c); 
+        gct.add(l);
+        
+        y++;
+        c.gridwidth = 1;
+        c.insets = new Insets(0, 16, 10, 0); 
+        c.anchor = GridBagConstraints.EAST;
+         // Transfer from
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;   
+        JLabel x = new JLabel("         From Wallet");
+        gridbag.setConstraints(x, c);
+        AppUI.setCommonFont(x);
+        gct.add(x);
+        
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;     
+        c.anchor = GridBagConstraints.WEST;
+ 
+        int nonSkyCnt = 0;
+        for (int i = 0; i < wallets.length; i++)
+            if (!wallets[i].isSkyWallet())
+                nonSkyCnt++;
+             
+        final String[] nonSkyOptions = new String[nonSkyCnt];
+        final int[] idxs = new int[nonSkyCnt];
+        int j = 0;
+        for (int i = 0; i < wallets.length; i++) {
+            if (!wallets[i].isSkyWallet()) {
+                nonSkyOptions[j] = wallets[i].getName() + " - " + AppCore.formatNumber(wallets[i].getTotal()) + " CC";
+                idxs[j] = i;
+                j++;
+            }
+        }
+
+        final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(AppUI.getColor2(), "Make Selection", nonSkyOptions);
+        gridbag.setConstraints(cboxfrom.getComboBox(), c);
+        gct.add(cboxfrom.getComboBox());
+
+        y++;
+        
+        
+        // Password From
+        c.anchor = GridBagConstraints.EAST;
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;   
+        final JLabel spText = new JLabel("Password");
+        gridbag.setConstraints(spText, c);
+        AppUI.setCommonFont(spText);
+        gct.add(spText);
+        
+        c.anchor = GridBagConstraints.WEST;
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;     
+        final MyTextField passwordSrc = new MyTextField("Wallet Password", true);
+        gridbag.setConstraints(passwordSrc.getTextField(), c);
+        gct.add(passwordSrc.getTextField());     
+        y++;
+        
+        passwordSrc.getTextField().setVisible(false);
+        spText.setVisible(false);
+              
+        cboxfrom.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                int srcIdx = cboxfrom.getSelectedIndex() - 1;              
+                if (srcIdx < 0 || srcIdx >= idxs.length) 
+                    return;
+                
+                srcIdx = idxs[srcIdx];
+                                
+                Wallet srcWallet = wallets[srcIdx];
+
+
+                if (srcWallet.isEncrypted()) {                 
+                    passwordSrc.getTextField().setVisible(true);
+                    spText.setVisible(true);
+                } else {
+                    passwordSrc.getTextField().setVisible(false);
+                    spText.setVisible(false);
+                }
+            }
+        });
     
-    
-    
-    
-    
+        rightPanel.add(gct); 
+
+        JPanel bp = getTwoButtonPanel(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {              
+                int srcIdx = cboxfrom.getSelectedIndex() - 1;              
+                if (srcIdx < 0 || srcIdx >= idxs.length) {
+                    ps.errText = "Please select Wallet";
+                    showScreen();
+                    return;
+                }
+
+                srcIdx = idxs[srcIdx];
+                Wallet srcWallet = wallets[srcIdx];
+
+                if (srcWallet == null)
+                    return;
+                if (srcWallet.isEncrypted()) {
+                    if (passwordSrc.getText().isEmpty()) {
+                        ps.errText = "Password is empty";
+                        showScreen();
+                        return;
+                    }
+                    
+                    String wHash = srcWallet.getPasswordHash();
+                    String providedHash = AppCore.getMD5(passwordSrc.getText());
+                    if (wHash == null) {
+                        ps.errText = "Wallet is corrupted";
+                        showScreen();
+                        return;
+                    }
+                    
+                    if (!wHash.equals(providedHash)) {
+                        ps.errText = "Password is incorrect";
+                        showScreen();
+                        return;
+                    } 
+                    
+                    ps.typedPassword = passwordSrc.getText();
+                }
+               
+                ps.srcWallet = srcWallet;              
+                ps.currentScreen = ProgramState.SCREEN_FIXING_FRACKED;
+                showScreen();
+            }
+        });
+        
+        AppUI.hr(rightPanel, 20);
+        rightPanel.add(bp);
+    }
+
     public void showBackupScreen() {
         showLeftScreen();
         
@@ -2886,7 +3257,6 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         ct.add(ltitle);
         AppUI.hr(ct, 20);
         
-
         maybeShowError(ct);
 
         // GridHolder Container
@@ -3201,11 +3571,9 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         rightPanel.add(bp);     
     }
     
-    public void showTransactionsScreen() {
-        
+    public void showTransactionsScreen() {        
         boolean isSky = sm.getActiveWallet().isSkyWallet() ? true : false;
-        
-       // sm.startFrackFixerService(new FrackFixerCb());
+
         
         showLeftScreen();
  
@@ -4659,10 +5027,6 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             wl.debug(ltag, "Echo finisheed");
             
             echoDone();
-
-         //   sm.startUnpackerService(new UnpackerCb());
-           // if (!sm.getActiveWallet().isSkyWallet())
-             //   sm.startFrackFixerService(new FrackFixerCb());
 	}  
     }
     
@@ -4707,9 +5071,6 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             final Object fresult = result;
 	
             AuthenticatorResult ar = (AuthenticatorResult) fresult;
-
-            //if (ar.status == AuthenticatorResult.STATUS_FINISHED)
-//                ar.status = AuthenticatorResult.STATUS_ERROR;
             if (ar.status == AuthenticatorResult.STATUS_ERROR) {
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {
@@ -4752,12 +5113,11 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             
             EventQueue.invokeLater(new Runnable() {         
                 public void run() {
-                    depositText.setText("Fixing fracked coins ...");
-                    depositText.repaint();
+                    pbarText.setText("Fixing fracked coins ...");
+                    pbarText.repaint();
                 }
             });
 
-            
             sm.startFrackFixerService(new FrackFixerCb());           
 	}
     }
@@ -4773,26 +5133,69 @@ public class AdvancedClient implements ActionListener, ComponentListener {
 
             if (fr.status == FrackFixerResult.STATUS_ERROR) {
                 wl.error(ltag, "Failed to fix");
-		//return;
             }
 
             if (fr.status == FrackFixerResult.STATUS_FINISHED) {
 		if (fr.fixed + fr.failed > 0) {
                     wl.debug(ltag, "Fracker fixed: " + fr.fixed + ", failed: " + fr.failed);
-                 //   return;
 		}
             }
 
             EventQueue.invokeLater(new Runnable() {         
                 public void run() {
-                    depositText.setText("Fixing lost coins ...");
-                    depositText.repaint();
+                    pbarText.setText("Fixing lost coins ...");
+                    pbarText.repaint();
                 }
             });
     
             sm.startLossFixerService(new LossFixerCb());
         }
     }
+    
+    
+    class FrackFixerOnPurposeCb implements CallbackInterface {
+	public void callback(Object result) {
+            FrackFixerResult fr = (FrackFixerResult) result;
+
+            ps.statTotalFracked = fr.failed + fr.fixed;
+            ps.statTotalFixed = fr.fixed;
+            ps.statFailedToFix = fr.failed;
+                      
+            if (fr.status == FrackFixerResult.STATUS_ERROR) {
+                EventQueue.invokeLater(new Runnable() {         
+                    public void run() {
+                        ps.errText = "Failed to Fix Coins. Pless see logs";
+                        ps.currentScreen = ProgramState.SCREEN_FIX_DONE;
+                        showScreen();
+                    }
+                });
+                return;
+            } else if (fr.status == FrackFixerResult.STATUS_FINISHED) {
+                EventQueue.invokeLater(new Runnable() {         
+                    public void run() {
+                        pbarText.setText("Fixing lost coins ...");
+                        pbarText.repaint();
+                    }
+                });
+    
+                sm.startLossFixerService(new LossFixerCb());
+                return;
+            } else if (fr.status == FrackFixerResult.STATUS_CANCELLED) {
+                EventQueue.invokeLater(new Runnable() {         
+                    public void run() {
+                        ps.errText = "Operation Cancelled";
+                        ps.currentScreen = ProgramState.SCREEN_FIX_DONE;
+                        showScreen();
+                    }
+                });
+                return;
+            }
+
+            //System.out.println("xxx=" + fr.totalFiles + " pr=" + fr.totalRAIDAProcessed + " fp=" + fr.totalFilesProcessed + " r="+fr.fixingRAIDA);
+            setRAIDAFixingProgress(fr.totalRAIDAProcessed, fr.totalFilesProcessed, fr.totalFiles, fr.fixingRAIDA);
+        }
+    }
+    
          
     class ExporterCb implements CallbackInterface {
 	public void callback(Object result) {
@@ -4887,6 +5290,8 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                         ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
                     } else if (isWithdrawing()) {
                         ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                    } else if (isFixing()) {
+                        ps.currentScreen = ProgramState.SCREEN_FIX_DONE;
                     }
                     
                     showScreen();
@@ -4909,8 +5314,8 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             if (sm.getActiveWallet().isEncrypted()) {
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {
-                        depositText.setText("Encrypting coins ...");
-                        depositText.repaint();
+                        pbarText.setText("Encrypting coins ...");
+                        pbarText.repaint();
                     }
                 });
                 
@@ -4951,7 +5356,6 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 return;
             }
             
-            System.out.println("Eraser cb");
             EventQueue.invokeLater(new Runnable() {         
                 public void run() {
                     eraserGoNext();
