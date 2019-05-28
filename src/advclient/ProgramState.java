@@ -43,6 +43,9 @@ public class ProgramState {
     final public static int SCREEN_FIX_FRACKED = 27;
     final public static int SCREEN_FIXING_FRACKED = 28;
     final public static int SCREEN_FIX_DONE = 29;
+    final public static int SCREEN_DELETE_WALLET = 30;
+    final public static int SCREEN_CONFIRM_DELETE_WALLET = 31;
+    final public static int SCREEN_DELETE_WALLET_DONE = 32;
     
     
     final static int CB_STATE_INIT = 1;

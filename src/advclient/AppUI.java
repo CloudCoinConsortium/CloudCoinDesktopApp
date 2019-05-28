@@ -10,11 +10,17 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Cursor;
+import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GraphicsEnvironment;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.font.TextAttribute;
+import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Map;
 import javax.swing.BorderFactory;
@@ -624,4 +630,38 @@ public class AppUI {
         return scrollPane;
         
     }
+    
+    
+    public static JLabel getHyperLink(String name, String url, int fontSize) {
+        final String fname = name;
+        final String furl = url;
+        
+        JLabel l = new JLabel(name);
+        if (fontSize == 0)
+            AppUI.setCommonFont(l);
+        else
+            AppUI.setFont(l, fontSize);
+        
+        AppUI.setColor(l, AppUI.getColor0());
+        AppUI.underLine(l);
+        AppUI.setHandCursor(l);
+        l.addMouseListener(new MouseAdapter() {
+            public void mouseReleased(MouseEvent e) {
+                if (Desktop.isDesktopSupported()) {
+                    try {
+                        URI uri = new URI(furl);
+                        Desktop.getDesktop().browse(uri);
+                    } catch (IOException ex) { 
+  
+                    } catch (URISyntaxException ex) {
+                        
+                    }
+                } else { 
+                }   
+            }
+        });
+        
+        return l;
+    }
+    
 }
