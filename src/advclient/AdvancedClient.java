@@ -778,6 +778,9 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             case ProgramState.SCREEN_DELETE_WALLET_DONE:
                 showDeleteWalletDoneScreen();
                 break;
+            case ProgramState.SCREEN_SKY_WALLET_CREATED:
+                showSkyWalletCreatedScreen();
+                break;
                 
         }
         
@@ -2011,6 +2014,43 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             subInnerCore.add(res);
             AppUI.hr(subInnerCore, 12);
         }
+            
+        JPanel bp = getOneButtonPanel();     
+        subInnerCore.add(bp);      
+    }
+    
+    public void showSkyWalletCreatedScreen() {
+        boolean isError = !ps.errText.equals("");
+        JPanel subInnerCore;
+        
+        if (isError) {
+            subInnerCore = getModalJPanel("Error");
+            AppUI.hr(subInnerCore, 32);
+            maybeShowError(subInnerCore);
+            return;
+        }
+
+        subInnerCore = getModalJPanel("Sky Wallet created");
+        AppUI.hr(subInnerCore, 32);
+        
+
+        JLabel res = new JLabel("<html><div style='width:500px; text-align:center'>"
+                + "You have now created a sky wallet on third-party trusted transfer sever.<br>" 
+                + "Your address is <b>" + ps.domain + "." + Config.DDNS_DOMAIN + "</b>.<br><br> "
+                + "This sky wallet allows you to receive CloudCoins "
+                + "that you know are authentic. <br>The sender will also know that "
+                + "the coins they send are authentic.<br><br>  NOTE: The CloudCoin Consortium owns the "
+                + "SkyWallet.cc domain name but it does not own the trusted transfer server "
+                + "that the name is pointing too. The trusted transfer server that "
+                + "SkyWallet.cc points to is called \"TeleportNow.\" TeleportNow has data supremacy "
+                + "just like the RAIDA. Teleport now cannot be brought down or hacked "
+                + "and there is no information about transaction that are stored.</div></html> ");
+        
+        AppUI.setFont(res, 18);
+        AppUI.alignCenter(res);
+        
+        subInnerCore.add(res);
+
             
         JPanel bp = getOneButtonPanel();     
         subInnerCore.add(bp);      
@@ -4396,7 +4436,8 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 
                 sm.initWallets();
                 
-                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                ps.domain = domain;
+                ps.currentScreen = ProgramState.SCREEN_SKY_WALLET_CREATED;
                 showScreen();
             }
         });

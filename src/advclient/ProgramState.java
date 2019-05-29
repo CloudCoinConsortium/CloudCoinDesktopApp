@@ -46,6 +46,7 @@ public class ProgramState {
     final public static int SCREEN_DELETE_WALLET = 30;
     final public static int SCREEN_CONFIRM_DELETE_WALLET = 31;
     final public static int SCREEN_DELETE_WALLET_DONE = 32;
+    final public static int SCREEN_SKY_WALLET_CREATED = 33;
     
     
     final static int CB_STATE_INIT = 1;
@@ -105,6 +106,8 @@ public class ProgramState {
     boolean needBackup;
     
     public Hashtable<String, String[]> envelopes;
+    
+    String domain;
     
     public ProgramState() {
         currentScreen = SCREEN_AGREEMENT;
