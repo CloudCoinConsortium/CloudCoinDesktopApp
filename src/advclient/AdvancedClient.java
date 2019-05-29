@@ -821,11 +821,11 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         pbarText.repaint();
     }
     
-    private void setRAIDAFixingProgress(int raidaProcessed, int totalFilesProcessed, int totalFiles, int fixingRAIDA) {
+    private void setRAIDAFixingProgress(int raidaProcessed, int totalFilesProcessed, int totalFiles, int fixingRAIDA, int round) {
         pbar.setVisible(true);
         pbar.setValue(raidaProcessed);
         
-        pbarText.setText("<html><div style='text-align:center'>Fixing on RAIDA " + 
+        pbarText.setText("<html><div style='text-align:center'>Round #" + round + " Fixing on RAIDA " + 
                 fixingRAIDA + "<br>" + totalFilesProcessed + " / " + totalFiles + " Fixed</div></html>");
         pbarText.repaint();
     }
@@ -1846,7 +1846,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         maybeShowError(subInnerCore);
         
         // Space
-        AppUI.hr(subInnerCore, 40);
+        //AppUI.hr(subInnerCore, 20);
         
         // Container
         JPanel ct = new JPanel();
@@ -1857,35 +1857,76 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         GridBagConstraints c = new GridBagConstraints();      
         ct.setLayout(gridbag);
         
+        int y = 0;
+        
+        // Text
+        c.anchor = GridBagConstraints.CENTER;
+        c.insets = new Insets(0, 0, 0, 0); 
+        c.gridx = GridBagConstraints.RELATIVE;;
+        c.gridy = y;
+
+
+        JLabel l = new JLabel("<html><div style='width:460px; text-align:center'>The CloudCoin Consortium recommends you use<br>"
+                + "a free encrypted email account from</div></html>");
+        AppUI.setFont(l, 16);
+        gridbag.setConstraints(l, c); 
+        ct.add(l);
+        
+        
+        y++;
+        c.gridx = GridBagConstraints.RELATIVE;;
+        c.gridy = y;
+        
+        l = AppUI.getHyperLink("www.protonmail.com", "www.protonmail.com", 16);
+        AppUI.setFont(l, 16);
+        gridbag.setConstraints(l, c); 
+        ct.add(l);
+        
+        
+        y++;
+        
+        
+        
+        
+        
+        
         // Password Label
         JLabel x = new JLabel("Email");
         AppUI.setCommonFont(x);
+        c.gridwidth = 1;
         c.anchor = GridBagConstraints.WEST;
-        c.insets = new Insets(0, 0, 4, 0); 
+        c.insets = new Insets(20, 120, 4, 0); 
         c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = 0;
+        c.gridy = y;
         gridbag.setConstraints(x, c);
         ct.add(x);
 
+        y++;
+        
         MyTextField tf0 = new MyTextField("Email", false);
-        c.insets = new Insets(0, 0, 16, 0);
+        c.insets = new Insets(0, 120, 16, 0);
         c.gridx = 0;
-        c.gridy = 1;
+        c.gridy = y;
         gridbag.setConstraints(tf0.getTextField(), c);
         ct.add(tf0.getTextField());
                
+        y++;
+        
         // Confirm Email Label
         x = new JLabel("Confirm Email");
         AppUI.setCommonFont(x);
-        c.insets = new Insets(0, 0, 4, 0);
+        c.insets = new Insets(0, 120, 4, 0);
         c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = 2;
+        c.gridy = y;
         gridbag.setConstraints(x, c);
         ct.add(x);
         
+        
+        y++;
+        
         MyTextField tf1 = new MyTextField("Confirm Email", false);
         c.gridx = GridBagConstraints.RELATIVE;;
-        c.gridy = 3;
+        c.gridy = y;
         gridbag.setConstraints(tf1.getTextField(), c);
         ct.add(tf1.getTextField());
                         
@@ -2519,8 +2560,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             public void actionPerformed(ActionEvent e) {
                 
                 ps.typedMemo = memo.getText();
-                if (ps.typedMemo.isEmpty())
-                    ps.typedMemo = "Transfer";
+                
                 
                 int srcIdx = cboxfrom.getSelectedIndex() - 1;
                 int dstIdx = cboxto.getSelectedIndex() - 1;
@@ -2634,9 +2674,21 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                         return;
                     }
                     
+                    if (dstWallet.isSkyWallet()) {
+                        if (ps.typedMemo.isEmpty()) {
+                            ps.errText = "Memo to SkyWallet is empty";
+                            showScreen();
+                            return;
+                        }
+                    }
+                    
+                    
                     ps.dstWallet = dstWallet;
                     ps.sendType = ProgramState.SEND_TYPE_WALLET;
                 }
+                
+                if (ps.typedMemo.isEmpty())
+                    ps.typedMemo = "Transfer";
                 
                 ps.currentScreen = ProgramState.SCREEN_CONFIRM_TRANSFER;
                 showScreen();
@@ -2889,6 +2941,32 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                         showScreen();
                         return;
                     } 
+                }
+                
+                
+                if (!w.isSkyWallet()) {
+                    int cnt;
+                    
+                    cnt = AppCore.getFilesCount(Config.DIR_FRACKED, w.getName());
+                    if (cnt != 0) {
+                        ps.errText = "Fracked folder is not empty. Please fix your coins first";
+                        showScreen();
+                        return;
+                    }
+                    
+                    cnt = AppCore.getFilesCount(Config.DIR_SUSPECT, w.getName());
+                    if (cnt != 0) {
+                        ps.errText = "Suspect folder is not empty. Please import your coins first";
+                        showScreen();
+                        return;
+                    }
+                    
+                    cnt = AppCore.getFilesCount(Config.DIR_IMPORT, w.getName());
+                    if (cnt != 0) {
+                        ps.errText = "Import folder is not empty. Please import your coins first";
+                        showScreen();
+                        return;
+                    }
                 }
                 
                 ps.dstWallet = w;          
@@ -4615,7 +4693,8 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         corePanel.add(mwrapperPanel);
         updateWalletAmount();
      
-        sm.startEchoService(new EchoCb());
+        if (!ps.isEchoFinished)
+            sm.startEchoService(new EchoCb());
         
         return subInnerCore;
     }
@@ -5336,7 +5415,11 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             if (ur.status == UnpackerResult.STATUS_ERROR) {
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {
-                        ps.errText = "Failed to Unpack file(s). Please check the logs";
+                        if (!ur.errText.isEmpty())
+                            ps.errText = ur.errText;
+                        else  
+                            ps.errText = "Failed to Unpack file(s). Please check the logs";
+
                         ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
                         showScreen();
                     }
@@ -5447,7 +5530,6 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             ps.statTotalFixed = fr.fixed;
             ps.statFailedToFix = fr.failed;
                       
-            fr.status = FrackFixerResult.STATUS_ERROR;
             if (fr.status == FrackFixerResult.STATUS_ERROR) {
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {
@@ -5479,7 +5561,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             }
 
             //System.out.println("xxx=" + fr.totalFiles + " pr=" + fr.totalRAIDAProcessed + " fp=" + fr.totalFilesProcessed + " r="+fr.fixingRAIDA);
-            setRAIDAFixingProgress(fr.totalRAIDAProcessed, fr.totalFilesProcessed, fr.totalFiles, fr.fixingRAIDA);
+            setRAIDAFixingProgress(fr.totalRAIDAProcessed, fr.totalFilesProcessed, fr.totalFiles, fr.fixingRAIDA, fr.round);
         }
     }
     
@@ -5610,7 +5692,11 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             } else {
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {
-                        ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
+                        if (isFixing()) {
+                            ps.currentScreen = ProgramState.SCREEN_FIX_DONE;
+                        } else {
+                            ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
+                        }
                         showScreen();
                     }
                 });
