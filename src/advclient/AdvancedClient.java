@@ -3044,16 +3044,19 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         gct.setLayout(gridbag);   
         GridBagConstraints c = new GridBagConstraints();    
         
+        int y = 0;
+        
         c.anchor = GridBagConstraints.CENTER;
         c.insets = new Insets(0, 0, 4, 0); 
         c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = 0;
+        c.gridy = y;
 
         String urlName = "http://cloudcoinconsortium.com/use.html";
         JLabel l = AppUI.getHyperLink(urlName, urlName, 0);
         gridbag.setConstraints(l, c); 
         gct.add(l);
         
+        y++;
         
         l = new JLabel("<html><div style='width:460px; text-align:center'><br>"
                 + "Support: 9 AM to 3 AM California Time (PST)<br> "
@@ -3062,11 +3065,12 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         c.insets = new Insets(0, 0, 0, 0); 
         AppUI.alignCenter(l);
         c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = 1;
+        c.gridy = y;
         AppUI.setCommonFont(l);
         gridbag.setConstraints(l, c);
         gct.add(l);
         
+        y++;
         
         l = new JLabel("<html><div style='width:480px; text-align:center; font-size: 14px'>"
                 + "(Secure if you get a free encrypted email account at ProtonMail.com)</div></html>");
@@ -3075,20 +3079,59 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         AppUI.setFont(l, 12);
         AppUI.alignCenter(l);
         c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = 2;
+        c.gridy = y;
         AppUI.setCommonFont(l);
         gridbag.setConstraints(l, c);
         gct.add(l);
 
+        y++;
+        
         // Get proton
         l = AppUI.getHyperLink("Get Protonmail", "https://www.protonmail.com", 14);
         c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = 3;
+        c.gridy = y;
         gridbag.setConstraints(l, c); 
         gct.add(l);
         
+        y++;
         
-        
+        // Get proton
+        l = AppUI.getHyperLink("Terms & Conditions", "javascript:void(0)", 20);
+        l.addMouseListener(new MouseAdapter() {
+            public void mouseReleased(MouseEvent e) {
+                final JDialog f = new JDialog(mainFrame, "Terms and Conditions", true);
+                AppUI.noOpaque((JComponent) f.getContentPane());
+                AppUI.setSize(f, (int) (tw / 1.2), (int) (th / 1.2)); 
+
+                JTextPane tp = new JTextPane();
+                
+                
+                AppUI.setFont(tp, 12);
+                String fontfamily = tp.getFont().getFamily();
+
+                tp.setContentType("text/html"); 
+                tp.setText("<html><div style=' font-family:"+fontfamily+"; font-size: 12px'>" + AppUI.getAgreementText() + "</div></html>"); 
+                tp.setEditable(false); 
+                tp.setBackground(null);
+                tp.setCaretPosition(0);
+
+                JScrollPane scrollPane = new JScrollPane(tp);
+
+                f.add(scrollPane);
+                f.pack();
+                f.setLocationRelativeTo(mainFrame);
+                f.setVisible(true);      
+                
+                scrollPane.getVerticalScrollBar().setValue(scrollPane.getVerticalScrollBar().getMinimum());
+                scrollPane.getViewport().setViewPosition(new java.awt.Point(0, 100));
+                scrollPane.repaint();
+            }
+        });
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+        c.insets = new Insets(80, 0, 4, 0); 
+        gridbag.setConstraints(l, c); 
+        gct.add(l);
         
         
         ct.add(gct);
@@ -4134,7 +4177,6 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 
                 
                 final JDialog f = new JDialog(mainFrame, "Receipt", true);
-                AppUI.setBackground((JComponent) f.getContentPane(), Color.RED);
                 AppUI.noOpaque((JComponent) f.getContentPane());
                 AppUI.setSize(f, (int) (tw / 1.6), (int) (th / 1.6)); 
 
