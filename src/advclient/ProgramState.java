@@ -47,6 +47,9 @@ public class ProgramState {
     final public static int SCREEN_CONFIRM_DELETE_WALLET = 31;
     final public static int SCREEN_DELETE_WALLET_DONE = 32;
     final public static int SCREEN_SKY_WALLET_CREATED = 33;
+    final public static int SCREEN_PREDEPOSIT = 34;
+    final public static int SCREEN_DEPOSIT_SKY_WALLET = 35;
+    final public static int SCREEN_SHOW_FOLDERS = 36;
     
     
     final static int CB_STATE_INIT = 1;
@@ -109,6 +112,10 @@ public class ProgramState {
     
     String domain;
     
+    String trustedServer;
+    
+    boolean isSkyDeposit;
+    
     public ProgramState() {
         currentScreen = SCREEN_AGREEMENT;
         cwalletRecoveryRequested = cwalletPasswordRequested = false;
@@ -149,6 +156,12 @@ public class ProgramState {
         envelopes = null;
         
         statTotalFracked = statTotalFixed = statFailedToFix = 0;
+        
+        domain = "";
+        trustedServer = "";
+        
+        isSkyDeposit = false;
+                
     }
     
 }

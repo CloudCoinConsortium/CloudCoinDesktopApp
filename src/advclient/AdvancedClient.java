@@ -125,6 +125,10 @@ public class AdvancedClient implements ActionListener, ComponentListener {
     
     JFrame mainFrame;
     
+    
+    final static int TYPE_ADD_BUTTON = 1;
+    final static int TYPE_ADD_SKY = 2;
+    
     public AdvancedClient() {
         initSystem();
                 
@@ -178,19 +182,40 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         w.setSNs(sns);
     }
     
+    public void walletSetTotal(Wallet w, int total) {
+        JLabel cntLabel = (JLabel) w.getuiRef();
+        
+        w.setTotal(total);
+        String strCnt = AppCore.formatNumber(total);
+        if (cntLabel == null)
+            return;
+        
+        cntLabel.setText(strCnt);
+        
+        if (total < 9999)
+            AppUI.setFont(cntLabel, 18);
+        else if (total < 99999)
+            AppUI.setFont(cntLabel, 14);
+        else if (total < 999999)
+            AppUI.setFont(cntLabel, 13);
+        else 
+            AppUI.setFont(cntLabel, 10);
+        
+        cntLabel.repaint();
+    }
+    
     public void showCoinsDone(int[][] counters) {
         Wallet w = wallets[ps.currentWalletIdx - 1];
-        JLabel cntLabel = (JLabel) w.getuiRef();
+        
      
         int totalCnt = AppCore.getTotal(counters[Config.IDX_FOLDER_BANK]) +
 			AppCore.getTotal(counters[Config.IDX_FOLDER_FRACKED]) +
                         AppCore.getTotal(counters[Config.IDX_FOLDER_VAULT]);
         
-        w.setTotal(totalCnt);
-        ps.counters = counters;
-        String strCnt = AppCore.formatNumber(totalCnt);
-        cntLabel.setText(strCnt);
         
+        ps.counters = counters;
+        walletSetTotal(w, totalCnt);
+   
         Thread t = new Thread(new Runnable() {
             public void run(){
                 showCoinsGoNext();
@@ -298,7 +323,8 @@ public class AdvancedClient implements ActionListener, ComponentListener {
     }
     
     public boolean isDepositing() {
-        if (ps.currentScreen == ProgramState.SCREEN_DEPOSIT ||
+        if (ps.currentScreen == ProgramState.SCREEN_PREDEPOSIT || 
+                ps.currentScreen == ProgramState.SCREEN_DEPOSIT ||
                 ps.currentScreen == ProgramState.SCREEN_IMPORTING ||
                 ps.currentScreen == ProgramState.SCREEN_IMPORT_DONE)
             return true;
@@ -446,7 +472,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 public void actionPerformed(ActionEvent e) {
                     JButton b = (JButton) e.getSource();
                     
-                    ps.currentScreen = ProgramState.SCREEN_DEPOSIT;
+                    ps.currentScreen = ProgramState.SCREEN_PREDEPOSIT;
                     showScreen();
                 }
             };
@@ -537,7 +563,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             } 
         };
  
-        String[] items = {"Backup", "List serials", "Clear History", "Fix Fracked", "Delete Wallet" };
+        String[] items = {"Backup", "List serials", "Clear History", "Fix Fracked", "Delete Wallet", "Show Folders"};
         for (int i = 0; i < items.length; i++) {
             JMenuItem menuItem = new JMenuItem(items[i]);
             menuItem.setActionCommand("" + i);
@@ -568,6 +594,8 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                         ps.currentScreen = ProgramState.SCREEN_FIX_FRACKED;
                     } else if (action.equals("4")) {
                         ps.currentScreen = ProgramState.SCREEN_DELETE_WALLET;
+                    } else if (action.equals("5")) {
+                        ps.currentScreen = ProgramState.SCREEN_SHOW_FOLDERS;
                     }
                     showScreen();
                 }
@@ -780,6 +808,15 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 break;
             case ProgramState.SCREEN_SKY_WALLET_CREATED:
                 showSkyWalletCreatedScreen();
+                break;
+            case ProgramState.SCREEN_PREDEPOSIT:
+                showPredepositScreen();
+                break;
+            case ProgramState.SCREEN_DEPOSIT_SKY_WALLET:
+                showDepositSkyWalletScreen();
+                break;
+            case ProgramState.SCREEN_SHOW_FOLDERS:
+                showFoldersScreen();
                 break;
                 
         }
@@ -1059,7 +1096,11 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         JPanel bp = getOneButtonPanelCustom("Cancel", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 sm.cancel("Unpacker");
-                sm.cancel("Authenticator");
+                
+                if (ps.isSkyDeposit)
+                    sm.cancel("Sender");
+                else
+                    sm.cancel("Authenticator");
                 
                 ps.currentScreen = ProgramState.SCREEN_DEFAULT;
                 showScreen();
@@ -1090,12 +1131,24 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 
                 pbarText.setText("Moving coins ...");
                 for (String filename : ps.files) {
-                    AppCore.moveToFolder(filename, Config.DIR_IMPORT, sm.getActiveWallet().getName());
+                    String name;
+                    if (sm.getActiveWallet().isSkyWallet())
+                        name = sm.getActiveWallet().getParent().getName();
+                    else
+                        name = sm.getActiveWallet().getName();
+                    
+                    AppCore.moveToFolder(filename, Config.DIR_IMPORT, name);
                 }
 
                 pbarText.setText("Unpacking coins ...");
                 pbarText.repaint();
-                sm.startUnpackerService(new UnpackerCb());
+                
+                wl.debug(ltag, "issky " + ps.isSkyDeposit);
+                if (ps.isSkyDeposit) {
+                    sm.startUnpackerService(new UnpackerSenderCb());
+                } else {
+                    sm.startUnpackerService(new UnpackerCb());
+                }
             }
         });
         
@@ -1434,7 +1487,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         JPanel bp = getTwoButtonPanelCustom("Next Deposit", "Continue", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 resetState();
-                ps.currentScreen = ProgramState.SCREEN_DEPOSIT;
+                ps.currentScreen = ProgramState.SCREEN_PREDEPOSIT;
                 showScreen();
             }
         },  new ActionListener() {
@@ -1822,10 +1875,10 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                     ps.currentScreen = ProgramState.SCREEN_SENDING;
                     showScreen();
                 } else if (ps.sendType == ProgramState.SEND_TYPE_REMOTE) {              
-                    DNSSn d = new DNSSn(ps.typedRemoteWallet, wl);
+                    DNSSn d = new DNSSn(ps.typedRemoteWallet, Config.DDNS_DOMAIN, wl);
                     int sn = d.getSN();
                     if (sn < 0) {
-                        ps.errText = "Failed get receiver. Check that the name is valid";
+                        ps.errText = "Failed to query receiver. Check that the name is valid";
                         ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
                         showScreen();
                         return;
@@ -2036,7 +2089,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
 
         JLabel res = new JLabel("<html><div style='width:500px; text-align:center'>"
                 + "You have now created a sky wallet on third-party trusted transfer sever.<br>" 
-                + "Your address is <b>" + ps.domain + "." + Config.DDNS_DOMAIN + "</b>.<br><br> "
+                + "Your address is <b>" + ps.domain + "." + ps.trustedServer + "</b>.<br><br> "
                 + "This sky wallet allows you to receive CloudCoins "
                 + "that you know are authentic. <br>The sender will also know that "
                 + "the coins they send are authentic.<br><br>  NOTE: The CloudCoin Consortium owns the "
@@ -2213,9 +2266,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
        
         if (ps.isUpdatedWallets) {
             for (int i = 0; i < wallets.length; i++) {
-                JLabel cntLabel = (JLabel) wallets[i].getuiRef();
-                String strCnt = AppCore.formatNumber(wallets[i].getTotal());
-                cntLabel.setText(strCnt);
+                walletSetTotal(wallets[i], wallets[i].getTotal());
             }
             
             setTotalCoins();
@@ -2276,6 +2327,194 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         showLeftScreen();
         
         JPanel rightPanel = getRightPanel();     
+    }
+    
+    public void showDepositSkyWalletScreen() {
+           
+        showLeftScreen();
+
+        JPanel rightPanel = getRightPanel();    
+    
+        JPanel ct = new JPanel();
+        AppUI.setBoxLayout(ct, true);
+        AppUI.noOpaque(ct);
+        rightPanel.add(ct);
+        
+        JLabel ltitle = AppUI.getTitle("Deposit");   
+        ct.add(ltitle);
+        AppUI.alignTop(ct);
+        AppUI.alignTop(ltitle);
+        
+        AppUI.hr(ct, 10);
+        
+        maybeShowError(ct);
+        
+        // Outer Container
+        JPanel oct = new JPanel();
+        AppUI.noOpaque(oct);
+        
+        int y = 0;
+        
+        GridBagLayout gridbag = new GridBagLayout();
+        GridBagConstraints c = new GridBagConstraints(); 
+        c.gridwidth = 1;
+        c.anchor = GridBagConstraints.EAST;
+        c.insets = new Insets(12, 18, 0, 0); 
+        oct.setLayout(gridbag);
+        
+        
+        // Deposit To
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;   
+        c.anchor = GridBagConstraints.CENTER; 
+        c.gridwidth = 2;
+        JLabel x = new JLabel("Deposit To " + ps.dstWallet.getName());
+        gridbag.setConstraints(x, c);
+        AppUI.setCommonFont(x);
+        oct.add(x);
+        
+        c.gridwidth = 1;
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;     
+        c.anchor = GridBagConstraints.WEST; 
+     
+        y++;
+        // Memo
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;   
+        c.anchor = GridBagConstraints.EAST; 
+        x = new JLabel("Memo (Note)");
+        gridbag.setConstraints(x, c);
+        AppUI.setCommonFont(x);
+        oct.add(x);
+        
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;     
+        c.anchor = GridBagConstraints.WEST;   
+        final MyTextField memo = new MyTextField("Memo", false);
+        gridbag.setConstraints(memo.getTextField(), c);
+
+        if (!ps.typedMemo.isEmpty())
+            memo.setData(ps.typedMemo);
+        
+        oct.add(memo.getTextField());
+        
+        
+
+        // Total files selected
+        final JLabel tl = new JLabel("Total files selected: " + ps.files.size());
+        AppUI.setCommonFont(tl);
+        c.insets = new Insets(28, 18, 0, 0); 
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridwidth = 2;
+        c.anchor = GridBagConstraints.CENTER;
+        c.gridy = y + 3;  
+        gridbag.setConstraints(tl, c);
+        oct.add(tl);
+
+        int ddWidth = 701;
+        
+        // Drag and Drop
+        JPanel ddPanel = new JPanel();
+        ddPanel.setLayout(new GridBagLayout());
+        
+        JLabel l = new JLabel("<html><div style='text-align:center; width:" + ddWidth  +"'><b>Drop files here or click<br>to select files</b></div></html>");
+        AppUI.setColor(l, AppUI.getColor13());
+        AppUI.setBoldFont(l, 40);
+        AppUI.noOpaque(ddPanel);
+        AppUI.setHandCursor(ddPanel);
+        ddPanel.setBorder(new DashedBorder(40, AppUI.getColor13()));
+        ddPanel.add(l);
+        
+        c.insets = new Insets(8, 18, 0, 0); 
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridwidth = 2;
+        c.anchor = GridBagConstraints.CENTER;
+        c.gridy = y + 4;  
+        
+        AppUI.setSize(ddPanel, (int) ddWidth, 179);
+        gridbag.setConstraints(ddPanel, c);
+        new FileDrop(null, ddPanel, new FileDrop.Listener() {
+            public void filesDropped( java.io.File[] files ) {   
+                for( int i = 0; i < files.length; i++ ) {
+                    ps.files.add(files[i].getAbsolutePath());
+                }
+                
+                tl.setText("Total files selected: " + ps.files.size());            
+            } 
+        }); 
+        
+        final JFileChooser chooser = new JFileChooser();
+        FileNameExtensionFilter filter = new FileNameExtensionFilter(
+                "CloudCoins", "jpg", "jpeg", "stack", "json", "txt");
+        chooser.setFileFilter(filter);
+        chooser.setMultiSelectionEnabled(true);
+        
+        ddPanel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                int returnVal = chooser.showOpenDialog(null);
+                if (returnVal == JFileChooser.APPROVE_OPTION) {
+                    File[] files = chooser.getSelectedFiles();
+                    for (int i = 0; i < files.length; i++) {
+                        ps.files.add(files[i].getAbsolutePath());
+                    }
+                    
+                    tl.setText("Total files selected: " + ps.files.size());   
+                }
+            }   
+        });
+
+        oct.add(ddPanel);
+        rightPanel.add(oct);
+        
+        // Space
+        AppUI.hr(oct, 22);
+        
+        JPanel bp = getTwoButtonPanel(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                Wallet w;
+                
+                ps.typedMemo = memo.getText();
+                if (ps.typedMemo.isEmpty()) {
+                    ps.errText = "Memo can not be empty";
+                    showScreen();
+                    return;
+                }
+                
+                w = ps.dstWallet;
+                
+                if (ps.files.size() == 0) {
+                    ps.errText = "No files selected";
+                    showScreen();
+                    return;
+                }
+                
+                int cnt = AppCore.getFilesCount(Config.DIR_SUSPECT, w.getParent().getName());
+                if (cnt != 0) {
+                    ps.errText = "Suspect folder is not empty. Please import your coins first";
+                    showScreen();
+                    return;
+                }
+                
+                cnt = AppCore.getFilesCount(Config.DIR_IMPORT, w.getParent().getName());
+                if (cnt != 0) {
+                    ps.errText = "Import folder is not empty. Please import your coins first";
+                    showScreen();
+                    return;
+                }
+
+                  
+                ps.isSkyDeposit = true;
+                ps.currentScreen = ProgramState.SCREEN_IMPORTING;
+                
+                showScreen();
+            }
+        });
+        
+        AppUI.hr(rightPanel, 20);
+        rightPanel.add(bp); 
+        
     }
     
     public void showTransferScreen() {
@@ -2409,14 +2648,14 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         // Remote User
         c.gridx = GridBagConstraints.RELATIVE;
         c.gridy = y;   
-        final JLabel rwText = new JLabel("Remote Wallet");
+        final JLabel rwText = new JLabel("To Sky Vault");
         gridbag.setConstraints(rwText, c);
         AppUI.setCommonFont(rwText);
         oct.add(rwText);
         
         c.gridx = GridBagConstraints.RELATIVE;
         c.gridy = y;     
-        final MyTextField remoteWalledId = new MyTextField("Remote Wallet", false);
+        final MyTextField remoteWalledId = new MyTextField("JohnDoe.SkyWallet.cc", false);
         gridbag.setConstraints(remoteWalledId.getTextField(), c);
         oct.add(remoteWalledId.getTextField());     
         y++;
@@ -2514,19 +2753,6 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                     passwordSrc.getTextField().setVisible(false);
                     spText.setVisible(false);
                 }
-                /*
-                if (srcWallet.isSkyWallet()) {
-                    if (ps.isDstBoxFull) {
-                        cboxto.setOptions(nonSkyOptions);
-                        ps.isDstBoxFull = false;
-                    }
-                } else {
-                    if (!ps.isDstBoxFull) {
-                        cboxto.setOptions(options);
-                        ps.isDstBoxFull = true;
-                    }
-                }
-                */
             }
         });
         
@@ -2537,6 +2763,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 localFolder.getTextField().setVisible(false);
                 lfText.setVisible(false);
                 
+                // Remote Wallet
                 if (dstIdx == wallets.length) {
                     remoteWalledId.getTextField().setVisible(true);
                     rwText.setVisible(true);
@@ -2547,12 +2774,17 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                     localFolder.getTextField().setVisible(false);
                     lfText.setVisible(false);
                     
+                    memo.setPlaceholder("From John Doe for May rent");
+                    
                     return;
+                } else {
+                    memo.setPlaceholder("Optional");
                 } 
                 
                 remoteWalledId.getTextField().setVisible(false);
                 rwText.setVisible(false);
-                                   
+                  
+                // Local
                 if (dstIdx == wallets.length + 1) {    
                     passwordDst.getTextField().setVisible(false);
                     dpText.setVisible(false);
@@ -2577,19 +2809,6 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                     passwordDst.getTextField().setVisible(false);
                     dpText.setVisible(false);
                 }
-                /*
-                 if (dstWallet.isSkyWallet()) {
-                    if (ps.isSrcBoxFull) {
-                        cboxfrom.setOptions(nonSkyOptions);
-                        ps.isSrcBoxFull = false;
-                    }
-                } else {
-                    if (!ps.isSrcBoxFull) {
-                        cboxfrom.setOptions(options);
-                        ps.isSrcBoxFull = true;
-                    }
-                }
-                */
             }
         });
 
@@ -2670,12 +2889,25 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                         showScreen();
                         return;
                     }
+                    
+                    if (ps.srcWallet.isSkyWallet()) {
+                        ps.errText = "Transfer from Sky Vault to Remote Vault is not supported";
+                        showScreen();
+                        return;
+                    }
+                    
                     ps.typedRemoteWallet = remoteWalledId.getText();
                     ps.sendType = ProgramState.SEND_TYPE_REMOTE;
                 } else if (dstIdx == wallets.length + 1) {
                     // Local folder
                     if (ps.chosenFile.isEmpty()) {
                         ps.errText = "Folder is not chosen";
+                        showScreen();
+                        return;
+                    }
+                    
+                    if (ps.srcWallet.isSkyWallet()) {
+                        ps.errText = "Transfer from Sky Vault to Local Folder is not supported";
                         showScreen();
                         return;
                     }
@@ -2716,7 +2948,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                     
                     if (dstWallet.isSkyWallet()) {
                         if (ps.typedMemo.isEmpty()) {
-                            ps.errText = "Memo to SkyWallet is empty";
+                            ps.errText = "Memo must not be empty";
                             showScreen();
                             return;
                         }
@@ -2739,6 +2971,120 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         rightPanel.add(bp);   
     }
     
+    public void showPredepositScreen() {
+               
+        showLeftScreen();
+
+        JPanel rightPanel = getRightPanel();    
+    
+        JPanel ct = new JPanel();
+        AppUI.setBoxLayout(ct, true);
+        AppUI.noOpaque(ct);
+        rightPanel.add(ct);
+        
+        JLabel ltitle = AppUI.getTitle("Deposit");   
+        ct.add(ltitle);
+        AppUI.alignTop(ct);
+        AppUI.alignTop(ltitle);
+        
+        AppUI.hr(ct, 10);
+        
+        maybeShowError(ct);
+        
+        // Outer Container
+        JPanel oct = new JPanel();
+        AppUI.noOpaque(oct);
+        
+        int y = 0;
+        
+        GridBagLayout gridbag = new GridBagLayout();
+        GridBagConstraints c = new GridBagConstraints(); 
+        c.gridwidth = 1;
+        c.anchor = GridBagConstraints.EAST;
+        c.insets = new Insets(12, 18, 0, 0); 
+        oct.setLayout(gridbag);
+        
+        
+        // Deposit To
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;   
+        c.anchor = GridBagConstraints.EAST; 
+        JLabel x = new JLabel("Deposit From");
+        gridbag.setConstraints(x, c);
+        AppUI.setCommonFont(x);
+        oct.add(x);
+        
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;     
+        c.anchor = GridBagConstraints.WEST; 
+ 
+        int cnt = 0;
+        for (int i = 0; i < wallets.length; i++)
+            if (wallets[i].isSkyWallet())
+                cnt++;
+           
+        final String[] options = new String[cnt + 2];
+        int j = 0;
+        for (int i = 0; i < wallets.length; i++) {
+            if (wallets[i].isSkyWallet()) {
+                options[j] = wallets[i].getName();
+                j++;
+            }
+        }
+        
+        options[j++] = "- FileSystem";
+        options[j++] = "- Add Sky Vault";
+      
+        final RoundedCornerComboBox cbox = new RoundedCornerComboBox(AppUI.getColor2(), "Select Destination", options);
+        gridbag.setConstraints(cbox.getComboBox(), c);
+        oct.add(cbox.getComboBox());
+
+
+        rightPanel.add(oct);
+        
+        // Space
+        AppUI.hr(oct, 22);
+        
+        JPanel bp = getTwoButtonPanel(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                int cidx = cbox.getSelectedIndex();
+                if (cidx < 0 || cidx >= options.length + 1)
+                    return;
+
+                if (cidx == options.length - 1) {
+                    ps.isSkyDeposit = false;
+                    ps.currentScreen = ProgramState.SCREEN_DEPOSIT;
+                    showScreen();
+                    return;
+                }
+                
+                if (cidx == options.length) {
+                    ps.currentScreen = ProgramState.SCREEN_CREATE_SKY_WALLET;
+                    showScreen();
+                    return;
+                }
+                
+                String walletName = cbox.getSelectedValue();
+                Wallet w;
+   
+                w = sm.getWalletByName(walletName);
+                if (w == null) {
+                    ps.errText = "Wallet is not selected";
+                    showScreen();
+                    return;
+                }
+                
+                ps.dstWallet = w;
+                ps.isSkyDeposit = true;
+                ps.currentScreen = ProgramState.SCREEN_DEPOSIT_SKY_WALLET;            
+                showScreen();
+            }
+        });
+        
+        AppUI.hr(rightPanel, 20);
+        rightPanel.add(bp);    
+        
+    }
     
     public void showDepositScreen() {
         
@@ -3021,6 +3367,78 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         rightPanel.add(bp);       
     }
     
+    public void showFoldersScreen() {
+              showLeftScreen();
+ 
+        Wallet w = sm.getActiveWallet();     
+
+        JPanel rightPanel = getRightPanel();    
+        JPanel ct = new JPanel();
+        AppUI.setBoxLayout(ct, true);
+        AppUI.noOpaque(ct);
+        rightPanel.add(ct);
+        
+        JLabel ltitle = AppUI.getTitle("Show Folders");   
+        ct.add(ltitle);
+       // AppUI.hr(ct, 20);
+            
+        // GridHolder Container
+        JPanel gct = new JPanel();
+        AppUI.noOpaque(gct);
+   
+        GridBagLayout gridbag = new GridBagLayout();
+        gct.setLayout(gridbag);   
+        GridBagConstraints c = new GridBagConstraints();    
+        
+        int y = 0;
+
+        c.anchor = GridBagConstraints.NORTH;
+        c.insets = new Insets(0, 0, 24, 0); 
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+        c.gridwidth = 2;
+
+
+        JLabel sl = new JLabel("Folders:");
+        AppUI.setCommonFont(sl);
+        gridbag.setConstraints(sl, c); 
+        gct.add(sl);
+        y++;
+            
+        c.gridwidth = 1;
+        for (int i = 0; i < wallets.length; i++) {
+            if (wallets[i].isSkyWallet()) 
+                continue;
+            
+            sl = new JLabel(wallets[i].getName());
+            AppUI.setBoldFont(sl, 18);
+            c.insets = new Insets(0, 0, 4, 0); 
+            c.anchor = GridBagConstraints.EAST;
+            c.gridx = GridBagConstraints.RELATIVE;
+            c.gridy = y;
+        //    c.weightx = 2;
+            gridbag.setConstraints(sl, c); 
+            gct.add(sl);
+            
+            sl = new JLabel(AppCore.getRootUserDir(wallets[i].getName()));
+            AppUI.setFont(sl, 18);
+            c.insets = new Insets(0, 10, 4, 0); 
+            c.anchor = GridBagConstraints.WEST;
+            c.gridx = GridBagConstraints.RELATIVE;
+            c.gridy = y;
+        //    c.weightx = 3;
+            gridbag.setConstraints(sl, c); 
+            gct.add(sl);
+            
+            y++;
+                
+   
+        }
+            
+   
+        ct.add(gct);
+    }
+    
     public void showSupportScreen() {
         showLeftScreen();
  
@@ -3034,7 +3452,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         
         JLabel ltitle = AppUI.getTitle("Help & Support");   
         ct.add(ltitle);
-        AppUI.hr(ct, 20);
+       // AppUI.hr(ct, 20);
             
         // GridHolder Container
         JPanel gct = new JPanel();
@@ -3046,8 +3464,59 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         
         int y = 0;
         
-        c.anchor = GridBagConstraints.CENTER;
+        
+        
+        
+        c.anchor = GridBagConstraints.NORTH;
         c.insets = new Insets(0, 0, 4, 0); 
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+
+        int tsw = 0;
+        for (int i = 0; i < wallets.length; i++) {
+            if (wallets[i].isSkyWallet()) {
+                tsw++;
+            }
+        }
+         
+        int topMargin = 0;
+        if (tsw != 0) {
+            JLabel sl = new JLabel("Your Sky Vaults:");
+            AppUI.setFont(sl, 22);
+            gridbag.setConstraints(sl, c); 
+            gct.add(sl);
+            y++;
+            
+            for (int i = 0; i < wallets.length; i++) {
+                if (wallets[i].isSkyWallet()) {
+                    sl = new JLabel(wallets[i].getName());
+                    AppUI.setFont(sl, 18);
+                    c.insets = new Insets(0, 0, 4, 0); 
+                    c.gridx = GridBagConstraints.RELATIVE;
+                    c.gridy = y;
+                    gridbag.setConstraints(sl, c); 
+                    gct.add(sl);
+                    y++;
+                }
+            }
+            
+            topMargin = 26;
+        }
+            
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        c.anchor = GridBagConstraints.CENTER;
+        c.insets = new Insets(topMargin, 0, 4, 0); 
         c.gridx = GridBagConstraints.RELATIVE;
         c.gridy = y;
 
@@ -4374,7 +4843,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         chooser.setFileFilter(filter);
         
         
-        JPanel subInnerCore = getModalJPanel("Create Sky Wallet");
+        JPanel subInnerCore = getModalJPanel("Create Sky Vault");
         maybeShowError(subInnerCore);
       
         AppUI.hr(subInnerCore, 30);
@@ -4390,38 +4859,73 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         AppUI.noOpaque(ct);
         oct.add(ct);
         
+        int y = 0;
+        
         GridBagLayout gridbag = new GridBagLayout();
         GridBagConstraints c = new GridBagConstraints();      
         ct.setLayout(gridbag);
         
         
-        // Password Label
-        JLabel x = new JLabel("Wallet Name");
-        AppUI.setCommonFont(x);
+        JLabel x = new JLabel("DNS Name or IP Address of Trusted Server");
         c.anchor = GridBagConstraints.WEST;
         c.insets = new Insets(0, 0, 4, 0); 
         c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = 0;
+        c.gridy = y;
+        AppUI.setFont(x, 18);
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+        
+        y++;
+        
+        String[] options = {
+            Config.DDNS_DOMAIN,
+        //    "Enter Custom Server"
+        };
+        
+        c.anchor = GridBagConstraints.WEST;
+        c.insets = new Insets(0, 0, 4, 0); 
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+        
+        final RoundedCornerComboBox cbox = new RoundedCornerComboBox(AppUI.getColor2(), "Select Server", options);
+        gridbag.setConstraints(cbox.getComboBox(), c);
+        ct.add(cbox.getComboBox());
+        
+        y++;
+        
+        // Name Label
+        x = new JLabel("Your Proposed Address");
+        c.anchor = GridBagConstraints.WEST;
+        c.insets = new Insets(16, 0, 4, 0); 
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+        AppUI.setFont(x, 18);
+
         gridbag.setConstraints(x, c);
         ct.add(x);
 
-        final MyTextField tf0 = new MyTextField("Wallet Name", false);
-        c.insets = new Insets(0, 0, 36, 0);
+        y++;
+        
+        final MyTextField tf0 = new MyTextField("JohnDoe." + Config.DDNS_DOMAIN, false);
+        c.insets = new Insets(0, 0, 4, 0);
         c.gridx = 0;
-        c.gridy = 1;
+        c.gridy = y;
         gridbag.setConstraints(tf0.getTextField(), c);
         ct.add(tf0.getTextField());
         
+        y++;
         // Text
-        JLabel txt = new JLabel("Select CloudCoin for your Sky Wallet");
+        JLabel txt = new JLabel("Select CloudCoin to be used as ID");
         AppUI.setCommonFont(txt);
         AppUI.alignCenter(txt);
-        c.insets = new Insets(0, 0, 4, 0);
+        c.insets = new Insets(16, 0, 4, 0);
         c.gridx = 0;
-        c.gridy = 2;
+        c.gridy = y;
+        AppUI.setFont(txt, 18);
         gridbag.setConstraints(txt, c);
         ct.add(txt);
               
+        y++;
         final MyTextField tf1 = new MyTextField("", false, true);
         tf1.disable();
         tf1.setFilepickerListener(new MouseAdapter() {
@@ -4435,13 +4939,24 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             }
         });
 
+        c.insets = new Insets(0, 0, 4, 0);
         c.gridx = 0;
-        c.gridy = 3;
+        c.gridy = y;
         gridbag.setConstraints(tf1.getTextField(), c);
         ct.add(tf1.getTextField());
              
         JPanel bp = getTwoButtonPanel(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+                int srcIdx = cbox.getSelectedIndex();
+                if (srcIdx != 1) {
+                    ps.errText = "Trusted Server is not selected";
+                    showScreen();
+                    return;
+                }
+                
+                ps.trustedServer = cbox.getSelectedValue();
+                
+                
                 if (ps.chosenFile.isEmpty()) {
                     ps.errText = "Select the CloudCoin";
                     showScreen();
@@ -4460,9 +4975,8 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                     showScreen();
                     return;
                 }
-                
-                
-                DNSSn d = new DNSSn(domain, wl);
+
+                DNSSn d = new DNSSn(domain, ps.trustedServer, wl);
                 if (!d.setRecord(ps.chosenFile, sm.getSR())) {
                     ps.errText = "Failed to set record. Check if the coin is valid";
                     showScreen();
@@ -4801,12 +5315,19 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         // List wallets
         wallets = sm.getWallets();
         for (int i = 0; i < wallets.length; i++) {
-            walletWidget = getWallet(wallets[i]);
+            if (wallets[i].isSkyWallet())
+                continue;
+            
+            walletWidget = getWallet(wallets[i], 0);
             wpanel.add(walletWidget);
         }
  
         // "Add" Button
-        wpanel.add(getWallet(null));
+        wpanel.add(getWallet(null, TYPE_ADD_BUTTON));
+        
+        // "Add Sky Vault" Button
+        wpanel.add(getWallet(null, TYPE_ADD_SKY));
+ 
         
         // Padding from the bottom
         AppUI.hr(wpanel, 120);
@@ -4831,7 +5352,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         corePanel.add(lwrapperPanel);
     }
     
-    public JLayeredPane getWallet(Wallet wallet) {
+    public JLayeredPane getWallet(Wallet wallet, int type) {
         boolean isDisabled = true;
 
         if (wallet != null)
@@ -4852,23 +5373,12 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         addBtn.setContentAreaFilled(false);
         addBtn.setBounds(0, 0, 200, 120);
 
-        
-        
-        
-        
 
         JPanel cx = new JPanel();
         cx.setBounds(0,12,200,100);
         AppUI.noOpaque(cx);
-       
-        
-        
-        
-        
-        
-        
-        GridBagLayout gridbag = new GridBagLayout();
-       
+
+        GridBagLayout gridbag = new GridBagLayout();   
         cx.setLayout(gridbag);
         
         GridBagConstraints c = new GridBagConstraints();      
@@ -4877,7 +5387,18 @@ public class AdvancedClient implements ActionListener, ComponentListener {
  
         int y = 0;
         
-        String name = (wallet == null) ? "Add Wallet" : wallet.getName();        
+        String name;
+        if (wallet == null) {
+            if (type == TYPE_ADD_BUTTON)
+                name = "Add Wallet";
+            else if (type == TYPE_ADD_SKY)
+                name = "Add Sky Vault";
+            else
+                name = "";
+        } else {
+            name = wallet.getName();
+        }
+    
         JLabel l = new JLabel(name);
         AppUI.setFont(l, 22);
         if (isDisabled)
@@ -4932,7 +5453,6 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 iconr = new JLabel(new ImageIcon(img));
                 AppUI.setMargin(iconr, 5, 0, 0, 0);
             } catch (Exception ex) {
-                System.out.println("err " + ex.getMessage());
                 return null;
             }
             c.insets = new Insets(24, 16, 0, 16); 
@@ -5005,12 +5525,16 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             gridbag.setConstraints(plus, c);
             cx.add(plus);
 
+            final int ftype = type;
             MouseAdapter ma = new MouseAdapter() {
                 @Override
                 public void mouseReleased(MouseEvent e) {
                     ps.currentWallet = null;
-                    ps.currentScreen = ProgramState.SCREEN_PREPARE_TO_ADD_WALLET;
-                    ps.isAddingWallet = true;
+                    //ps.currentScreen = ProgramState.SCREEN_PREPARE_TO_ADD_WALLET;
+                    if (ftype == TYPE_ADD_BUTTON)
+                        ps.currentScreen = ProgramState.SCREEN_CREATE_WALLET;
+                    else if (ftype == TYPE_ADD_SKY)
+                        ps.currentScreen = ProgramState.SCREEN_CREATE_SKY_WALLET;
                     showScreen();
                 }  
                 
@@ -5488,6 +6012,38 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         }
     }
     
+    class UnpackerSenderCb implements CallbackInterface {
+	public void callback(Object result) {
+            wl.debug(ltag, "Unpacker (Sender) finished");
+            
+            final Object fresult = result;
+            UnpackerResult ur = (UnpackerResult) fresult;
+
+            if (ur.status == UnpackerResult.STATUS_ERROR) {
+                EventQueue.invokeLater(new Runnable() {         
+                    public void run() {
+                        if (!ur.errText.isEmpty())
+                            ps.errText = ur.errText;
+                        else  
+                            ps.errText = "Failed to Unpack file(s). Please check the logs";
+
+                        ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
+                        showScreen();
+                    }
+                });
+                
+                return;
+            }
+            
+            int sn = sm.getActiveWallet().getIDCoin().sn;
+            wl.debug(ltag, "UnpackerForSender sn=" + sn);
+
+            setRAIDAProgress(0, 0, AppCore.getFilesCount(Config.DIR_SUSPECT, sm.getActiveWallet().getName()));
+            sm.startSenderService(sn, null, 0, ps.typedMemo, new SenderDepositCb());
+
+        }
+    }
+    
     class UnpackerCb implements CallbackInterface {
 	public void callback(Object result) {
             wl.debug(ltag, "Unpacker finisheed");
@@ -5875,12 +6431,15 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                     dstWallet.appendTransaction(ps.typedMemo, sr.amount, sr.receiptId);
                     if (dstWallet.isEncrypted()) {
                         sm.changeServantUser("Vaulter", dstWallet.getName());
-                        sm.startVaulterService(new VaulterCb(), dstWallet.getPassword());          
+                        sm.startVaulterService(new VaulterCb(), dstWallet.getPassword());
                     } else {
                         ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
                         showScreen();
                     }
-                }      
+                } else {
+                    ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                    showScreen();
+                }
                 
                 return;
             } else {
@@ -5894,6 +6453,51 @@ public class AdvancedClient implements ActionListener, ComponentListener {
 	}
     }
     
+    class SenderDepositCb implements CallbackInterface {
+	public void callback(Object result) {
+            final SenderResult sr = (SenderResult) result;
+            
+            wl.debug(ltag, "Sender (Depostit) finished: " + sr.status);
+            if (sr.status == SenderResult.STATUS_PROCESSING) {
+                setRAIDAProgress(sr.totalRAIDAProcessed, sr.totalFilesProcessed, sr.totalFiles);
+                return;
+            }
+            
+            
+            if (sr.status == SenderResult.STATUS_CANCELLED) {
+                EventQueue.invokeLater(new Runnable() {         
+                    public void run() {
+                        ps.errText = "Operation Cancelled";
+                        ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
+                        showScreen();
+                    }
+                });
+                return;
+            }
+      
+            if (sr.status == SenderResult.STATUS_ERROR) {
+                EventQueue.invokeLater(new Runnable() {         
+                    public void run() {
+                        ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
+                        if (!sr.errText.isEmpty())
+                            ps.errText = sr.errText;
+                        else  
+                            ps.errText = "Error occurred. Please check the logs";
+                        
+                        showScreen();
+                    }
+                });
+		return;
+            }   
+           
+            ps.statToBankValue = sr.totalAuthenticValue + sr.totalFrackedValue;
+            ps.statToBank = sr.totalAuthentic + sr.totalFracked;
+            ps.statFailed = sr.totalCounterfeit + sr.totalUnchecked;
+            
+            ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
+            showScreen();              
+	}
+    }
     
     class ShowEnvelopeCoinsCb implements CallbackInterface {
 	public void callback(Object result) {

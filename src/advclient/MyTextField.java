@@ -35,6 +35,10 @@ public class MyTextField  {
         core = makeUI(placeholder);
     }
     
+    public void setPlaceholder(String placeholder) {
+        tf.setPlaceholder(placeholder);
+    }
+    
     public MyTextField(String placeholder, boolean isPassword) {
         this.isPassword = isPassword;
         isFilepicker = false;

@@ -37,9 +37,19 @@ public class RoundedTextField extends JPasswordField {
         show();    
     }
     
+    public void setPlaceholder(String placeholder) {
+        this.savedPlaceholder = placeholder;
+    
+
+        if (!this.placeholder.equals("")) 
+            this.placeholder = placeholder;
+            
+        repaint();
+        revalidate();
+    }
+    
     public void hide() {
-        setEchoChar('*');
-        
+        setEchoChar('*');        
     }
     
     public void show() {      
