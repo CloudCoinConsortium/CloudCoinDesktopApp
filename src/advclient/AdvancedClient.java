@@ -6239,7 +6239,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             wl.debug(ltag, "Unpacker (Sender) finished");
             
             final Object fresult = result;
-            UnpackerResult ur = (UnpackerResult) fresult;
+            final UnpackerResult ur = (UnpackerResult) fresult;
 
             if (ur.status == UnpackerResult.STATUS_ERROR) {
                 EventQueue.invokeLater(new Runnable() {         
@@ -6271,7 +6271,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             wl.debug(ltag, "Unpacker finisheed");
             
             final Object fresult = result;
-            UnpackerResult ur = (UnpackerResult) fresult;
+            final UnpackerResult ur = (UnpackerResult) fresult;
 
             if (ur.status == UnpackerResult.STATUS_ERROR) {
                 EventQueue.invokeLater(new Runnable() {         
