@@ -6,6 +6,7 @@
 package advclient;
 
 import global.cloudcoin.ccbank.core.Wallet;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Hashtable;
 
@@ -163,5 +164,30 @@ public class ProgramState {
         isSkyDeposit = false;
                 
     }
-    
+ 
+    public String toString() {
+        StringBuilder result = new StringBuilder();
+        String newLine = System.getProperty("line.separator");
+
+        Field[] fields = this.getClass().getDeclaredFields();
+
+        for (Field field : fields) {
+            result.append("  ");
+            try {
+                Character c = field.getName().charAt(0);
+                if (Character.isUpperCase(c)) {
+                    continue;
+                }
+                
+                result.append(field.getName());
+                result.append(": ");
+                
+                result.append(field.get(this));
+            } catch (IllegalAccessException ex) {
+            }
+            result.append("; ");
+        }
+
+        return result.toString();
+    }
 }

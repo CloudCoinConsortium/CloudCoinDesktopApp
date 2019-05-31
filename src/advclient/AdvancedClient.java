@@ -705,6 +705,9 @@ public class AdvancedClient implements ActionListener, ComponentListener {
     
     public void showScreen() {
         clear();
+        
+        wl.debug(ltag, "SCREEN " + ps.currentScreen + ": " + ps.toString());
+        
         switch (ps.currentScreen) {
             case ProgramState.SCREEN_AGREEMENT:
                 resetState();
@@ -1385,11 +1388,14 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             to = "?";
         }
         
+        String name = ps.srcWallet.getName();
+        if (ps.srcWallet.isSkyWallet())
+            name += "." + Config.DDNS_DOMAIN;
         
         
         JLabel x = new JLabel("<html><div style='width:400px; text-align:center'>"
                 + "<b>" + AppCore.formatNumber(ps.typedAmount) + " CC</b> have been transferred to <b>" + to + "</b> from <b>"
-                + ps.srcWallet.getName() + "</b></div></html>");
+                + name + "</b></div></html>");
         AppUI.setCommonFont(x);
  
         c.insets = new Insets(0, 0, 4, 0);
@@ -1753,7 +1759,11 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         gridbag.setConstraints(x, c);
         ct.add(x);
 
-        x = new JLabel(ps.srcWallet.getName());
+        String name = ps.srcWallet.getName();
+        if (ps.srcWallet.isSkyWallet())
+            name += "." + Config.DDNS_DOMAIN;
+        
+        x = new JLabel(name);
         AppUI.setCommonBoldFont(x);
         c.anchor = GridBagConstraints.WEST;
         c.gridx = GridBagConstraints.RELATIVE;;
@@ -1765,7 +1775,12 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         
         String to;
         if (ps.sendType == ProgramState.SEND_TYPE_WALLET) {
-            to = ps.dstWallet.getName();
+            name = ps.dstWallet.getName();
+            if (ps.dstWallet.isSkyWallet())
+                name += "." + Config.DDNS_DOMAIN;
+            
+            to = name;
+            
         } else if (ps.sendType == ProgramState.SEND_TYPE_REMOTE) {
             to = ps.typedRemoteWallet;
         } else if (ps.sendType == ProgramState.SEND_TYPE_FOLDER) {
@@ -2362,13 +2377,16 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         c.insets = new Insets(12, 18, 0, 0); 
         oct.setLayout(gridbag);
         
+        String name = ps.dstWallet.getName();
+        if (ps.dstWallet.isSkyWallet())
+            name += "." + Config.DDNS_DOMAIN;
         
         // Deposit To
         c.gridx = GridBagConstraints.RELATIVE;
         c.gridy = y;   
         c.anchor = GridBagConstraints.CENTER; 
         c.gridwidth = 2;
-        JLabel x = new JLabel("Deposit To " + ps.dstWallet.getName());
+        JLabel x = new JLabel("Deposit To " + name);
         gridbag.setConstraints(x, c);
         AppUI.setCommonFont(x);
         oct.add(x);
@@ -2575,9 +2593,23 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             }
         }
         */
-        final String[] options = new String[wallets.length];
+        //final String[] options = new String[wallets.length];
+        final int[] idxs = new int[nonSkyCnt];
+        final String[] options = new String[nonSkyCnt];
+        
+        int j = 0;
         for (int i = 0; i < wallets.length; i++) {
-            options[i] = wallets[i].getName() + " - " + AppCore.formatNumber(wallets[i].getTotal()) + " CC";
+            if (wallets[i].isSkyWallet())
+                continue;
+            
+            String name = wallets[i].getName();
+            
+//            if (wallets[i].isSkyWallet())
+//                name += "." + Config.DDNS_DOMAIN;
+            
+            options[j] = name + " - " + AppCore.formatNumber(wallets[i].getTotal()) + " CC";
+            idxs[j] = i;
+            j++;
         }
         
       
@@ -2742,6 +2774,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 if (srcIdx < 0 || srcIdx >= wallets.length) 
                     return;
                 
+                srcIdx = idxs[srcIdx];
                 Wallet srcWallet = wallets[srcIdx];
                 if (srcWallet == null)
                     return;
@@ -2763,8 +2796,9 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 localFolder.getTextField().setVisible(false);
                 lfText.setVisible(false);
                 
+                
                 // Remote Wallet
-                if (dstIdx == wallets.length) {
+                if (dstIdx == idxs.length) {
                     remoteWalledId.getTextField().setVisible(true);
                     rwText.setVisible(true);
                     
@@ -2785,7 +2819,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 rwText.setVisible(false);
                   
                 // Local
-                if (dstIdx == wallets.length + 1) {    
+                if (dstIdx == idxs.length + 1) {    
                     passwordDst.getTextField().setVisible(false);
                     dpText.setVisible(false);
                     
@@ -2795,9 +2829,12 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                     return;
                 }
    
-                if (dstIdx < 0 || dstIdx >= wallets.length) 
+                if (dstIdx < 0 || dstIdx >= idxs.length) 
                     return;
                            
+                
+                dstIdx = idxs[dstIdx];
+                
                 Wallet dstWallet = wallets[dstIdx];             
                 if (dstWallet == null)
                     return;
@@ -2824,7 +2861,9 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 int srcIdx = cboxfrom.getSelectedIndex() - 1;
                 int dstIdx = cboxto.getSelectedIndex() - 1;
                 
-                if (srcIdx < 0 || srcIdx >= wallets.length || dstIdx < 0 || dstIdx >= wallets.length + 2) {
+
+                
+                if (srcIdx < 0 || srcIdx >= idxs.length || dstIdx < 0 || dstIdx >= idxs.length + 2) {
                     ps.errText = "Please select from and to Wallet";
                     showScreen();
                     return;
@@ -2849,6 +2888,9 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                     showScreen();
                     return;  
                 }
+                
+                srcIdx = idxs[srcIdx];
+
                           
                 Wallet srcWallet = wallets[srcIdx];
                 if (srcWallet.isEncrypted()) {
@@ -2882,7 +2924,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 }
                       
                 ps.srcWallet = srcWallet;              
-                if (dstIdx == wallets.length) {
+                if (dstIdx == idxs.length) {
                     // Remote User
                     if (remoteWalledId.getText().isEmpty()) {
                         ps.errText = "Remote Wallet is empty";
@@ -2898,7 +2940,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                     
                     ps.typedRemoteWallet = remoteWalledId.getText();
                     ps.sendType = ProgramState.SEND_TYPE_REMOTE;
-                } else if (dstIdx == wallets.length + 1) {
+                } else if (dstIdx == idxs.length + 1) {
                     // Local folder
                     if (ps.chosenFile.isEmpty()) {
                         ps.errText = "Folder is not chosen";
@@ -2914,6 +2956,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                     
                     ps.sendType = ProgramState.SEND_TYPE_FOLDER;      
                 } else {
+                    dstIdx = idxs[dstIdx];
                     // Wallet
                     Wallet dstWallet = wallets[dstIdx];
                     if (dstWallet.isEncrypted()) {
@@ -3005,7 +3048,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         oct.setLayout(gridbag);
         
         
-        // Deposit To
+        // Deposit From
         c.gridx = GridBagConstraints.RELATIVE;
         c.gridy = y;   
         c.anchor = GridBagConstraints.EAST; 
@@ -3024,11 +3067,22 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 cnt++;
            
         final String[] options = new String[cnt + 2];
-        int j = 0;
+        final String[] doptions = new String[wallets.length - cnt];
+        int j = 0, k = 0;
+        
+        final int fidxs[], tidxs[];
+        
+        fidxs = new int[cnt + 2];
+        tidxs = new int[wallets.length - cnt];
         for (int i = 0; i < wallets.length; i++) {
             if (wallets[i].isSkyWallet()) {
-                options[j] = wallets[i].getName();
+                options[j] = wallets[i].getName() + "." + Config.DDNS_DOMAIN + " - " + wallets[i].getTotal() + " CC";
+                fidxs[j] = i;
                 j++;
+            } else {
+                doptions[k] = wallets[i].getName() + " - " + wallets[i].getTotal() + " CC";
+                tidxs[k] = i;
+                k++;
             }
         }
         
@@ -3039,18 +3093,103 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         gridbag.setConstraints(cbox.getComboBox(), c);
         oct.add(cbox.getComboBox());
 
-
+        y++;
+        
         rightPanel.add(oct);
         
+        // Deposit To
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;   
+        c.anchor = GridBagConstraints.EAST; 
+        final JLabel dto = new JLabel("Deposit To");
+        gridbag.setConstraints(dto, c);
+        AppUI.setCommonFont(dto);
+        oct.add(dto);
+         
+        //final optRv rv = setOptionsForWallets(false, false);
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;     
+        c.anchor = GridBagConstraints.WEST; 
+        final RoundedCornerComboBox cboxto = new RoundedCornerComboBox(AppUI.getColor2(), "Select Destination", doptions);
+        gridbag.setConstraints(cboxto.getComboBox(), c);
+        oct.add(cboxto.getComboBox());
+        
+        
+        cboxto.getComboBox().setVisible(false);
+        dto.setVisible(false);
+        
+        y++;
+        
+        // Password
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;   
+        c.anchor = GridBagConstraints.EAST;   
+        final JLabel pText = new JLabel("Password");
+        gridbag.setConstraints(pText, c);
+        AppUI.setCommonFont(pText);
+        oct.add(pText);
+        
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;     
+        c.anchor = GridBagConstraints.WEST;   
+        final MyTextField password = new MyTextField("Wallet Password", true);
+        gridbag.setConstraints(password.getTextField(), c);
+        oct.add(password.getTextField());
+        
+        password.getTextField().setVisible(false);
+        pText.setVisible(false);
+        
+        y++;
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        cbox.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                int cidx = cbox.getSelectedIndex();
+                if (cidx > options.length - 2) {
+                    cboxto.getComboBox().setVisible(false);
+                    dto.setVisible(false);
+                    
+                    password.getTextField().setVisible(false);
+                    pText.setVisible(false);
+                } else {
+                    cboxto.getComboBox().setVisible(true);
+                    dto.setVisible(true);
+                }
+            }
+        });
+        
+        cboxto.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                int cidx = cboxto.getSelectedIndex();
+                
+                cidx = tidxs[cidx - 1];
+                Wallet w = wallets[cidx];
+                if (w.isEncrypted()) {
+                    password.getTextField().setVisible(true);
+                    pText.setVisible(true);
+                } else {
+                    password.getTextField().setVisible(false);
+                    pText.setVisible(false);
+                }
+            }
+        });
+        
+        
+               
         // Space
         AppUI.hr(oct, 22);
         
         JPanel bp = getTwoButtonPanel(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 int cidx = cbox.getSelectedIndex();
-                if (cidx < 0 || cidx >= options.length + 1)
-                    return;
-
                 if (cidx == options.length - 1) {
                     ps.isSkyDeposit = false;
                     ps.currentScreen = ProgramState.SCREEN_DEPOSIT;
@@ -3064,19 +3203,81 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                     return;
                 }
                 
-                String walletName = cbox.getSelectedValue();
-                Wallet w;
-   
-                w = sm.getWalletByName(walletName);
+                cidx = fidxs[cidx - 1];
+                
+                Wallet w = wallets[cidx];
                 if (w == null) {
                     ps.errText = "Wallet is not selected";
                     showScreen();
                     return;
                 }
                 
+                ps.srcWallet = w;
+
+                cidx = cboxto.getSelectedIndex();
+                cidx = tidxs[cidx - 1];
+                
+                w = wallets[cidx];
+                if (w == null) {
+                    ps.errText = "Destination Wallet is not selected";
+                    showScreen();
+                    return;
+                }
+                
                 ps.dstWallet = w;
+                
+                int cnt = AppCore.getFilesCount(Config.DIR_SUSPECT, w.getName());
+                if (cnt != 0) {
+                    ps.errText = "Suspect folder is not empty. Please import your coins first";
+                    showScreen();
+                    return;
+                }
+                
+                cnt = AppCore.getFilesCount(Config.DIR_IMPORT, w.getName());
+                if (cnt != 0) {
+                    ps.errText = "Import folder is not empty. Please import your coins first";
+                    showScreen();
+                    return;
+                }
+
+                int total;
+                total = ps.srcWallet.getTotal();
+                if (total == 0) {
+                    ps.errText = ps.srcWallet.getName() + "." + Config.DDNS_DOMAIN + " is empty";
+                    showScreen();
+                    return;
+                }
+                
+                if (ps.dstWallet.isEncrypted()) {
+                
+                    if (password.getText().isEmpty()) {
+                        ps.errText = "From Password is empty";
+                        showScreen();
+                        return;
+                    }
+                    
+                    String wHash = ps.dstWallet.getPasswordHash();
+                    String providedHash = AppCore.getMD5(password.getText());
+                    if (wHash == null) {
+                        ps.errText = "From Wallet is corrupted";
+                        showScreen();
+                        return;
+                    }
+                    
+                    if (!wHash.equals(providedHash)) {
+                        ps.errText = "From Password is incorrect";
+                        showScreen();
+                        return;
+                    } 
+                    
+                    ps.typedDstPassword = password.getText();
+                    ps.dstWallet.setPassword(ps.typedDstPassword);
+                }
+                
+                ps.typedAmount = total;
                 ps.isSkyDeposit = true;
-                ps.currentScreen = ProgramState.SCREEN_DEPOSIT_SKY_WALLET;            
+                ps.currentScreen = ProgramState.SCREEN_SENDING;
+                
                 showScreen();
             }
         });
@@ -3489,7 +3690,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             
             for (int i = 0; i < wallets.length; i++) {
                 if (wallets[i].isSkyWallet()) {
-                    sl = new JLabel(wallets[i].getName());
+                    sl = new JLabel(wallets[i].getName() + "." + Config.DDNS_DOMAIN);
                     AppUI.setFont(sl, 18);
                     c.insets = new Insets(0, 0, 4, 0); 
                     c.gridx = GridBagConstraints.RELATIVE;
@@ -3830,15 +4031,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         
         AppUI.hr(rightPanel, 20);
         rightPanel.add(bp); 
-        
-        
-        
-        
-        
-        
-        
-        
-        
+
     }
     
     
@@ -4846,7 +5039,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         JPanel subInnerCore = getModalJPanel("Create Sky Vault");
         maybeShowError(subInnerCore);
       
-        AppUI.hr(subInnerCore, 30);
+        AppUI.hr(subInnerCore, 4);
         
         // Outer Container
         JPanel oct = new JPanel();
@@ -4868,10 +5061,10 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         
         JLabel x = new JLabel("DNS Name or IP Address of Trusted Server");
         c.anchor = GridBagConstraints.WEST;
-        c.insets = new Insets(0, 0, 4, 0); 
+        c.insets = new Insets(10, 0, 4, 0); 
         c.gridx = GridBagConstraints.RELATIVE;
         c.gridy = y;
-        AppUI.setFont(x, 18);
+        AppUI.setFont(x, 16);
         gridbag.setConstraints(x, c);
         ct.add(x);
         
@@ -4896,10 +5089,10 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         // Name Label
         x = new JLabel("Your Proposed Address");
         c.anchor = GridBagConstraints.WEST;
-        c.insets = new Insets(16, 0, 4, 0); 
+        c.insets = new Insets(12, 0, 4, 0); 
         c.gridx = GridBagConstraints.RELATIVE;
         c.gridy = y;
-        AppUI.setFont(x, 18);
+        AppUI.setFont(x, 16);
 
         gridbag.setConstraints(x, c);
         ct.add(x);
@@ -4918,10 +5111,10 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         JLabel txt = new JLabel("Select CloudCoin to be used as ID");
         AppUI.setCommonFont(txt);
         AppUI.alignCenter(txt);
-        c.insets = new Insets(16, 0, 4, 0);
+        c.insets = new Insets(12, 0, 4, 0);
         c.gridx = 0;
         c.gridy = y;
-        AppUI.setFont(txt, 18);
+        AppUI.setFont(txt, 16);
         gridbag.setConstraints(txt, c);
         ct.add(txt);
               
@@ -4939,20 +5132,33 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             }
         });
 
-        c.insets = new Insets(0, 0, 4, 0);
+        c.insets = new Insets(0, 0, 0, 0);
         c.gridx = 0;
         c.gridy = y;
         gridbag.setConstraints(tf1.getTextField(), c);
         ct.add(tf1.getTextField());
-             
+        
+        y++;
+        
+        final MyCheckBox cb = new MyCheckBox("Create New Wallet");
+        //cb.setBoldFont();
+        c.insets = new Insets(12, 0, 0, 0);
+        c.gridx = 0;
+        c.gridy = y;
+        gridbag.setConstraints(cb.getCheckBox(), c);
+        ct.add(cb.getCheckBox());
+
+        
         JPanel bp = getTwoButtonPanel(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+                             System.out.println("xx" + cb.isChecked());
                 int srcIdx = cbox.getSelectedIndex();
                 if (srcIdx != 1) {
                     ps.errText = "Trusted Server is not selected";
                     showScreen();
                     return;
                 }
+   
                 
                 ps.trustedServer = cbox.getSelectedValue();
                 
@@ -4963,7 +5169,8 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                     return;
                 }
                 
-                if (!AppCore.isCoinOk(ps.chosenFile)) {
+                CloudCoin cc = AppCore.getCoin(ps.chosenFile);
+                if (cc == null) {
                     ps.errText = "The coin is invalid. Format error";
                     showScreen();
                     return;
@@ -4977,10 +5184,25 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 }
 
                 DNSSn d = new DNSSn(domain, ps.trustedServer, wl);
-                if (!d.setRecord(ps.chosenFile, sm.getSR())) {
-                    ps.errText = "Failed to set record. Check if the coin is valid";
-                    showScreen();
-                    return;
+                if (cb.isChecked()) {                  
+                    if (!d.setRecord(ps.chosenFile, sm.getSR())) {
+                        ps.errText = "Failed to set record. Check if the coin is valid";
+                        showScreen();
+                        return;
+                    }
+                } else {
+                    int sn = d.getSN();
+                    if (sn <= 0) {
+                        ps.errText = "Wallet does not exist";
+                        showScreen();
+                        return;
+                    }
+                    
+                    if (cc.sn != sn) {
+                        ps.errText = "Sky Coin SN does not match your Coin SN";
+                        showScreen();
+                        return;
+                    }
                 }
                 
                 String newFileName = domain + ".stack";
