@@ -1033,6 +1033,18 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 
 
                 String dstName =  (ps.foundSN == 0) ? ps.dstWallet.getName() : "" + ps.foundSN;
+                
+                if (ps.isSkyDeposit) {
+                    wl.debug(ltag, "sky deposit");
+                    int sn = ps.srcWallet.getIDCoin().sn;
+                    
+                    pbarText.setText("Querying coins ...");
+                    pbarText.repaint();
+                    
+                    sm.startShowSkyCoinsService(new ShowEnvelopeCoinsForReceiverCb(), sn);
+                    return;
+                }
+                
 
                 wl.debug(ltag, "Sending to dst " + dstName);
                 sm.transferCoins(ps.srcWallet.getName(), dstName, 
@@ -1498,14 +1510,15 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             }
         },  new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                setActiveWallet(ps.dstWallet);
+                ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
+                //ps.currentScreen = ProgramState.SCREEN_DEFAULT;
                 showScreen();
             }
         });
   
         
-        subInnerCore.add(bp);  
-        
+        subInnerCore.add(bp);          
     }
     
     public void showDeleteWalletDoneScreen() {
@@ -3140,16 +3153,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         pText.setVisible(false);
         
         y++;
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+         
         cbox.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 int cidx = cbox.getSelectedIndex();
@@ -3248,8 +3252,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                     return;
                 }
                 
-                if (ps.dstWallet.isEncrypted()) {
-                
+                if (ps.dstWallet.isEncrypted()) {               
                     if (password.getText().isEmpty()) {
                         ps.errText = "From Password is empty";
                         showScreen();
@@ -4737,7 +4740,6 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 "Memo (note)",
                 "Date",
                 "Amount"
-
             };        
                       
         } else {
@@ -4819,7 +4821,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         final JScrollPane scrollPane = AppUI.setupTable(table, headers, trs, r);
         
         table.getColumnModel().getColumn(0).setPreferredWidth(240);
-        table.getColumnModel().getColumn(1).setPreferredWidth(100);
+        table.getColumnModel().getColumn(1).setPreferredWidth(160);
         
         MouseAdapter ma = new MouseAdapter() {
             private int prevcolumn = -1;
@@ -5773,138 +5775,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
          
             cx.addMouseListener(ma);
         }
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
 
-        // Wrapper for label
-     
-       // AppUI.setBoxLayout(cx, true);
-      //  cx.setBounds(0,12,200,100);
-
-        // Space
-        //AppUI.hr(cx, 10);
-        
-
-       /*
-        // Line wrapper (2 icons + string of coins)
-        JPanel inner = new JPanel();
-        AppUI.setBoxLayout(inner, false);
-        AppUI.noOpaque(inner);
-
-        final JButton faddBtn = addBtn;    
-        final boolean fisDisabled = isDisabled;
-        
-        if (wallet != null) {
-            // Horizontal Space
-            AppUI.vr(inner, 10);
-        
-            String iconNameL, iconNameR;
-            ImageJPanel icon;
-            if (wallet.isSkyWallet()) {
-                iconNameL = "Cloud Icon.png";
-            } else if (wallet.isEncrypted()) {
-                if (isDisabled)
-                    iconNameL = "Lock Icon Disabled.png";
-                else
-                    iconNameL = "Lock Icon.png";
-            } else {
-                iconNameL = "dummy.png";
-            }
-        
-            if (!wallet.getEmail().equals("")) {
-                if (isDisabled)
-                    iconNameR = "Image 41.png";
-                else
-                    iconNameR = "Envelope.png";
-            } else {
-                iconNameR = "dummy.png";
-            }
-           
-            JLabel iconl, iconr;
-            try {
-                Image img;
-            
-                img = ImageIO.read(getClass().getClassLoader().getResource("resources/" + iconNameL));
-                iconl = new JLabel(new ImageIcon(img));
-            
-                img = ImageIO.read(getClass().getClassLoader().getResource("resources/" + iconNameR));
-                iconr = new JLabel(new ImageIcon(img));
-                AppUI.setMargin(iconr, 5, 0, 0, 0);
-            } catch (Exception ex) {
-                return null;
-            }
-        
-            inner.add(iconl);
- 
-            // Amount of coins
-            JPanel amWrapper = new JPanel();
-            amWrapper.setLayout(new GridBagLayout());
-            AppUI.noOpaque(amWrapper);
-        
-            // Amount (empty)
-            JLabel jxl = new JLabel("");
-            AppUI.setFont(jxl, 18);
-            AppUI.alignCenter(jxl);
-            AppUI.noOpaque(jxl);
-            amWrapper.add(jxl);
-            inner.add(amWrapper);
-
-            // Set ref between wallet and its ui
-            wallet.setuiRef(jxl);
-        
-            inner.add(iconr);
-            AppUI.vr(inner, 10);
-
-            final Wallet fwallet = wallet;
-            MouseAdapter ma = new MouseAdapter() {
-                @Override
-                public void mouseReleased(MouseEvent e) {
-                    setActiveWallet(fwallet);
-                    ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
-                    showScreen();
-                }   
-                
-                public void mouseEntered(MouseEvent e) {
-                    AppUI.roundCorners(faddBtn, AppUI.getColor5(), 20);
-                }
-            
-                public void mouseExited(MouseEvent e) {
-                    Color color = fisDisabled ? AppUI.getColor3() : AppUI.getColor4();
-                    
-                    AppUI.roundCorners(faddBtn, color, 20);
-                }
-            };
-            
-            cx.addMouseListener(ma);
-        } else {
-            
-        }
-          
-        cx.add(inner);        
-        */
-
-        
         lpane.add(addBtn, new Integer(1));
         lpane.add(cx, new Integer(2));
 
@@ -6421,7 +6292,6 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 return;
             }
 
-            //System.out.println("xxx=" + fr.totalFiles + " pr=" + fr.totalRAIDAProcessed + " fp=" + fr.totalFilesProcessed + " r="+fr.fixingRAIDA);
             setRAIDAFixingProgress(fr.totalRAIDAProcessed, fr.totalFilesProcessed, fr.totalFiles, fr.fixingRAIDA, fr.round);
         }
     }
@@ -6731,6 +6601,25 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         }
     }
     
+    class ShowEnvelopeCoinsForReceiverCb implements CallbackInterface {
+	public void callback(Object result) {
+            ShowEnvelopeCoinsResult er = (ShowEnvelopeCoinsResult) result;
+ 
+            ps.cenvelopes = er.envelopes;
+            
+            wl.debug(ltag, "Sending from sc to " + ps.dstWallet.getName());
+            
+            Thread t = new Thread(new Runnable() {
+                public void run(){
+                    sm.transferCoins(ps.srcWallet.getName(), ps.dstWallet.getName(), 
+                        ps.typedAmount, ps.typedMemo,  new SenderCb(), new ReceiverCb());
+                }
+            });
+        
+            t.start();
+        }
+    }
+    
     
     class ReceiverCb implements CallbackInterface {
 	public void callback(Object result) {
@@ -6787,7 +6676,25 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 
                 srcWallet.appendTransaction(ps.typedMemo, rr.amount * -1, rr.receiptId);
                 if (dstWallet != null) {
-                    dstWallet.appendTransaction(ps.typedMemo, rr.amount, rr.receiptId);
+                    if (srcWallet.isSkyWallet()) {
+                        wl.debug(ltag, "Appending sky transactions");
+                        
+                        Enumeration<String> enumeration = ps.cenvelopes.keys();
+                        while (enumeration.hasMoreElements()) {
+                            String key = enumeration.nextElement();
+                            String[] data = ps.cenvelopes.get(key);
+
+                            int total = 0;
+                            try {
+                                total = Integer.parseInt(data[1]);
+                            } catch (NumberFormatException e) {        
+                            }
+ 
+                            ps.dstWallet.appendTransaction(data[0], total, rr.receiptId, data[2]); 
+                        }
+                    } else {
+                        dstWallet.appendTransaction(ps.typedMemo, rr.amount, rr.receiptId);
+                    }
                     if (dstWallet.isEncrypted()) {
                         sm.changeServantUser("Vaulter", dstWallet.getName());
                         sm.startVaulterService(new VaulterCb(), dstWallet.getPassword());          
