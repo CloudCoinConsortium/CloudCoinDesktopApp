@@ -619,7 +619,8 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             } 
         };
  
-        String[] items = {"Backup", "List serials", "Clear History", "Fix Fracked", "Delete Wallet", "Show Folders"};
+        String[] items = {"Backup", "List serials", "Clear History", "Fix Fracked", 
+            "Delete Wallet", "Show Folders", "Echo RAIDA"};
         for (int i = 0; i < items.length; i++) {
             JMenuItem menuItem = new JMenuItem(items[i]);
             menuItem.setActionCommand("" + i);
@@ -652,6 +653,8 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                         ps.currentScreen = ProgramState.SCREEN_DELETE_WALLET;
                     } else if (action.equals("5")) {
                         ps.currentScreen = ProgramState.SCREEN_SHOW_FOLDERS;
+                    } else if (action.equals("6")) {
+                        ps.currentScreen = ProgramState.SCREEN_ECHO_RAIDA;
                     }
                     showScreen();
                 }
@@ -877,6 +880,12 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             case ProgramState.SCREEN_SHOW_FOLDERS:
                 showFoldersScreen();
                 break;
+            case ProgramState.SCREEN_ECHO_RAIDA:
+                showEchoRAIDAScreen();
+                break;
+            case ProgramState.SCREEN_ECHO_RAIDA_FINISHED:
+                showEchoRAIDAFinishedScreen();
+                break;
                 
         }
         
@@ -1009,6 +1018,85 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         t.start();
     }
     
+    public void showEchoRAIDAScreen() {
+        JPanel subInnerCore = getModalJPanel("Checking RAIDA");
+        maybeShowError(subInnerCore);
+
+        JPanel ct = new JPanel();
+        AppUI.noOpaque(ct);
+        subInnerCore.add(ct);
+        
+        AppUI.hr(ct, 60);
+        
+        JLabel x = new JLabel("Please wait...");
+        AppUI.setCommonFont(x);
+        AppUI.alignCenter(x);
+        ct.add(x);
+
+        sm.startEchoService(new EchoCb());
+    }
+    
+    public void showEchoRAIDAFinishedScreen() {
+        System.out.println("done");
+        JPanel subInnerCore = getModalJPanel("RAIDA Status");
+        maybeShowError(subInnerCore);
+
+        JPanel ct = new JPanel();
+        AppUI.noOpaque(ct);
+        subInnerCore.add(ct);
+        
+        AppUI.hr(ct, 2);
+        JLabel x;
+
+        
+        GridBagLayout gridbag = new GridBagLayout();
+        GridBagConstraints c = new GridBagConstraints();      
+        ct.setLayout(gridbag);
+        
+        x = new JLabel("");
+        AppUI.setFont(x, 15);
+        c.anchor = GridBagConstraints.CENTER;
+        c.insets = new Insets(0, 0, 4, 0); 
+        c.gridx = 0;
+        c.gridy = 0;
+        c.gridwidth = 2;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+        
+        String[] statuses = sm.getRAIDAStatuses();
+        
+        int y = 1;
+        for (int i = 0; i < statuses.length; i++) {
+            x = new JLabel("RAIDA" + i);
+            AppUI.setFont(x, 13);
+            c.gridwidth = 1;
+            c.anchor = GridBagConstraints.EAST;
+            c.insets = new Insets(0, 0, 2, 0); 
+            c.gridx = 0;
+            c.gridy = y;
+            gridbag.setConstraints(x, c);
+            ct.add(x);
+            
+            String status;
+            if (statuses[i] == null) {
+                status = "FAILED";
+            } else {
+                status = "OK: " + statuses[i] + "ms";
+            }
+            
+            x = new JLabel(status);
+            AppUI.setFont(x, 13);
+            c.anchor = GridBagConstraints.WEST;
+            c.insets = new Insets(0, 40, 2, 0); 
+            c.gridx = GridBagConstraints.RELATIVE;
+            c.gridy = y;
+            gridbag.setConstraints(x, c);
+            ct.add(x);
+            
+            y++;
+        }
+
+    }
     
     public void showSendingScreen() {
         JPanel subInnerCore = getModalJPanel("Transfer in Progress");
@@ -1567,6 +1655,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         },  new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 setActiveWallet(ps.dstWallet);
+                ps.sendType = 0;
                 ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
                 //ps.currentScreen = ProgramState.SCREEN_DEFAULT;
                 showScreen();
@@ -2651,18 +2740,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         for (int i = 0; i < wallets.length; i++)
             if (!wallets[i].isSkyWallet())
                 nonSkyCnt++;
-        
-        /*
-        final String[] nonSkyOptions = new String[nonSkyCnt];
-        int j = 0;
-        for (int i = 0; i < wallets.length; i++) {
-            if (!wallets[i].isSkyWallet()) {
-                nonSkyOptions[j] = wallets[i].getName() + " - " + AppCore.formatNumber(wallets[i].getTotal()) + " CC";
-                j++;
-            }
-        }
-        */
-        //final String[] options = new String[wallets.length];
+
         final int[] idxs = new int[nonSkyCnt];
         final String[] options = new String[nonSkyCnt];
         
@@ -2672,10 +2750,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 continue;
             
             String name = wallets[i].getName();
-            
-//            if (wallets[i].isSkyWallet())
-//                name += "." + Config.DDNS_DOMAIN;
-            
+
             options[j] = name + " - " + AppCore.formatNumber(wallets[i].getTotal()) + " CC";
             idxs[j] = i;
             j++;
@@ -3023,7 +3098,17 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                         return;
                     }
                     
-                    ps.sendType = ProgramState.SEND_TYPE_FOLDER;      
+                    if (ps.typedMemo.isEmpty())
+                        ps.typedMemo = "Export";
+                    
+                    ps.sendType = ProgramState.SEND_TYPE_FOLDER;    
+                    
+                    setActiveWallet(ps.srcWallet);
+                    ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
+                    showScreen();
+                    
+                    return;
+                    
                 } else {
                     dstIdx = idxs[dstIdx];
                     // Wallet
@@ -4937,6 +5022,30 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             }
         };
         
+        if (ps.sendType == ProgramState.SEND_TYPE_FOLDER) {
+            Thread t = new Thread(new Runnable() {
+                public void run(){
+                    //UIManager.put("FileChooser.readOnly", Boolean.TRUE);  
+                    JFileChooser c = new JFileChooser(ps.chosenFile);
+                   // UIManager.put("FileChooser.readOnly", Boolean.FALSE);  
+                    c.setSelectedFile(new File(ps.typedAmount + ".CloudCoin." + ps.typedMemo + ".stack"));
+
+                    int rVal = c.showSaveDialog(null);
+                    if (rVal == JFileChooser.APPROVE_OPTION) {
+                        String file = c.getSelectedFile().getAbsolutePath();
+                        if (ps.srcWallet.isEncrypted()) {
+                            sm.startSecureExporterService(Config.TYPE_STACK, ps.typedAmount, ps.typedMemo, file, false, new ExporterCb());
+                        } else {
+                            sm.startExporterService(Config.TYPE_STACK, ps.typedAmount, ps.typedMemo, file, false, new ExporterCb());
+                        }
+                    }
+                }
+            });
+        
+            t.start();
+
+            
+        }
         
         table.addMouseListener(ma);
         table.addMouseMotionListener(ma);
@@ -5772,6 +5881,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 @Override
                 public void mouseReleased(MouseEvent e) {
                     setActiveWallet(fwallet);
+                    ps.sendType = 0;
                     ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
                     showScreen();
                 }   
@@ -6148,6 +6258,15 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             wl.debug(ltag, "Echo finisheed");
             
             echoDone();
+            
+            if (ps.currentScreen == ProgramState.SCREEN_ECHO_RAIDA) {
+                EventQueue.invokeLater(new Runnable() {         
+                    public void run() {
+                        ps.currentScreen = ProgramState.SCREEN_ECHO_RAIDA_FINISHED;
+                        showScreen();
+                    }
+                });
+            }
 	}  
     }
     

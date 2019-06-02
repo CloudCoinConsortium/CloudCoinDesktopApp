@@ -51,6 +51,8 @@ public class ProgramState {
     final public static int SCREEN_PREDEPOSIT = 34;
     final public static int SCREEN_DEPOSIT_SKY_WALLET = 35;
     final public static int SCREEN_SHOW_FOLDERS = 36;
+    final public static int SCREEN_ECHO_RAIDA = 37;
+    final public static int SCREEN_ECHO_RAIDA_FINISHED = 38;
     
     
     final static int CB_STATE_INIT = 1;
