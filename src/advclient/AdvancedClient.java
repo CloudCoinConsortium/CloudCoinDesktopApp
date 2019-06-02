@@ -204,6 +204,61 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         cntLabel.repaint();
     }
     
+    public String getPickError(Wallet w) {
+        String errText = "<html><div style='width: 520px; text-align: center'>"
+                + "Cannot make change<br><br>This version of software does not support making change<br>"
+                + "You may only choose amounts that match your exact notes.<br>Please check to see if"
+                + " there is a newer version of the software.<br>In the meantime, you may transfer amounts "
+                + "that match the CloudCoin notes.<br>There are people who make change and you can find their addresses by contacting CloudCoinSupport@Protonmail.com";
+                
+        
+        int[][] counters = w.getCounters();
+        
+        if (counters == null || counters.length == 0) {
+            errText += "</div></html>";
+            return errText;
+        }
+        
+        int totalCnt = AppCore.getTotal(counters[Config.IDX_FOLDER_BANK]) +
+			AppCore.getTotal(counters[Config.IDX_FOLDER_FRACKED]) +
+                        AppCore.getTotal(counters[Config.IDX_FOLDER_VAULT]);
+        
+        errText += "<br><br>Here is your inventory:<br><br>";
+        int t1, t5, t25, t100, t250;
+        
+        t1 = counters[Config.IDX_FOLDER_BANK][Config.IDX_1] + 
+                counters[Config.IDX_FOLDER_FRACKED][Config.IDX_1] + 
+                counters[Config.IDX_FOLDER_VAULT][Config.IDX_1];
+        
+        t5 = counters[Config.IDX_FOLDER_BANK][Config.IDX_5] + 
+                counters[Config.IDX_FOLDER_FRACKED][Config.IDX_5] + 
+                counters[Config.IDX_FOLDER_VAULT][Config.IDX_5];
+        
+        t25 = counters[Config.IDX_FOLDER_BANK][Config.IDX_25] + 
+                counters[Config.IDX_FOLDER_FRACKED][Config.IDX_25] + 
+                counters[Config.IDX_FOLDER_VAULT][Config.IDX_25];
+        
+        t100 =  counters[Config.IDX_FOLDER_BANK][Config.IDX_100] + 
+                counters[Config.IDX_FOLDER_FRACKED][Config.IDX_100] + 
+                counters[Config.IDX_FOLDER_VAULT][Config.IDX_100];
+            
+        t250 = counters[Config.IDX_FOLDER_BANK][Config.IDX_250] + 
+                counters[Config.IDX_FOLDER_FRACKED][Config.IDX_250] + 
+                counters[Config.IDX_FOLDER_VAULT][Config.IDX_250];
+        
+        
+        errText += "1 CloudCoin Notes: " + t1 + "<br>";
+        errText += "5 CloudCoin Notes: " + t5 + "<br>";
+        errText += "25 CloudCoin Notes: " + t25 + "<br>";
+        errText += "100 CloudCoin Notes: " + t100 + "<br>";
+        errText += "250 CloudCoin Notes: " + t250 + "<br>";
+
+        errText += "</div></html>";
+
+        return errText;
+    }
+    
+    
     public void showCoinsDone(int[][] counters) {
         Wallet w = wallets[ps.currentWalletIdx - 1];
         
@@ -215,6 +270,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         
         ps.counters = counters;
         walletSetTotal(w, totalCnt);
+        w.setCounters(counters);
    
         Thread t = new Thread(new Runnable() {
             public void run(){
@@ -1894,9 +1950,9 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 if (ps.sendType == ProgramState.SEND_TYPE_FOLDER) {                
                     
                     if (ps.srcWallet.isEncrypted()) {
-                        sm.startSecureExporterService(Config.TYPE_STACK, ps.typedAmount, Config.DEFAULT_TAG, ps.chosenFile, false, new ExporterCb());
+                        sm.startSecureExporterService(Config.TYPE_STACK, ps.typedAmount, ps.typedMemo, ps.chosenFile, false, new ExporterCb());
                     } else {
-                        sm.startExporterService(Config.TYPE_STACK, ps.typedAmount, Config.DEFAULT_TAG, ps.chosenFile, false, new ExporterCb());
+                        sm.startExporterService(Config.TYPE_STACK, ps.typedAmount, ps.typedMemo, ps.chosenFile, false, new ExporterCb());
                     }
                 } else if (ps.sendType == ProgramState.SEND_TYPE_WALLET) {
                     ps.dstWallet.setPassword(ps.typedDstPassword);              
@@ -3536,13 +3592,13 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 
                 if (!w.isSkyWallet()) {
                     int cnt;
-                    
+                    /*
                     cnt = AppCore.getFilesCount(Config.DIR_FRACKED, w.getName());
                     if (cnt != 0) {
                         ps.errText = "Fracked folder is not empty. Please fix your coins first";
                         showScreen();
                         return;
-                    }
+                    }*/
                     
                     cnt = AppCore.getFilesCount(Config.DIR_SUSPECT, w.getName());
                     if (cnt != 0) {
@@ -6306,10 +6362,15 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {
                         ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
-                        if (!er.errText.isEmpty())
-                            ps.errText = er.errText;
-                        else
+                        if (!er.errText.isEmpty()) {
+                            if (er.errText.equals(Config.PICK_ERROR_MSG)) {
+                                ps.errText = getPickError(ps.srcWallet);
+                            } else {
+                                ps.errText = er.errText;
+                            }
+                        } else {
                             ps.errText = "Failed to export coins";
+                        }
                         
                         showScreen();
                     }
@@ -6494,10 +6555,15 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {
                         ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
-                        if (!sr.errText.isEmpty())
-                            ps.errText = sr.errText;
-                        else  
+                        if (!sr.errText.isEmpty()) {
+                            if (sr.errText.equals(Config.PICK_ERROR_MSG)) {
+                                ps.errText = getPickError(ps.srcWallet);
+                            } else {
+                                ps.errText = sr.errText;
+                            }
+                        } else {
                             ps.errText = "Error occurred. Please check the logs";
+                        }
                         
                         showScreen();
                     }
