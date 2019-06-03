@@ -3082,6 +3082,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                         return;
                     }
                     
+                    ps.dstWallet = null;
                     ps.typedRemoteWallet = remoteWalledId.getText();
                     ps.sendType = ProgramState.SEND_TYPE_REMOTE;
                 } else if (dstIdx == idxs.length + 1) {
@@ -3107,8 +3108,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                     ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
                     showScreen();
                     
-                    return;
-                    
+                    return;                    
                 } else {
                     dstIdx = idxs[dstIdx];
                     // Wallet
@@ -4844,6 +4844,55 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         AppUI.hr(ct, 20);
 
         
+        // Coins
+        int[][] counters = w.getCounters();   
+        if (counters != null && counters.length != 0) {
+            int t1, t5, t25, t100, t250;
+        
+            t1 = counters[Config.IDX_FOLDER_BANK][Config.IDX_1] + 
+                counters[Config.IDX_FOLDER_FRACKED][Config.IDX_1] + 
+                counters[Config.IDX_FOLDER_VAULT][Config.IDX_1];
+        
+            t5 = counters[Config.IDX_FOLDER_BANK][Config.IDX_5] + 
+                counters[Config.IDX_FOLDER_FRACKED][Config.IDX_5] + 
+                counters[Config.IDX_FOLDER_VAULT][Config.IDX_5];
+        
+            t25 = counters[Config.IDX_FOLDER_BANK][Config.IDX_25] + 
+                counters[Config.IDX_FOLDER_FRACKED][Config.IDX_25] + 
+                counters[Config.IDX_FOLDER_VAULT][Config.IDX_25];
+        
+            t100 =  counters[Config.IDX_FOLDER_BANK][Config.IDX_100] + 
+                counters[Config.IDX_FOLDER_FRACKED][Config.IDX_100] + 
+                counters[Config.IDX_FOLDER_VAULT][Config.IDX_100];
+            
+            t250 = counters[Config.IDX_FOLDER_BANK][Config.IDX_250] + 
+                counters[Config.IDX_FOLDER_FRACKED][Config.IDX_250] + 
+                counters[Config.IDX_FOLDER_VAULT][Config.IDX_250];
+            
+            String s;
+            
+            s = "Inventory: 1s: <b>" + t1 + "</b>, 5s: <b>" + t5 + "</b>, 25s: <b>" + t25 
+                    + "</b>, 100s: <b>" + t100 + "</b>, 250s: <b>" + t250 + "</b>";
+            JLabel ml = new JLabel("<html><div style='text-align:center; width:680px'>" + s + "</div></html>");
+            AppUI.alignCenter(ml);
+            AppUI.setFont(ml, 14);
+            ct.add(ml);
+            
+            AppUI.hr(ct, 20);
+        }
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         // Create transactions
         final String[][] trs;
         JLabel trLabel;
@@ -5325,11 +5374,8 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                     showScreen();
                     return;
                 }
-   
-                
-                ps.trustedServer = cbox.getSelectedValue();
-                
-                
+                  
+                ps.trustedServer = cbox.getSelectedValue();         
                 if (ps.chosenFile.isEmpty()) {
                     ps.errText = "Select the CloudCoin";
                     showScreen();
@@ -5349,6 +5395,14 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                     showScreen();
                     return;
                 }
+                
+                domain = domain.toLowerCase();
+                if (domain.endsWith(ps.trustedServer)) {
+                    System.out.println("xx=" +domain);
+                    domain = domain.substring(0, domain.length() - ps.trustedServer.length() - 1);
+                    System.out.println("xx1=" +domain);
+                }
+                System.exit(1);
 
                 DNSSn d = new DNSSn(domain, ps.trustedServer, wl);
                 if (cb.isChecked()) {                  
@@ -6701,9 +6755,11 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 }
                 
                 ps.typedAmount = sr.amount;
-                sm.getActiveWallet().appendTransaction(ps.typedMemo, sr.amount * -1, sr.receiptId);
+                
                 Wallet srcWallet = ps.srcWallet;
                 Wallet dstWallet = ps.dstWallet;
+                
+                srcWallet.appendTransaction(ps.typedMemo, sr.amount * -1, sr.receiptId);
                 if (dstWallet != null) {
                     dstWallet.appendTransaction(ps.typedMemo, sr.amount, sr.receiptId);
                     if (dstWallet.isEncrypted()) {
@@ -6892,7 +6948,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 return;
             } else {
                 ps.typedAmount = 0;
-                ps.errText = "Coins were not sent. Please check the logs";     
+                ps.errText = "Coins were not received. Please check the logs";     
             }
             
             ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
