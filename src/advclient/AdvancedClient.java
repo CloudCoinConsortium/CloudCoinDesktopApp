@@ -5275,7 +5275,56 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         ct.setLayout(gridbag);
         
         
-        JLabel x = new JLabel("DNS Name or IP Address of Trusted Server");
+        JLabel x;
+        
+        // Radio
+        ButtonGroup nwGroup = new ButtonGroup();
+        final MyRadioButton rb0 = new MyRadioButton();
+        
+        c.insets = new Insets(0, 0, 4, 0); 
+        c.weightx = 0;
+        c.gridx = GridBagConstraints.RELATIVE;;
+        c.gridy = y;
+        gridbag.setConstraints(rb0.getRadioButton(), c);
+        ct.add(rb0.getRadioButton());
+        rb0.attachToGroup(nwGroup);
+        
+        
+        x = new JLabel("Add Existing");
+        c.insets = new Insets(0, 14, 4, 0); 
+        AppUI.setFont(x, 16);
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+        
+        
+        final MyRadioButton rb1 = new MyRadioButton();
+        c.insets = new Insets(0, 44, 4, 0); 
+        c.gridx = GridBagConstraints.RELATIVE;;
+        c.gridy = y;
+        gridbag.setConstraints(rb1.getRadioButton(), c);
+        ct.add(rb1.getRadioButton());
+        rb1.attachToGroup(nwGroup);
+        rb1.select();
+        
+        x = new JLabel("Create New");
+        c.insets = new Insets(0, 4, 4, 0); 
+        AppUI.setFont(x, 16);
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+        
+        
+        
+        
+        
+        
+        
+        
+        y++;
+        
+        c.gridwidth = 4;
+        
+        
+        x = new JLabel("DNS Name or IP Address of Trusted Server");
         c.anchor = GridBagConstraints.WEST;
         c.insets = new Insets(10, 0, 4, 0); 
         c.gridx = GridBagConstraints.RELATIVE;
@@ -5355,7 +5404,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         ct.add(tf1.getTextField());
         
         y++;
-        
+        /*
         final MyCheckBox cb = new MyCheckBox("Create New Wallet");
         //cb.setBoldFont();
         c.insets = new Insets(12, 0, 0, 0);
@@ -5363,11 +5412,11 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         c.gridy = y;
         gridbag.setConstraints(cb.getCheckBox(), c);
         ct.add(cb.getCheckBox());
-
+        */
         
         JPanel bp = getTwoButtonPanel(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                             System.out.println("xx" + cb.isChecked());
+                             System.out.println("is new=" + rb1.isSelected());
                 int srcIdx = cbox.getSelectedIndex();
                 if (srcIdx != 1) {
                     ps.errText = "Trusted Server is not selected";
@@ -5398,14 +5447,16 @@ public class AdvancedClient implements ActionListener, ComponentListener {
                 
                 domain = domain.toLowerCase();
                 if (domain.endsWith(ps.trustedServer)) {
-                    System.out.println("xx=" +domain);
                     domain = domain.substring(0, domain.length() - ps.trustedServer.length() - 1);
-                    System.out.println("xx1=" +domain);
+                    if (domain.isEmpty()) {
+                        ps.errText = "Wallet name can't be empty";
+                        showScreen();
+                        return;
+                    }
                 }
-                System.exit(1);
 
                 DNSSn d = new DNSSn(domain, ps.trustedServer, wl);
-                if (cb.isChecked()) {                  
+                if (rb1.isSelected()) {                  
                     if (!d.setRecord(ps.chosenFile, sm.getSR())) {
                         ps.errText = "Failed to set record. Check if the coin is valid";
                         showScreen();
