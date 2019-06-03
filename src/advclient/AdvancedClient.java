@@ -5416,7 +5416,6 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         
         JPanel bp = getTwoButtonPanel(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                             System.out.println("is new=" + rb1.isSelected());
                 int srcIdx = cbox.getSelectedIndex();
                 if (srcIdx != 1) {
                     ps.errText = "Trusted Server is not selected";
