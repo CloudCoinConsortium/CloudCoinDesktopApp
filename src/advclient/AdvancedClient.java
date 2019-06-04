@@ -1052,7 +1052,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         GridBagLayout gridbag = new GridBagLayout();
         GridBagConstraints c = new GridBagConstraints();      
         ct.setLayout(gridbag);
-        
+        /*
         x = new JLabel("");
         AppUI.setFont(x, 15);
         c.anchor = GridBagConstraints.CENTER;
@@ -1061,14 +1061,17 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         c.gridy = 0;
         c.gridwidth = 2;
         gridbag.setConstraints(x, c);
-        ct.add(x);
+        ct.add(x);*/
         
         String[] statuses = sm.getRAIDAStatuses();
         
         int y = 1;
-        for (int i = 0; i < statuses.length; i++) {
+        int fontSize = 16;
+        for (int i = 0; i < statuses.length / 2 + 1; i ++) {
+            String status;
+            
             x = new JLabel("RAIDA" + i);
-            AppUI.setFont(x, 13);
+            AppUI.setFont(x, fontSize);
             c.gridwidth = 1;
             c.anchor = GridBagConstraints.EAST;
             c.insets = new Insets(0, 0, 2, 0); 
@@ -1076,8 +1079,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             c.gridy = y;
             gridbag.setConstraints(x, c);
             ct.add(x);
-            
-            String status;
+                   
             if (statuses[i] == null) {
                 status = "FAILED";
             } else {
@@ -1085,13 +1087,69 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             }
             
             x = new JLabel(status);
-            AppUI.setFont(x, 13);
+            AppUI.setFont(x, fontSize);
             c.anchor = GridBagConstraints.WEST;
             c.insets = new Insets(0, 40, 2, 0); 
             c.gridx = GridBagConstraints.RELATIVE;
             c.gridy = y;
             gridbag.setConstraints(x, c);
             ct.add(x);
+            
+            
+            
+            
+            
+            int j = i + 13;
+            System.out.println("i=" + i + "," +j);
+            if (j == 25)
+                break;
+            
+            x = new JLabel("RAIDA" + j);
+            AppUI.setFont(x, fontSize);
+            c.gridwidth = 1;
+            c.anchor = GridBagConstraints.EAST;
+            c.insets = new Insets(0, 100, 2, 0); 
+            c.gridx = GridBagConstraints.RELATIVE;
+            c.gridy = y;
+            gridbag.setConstraints(x, c);
+            ct.add(x);
+                   
+            if (statuses[j] == null) {
+                status = "FAILED";
+            } else {
+                status = "OK: " + statuses[j] + "ms";
+            }
+            
+            x = new JLabel(status);
+            AppUI.setFont(x, fontSize);
+            c.anchor = GridBagConstraints.WEST;
+            c.insets = new Insets(0, 40, 2, 0); 
+            c.gridx = GridBagConstraints.RELATIVE;
+            c.gridy = y;
+            gridbag.setConstraints(x, c);
+            ct.add(x);
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
             
             y++;
         }
@@ -1994,7 +2052,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         
         String memo = ps.typedMemo;
         if (memo.length() > 24) {
-            memo = to.substring(0, 24) + "...";
+            memo = memo.substring(0, 24) + "...";
         }
         
         // Memo
