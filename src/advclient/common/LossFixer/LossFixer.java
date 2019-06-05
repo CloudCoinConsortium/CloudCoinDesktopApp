@@ -49,6 +49,10 @@ public class LossFixer extends Servant {
 
         CloudCoin cc;
 
+        int totalToFix = AppCore.getFilesCount(Config.DIR_LOST, user);
+        
+        logger.debug(ltag, "Need to check: " + totalToFix + " coins");
+        
         File dirObj = new File(fullLostPath);
         for (File file : dirObj.listFiles()) {
             if (file.isDirectory())
@@ -81,7 +85,7 @@ public class LossFixer extends Servant {
     }
 
     public void doRecoverCoin(CloudCoin cc) {
-        logger.debug(ltag, "Recovering " + cc.sn);
+        logger.debug(ltag, "Recovering " + cc.sn + " pown " + cc.getPownString());
 
         String[] results;
         String[] requests;
@@ -145,36 +149,44 @@ public class LossFixer extends Servant {
             return;
         }
 
+        if (results.length != rcnt) {
+            logger.error(ltag, "Invalid response length: " + results.length + " vs " + rcnt);
+            lr.failed++;
+            return;
+        }
+        
         LossFixerResponse lfr;
         boolean changed = false;
+        int ridx;
 
         for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++)
             brlist[i] = false;
 
         rcnt = 0;
         for (i = 0; i < results.length; i++) {
-            logger.info(ltag, "res=" + results[i]);
-
+            ridx = rlist[i];
+            
+            logger.info(ltag, "res=" + results[i] + " from raida " + ridx);
             lfr = (LossFixerResponse) parseResponse(results[i], LossFixerResponse.class);
             if (lfr == null) {
-                logger.error(ltag, "Failed to parse response from: " + i);
-                cc.setDetectStatus(i, CloudCoin.STATUS_ERROR);
+                logger.error(ltag, "Failed to parse response from: " + i + " raida " + ridx);
+                cc.setDetectStatus(ridx, CloudCoin.STATUS_ERROR);
                 changed = true;
                 continue;
             }
 
             if (lfr.status.equals(Config.REQUEST_STATUS_PASS)) {
-                logger.debug(ltag, "RAIDA " + i + " returned OK");
-                cc.setDetectStatus(i, CloudCoin.STATUS_PASS);
+                logger.debug(ltag, "RAIDA " + ridx + " returned OK");
+                cc.setDetectStatus(ridx, CloudCoin.STATUS_PASS);
                 changed = true;
                 continue;
             }
 
             if (lfr.status.equals(Config.REQUEST_STATUS_FAIL)) {
-                logger.debug(ltag, "RAIDA " + i + " returned Counterfeit");
-                cc.setDetectStatus(i, CloudCoin.STATUS_FAIL);
+                logger.debug(ltag, "RAIDA " + ridx + " returned Counterfeit");
+                cc.setDetectStatus(ridx, CloudCoin.STATUS_FAIL);
                 changed = true;
-                brlist[i] = true;
+                brlist[ridx] = true;
                 rcnt++;
                 continue;
             }
@@ -206,38 +218,48 @@ public class LossFixer extends Servant {
         }
 
         for (i = 0; i < results.length; i++) {
-            logger.info(ltag, "res=" + results[i]);
+            ridx = rlist[i];
+            
+            logger.info(ltag, "res=" + results[i] + " from raida " + ridx);
 
             lfr = (LossFixerResponse) parseResponse(results[i], LossFixerResponse.class);
             if (lfr == null) {
-                logger.error(ltag, "Failed to parse response from: " + i);
-                cc.setDetectStatus(i, CloudCoin.STATUS_ERROR);
+                logger.error(ltag, "Failed to parse response from: " + i + " raida " + ridx);
+                cc.setDetectStatus(ridx, CloudCoin.STATUS_ERROR);
                 continue;
             }
 
             if (lfr.status.equals(Config.REQUEST_STATUS_PASS)) {
                 logger.debug(ltag, "Round2. RAIDA " + i + " returned OK");
-                cc.setDetectStatus(i, CloudCoin.STATUS_PASS);
-                cc.ans[i] = cc.pans[i];
+                cc.setDetectStatus(ridx, CloudCoin.STATUS_PASS);
+                cc.ans[ridx] = cc.pans[ridx];
                 continue;
             }
         }
 
         cc.setPownStringFromDetectStatus();
-        logger.debug(ltag, "pown " + cc.getPownString());
+        logger.debug(ltag, "Coin Pown after " + cc.getPownString());
 
+        for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+            int status = cc.getDetectStatus(i);
+
+            if (status == CloudCoin.STATUS_UNTRIED || status == CloudCoin.STATUS_ERROR) {
+                logger.debug(ltag, "We still have a error on RAIDA " + i);
+                return;
+            }
+        }
+    
         moveCoin(cc);
-
         lr.recovered++;
     }
 
     public void moveCoin(CloudCoin cc) {
-        String dir = AppCore.getUserDir(Config.DIR_DETECTED, user);
+        String dir = AppCore.getUserDir(Config.DIR_BANK, user);
         String file;
 
         file = dir + File.separator + cc.getFileName();
         logger.info(ltag, "Saving coin " + file);
-        if (!AppCore.saveFile(file, cc.getJson())) {
+        if (!AppCore.saveFile(file, cc.getJson(false))) {
             logger.error(ltag, "Failed to move coin to Imported: " + cc.getFileName());
             return;
         }

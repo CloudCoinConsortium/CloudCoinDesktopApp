@@ -185,21 +185,23 @@ public class AdvancedClient implements ActionListener, ComponentListener {
     public void walletSetTotal(Wallet w, int total) {
         JLabel cntLabel = (JLabel) w.getuiRef();
         
+        
         w.setTotal(total);
         String strCnt = AppCore.formatNumber(total);
         if (cntLabel == null)
             return;
         
+
         cntLabel.setText(strCnt);
         
         if (total < 9999)
             AppUI.setFont(cntLabel, 18);
-        else if (total < 99999)
-            AppUI.setFont(cntLabel, 14);
-        else if (total < 999999)
-            AppUI.setFont(cntLabel, 13);
+        else if (total < 999999999)
+            AppUI.setFont(cntLabel, 16);
         else 
-            AppUI.setFont(cntLabel, 10);
+            AppUI.setFont(cntLabel, 14);
+        
+        //AppUI.setColor(cntLabel, AppUI.getDisabledColor2());
         
         cntLabel.repaint();
     }
@@ -764,7 +766,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
     
     public void showScreen() {
         clear();
-        
+
         wl.debug(ltag, "SCREEN " + ps.currentScreen + ": " + ps.toString());
         
         switch (ps.currentScreen) {
@@ -1626,7 +1628,14 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             }
         },  new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                
+                if (ps.srcWallet != null && !ps.srcWallet.isSkyWallet()) {
+                    setActiveWallet(ps.srcWallet);
+                    ps.sendType = 0;
+                    ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
+                } else {
+                    ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                }
                 showScreen();
             }
         });
@@ -1653,16 +1662,21 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         String total = AppCore.formatNumber(ps.statToBankValue);
         String totalBank = AppCore.formatNumber(ps.statToBank);
         String totalFailed = AppCore.formatNumber(ps.statFailed);
+        String totalLost = AppCore.formatNumber(ps.statLost);
         
         JLabel x = new JLabel("<html><div style='width:400px; text-align:center'>Deposited <b>" +  total +  " CloudCoins</b> to <b>" + ps.dstWallet.getName() + " </b></div></html>");
         AppUI.setCommonFont(x);
  
+        int y = 0;
+        
         c.insets = new Insets(0, 0, 4, 0);
         c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = 0;
+        c.gridy = y;
         c.gridwidth = 2;
         gridbag.setConstraints(x, c);
         ct.add(x);
+        
+        y++;
         
         // Auth
         x = new JLabel("Total Authentic Coins:");
@@ -1672,7 +1686,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         c.anchor = GridBagConstraints.EAST;
         c.insets = new Insets(50, 0, 4, 10);
         c.gridx = 0;
-        c.gridy = 1;
+        c.gridy = y;
         c.gridwidth = 1;
         gridbag.setConstraints(x, c);
         ct.add(x);
@@ -1682,16 +1696,19 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         
         c.anchor = GridBagConstraints.WEST;
         c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = 1;
+        c.gridy = y;
         gridbag.setConstraints(x, c);
         ct.add(x);
         
+        y++;
+        
+        // Counterfeit
         x = new JLabel("Total Counterfeit Coins:");
         AppUI.setCommonFont(x);
         c.anchor = GridBagConstraints.EAST;
         c.insets = new Insets(10, 0, 4, 10);
         c.gridx = 0;
-        c.gridy = 2;
+        c.gridy = y;
         gridbag.setConstraints(x, c);
         ct.add(x);
         
@@ -1699,10 +1716,29 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         AppUI.setCommonBoldFont(x);
         c.anchor = GridBagConstraints.WEST;
         c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = 2;
+        c.gridy = y;
         gridbag.setConstraints(x, c);
         ct.add(x);
         
+        y++;
+        
+        // Lost
+        x = new JLabel("Total Lost Coins:");
+        AppUI.setCommonFont(x);
+        c.anchor = GridBagConstraints.EAST;
+        c.insets = new Insets(10, 0, 4, 10);
+        c.gridx = 0;
+        c.gridy = y;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+        
+        x = new JLabel(totalLost);
+        AppUI.setCommonBoldFont(x);
+        c.anchor = GridBagConstraints.WEST;
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
         
         JPanel bp = getTwoButtonPanelCustom("Next Deposit", "Continue", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -2171,12 +2207,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         
         
         y++;
-        
-        
-        
-        
-        
-        
+         
         // Password Label
         JLabel x = new JLabel("Email");
         AppUI.setCommonFont(x);
@@ -2264,29 +2295,47 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             return;
         }
 
-        subInnerCore = getModalJPanel("Wallet created");
-        AppUI.hr(subInnerCore, 82);
+        subInnerCore = getModalJPanel("Wallet " + ps.typedWalletName + " created");
+        AppUI.hr(subInnerCore, 42);
         
         JLabel res;
         if (!ps.typedPassword.equals("")) {
-            res = AppUI.getCommonLabel("Wallet was set with password encryption");
+            res = AppUI.getCommonLabel("The coins in this wallet are ");
             subInnerCore.add(res);
-            AppUI.hr(subInnerCore, 12);            
+            AppUI.hr(subInnerCore, 12);  
+            
+            res = AppUI.getCommonLabel("protected from theft by password. ");
+            subInnerCore.add(res);
+            AppUI.hr(subInnerCore, 12);  
+      
+            res = AppUI.getCommonLabel("Please record your password in a secure location.");
+            subInnerCore.add(res);
+            AppUI.hr(subInnerCore, 12);  
+            
             if (!ps.typedEmail.equals("")) {
-                res = AppUI.getCommonLabel("and email for coin recovery was set as");
+                res = AppUI.getCommonLabel("Your coins in this wallet are protected from loss.");
                 subInnerCore.add(res);
                 AppUI.hr(subInnerCore, 12);
+                
+                res = AppUI.getCommonLabel("Your loss recovery email is:");
+                subInnerCore.add(res);
+                AppUI.hr(subInnerCore, 12);
+                
                 
                 res = AppUI.getCommonBoldLabel(ps.typedEmail);
                 subInnerCore.add(res);
                 AppUI.hr(subInnerCore, 12);               
             } else {
-                res = AppUI.getCommonLabel("and no recovery email");
+                res = AppUI.getCommonLabel("No recovery email was set.");
                 subInnerCore.add(res);
                 AppUI.hr(subInnerCore, 12); 
             }
         } else if (!ps.typedEmail.equals("")) {
-            res = AppUI.getCommonLabel("Coin recovery email was set as");
+            res = AppUI.getCommonLabel("Your coins in this wallet are protected from loss.");
+            subInnerCore.add(res);
+            AppUI.hr(subInnerCore, 12);
+                
+            res = AppUI.getCommonLabel("Your loss recovery email is:");
             subInnerCore.add(res);
             AppUI.hr(subInnerCore, 12);
             
@@ -4940,17 +4989,6 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         }
         
         
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
         // Create transactions
         final String[][] trs;
         JLabel trLabel;
@@ -6006,7 +6044,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             } catch (Exception ex) {
                 return null;
             }
-            c.insets = new Insets(24, 16, 0, 16); 
+            c.insets = new Insets(24, 12, 0, 8); 
             c.gridwidth = 1;
             c.gridx = GridBagConstraints.RELATIVE;
             c.gridy = y;  
@@ -6014,6 +6052,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             gridbag.setConstraints(iconl, c);
             cx.add(iconl);
 
+            c.insets = new Insets(24, 0, 0, 0); 
             // Amount (empty)
             JLabel jxl = new JLabel("");
             AppUI.setFont(jxl, 18);
@@ -6031,6 +6070,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             // Set ref between wallet and its ui
             wallet.setuiRef(jxl);
         
+            c.insets = new Insets(24, 8, 0, 12); 
             c.gridx = GridBagConstraints.RELATIVE;
             c.gridy = y; 
             c.weightx = 0;
@@ -6137,7 +6177,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         AppUI.hr(agreementPanel,  tw * 0.0082 * 2);
                 
         // Text
-        text = new JLabel("<html><div style='padding-right: 20px; width:" + (tw / 1.6) + "px'>" + AppUI.getAgreementText() + "</div></html>");
+        text = new JLabel("<html><div style='padding-right: 20px; width: 720px'>" + AppUI.getAgreementText() + "</div></html>");
         AppUI.alignCenter(text);
         AppUI.setFont(text, 18);
               
@@ -6199,7 +6239,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
         scrollPane.setOpaque(false);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);     
+      //  scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);     
         agreementPanel.add(scrollPane);
       
         subInnerCore.add(agreementPanel);
@@ -6542,7 +6582,8 @@ public class AdvancedClient implements ActionListener, ComponentListener {
 
             ps.statToBankValue = gr.totalAuthenticValue + gr.totalFrackedValue;
             ps.statToBank = gr.totalAuthentic + gr.totalFracked;
-            ps.statFailed = gr.totalLost + gr.totalCounterfeit + gr.totalUnchecked;
+            ps.statFailed = gr.totalCounterfeit;
+            ps.statLost = gr.totalLost + gr.totalUnchecked;
             ps.receiptId = gr.receiptId;
             
             if (ps.statToBankValue != 0) {
@@ -6934,6 +6975,7 @@ public class AdvancedClient implements ActionListener, ComponentListener {
             ps.statToBankValue = sr.totalAuthenticValue + sr.totalFrackedValue;
             ps.statToBank = sr.totalAuthentic + sr.totalFracked;
             ps.statFailed = sr.totalCounterfeit + sr.totalUnchecked;
+            ps.statLost = 0;
             
             ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
             showScreen();              

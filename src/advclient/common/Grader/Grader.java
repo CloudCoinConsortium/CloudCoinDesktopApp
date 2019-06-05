@@ -101,7 +101,6 @@ public class Grader extends Servant {
         String ccFile;
 
         if (passed >= Config.PASS_THRESHOLD) {
-            //if (passed != RAIDA.TOTAL_RAIDA_COUNT) {
             if (counterfeit != 0) {
                 logger.debug(ltag, "Coin " + cc.sn + " is fracked");
 

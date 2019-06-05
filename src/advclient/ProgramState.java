@@ -92,7 +92,7 @@ public class ProgramState {
     boolean isEchoFinished;
     boolean isShowCoinsFinished;
     
-    int statToBankValue, statToBank, statFailed;
+    int statToBankValue, statToBank, statFailed, statLost;
     
     int statTotalFracked, statTotalFixed, statFailedToFix;
     
