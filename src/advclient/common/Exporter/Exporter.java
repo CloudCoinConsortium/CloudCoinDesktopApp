@@ -271,10 +271,10 @@ public class Exporter extends Servant {
         int total = 0;
         String fileName;
 
-        sb.append("{" + ls + "\"cloudcoin\": [" + ls);
+        sb.append("{" + ls + "\t\"cloudcoin\": [");
         for (CloudCoin cc : coinsPicked) {
             if (!first)
-                sb.append(",");
+                sb.append(", ");
 
             sb.append(cc.getSimpleJson());
             first = false;
@@ -282,7 +282,7 @@ public class Exporter extends Servant {
             total += cc.getDenomination();
         }
 
-        sb.append(ls + "]" + ls + "}");
+        sb.append("]" + ls + "}");
 
         File sdir = new File(dir);
         if (sdir.isDirectory()) {

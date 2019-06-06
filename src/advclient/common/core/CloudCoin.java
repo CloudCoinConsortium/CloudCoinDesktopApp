@@ -18,7 +18,7 @@ public class CloudCoin {
 	private String ed;
 	private String edHex;
 	private String pownString;
-	private String aoid;
+	private String[] aoid;
 	private String fileName;
 
 	public static final int YEARSTILEXPIRE = 2;
@@ -62,8 +62,10 @@ public class CloudCoin {
             JSONArray an = childJSONObject.getJSONArray("an");
 
             ed = childJSONObject.optString("ed");
-            aoid = childJSONObject.optString("aoid");
-
+            JSONArray aoidJson = childJSONObject.optJSONArray("aoid");
+            if (aoidJson != null)
+                aoid = toStringArray(aoidJson);
+            
             ans = toStringArray(an);
             if (ans.length != RAIDA.TOTAL_RAIDA_COUNT)
                 throw(new JSONException("Wrong an count"));
@@ -96,7 +98,7 @@ public class CloudCoin {
 			detectStatus[i] = STATUS_UNTRIED;
 	}
 
-	public CloudCoin(int nn, int sn, String[] ans, String ed, String aoid, String tag) {
+	public CloudCoin(int nn, int sn, String[] ans, String ed, String[] aoid, String tag) {
 		this.nn = nn;
 		this.sn = sn;
 		this.ans = ans;
@@ -148,10 +150,8 @@ public class CloudCoin {
 		return getJson(true);
 	}
 
-	public String getJson(boolean includePans) {
-		String json;
-
-		Date date = new Date();
+        public void setEd() {
+            	Date date = new Date();
 		Calendar cal = Calendar.getInstance();
 		cal.setTime(date);
 
@@ -159,7 +159,13 @@ public class CloudCoin {
 		int year = cal.get(Calendar.YEAR);
 		year = year + YEARSTILEXPIRE;
 
-		String expDate = month + "-" + year;
+		ed = month + "-" + year;
+        }
+        
+	public String getJson(boolean includePans) {
+		String json;
+
+                setEd();
 
 		json = "{\"cloudcoin\":[{\"nn\":" + nn + ",\"sn\":" + sn + ",\"an\":[\"";
 		for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
@@ -190,7 +196,9 @@ public class CloudCoin {
 		}
 
 		String pownString = getPownString();
-		json += "\"], \"ed\": \"" + expDate + "\", \"pown\": \"" + pownString + "\" }]}";
+                String aoidString = getAoidString();
+		json += "\"], \"ed\": \"" + ed + "\", \"pown\": \"" + pownString + "\","
+                        + " \"aoid\": [" + aoidString + "] }]}";
 
 		return json;
 	}
@@ -198,7 +206,7 @@ public class CloudCoin {
 	public String getSimpleJson() {
 		String json;
 
-		json = "{" + ls + "\"nn\":" + nn + "," + ls + "\"sn\":" + sn + "," + ls + "\"an\":[\"";
+		json = "{" + ls + "\t\t\"nn\":" + nn + "," + ls + "\t\t\"sn\":" + sn + "," + ls + "\t\t\"an\":[\"";
 		for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
                     String an = ans[i];
                     
@@ -207,12 +215,18 @@ public class CloudCoin {
                     
                     json += an;
                     if (i != RAIDA.TOTAL_RAIDA_COUNT - 1) {
-			json += "\",\"";
+			json += "\", \"";
                     }
 		}
 
+                if (ed == null)
+                    setEd();
+                
 		json += "\"]," + ls;
-                json += "\"pown\":\"" + getPownString() + "\"" + ls + "}";
+                json += "\t\t\"ed\" : \"" + ed + "\"," + ls;
+                json += "\t\t\"pown\": \"" + getPownString() + "\"," + ls;
+                json += "\t\t\"aoid\": [" + getAoidString() + "]" + ls;
+                json += "\t}";
 
 		return json;
 	}
@@ -221,6 +235,20 @@ public class CloudCoin {
 		return pownString;
 	}
 
+        public String getAoidString() {
+            String v = "";
+            if (aoid == null)
+                return v;
+            
+            for (int i = 0; i < aoid.length; i++) {
+                if (i != 0)
+                    v += ", ";
+                v += "\"" + aoid[i] + "\"";
+            }
+            
+            return v;
+        }
+        
 	public void setPownStringFromDetectStatus() {
 		String s;
 

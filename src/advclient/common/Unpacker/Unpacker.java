@@ -366,7 +366,7 @@ public class Unpacker extends Servant {
             return null;
         }
 
-        CloudCoin cc = new CloudCoin(nn, sn, ans, ed, aoid, Config.DEFAULT_TAG);
+        CloudCoin cc = new CloudCoin(nn, sn, ans, ed, new String[] { aoid }, Config.DEFAULT_TAG);
 
         return cc;
     }
@@ -393,8 +393,10 @@ public class Unpacker extends Servant {
                 JSONArray ans = childJSONObject.getJSONArray("an");
                 String[] strAns = toStringArray(ans);
                 String ed = childJSONObject.optString("ed");
+                JSONArray aoidJson = childJSONObject.optJSONArray("aoid");
+                String[] strAoid = toStringArray(aoidJson);
 
-                cc = new CloudCoin(nn, sn, strAns, ed, "", Config.DEFAULT_TAG);
+                cc = new CloudCoin(nn, sn, strAns, ed, strAoid, Config.DEFAULT_TAG);
                 ccs[i] = cc;
             }
         } catch (JSONException e) {
@@ -438,7 +440,7 @@ public class Unpacker extends Servant {
             for (int j = 0; j < RAIDA.TOTAL_RAIDA_COUNT; j++)
                 ans[j] = subparts[j + 2].trim();
 
-            cc = new CloudCoin(nn, sn, ans, "", "", Config.DEFAULT_TAG);
+            cc = new CloudCoin(nn, sn, ans, "", new String[] {""}, Config.DEFAULT_TAG);
 
             ccs[i] = cc;
 
