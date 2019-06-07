@@ -65,7 +65,7 @@ public class Vaulter extends Servant {
         String fullVaultPath = AppCore.getUserDir(Config.DIR_VAULT, user);
 
         String fullBankPath = AppCore.getUserDir(Config.DIR_BANK, user);
-        if (!getCoins(fullBankPath, amount, cc)) {
+        if (!getCoins(fullBankPath, amount, cc, null)) {
             logger.error(ltag, "Failed to get coins");
             vr.status = VaulterResult.STATUS_ERROR;
             return;
@@ -162,8 +162,9 @@ public class Vaulter extends Servant {
     public void doUnvault(String password, int amount, CloudCoin cc) {
         String fullVaultPath = AppCore.getUserDir(Config.DIR_VAULT, user);
         String fullBankPath = AppCore.getUserDir(Config.DIR_BANK, user);
+        String fullFrackedPath = AppCore.getUserDir(Config.DIR_FRACKED, user);
 
-        if (!getCoins(fullVaultPath, amount, cc)) {
+        if (!getCoins(fullVaultPath, amount, cc, fullFrackedPath)) {
             logger.error(ltag, "Failed to get coins");
             vr.status = VaulterResult.STATUS_ERROR;
             return;
@@ -172,6 +173,21 @@ public class Vaulter extends Servant {
         String hash = AppCore.getMD5(password);
         logger.debug(ltag, "password hash " + hash);
         for (CloudCoin tcc : coinsPicked) {
+            String ccFile = tcc.originalFile;
+            File cf = new File(ccFile);
+            File parentCf = cf.getParentFile();
+            if (parentCf == null) {
+                logger.error(ltag, "Can't find coins folder");
+                continue;
+            }   
+            
+            String coinFolder = cf.getParentFile().getName();
+            if (coinFolder.equals(Config.DIR_FRACKED)) {
+                logger.debug(ltag, "Skipping fracked");
+                continue;
+            }
+            
+            
             ArrayList<String> ans = new ArrayList<>();
 
             for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
@@ -250,7 +266,7 @@ public class Vaulter extends Servant {
                 tcc.ans[i] = builder.toString().replace(")", "");
                 logger.info(ltag, "cc=" + tcc.sn + " is AN" + i + ":" + tcc.ans[i] + " move " + tcc.originalFile + " d=" + Config.DIR_VAULT);
             }
-
+      
             String vpath = fullBankPath + File.separator + tcc.getFileName();
             logger.info(ltag, "p="+vpath);
             if (!AppCore.saveFile(fullBankPath + File.separator + tcc.getFileName(), tcc.getJson(false))) {
@@ -266,19 +282,39 @@ public class Vaulter extends Servant {
         vr.status = VaulterResult.STATUS_FINISHED;
     }
 
-    private boolean getCoins(String folder, int amount, CloudCoin cc) {
+    private boolean getCoins(String folder, int amount, CloudCoin cc, String addFolder) {
         if (cc != null) {
             coinsPicked.add(cc);
             return true;
         }
 
         if (amount != 0) {
+            
+            if (addFolder != null) {
+                logger.debug(ltag, "Checking with fracked. Dir " + addFolder);
+                if (!pickCoinsAmountInDirs(folder, addFolder, amount)) {
+                    logger.error(ltag, "Failed to collect coins: " + amount);
+                    return false;
+                }
+                
+                return true;
+            }
+            
+            logger.debug(ltag, "Picking from one folder only " + folder);
             if (!pickCoinsAmountInDir(folder, amount))
                 return false;
 
             return true;
         }
 
+        pickAll(folder);
+
+        return true;
+    }
+    
+    public void pickAll(String folder) {
+        CloudCoin cc;
+        
         File dirObj = new File(folder);
         for (File file : dirObj.listFiles()) {
             if (file.isDirectory())
@@ -295,7 +331,6 @@ public class Vaulter extends Servant {
 
             coinsPicked.add(cc);
         }
-
-        return true;
+        
     }
 }
