@@ -4082,6 +4082,7 @@ public class AdvancedClient  {
         l.addMouseListener(new MouseAdapter() {
             public void mouseReleased(MouseEvent e) {
                 final JDialog f = new JDialog(mainFrame, "Terms and Conditions", true);
+                f.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
                 AppUI.noOpaque((JComponent) f.getContentPane());
                 AppUI.setSize(f, (int) (tw / 1.2), (int) (th / 1.2)); 
 
