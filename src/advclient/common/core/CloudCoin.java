@@ -206,7 +206,7 @@ public class CloudCoin {
 	public String getSimpleJson() {
 		String json;
 
-		json = "{" + ls + "\t\t\"nn\":" + nn + "," + ls + "\t\t\"sn\":" + sn + "," + ls + "\t\t\"an\":[\"";
+		json = "{" + ls + "\t\t\"nn\":\"" + nn + "\"," + ls + "\t\t\"sn\":\"" + sn + "\"," + ls + "\t\t\"an\":[\"";
 		for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
                     String an = ans[i];
                     

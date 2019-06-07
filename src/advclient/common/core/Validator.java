@@ -24,4 +24,11 @@ public class Validator {
         
         return true;
     }
+    
+    public static boolean email(String email) {
+        String regex = "^[\\w-_\\.+]*[\\w-_\\.]\\@([\\w]+\\.)+[\\w]+[\\w]$";
+        
+        return email.matches(regex);
+    }
+    
 }

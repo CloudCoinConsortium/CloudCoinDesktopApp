@@ -440,6 +440,10 @@ public class ServantManager {
     
     public void startVaulterService(CallbackInterface cb) {
         String password = getActiveWallet().getPassword();
+        if (password.isEmpty()) {
+            logger.error(ltag, "Empty password");
+            return;
+        }
         
         logger.debug(ltag, "Vaulter password " + password);
 	Vaulter v = (Vaulter) sr.getServant("Vaulter");
@@ -448,6 +452,11 @@ public class ServantManager {
     
     public void startVaulterService(CallbackInterface cb, String password) {
         logger.debug(ltag, "Vaulter password " + password);
+        if (password.isEmpty()) {
+            logger.error(ltag, "Empty password");
+            return;
+        }
+        
 	Vaulter v = (Vaulter) sr.getServant("Vaulter");
 	v.vault(password, 0, null, cb);
     }
@@ -462,7 +471,12 @@ public class ServantManager {
     }
     
     public void startSecureExporterService(int exportType, int amount, String tag, String dir, boolean keepSrc, CallbackInterface cb) {
+        logger.debug(ltag, "Secure Exporter " + getActiveWallet().getName());
         String password = getActiveWallet().getPassword();
+        if (password.isEmpty()) {
+            logger.error(ltag, "Empty password");
+            return;
+        }
         
         logger.debug(ltag, "Vaulter password " + password);
 	Vaulter v = (Vaulter) sr.getServant("Vaulter");
