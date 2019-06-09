@@ -1,94 +1,45 @@
 package advclient;
 
 import advclient.common.core.Validator;
-import global.cloudcoin.ccbank.Authenticator.Authenticator;
 import global.cloudcoin.ccbank.Authenticator.AuthenticatorResult;
 import global.cloudcoin.ccbank.Backupper.BackupperResult;
-import global.cloudcoin.ccbank.Echoer.Echoer;
 import global.cloudcoin.ccbank.Eraser.EraserResult;
-import global.cloudcoin.ccbank.Exporter.Exporter;
 import global.cloudcoin.ccbank.Exporter.ExporterResult;
-import global.cloudcoin.ccbank.FrackFixer.FrackFixer;
 import global.cloudcoin.ccbank.FrackFixer.FrackFixerResult;
-import global.cloudcoin.ccbank.Grader.Grader;
 import global.cloudcoin.ccbank.Grader.GraderResult;
 import global.cloudcoin.ccbank.LossFixer.LossFixerResult;
 import global.cloudcoin.ccbank.Receiver.ReceiverResult;
 import global.cloudcoin.ccbank.Sender.SenderResult;
 import global.cloudcoin.ccbank.ServantManager.ServantManager;
-import global.cloudcoin.ccbank.ShowCoins.ShowCoins;
 import global.cloudcoin.ccbank.ShowCoins.ShowCoinsResult;
-import global.cloudcoin.ccbank.ShowEnvelopeCoins.ShowEnvelopeCoins;
 import global.cloudcoin.ccbank.ShowEnvelopeCoins.ShowEnvelopeCoinsResult;
-import global.cloudcoin.ccbank.Unpacker.Unpacker;
 import global.cloudcoin.ccbank.Unpacker.UnpackerResult;
-import global.cloudcoin.ccbank.Vaulter.Vaulter;
 import global.cloudcoin.ccbank.Vaulter.VaulterResult;
 import global.cloudcoin.ccbank.core.AppCore;
 import global.cloudcoin.ccbank.core.CallbackInterface;
 import global.cloudcoin.ccbank.core.CloudCoin;
 import global.cloudcoin.ccbank.core.Config;
 import global.cloudcoin.ccbank.core.DNSSn;
-import global.cloudcoin.ccbank.core.GLogger;
-import global.cloudcoin.ccbank.core.ServantRegistry;
 import global.cloudcoin.ccbank.core.Wallet;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.geom.Point2D;
-import java.awt.geom.RoundRectangle2D;
-import java.awt.image.BufferedImage;
 import java.awt.print.PrinterException;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.net.URLEncoder;
 import java.util.*;
-import java.util.List;
 import javax.imageio.ImageIO;
-import javax.imageio.spi.ServiceRegistry;
-import javax.swing.border.Border;
-import javax.swing.border.CompoundBorder;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.EtchedBorder;
-import javax.swing.border.LineBorder;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.plaf.ColorUIResource;
 import javax.swing.plaf.MenuItemUI;
-import javax.swing.plaf.basic.BasicProgressBarUI;
-import javax.swing.plaf.basic.BasicScrollBarUI;
 import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.JTableHeader;
-import javax.swing.table.TableCellRenderer;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-
-
 
 
 /**
@@ -124,8 +75,7 @@ public class AdvancedClient  {
     JLabel pbarText;
     
     JFrame mainFrame;
-    
-    
+       
     final static int TYPE_ADD_BUTTON = 1;
     final static int TYPE_ADD_SKY = 2;
     
@@ -134,7 +84,6 @@ public class AdvancedClient  {
                 
         AppUI.init(tw, th); 
         headerHeight = th / 10;
-    
         
         initMainScreen();
         
@@ -155,8 +104,6 @@ public class AdvancedClient  {
     public void initSystem() {
         wl = new WLogger();
         
-        
-
         String home = System.getProperty("user.home");
         home += File.separator + "DebugX";
             
@@ -167,7 +114,6 @@ public class AdvancedClient  {
         }
         
         resetState();
-
     }
    
     public void echoDone() {
@@ -176,6 +122,9 @@ public class AdvancedClient  {
        
     
     public void setSNs(int[] sns) {
+        if (ps.currentWalletIdx <= 0)
+            return;
+        
         Wallet w = wallets[ps.currentWalletIdx - 1];
         
         w.setSNs(sns);
@@ -198,8 +147,6 @@ public class AdvancedClient  {
             AppUI.setFont(cntLabel, 16);
         else 
             AppUI.setFont(cntLabel, 14);
-        
-        //AppUI.setColor(cntLabel, AppUI.getDisabledColor2());
         
         cntLabel.repaint();
     }
@@ -260,6 +207,9 @@ public class AdvancedClient  {
     
     
     public void showCoinsDone(int[][] counters) {
+        if (ps.currentWalletIdx <= 0)
+            return;
+        
         Wallet w = wallets[ps.currentWalletIdx - 1];
         
      
@@ -317,13 +267,14 @@ public class AdvancedClient  {
         ps.cbState = ProgramState.CB_STATE_DONE;
     }
     
-    public void initSystemUser() {
-        if (ps.isDefaultWalletBeingCreated)
-            ps.typedWalletName = Config.DIR_DEFAULT_USER;
-        
+    public void initSystemUser() {  
         if (!sm.initUser(ps.typedWalletName, ps.typedEmail, ps.typedPassword)) {
             ps.errText = "Failed to init Wallet"; 
             return;
+        }
+        
+        if (ps.isDefaultWalletBeingCreated) {
+            AppCore.setDefaultWallet(ps.typedWalletName);
         }
             
         AppCore.copyTemplatesFromJar(ps.typedWalletName);
@@ -803,7 +754,13 @@ public class AdvancedClient  {
             
         if (sm.getWallets().length != 0) {
             ps.defaultWalletCreated = true;
+            ps.defaultWalletName = AppCore.getDefaultWalletName();
             ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+            if (ps.defaultWalletName == null) {
+                wl.error(ltag, "Failed to determine default wallet");
+                System.err.println("Failed to determine default wallet. The folders are corrupted");
+                System.exit(1);
+            }
         } else {
             ps.defaultWalletCreated = false;
         }          
@@ -811,7 +768,7 @@ public class AdvancedClient  {
     
     public void showScreen() {
         clear();
-        
+
         wl.debug(ltag, "SCREEN " + ps.currentScreen + ": " + ps.toString());
         
         switch (ps.currentScreen) {
@@ -2407,6 +2364,7 @@ public class AdvancedClient  {
             AppUI.hr(subInnerCore, 12);
         }
             
+        resetState();
         
         JPanel bp = getOneButtonPanel();     
         subInnerCore.add(bp);      
@@ -4949,28 +4907,8 @@ public class AdvancedClient  {
         AppUI.setSize(scrollPane, 260, 325);
  
         ct.add(scrollPane);
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        JPanel bp = getTwoButtonPanelCustom("Print", "Export History", new ActionListener() {
+
+        JPanel bp = getTwoButtonPanelCustom("Print", "Export List", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                     try {
                         table.print();
@@ -5643,7 +5581,7 @@ public class AdvancedClient  {
                 }
                 
                 String newFileName = domain + ".stack";
-                if (!AppCore.moveToFolderNewName(ps.chosenFile, Config.DIR_ID, Config.DIR_DEFAULT_USER, newFileName)) {
+                if (!AppCore.moveToFolderNewName(ps.chosenFile, Config.DIR_ID, ps.defaultWalletName, newFileName)) {
                     ps.errText = "Failed to move coin";
                     showScreen();
                     return;
@@ -5666,11 +5604,14 @@ public class AdvancedClient  {
         String str;
         MyTextField walletName = null;
               
-        if (!ps.isDefaultWalletBeingCreated) {
+    /*    if (!ps.isDefaultWalletBeingCreated) {
             str = "Create Wallet";
         } else {
             str = "Create Default Wallet";
         }
+        */
+        
+        str = "Create Wallet";
         
         JPanel subInnerCore = getModalJPanel(str);
         maybeShowError(subInnerCore);
@@ -5684,7 +5625,7 @@ public class AdvancedClient  {
         // Space
         AppUI.hr(oct, 22);
         
-        if (!ps.isDefaultWalletBeingCreated) {
+        //if (!ps.isDefaultWalletBeingCreated) {
             JPanel hct = new JPanel();
         
             AppUI.setBoxLayout(hct, false);
@@ -5704,7 +5645,7 @@ public class AdvancedClient  {
             hct.add(walletName.getTextField());
 
             oct.add(hct);
-        }
+        //}
 
         // GridHolder Container
         JPanel ct = new JPanel();
@@ -5797,15 +5738,16 @@ public class AdvancedClient  {
                 ps.cwalletPasswordRequested = frb0.isSelected();
                 ps.cwalletRecoveryRequested = frb2.isSelected();
                 
-                if (!ps.isDefaultWalletBeingCreated && fwalletName != null) {
-                    if (!Validator.walletName(fwalletName.getText())) {
-                        ps.errText = "Wallet name is empty";
-                        showScreen();
-                        return;
-                    }
-                    
-                    ps.typedWalletName = fwalletName.getText();
+                //if (!ps.isDefaultWalletBeingCreated && fwalletName != null) {
+                //if (fwalletName != null) {
+                if (!Validator.walletName(fwalletName.getText())) {
+                    ps.errText = "Wallet name is incorrect";
+                    showScreen();
+                    return;
                 }
+                    
+                ps.typedWalletName = fwalletName.getText();
+                //}
                 
                 if (ps.cwalletPasswordRequested) {
                     ps.currentScreen = ProgramState.SCREEN_SET_PASSWORD;

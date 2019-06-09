@@ -37,14 +37,13 @@ public class Wallet {
         this.logger = logger;
         this.parent = null;
         this.sns = new int[0];
-        
-        
+               
         logger.debug(ltag, "wallet " + name + " e=" + email + " is="+isEncrypted+ " p="+password);
         lsep = System.getProperty("line.separator");
     }
     
     public boolean isDefaultWallet() {
-        return name.equals(Config.DIR_DEFAULT_USER);
+        return name.equals(AppCore.getDefaultWalletName());
     }
     
     public int[] getSNs() {

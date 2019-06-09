@@ -666,14 +666,6 @@ public class AppCore {
         }
     }
     
-    /*
-    public static String getCurrentDate() {
-        DateFormat dateFormat = new SimpleDateFormat("MMM dd yyyy");
-	Date date = new Date();
-        
-        return dateFormat.format(date);
-    }*/
-    
     public static String getCurrentDate() {
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MMM-d h-mma");
 	Date date = new Date();
@@ -826,7 +818,57 @@ public class AppCore {
         return true;
     }
     
+    public static String getDefaultWalletName() {
+        String wname, dname;
+        
+        wname = null;
+        
+        File dirObj = new File(rootPath + File.separator + Config.DIR_ACCOUNTS);
+        for (File file: dirObj.listFiles()) {
+            if (!file.isDirectory())
+                continue;
+            
+            dname = file.getAbsolutePath() + File.separator + Config.DEFAULT_DIR_MARKER;
+            File f = new File(dname);
+            if (f.exists()) {
+                if (wname != null) {
+                    logger.error(ltag, "Duplicated default wallets " + wname + " and " + f.getName());
+                    return null;
+                }
+                
+                wname = file.getName();
+            }
+        }
+        
+        if (wname == null) {
+            logger.debug(ltag, "Falling back to the default dir");
+            wname = Config.DIR_DEFAULT_USER;
+        }
+        
+        return wname;
+    }
     
+    public static boolean setDefaultWallet(String walletName) {
+        File dirObj = new File(rootPath + File.separator + 
+                Config.DIR_ACCOUNTS + File.separator + walletName);
+        
+        String fileMarker = dirObj.getAbsolutePath() + File.separator + Config.DEFAULT_DIR_MARKER;
+        
+        File f = new File(fileMarker);
+        
+        try {
+            if (!f.createNewFile()) {
+                logger.error(ltag, "Failed to create tag file: " + fileMarker);
+                return false;
+            }
+        } catch (IOException e) {
+            logger.error(ltag, "Failed to create tag file: " + fileMarker + " ex " + e.getMessage());
+            return false;
+        }
+        
+        return true;
+        
+    }
     
     
 }

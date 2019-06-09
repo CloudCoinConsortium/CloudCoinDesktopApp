@@ -91,7 +91,7 @@ public abstract class GLogger implements GLoggerInterface {
         if (!f.exists())
             return false;
         
-        String dfileName = AppCore.getCurrentBackupDir(AppCore.getBackupDir(), Config.DIR_DEFAULT_USER);
+        String dfileName = AppCore.getCurrentBackupDir(AppCore.getBackupDir(), "all");
         dfileName += File.separator + f.getName();
         
         return AppCore.copyFile(f.getAbsolutePath(), dfileName);

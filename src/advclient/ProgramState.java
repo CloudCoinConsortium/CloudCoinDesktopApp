@@ -121,6 +121,8 @@ public class ProgramState {
     
     boolean defaultWalletCreated;
     
+    String defaultWalletName;
+    
     public ProgramState() {
         currentScreen = SCREEN_AGREEMENT;
         cwalletRecoveryRequested = cwalletPasswordRequested = false;
@@ -169,6 +171,8 @@ public class ProgramState {
         isSkyDeposit = false;
                 
         defaultWalletCreated = false;
+        
+        defaultWalletName = null;
     }
  
     public String toString() {

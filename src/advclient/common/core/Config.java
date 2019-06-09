@@ -136,4 +136,6 @@ public class Config {
     final public static String MAIN_LOG_FILENAME = "main.log";
     
     final public static String PICK_ERROR_MSG = "PickError";
+    
+    final public static String DEFAULT_DIR_MARKER = ".default.wallet";
 }

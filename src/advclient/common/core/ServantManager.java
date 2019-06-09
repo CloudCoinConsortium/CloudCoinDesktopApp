@@ -232,16 +232,7 @@ public class ServantManager {
               
         return true;
     }
-    /*
-    public String getConfigValue(String servant, String rquser, String value) {
-        Servant s = sr.getServant(servant);
-        
-        s.changeUser(rquser);
-        sr.getServant(servant).getConfigValue("password");
-        s.changeUser(rquser);
-    }
-    */
-    
+
     public boolean writeConfig(String user) {
         String config = "", ct;
         
@@ -554,11 +545,17 @@ public class ServantManager {
         Collection c = wallets.values();
         Wallet[] ws = new Wallet[size];
         
+        String defaultWalletName = AppCore.getDefaultWalletName();
+        if (defaultWalletName == null) {
+            logger.info(ltag, "Can't find default wallet");
+            defaultWalletName = Config.DIR_DEFAULT_USER;
+        }
+        
         int i = 0;
         Iterator itr = c.iterator();
         while (itr.hasNext()) {
             Wallet tw = (Wallet) itr.next();
-            if (tw.getName().equals(Config.DIR_DEFAULT_USER)) {
+            if (tw.getName().equals(defaultWalletName)) {
                 ws[i++] = tw;
                 break;
             }
@@ -567,13 +564,12 @@ public class ServantManager {
         itr = c.iterator();
         while (itr.hasNext()) {
             Wallet tw = (Wallet) itr.next();
-            if (tw.getName().equals(Config.DIR_DEFAULT_USER))
+            if (tw.getName().equals(defaultWalletName))
                 continue;
             
             ws[i++] = tw;
         }
-        
-        
+                
         return ws;
     }
     
@@ -590,8 +586,7 @@ public class ServantManager {
                 String name = tw.getName() + "." + Config.DDNS_DOMAIN;
                 if (name.equals(walletName))
                     return tw;
-            }
-                
+            }                
         }
         
         return null;

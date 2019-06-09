@@ -492,7 +492,13 @@ public class Servant {
     }
 
     protected CloudCoin getIDcc(int sn) {
-        String fullDirIDPath = AppCore.getUserDir(Config.DIR_ID, Config.DIR_DEFAULT_USER);
+        String defaultWalletName = AppCore.getDefaultWalletName();
+        if (defaultWalletName == null) {
+            logger.error(ltag, "Can't find default wallet");
+            return null;
+        }
+        
+        String fullDirIDPath = AppCore.getUserDir(Config.DIR_ID, defaultWalletName);
         CloudCoin cc = null;
 
         File dirObj = new File(fullDirIDPath);
