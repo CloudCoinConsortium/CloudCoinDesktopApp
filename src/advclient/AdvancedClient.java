@@ -5996,7 +5996,7 @@ public class AdvancedClient  {
         // Rounded Background
         Color color = isDisabled ? AppUI.getColor3() : AppUI.getColor4();
         
-        JButton addBtn = new JButton("");
+        final JButton addBtn = new JButton("");
         addBtn.setBorder(new RoundedBorder(20, color));
         addBtn.setFocusPainted(false);
         addBtn.setContentAreaFilled(false);
