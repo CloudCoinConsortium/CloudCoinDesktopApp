@@ -31,6 +31,17 @@ public class FrackFixer extends Servant {
         this.cb = icb;
 
         fr = new FrackFixerResult();
+        if (isCancelled()) {
+            logger.info(ltag, "Start Cancelled");
+
+            resume();
+            fr.status = FrackFixerResult.STATUS_CANCELLED;
+            if (cb != null)
+                cb.callback(fr);
+
+            return;
+        }
+        
         launchDetachedThread(new Runnable() {
             @Override
             public void run() {

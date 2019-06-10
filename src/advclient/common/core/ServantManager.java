@@ -610,5 +610,8 @@ public class ServantManager {
         
         return rv;
     }
-    
+ 
+    public void resumeAll() {
+        sr.resumeAll();
+    }
 }

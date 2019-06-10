@@ -21,16 +21,14 @@ public class ShowCoins extends Servant {
 
     public ShowCoins(String rootDir, GLogger logger) {
         super("ShowCoins", rootDir, logger);
-
-        result = new ShowCoinsResult();
-        ccs = new ArrayList<CloudCoin>();
-
     }
 
     public void launch(CallbackInterface icb) {
         this.cb = icb;
 
+        result = new ShowCoinsResult();
         result.counters = new int[Config.IDX_FOLDER_LAST][5];
+        ccs = new ArrayList<CloudCoin>();
         launchThread(new Runnable() {
             @Override
             public void run() {

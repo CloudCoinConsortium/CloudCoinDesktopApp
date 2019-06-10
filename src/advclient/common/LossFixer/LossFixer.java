@@ -24,6 +24,16 @@ public class LossFixer extends Servant {
         this.cb = icb;
 
         lr = new LossFixerResult();
+        if (isCancelled()) {
+            logger.info(ltag, "Start Cancelled");
+
+            resume();
+            lr.status = LossFixerResult.STATUS_CANCELLED;
+            if (cb != null)
+                cb.callback(lr);
+
+            return;
+        }
 
 
         launchThread(new Runnable() {
@@ -67,6 +77,20 @@ public class LossFixer extends Servant {
                 lr.failed++;
                 continue;
             }
+            
+             if (isCancelled()) {
+                logger.info(ltag, "Cancelled");
+
+                resume();
+                LossFixerResult lfr = new LossFixerResult();
+                lfr.status = LossFixerResult.STATUS_CANCELLED;
+                copyFromMainFr(lfr);
+                if (cb != null)
+                    cb.callback(lfr);
+
+                return;
+            }
+            
 
             logger.info(ltag, "doing recovery " + cc.sn);
             doRecoverCoin(cc);

@@ -2,6 +2,7 @@ package global.cloudcoin.ccbank.core;
 
 import java.util.Hashtable;
 import java.lang.reflect.Constructor;
+import java.util.Enumeration;
 import java.util.Set;
 
 public class ServantRegistry {
@@ -128,5 +129,16 @@ public class ServantRegistry {
         }
 
         return false;
+    }
+    
+    public void resumeAll() {        
+        Enumeration<String> enumeration = servants.keys();
+        while(enumeration.hasMoreElements()) {
+ 
+            String key = enumeration.nextElement();
+            Servant s = servants.get(key);
+
+            s.resume();
+        }   
     }
 }

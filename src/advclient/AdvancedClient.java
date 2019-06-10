@@ -27,6 +27,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.print.PrinterException;
@@ -46,12 +48,14 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.0.0";
+    String version = "2.0.1";
 
     JPanel headerPanel;
     JPanel mainPanel;
     JPanel corePanel;
     JPanel wpanel;
+    
+    JPanel lwrapperPanel;
     
     String ltag = "Advanced Client";
     JLabel totalText;
@@ -353,6 +357,14 @@ public class AdvancedClient  {
         if (ps.currentScreen == ProgramState.SCREEN_FIX_FRACKED ||
                 ps.currentScreen == ProgramState.SCREEN_FIXING_FRACKED ||
                 ps.currentScreen == ProgramState.SCREEN_FIX_DONE)
+            return true;
+        
+        return false;
+    }
+    
+    public boolean isBackupping() {
+        if (ps.currentScreen == ProgramState.SCREEN_BACKUP ||
+                ps.currentScreen == ProgramState.SCREEN_BACKUP_DONE)
             return true;
         
         return false;
@@ -1322,14 +1334,18 @@ public class AdvancedClient  {
         JPanel bp = getOneButtonPanelCustom("Cancel", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 sm.cancel("Unpacker");
-                
+
                 if (ps.isSkyDeposit)
                     sm.cancel("Sender");
-                else
+                else {
                     sm.cancel("Authenticator");
+                    sm.cancel("FrackFixer");
+                    sm.cancel("LossFixer");
+                }
                 
-                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
-                showScreen();
+                resetState();
+                //ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                //showScreen();
             }
         });
   
@@ -1390,6 +1406,7 @@ public class AdvancedClient  {
             subInnerCore = getModalJPanel("Error");
             AppUI.hr(subInnerCore, 32);
             maybeShowError(subInnerCore);
+            resetState();
             return;
         }
         
@@ -1407,8 +1424,7 @@ public class AdvancedClient  {
         GridBagLayout gridbag = new GridBagLayout();
         GridBagConstraints c = new GridBagConstraints();      
         ct.setLayout(gridbag);
-        
-        
+
         JLabel x = new JLabel("<html><div style='width:400px; text-align:center'>" +
             "Your CloudCoins from " + ps.srcWallet.getName() + " have been fixed</div></html>");
           
@@ -1458,29 +1474,10 @@ public class AdvancedClient  {
         c.gridy = 2;
         gridbag.setConstraints(x, c);
         ct.add(x);
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+                 
         JPanel bp = getOneButtonPanel();
   
+        resetState();
         
         subInnerCore.add(bp);       
     }
@@ -1493,6 +1490,7 @@ public class AdvancedClient  {
             subInnerCore = getModalJPanel("Error");
             AppUI.hr(subInnerCore, 32);
             maybeShowError(subInnerCore);
+            resetState();
             return;
         }
         
@@ -1555,7 +1553,6 @@ public class AdvancedClient  {
         gridbag.setConstraints(x, c);
         ct.add(x);
         
-        
         JPanel bp = getTwoButtonPanelCustom("Show Folder", "Continue", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 File file = new File(ps.chosenFile);
@@ -1572,6 +1569,7 @@ public class AdvancedClient  {
             }
         });
   
+        resetState();
         
         subInnerCore.add(bp);     
     }
@@ -1584,6 +1582,7 @@ public class AdvancedClient  {
             subInnerCore = getModalJPanel("Error");
             AppUI.hr(subInnerCore, 32);
             maybeShowError(subInnerCore);
+            resetState();
             return;
         }
  
@@ -1647,15 +1646,25 @@ public class AdvancedClient  {
             }
         });
   
+        resetState();
         
-        subInnerCore.add(bp);  
-        
-        
-        
+        subInnerCore.add(bp);        
     }
     
     public void showImportDoneScreen() {
-        JPanel subInnerCore = getModalJPanel("Deposit Complete");
+        
+        boolean isError = !ps.errText.equals("");
+        JPanel subInnerCore;
+        
+        if (isError) {
+            subInnerCore = getModalJPanel("Error");
+            AppUI.hr(subInnerCore, 32);
+            maybeShowError(subInnerCore);
+            resetState();
+            return;
+        }
+             
+        subInnerCore = getModalJPanel("Deposit Complete");
         maybeShowError(subInnerCore);
         
         JPanel ct = new JPanel();
@@ -1762,7 +1771,6 @@ public class AdvancedClient  {
                 showScreen();
             }
         });
-  
         
         subInnerCore.add(bp);          
     }
@@ -1775,6 +1783,7 @@ public class AdvancedClient  {
             subInnerCore = getModalJPanel("Error");
             AppUI.hr(subInnerCore, 32);
             maybeShowError(subInnerCore);
+            resetState();
             return;
         }
         
@@ -1808,6 +1817,8 @@ public class AdvancedClient  {
                
         y++; 
              
+        resetState();
+        
         JPanel bp = getOneButtonPanel();
         subInnerCore.add(bp);  
         
@@ -1821,6 +1832,7 @@ public class AdvancedClient  {
             subInnerCore = getModalJPanel("Error");
             AppUI.hr(subInnerCore, 32);
             maybeShowError(subInnerCore);
+            resetState();
             return;
         }
         
@@ -1858,6 +1870,8 @@ public class AdvancedClient  {
         ct.add(x);
                
         y++; 
+        
+        resetState();
              
         JPanel bp = getOneButtonPanel();
         subInnerCore.add(bp);       
@@ -2308,6 +2322,7 @@ public class AdvancedClient  {
             subInnerCore = getModalJPanel("Error");
             AppUI.hr(subInnerCore, 32);
             maybeShowError(subInnerCore);
+            resetState();
             return;
         }
 
@@ -2378,6 +2393,7 @@ public class AdvancedClient  {
             subInnerCore = getModalJPanel("Error");
             AppUI.hr(subInnerCore, 32);
             maybeShowError(subInnerCore);
+            resetState();
             return;
         }
 
@@ -3839,7 +3855,7 @@ public class AdvancedClient  {
     }
     
     public void showFoldersScreen() {
-              showLeftScreen();
+        showLeftScreen();
  
         Wallet w = sm.getActiveWallet();     
 
@@ -4822,18 +4838,14 @@ public class AdvancedClient  {
                     return;
                 }
                 
-                //sm.changeServantUser("Exporter", ps.srcWallet.getName());
                 sm.setActiveWalletObj(ps.srcWallet);
-                ps.srcWallet.setPassword(ps.typedSrcPassword);
+                ps.srcWallet.setPassword(ps.typedPassword);
                 int total = ps.srcWallet.getTotal();
                 if (ps.srcWallet.isEncrypted()) {
                     sm.startSecureExporterService(Config.TYPE_STACK, total, Config.BACKUP_TAG, ps.chosenFile, true, new ExporterBackupCb());
                 } else {
                     sm.startExporterService(Config.TYPE_STACK, total, Config.BACKUP_TAG, ps.chosenFile, true, new ExporterBackupCb());
                 }
-            
-            //    ps.currentScreen = ProgramState.SCREEN_BACKUP_DONE;
-            //    showScreen();
             }
         });
         
@@ -4899,9 +4911,7 @@ public class AdvancedClient  {
             serials[i][1] = "" + cc.getDenomination();
             serials[i][2] = ""; // We need it
         }
-        
-        
-     
+             
         final JTable table = new JTable();
         final JScrollPane scrollPane = AppUI.setupTable(table, new String[] {"Serial Number", "Denomination"}, serials, r);
         AppUI.setSize(scrollPane, 260, 325);
@@ -5899,7 +5909,7 @@ public class AdvancedClient  {
     }
     
     public void showLeftScreen() {
-        JPanel lwrapperPanel = new JPanel();
+        lwrapperPanel = new JPanel();
         
         AppUI.setBoxLayout(lwrapperPanel, true);
         AppUI.noOpaque(lwrapperPanel);
@@ -5951,10 +5961,26 @@ public class AdvancedClient  {
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
         lwrapperPanel.add(scrollPane);  
+        /*
+        //scrollBar.setValue(200);
+        InputMap im = scrollBar.getInputMap(JComponent.WHEN_FOCUSED);
+        ActionMap actMap = scrollBar.getActionMap();
+        //InputMap im = scrollBar.getInputMap();
+
+ 
+        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0), "Up");
+        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0), "Down");
+        actMap.put("Up", new UpDownAction("Up", scrollPane.getVerticalScrollBar().getModel(), 42));
+        actMap.put("Down", new UpDownAction("Down", scrollPane.getVerticalScrollBar().getModel(), 42));
+
+        */
+        //lwrapperPanel.requestFocus();
+        //lwrapperPanel.requestFocusInWindow();
+        //lwrapperPanel.setFocusable(true);
         
         corePanel.add(lwrapperPanel);
     }
-    
+
     public JLayeredPane getWallet(Wallet wallet, int type) {
         boolean isDisabled = true;
 
@@ -6157,6 +6183,13 @@ public class AdvancedClient  {
          
             cx.addMouseListener(ma);
         }
+        
+        lpane.addMouseListener( new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) { 
+                addBtn.requestFocus();
+            }         
+        });
 
         lpane.add(addBtn, new Integer(1));
         lpane.add(cx, new Integer(2));
@@ -6415,7 +6448,7 @@ public class AdvancedClient  {
 
     class AuthenticatorCb implements CallbackInterface {
 	public void callback(Object result) {
-            wl.debug(ltag, "Authenticator finisheed");
+            wl.debug(ltag, "Authenticator finished");
             
             final Object fresult = result;
 	
@@ -6433,6 +6466,7 @@ public class AdvancedClient  {
                 sm.startGraderService(new GraderCb());
                 return;
             } else if (ar.status == AuthenticatorResult.STATUS_CANCELLED) {
+                sm.resumeAll();
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {
                         ps.errText = "Operation Cancelled";
@@ -6482,7 +6516,21 @@ public class AdvancedClient  {
             }
 
             if (fr.status == FrackFixerResult.STATUS_ERROR) {
+                ps.errText = "Failed to fix coins";
                 wl.error(ltag, "Failed to fix");
+            }
+            
+            if (fr.status == FrackFixerResult.STATUS_CANCELLED) {
+                wl.error(ltag, "Frack cancelled");
+                sm.resumeAll();
+                EventQueue.invokeLater(new Runnable() {         
+                    public void run() {
+                        ps.errText = "Operation Cancelled";
+                        ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
+                        showScreen();
+                    }
+                });
+                return;
             }
 
             if (fr.status == FrackFixerResult.STATUS_FINISHED) {
@@ -6617,7 +6665,13 @@ public class AdvancedClient  {
                 return;
             }
 
-            if (er.status == ExporterResult.STATUS_FINISHED) {
+            if (er.status == ExporterResult.STATUS_FINISHED) {              
+                if (ps.srcWallet.isEncrypted()) {
+                    wl.debug(ltag, "Ecrypting back");
+                    sm.startVaulterService(new VaulterCb());
+                    return;
+                }
+                
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {
                         ps.currentScreen = ProgramState.SCREEN_BACKUP_DONE;
@@ -6646,6 +6700,8 @@ public class AdvancedClient  {
                         ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
                     } else if (isFixing()) {
                         ps.currentScreen = ProgramState.SCREEN_FIX_DONE;
+                    } else if (isBackupping()) {
+                        ps.currentScreen = ProgramState.SCREEN_BACKUP_DONE;
                     }
                     
                     showScreen();
@@ -6661,6 +6717,11 @@ public class AdvancedClient  {
             if (lr.status == LossFixerResult.STATUS_PROCESSING) {
                 wl.debug(ltag, "Processing lossfixer");
                 return;
+            }
+            
+            if (lr.status == LossFixerResult.STATUS_CANCELLED) {
+                ps.errText = "Operation Cancelled";
+                sm.resumeAll();
             }
             
             wl.debug(ltag, "LossFixer finished");
@@ -6738,6 +6799,7 @@ public class AdvancedClient  {
                     public void run() {
                         ps.errText = "Operation Cancelled";
                         ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                        sm.resumeAll();
                         showScreen();
                     }
                 });
@@ -6822,6 +6884,7 @@ public class AdvancedClient  {
                     public void run() {
                         ps.errText = "Operation Cancelled";
                         ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
+                        sm.resumeAll();
                         showScreen();
                     }
                 });
@@ -6900,6 +6963,7 @@ public class AdvancedClient  {
                     public void run() {
                         ps.errText = "Operation Cancelled";
                         ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                        sm.resumeAll();
                         showScreen();
                     }
                 });
