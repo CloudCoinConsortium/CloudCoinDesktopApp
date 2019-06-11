@@ -39,6 +39,12 @@ public class RoundedCornerComboBox {
         core = makeUI();
     }
     
+    public void setDefault() {
+        if (options.length == 1) {
+            combo1.setSelectedIndex(1);
+        }
+    }
+    
     public JPanel getComboBox() {
         return core;
     }
@@ -53,6 +59,8 @@ public class RoundedCornerComboBox {
     
     public void addActionListener(ActionListener al) {
         combo1.addActionListener(al);
+        
+        setDefault();
     }
     
     public void setOptions(String[] options) {
@@ -67,13 +75,20 @@ public class RoundedCornerComboBox {
     }
     
     public void addOption(String option) {
+        int i;
+        
+        String[] nopts = new String[options.length + 1];
+        for (i = 0; i < options.length; i++)
+            nopts[i] = options[i];
+        
+        nopts[i] = option;
+        this.options = nopts;
+        
         combo1.addItem(option);
     }
     
     
-    public JPanel makeUI() {
-        
-     
+    public JPanel makeUI() { 
         background = AppUI.blendColors(AppUI.getColor4(), outerBgColor);
         foreground = background;
 
@@ -112,13 +127,7 @@ public class RoundedCornerComboBox {
         combo1.addPopupMenuListener(new HeavyWeightContainerListener(this.outerBgColor, cbm));   
         ComboBoxRenderer renderer = new ComboBoxRenderer(combo1, background);
         combo1.setRenderer(renderer);
-        
-        
-        
         combo1.setModel(cbm);
-
-    
-        
         setOptions(this.options);
 
         

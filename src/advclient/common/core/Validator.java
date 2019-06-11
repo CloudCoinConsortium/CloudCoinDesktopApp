@@ -31,4 +31,11 @@ public class Validator {
         return email.matches(regex);
     }
     
+    public static boolean memo(String tag) {
+        if (tag.indexOf('.') != -1 || tag.indexOf('/') != -1 || tag.indexOf('\\') != -1)
+            return false;
+        
+        return true;
+    }
+    
 }

@@ -48,7 +48,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.0.1";
+    String version = "2.0.2";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -968,7 +968,7 @@ public class AdvancedClient  {
         ct.setLayout(gridbag);
         
         int y = 0;
-        // Password Label
+        // Text Label
         pbarText = new JLabel("");
         AppUI.setCommonFont(pbarText);
         c.insets = new Insets(40, 20, 4, 0);
@@ -1024,7 +1024,6 @@ public class AdvancedClient  {
                 }
 
                 wl.debug(ltag, "Fixing coins in " + ps.srcWallet.getName());
-                
                 
                 sm.setActiveWalletObj(ps.srcWallet);                
                 sm.startFrackFixerService(new FrackFixerOnPurposeCb());
@@ -1646,7 +1645,7 @@ public class AdvancedClient  {
             }
         });
   
-        resetState();
+        //resetState();
         
         subInnerCore.add(bp);        
     }
@@ -3227,6 +3226,12 @@ public class AdvancedClient  {
                     ps.typedRemoteWallet = remoteWalledId.getText();
                     ps.sendType = ProgramState.SEND_TYPE_REMOTE;
                 } else if (dstIdx == idxs.length + 1) {
+                    if (!Validator.memo(ps.typedMemo)) {
+                        ps.errText = "Memo cannot contain dots or slashes";
+                        showScreen();
+                        return;
+                    }
+                    
                     // Local folder
                     if (ps.chosenFile.isEmpty()) {
                         ps.errText = "Folder is not chosen";
@@ -3456,6 +3461,9 @@ public class AdvancedClient  {
             public void actionPerformed(ActionEvent e) {
                 int cidx = cboxto.getSelectedIndex();
                 
+                if (!dto.isVisible())
+                    return;
+                
                 cidx = tidxs[cidx - 1];
                 Wallet w = wallets[cidx];
                 if (w.isEncrypted()) {
@@ -3467,9 +3475,8 @@ public class AdvancedClient  {
                 }
             }
         });
-        
-        
-               
+       
+
         // Space
         AppUI.hr(oct, 22);
         
@@ -3951,9 +3958,16 @@ public class AdvancedClient  {
         
         int y = 0;
         
-        
-        
-        
+        c.anchor = GridBagConstraints.NORTH;
+        c.insets = new Insets(10, 0, 14, 0); 
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+        JLabel vl = new JLabel("Version: " + this.version);
+        AppUI.setFont(vl, 16);
+        gridbag.setConstraints(vl, c); 
+        gct.add(vl);
+        y++;
+               
         c.anchor = GridBagConstraints.NORTH;
         c.insets = new Insets(0, 0, 4, 0); 
         c.gridx = GridBagConstraints.RELATIVE;
@@ -4470,9 +4484,10 @@ public class AdvancedClient  {
                     } 
                     
                     ps.typedPassword = passwordSrc.getText();
+                    srcWallet.setPassword(ps.typedPassword);
                 }
                
-                ps.srcWallet = srcWallet;              
+                ps.srcWallet = srcWallet;             
                 ps.currentScreen = ProgramState.SCREEN_FIXING_FRACKED;
                 showScreen();
             }
@@ -4756,6 +4771,8 @@ public class AdvancedClient  {
                 }
             }
         });
+        
+        
         
         // Backup folder
         JLabel txt = new JLabel("Backup Folder");
