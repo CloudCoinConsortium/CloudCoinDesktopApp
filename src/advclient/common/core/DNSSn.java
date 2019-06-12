@@ -32,7 +32,10 @@ public class DNSSn {
         
     
     public boolean recordExists() {
-        String rqdomain = name + "." + this.domain;
+        String rqdomain = name;
+        
+        if (this.domain != null)
+            rqdomain = name + "." + this.domain;
         
         logger.debug(ltag, "Query " + rqdomain);
         InetAddress address;
@@ -50,8 +53,10 @@ public class DNSSn {
         String rqdomain = name;
         
         logger.debug(ltag, "Domain " + name);
-        if (!rqdomain.endsWith("." + Config.DDNS_DOMAIN)) {          
-            rqdomain += "." + this.domain;
+        if (this.domain != null) {
+            if (!rqdomain.endsWith("." + this.domain)) {          
+                rqdomain += "." + this.domain;
+            }
         }
 
         rqdomain = rqdomain.toLowerCase();

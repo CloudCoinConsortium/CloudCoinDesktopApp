@@ -48,7 +48,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.0.2";
+    String version = "2.0.4";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -522,6 +522,7 @@ public class AdvancedClient  {
                     
                     JButton b = (JButton) e.getSource();
                     
+                    resetState();
                     ps.currentScreen = ProgramState.SCREEN_PREDEPOSIT;
                     showScreen();
                 }
@@ -535,6 +536,7 @@ public class AdvancedClient  {
                     
                     JButton b = (JButton) e.getSource();
                     
+                    resetState();
                     ps.currentScreen = ProgramState.SCREEN_WITHDRAW;
                     showScreen();
                 }
@@ -2164,7 +2166,7 @@ public class AdvancedClient  {
                     ps.currentScreen = ProgramState.SCREEN_SENDING;
                     showScreen();
                 } else if (ps.sendType == ProgramState.SEND_TYPE_REMOTE) {              
-                    DNSSn d = new DNSSn(ps.typedRemoteWallet, Config.DDNS_DOMAIN, wl);
+                    DNSSn d = new DNSSn(ps.typedRemoteWallet, null, wl);
                     int sn = d.getSN();
                     if (sn < 0) {
                         ps.errText = "Failed to query receiver. Check that the name is valid";
@@ -3222,9 +3224,27 @@ public class AdvancedClient  {
                         return;
                     }
                     
+                    if (ps.typedMemo.isEmpty()) {
+                        ps.errText = "Memo cannot be empty";
+                        showScreen();
+                        return; 
+                    }
+                    
                     ps.dstWallet = null;
                     ps.typedRemoteWallet = remoteWalledId.getText();
                     ps.sendType = ProgramState.SEND_TYPE_REMOTE;
+                    
+                    DNSSn d = new DNSSn(ps.typedRemoteWallet, null, wl);
+                    if (!d.recordExists()) {
+                        ps.errText = "Domain " + ps.typedRemoteWallet + " does not exist";
+                        showScreen();
+                        return;
+                    }
+                    
+                    
+                    
+                    
+                    
                 } else if (dstIdx == idxs.length + 1) {
                     if (!Validator.memo(ps.typedMemo)) {
                         ps.errText = "Memo cannot contain dots or slashes";
@@ -3508,6 +3528,12 @@ public class AdvancedClient  {
                 ps.srcWallet = w;
 
                 cidx = cboxto.getSelectedIndex();
+                if (cidx == 0) {
+                    ps.errText = "Destination Wallet is not selected";
+                    showScreen();
+                    return;
+                }
+                
                 cidx = tidxs[cidx - 1];
                 
                 w = wallets[cidx];
@@ -5443,13 +5469,6 @@ public class AdvancedClient  {
         gridbag.setConstraints(x, c);
         ct.add(x);
         
-        
-        
-        
-        
-        
-        
-        
         y++;
         
         c.gridwidth = 4;
@@ -5479,6 +5498,7 @@ public class AdvancedClient  {
         final RoundedCornerComboBox cbox = new RoundedCornerComboBox(AppUI.getColor2(), "Select Server", options);
         gridbag.setConstraints(cbox.getComboBox(), c);
         ct.add(cbox.getComboBox());
+        cbox.setDefault();
         
         y++;
         
