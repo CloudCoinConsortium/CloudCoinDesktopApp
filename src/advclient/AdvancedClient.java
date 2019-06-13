@@ -240,7 +240,7 @@ public class AdvancedClient  {
         int total = 0;
         for (int i = 0; i < wallets.length; i++) {
             total += wallets[i].getTotal();
-            totalText.setText("" + total);
+            totalText.setText("" + AppCore.formatNumber(total));
         }
         
         totalText.repaint();

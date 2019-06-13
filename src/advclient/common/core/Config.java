@@ -42,7 +42,7 @@ public class Config {
 
     public static int THREAD_POOL_SIZE = 8;
 
-    public static int CONNECTION_TIMEOUT = 10000; // ms
+    public static int CONNECTION_TIMEOUT = 30000; // ms
 
     public static int MAX_ALLOWED_FAILED_RAIDAS = 3;
 
