@@ -39,10 +39,15 @@ public class RoundedCornerComboBox {
         core = makeUI();
     }
     
-    public void setDefault() {
+    public void setDefault(String value) {
         if (options.length == 1) {
             combo1.setSelectedIndex(1);
+            return;
         }
+        
+        if (value != null)
+            combo1.setSelectedItem(value);
+        
     }
     
     public JPanel getComboBox() {
@@ -60,7 +65,7 @@ public class RoundedCornerComboBox {
     public void addActionListener(ActionListener al) {
         combo1.addActionListener(al);
         
-        setDefault();
+        setDefault(null);
     }
     
     public void setOptions(String[] options) {

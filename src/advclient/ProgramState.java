@@ -123,6 +123,10 @@ public class ProgramState {
     
     String defaultWalletName;
     
+    boolean isCreatingNewSkyWallet;
+    
+    String skyVaultDomain;
+    
     public ProgramState() {
         currentScreen = SCREEN_AGREEMENT;
         cwalletRecoveryRequested = cwalletPasswordRequested = false;
@@ -173,6 +177,10 @@ public class ProgramState {
         defaultWalletCreated = false;
         
         defaultWalletName = null;
+        
+        isCreatingNewSkyWallet = false;
+        
+        skyVaultDomain = "";
     }
  
     public String toString() {

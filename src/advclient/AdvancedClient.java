@@ -765,7 +765,8 @@ public class AdvancedClient  {
     
     public void resetState() {
         ps = new ProgramState();
-            
+        
+        System.out.println("resr");
         if (sm.getWallets().length != 0) {
             ps.defaultWalletCreated = true;
             ps.defaultWalletName = AppCore.getDefaultWalletName();
@@ -2821,6 +2822,13 @@ public class AdvancedClient  {
                     showScreen();
                     return;
                 }
+                
+                cnt = AppCore.getFilesCount(Config.DIR_DETECTED, w.getName());
+                if (cnt != 0) {
+                    ps.errText = "Detected folder is not empty. Please import your coins first";
+                    showScreen();
+                    return;
+                }
 
                   
                 ps.isSkyDeposit = true;
@@ -3511,6 +3519,7 @@ public class AdvancedClient  {
                 }
                 
                 if (cidx == options.length) {
+                    resetState();
                     ps.currentScreen = ProgramState.SCREEN_CREATE_SKY_WALLET;
                     showScreen();
                     return;
@@ -3724,11 +3733,6 @@ public class AdvancedClient  {
         gridbag.setConstraints(tl, c);
         oct.add(tl);
 
-        
-        
-        
-        
-                
         cbox.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 String walletName = cbox.getSelectedValue();             
@@ -3870,6 +3874,13 @@ public class AdvancedClient  {
                     cnt = AppCore.getFilesCount(Config.DIR_IMPORT, w.getName());
                     if (cnt != 0) {
                         ps.errText = "Import folder is not empty. Please import your coins first";
+                        showScreen();
+                        return;
+                    }
+                    
+                    cnt = AppCore.getFilesCount(Config.DIR_DETECTED, w.getName());
+                    if (cnt != 0) {
+                        ps.errText = "Detected folder is not empty. Please import your coins first";
                         showScreen();
                         return;
                     }
@@ -5403,6 +5414,9 @@ public class AdvancedClient  {
     }
     
     public void showCreateSkyWalletScreen() {
+        boolean isError = !ps.errText.equals("");
+
+        
         final JFileChooser chooser = new JFileChooser();
         FileNameExtensionFilter filter = new FileNameExtensionFilter(
                 "CloudCoins", "jpg", "jpeg", "stack", "json", "txt");
@@ -5445,7 +5459,8 @@ public class AdvancedClient  {
         gridbag.setConstraints(rb0.getRadioButton(), c);
         ct.add(rb0.getRadioButton());
         rb0.attachToGroup(nwGroup);
-        
+        if (isError && !ps.isCreatingNewSkyWallet)
+            rb0.select();
         
         x = new JLabel("Add Existing");
         c.insets = new Insets(0, 14, 4, 0); 
@@ -5461,7 +5476,8 @@ public class AdvancedClient  {
         gridbag.setConstraints(rb1.getRadioButton(), c);
         ct.add(rb1.getRadioButton());
         rb1.attachToGroup(nwGroup);
-        rb1.select();
+        if (!isError || ps.isCreatingNewSkyWallet)
+            rb1.select();
         
         x = new JLabel("Create New");
         c.insets = new Insets(0, 4, 4, 0); 
@@ -5498,7 +5514,7 @@ public class AdvancedClient  {
         final RoundedCornerComboBox cbox = new RoundedCornerComboBox(AppUI.getColor2(), "Select Server", options);
         gridbag.setConstraints(cbox.getComboBox(), c);
         ct.add(cbox.getComboBox());
-        cbox.setDefault();
+        cbox.setDefault(null);
         
         y++;
         
@@ -5521,6 +5537,8 @@ public class AdvancedClient  {
         c.gridy = y;
         gridbag.setConstraints(tf0.getTextField(), c);
         ct.add(tf0.getTextField());
+        if (!ps.skyVaultDomain.isEmpty())
+            tf0.setData(ps.skyVaultDomain);
         
         y++;
         // Text
@@ -5567,6 +5585,10 @@ public class AdvancedClient  {
         
         JPanel bp = getTwoButtonPanel(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+                
+                ps.isCreatingNewSkyWallet = rb1.isSelected();
+                ps.skyVaultDomain = tf0.getText();
+                
                 int srcIdx = cbox.getSelectedIndex();
                 if (srcIdx != 1) {
                     ps.errText = "Trusted Server is not selected";
@@ -5603,6 +5625,7 @@ public class AdvancedClient  {
                         showScreen();
                         return;
                     }
+                    
                 }
 
                 DNSSn d = new DNSSn(domain, ps.trustedServer, wl);
@@ -6200,10 +6223,13 @@ public class AdvancedClient  {
                 public void mouseReleased(MouseEvent e) {
                     ps.currentWallet = null;
                     //ps.currentScreen = ProgramState.SCREEN_PREPARE_TO_ADD_WALLET;
-                    if (ftype == TYPE_ADD_BUTTON)
+                    if (ftype == TYPE_ADD_BUTTON) {
+                        resetState();
                         ps.currentScreen = ProgramState.SCREEN_CREATE_WALLET;
-                    else if (ftype == TYPE_ADD_SKY)
+                    } else if (ftype == TYPE_ADD_SKY) {  
+                        resetState();
                         ps.currentScreen = ProgramState.SCREEN_CREATE_SKY_WALLET;
+                    }
                     showScreen();
                 }  
                 
