@@ -766,7 +766,6 @@ public class AdvancedClient  {
     public void resetState() {
         ps = new ProgramState();
         
-        System.out.println("resr");
         if (sm.getWallets().length != 0) {
             ps.defaultWalletCreated = true;
             ps.defaultWalletName = AppCore.getDefaultWalletName();
