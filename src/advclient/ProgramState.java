@@ -127,6 +127,11 @@ public class ProgramState {
     
     String skyVaultDomain;
     
+    boolean isShowingCoins;
+    
+    int selectedFromIdx, selectedToIdx;
+
+    
     public ProgramState() {
         currentScreen = SCREEN_AGREEMENT;
         cwalletRecoveryRequested = cwalletPasswordRequested = false;
@@ -143,7 +148,7 @@ public class ProgramState {
         files = new ArrayList<String>();
         dstWallet = srcWallet = null;
         isEchoFinished = false;
-        isShowCoinsFinished = false;
+        isShowCoinsFinished = true;
         statToBankValue = statToBank = statFailed = 0;
         
         isDefaultWalletBeingCreated = false;
@@ -181,6 +186,11 @@ public class ProgramState {
         isCreatingNewSkyWallet = false;
         
         skyVaultDomain = "";
+        
+        isShowingCoins = false;
+        
+        selectedFromIdx = selectedToIdx = -1;
+        
     }
  
     public String toString() {

@@ -50,6 +50,11 @@ public class RoundedCornerComboBox {
         
     }
     
+    public void setDefaultIdx(int idx) {
+        combo1.setSelectedIndex(idx);
+        return;
+    }
+    
     public JPanel getComboBox() {
         return core;
     }

@@ -48,7 +48,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.0.4";
+    String version = "2.0.5";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -247,7 +247,7 @@ public class AdvancedClient  {
     }
     
     public void showCoinsGoNext() {
-        if (wallets.length > ps.currentWalletIdx) {     
+        if (wallets.length > ps.currentWalletIdx) {  
             if (!wallets[ps.currentWalletIdx].isSkyWallet()) {
                 sm.changeServantUser("ShowCoins", wallets[ps.currentWalletIdx].getName());
                 sm.startShowCoinsService(new ShowCoinsCb());
@@ -765,7 +765,6 @@ public class AdvancedClient  {
     
     public void resetState() {
         ps = new ProgramState();
-        
         if (sm.getWallets().length != 0) {
             ps.defaultWalletCreated = true;
             ps.defaultWalletName = AppCore.getDefaultWalletName();
@@ -1612,9 +1611,8 @@ public class AdvancedClient  {
         }
         
         String name = ps.srcWallet.getName();
-        if (ps.srcWallet.isSkyWallet())
-            name += "." + Config.DDNS_DOMAIN;
-        
+        //if (ps.srcWallet.isSkyWallet())
+        //    name += "." + Config.DDNS_DOMAIN;
         
         JLabel x = new JLabel("<html><div style='width:400px; text-align:center'>"
                 + "<b>" + AppCore.formatNumber(ps.typedAmount) + " CC</b> have been transferred to <b>" + to + "</b> from <b>"
@@ -2034,8 +2032,8 @@ public class AdvancedClient  {
         ct.add(x);
 
         String name = ps.srcWallet.getName();
-        if (ps.srcWallet.isSkyWallet())
-            name += "." + Config.DDNS_DOMAIN;
+        //if (ps.srcWallet.isSkyWallet())
+        //    name += "." + Config.DDNS_DOMAIN;
         
         x = new JLabel(name);
         AppUI.setCommonBoldFont(x);
@@ -2050,8 +2048,8 @@ public class AdvancedClient  {
         String to;
         if (ps.sendType == ProgramState.SEND_TYPE_WALLET) {
             name = ps.dstWallet.getName();
-            if (ps.dstWallet.isSkyWallet())
-                name += "." + Config.DDNS_DOMAIN;
+            //if (ps.dstWallet.isSkyWallet())
+            //    name += "." + Config.DDNS_DOMAIN;
             
             to = name;
             
@@ -2588,9 +2586,13 @@ public class AdvancedClient  {
             return;
         }
 
+        if (!ps.isShowCoinsFinished)
+            return;
+        
+        ps.isShowCoinsFinished = false;       
         ps.isUpdatedWallets = true;
         ps.currentWalletIdx = 0;
-        
+    
         showCoinsGoNext();
         setTotalCoins();
       
@@ -2678,8 +2680,8 @@ public class AdvancedClient  {
         oct.setLayout(gridbag);
         
         String name = ps.dstWallet.getName();
-        if (ps.dstWallet.isSkyWallet())
-            name += "." + Config.DDNS_DOMAIN;
+        //if (ps.dstWallet.isSkyWallet())
+        //    name += "." + Config.DDNS_DOMAIN;
         
         // Deposit To
         c.gridx = GridBagConstraints.RELATIVE;
@@ -3058,9 +3060,7 @@ public class AdvancedClient  {
         y++;
 
         rightPanel.add(oct);
-        
-        
-        
+
         cboxfrom.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 int srcIdx = cboxfrom.getSelectedIndex() - 1;
@@ -3142,6 +3142,15 @@ public class AdvancedClient  {
             }
         });
 
+        
+        if (ps.srcWallet != null && ps.selectedFromIdx > 0) {
+            cboxfrom.setDefaultIdx(ps.selectedFromIdx);
+        }
+        
+        if (ps.selectedToIdx > 0) {
+            cboxto.setDefaultIdx(ps.selectedToIdx);
+        }
+        
         // Space
         AppUI.hr(oct, 22);
         
@@ -3149,18 +3158,29 @@ public class AdvancedClient  {
             public void actionPerformed(ActionEvent e) {
                 
                 ps.typedMemo = memo.getText();
-                
-                
+              
                 int srcIdx = cboxfrom.getSelectedIndex() - 1;
                 int dstIdx = cboxto.getSelectedIndex() - 1;
                 
-
-                
-                if (srcIdx < 0 || srcIdx >= idxs.length || dstIdx < 0 || dstIdx >= idxs.length + 2) {
-                    ps.errText = "Please select from and to Wallet";
+                ps.selectedFromIdx = cboxfrom.getSelectedIndex();
+                ps.selectedToIdx =  cboxto.getSelectedIndex();
+       
+                if (srcIdx < 0 || srcIdx >= idxs.length) {                    
+                    ps.errText = "Please select From Wallet";
                     showScreen();
                     return;
                 }
+                
+                srcIdx = idxs[srcIdx];                  
+                Wallet srcWallet = wallets[srcIdx];
+                ps.srcWallet = srcWallet;
+            
+                if (dstIdx < 0 || dstIdx >= idxs.length + 2) {             
+                    ps.errText = "Please select To Wallet";
+                    showScreen();
+                    return;
+                }
+            
                 
                 if (srcIdx == dstIdx) {
                     ps.errText = "You can not transfer to the same wallet";
@@ -3182,10 +3202,7 @@ public class AdvancedClient  {
                     return;  
                 }
                 
-                srcIdx = idxs[srcIdx];
 
-                          
-                Wallet srcWallet = wallets[srcIdx];
                 if (srcWallet.isEncrypted()) {
                     if (passwordSrc.getText().isEmpty()) {
                         ps.errText = "From Password is empty";
@@ -3216,7 +3233,7 @@ public class AdvancedClient  {
                     return;
                 }
                       
-                ps.srcWallet = srcWallet;              
+                              
                 if (dstIdx == idxs.length) {
                     // Remote User
                     if (remoteWalledId.getText().isEmpty()) {
@@ -3246,12 +3263,7 @@ public class AdvancedClient  {
                         ps.errText = "Domain " + ps.typedRemoteWallet + " does not exist";
                         showScreen();
                         return;
-                    }
-                    
-                    
-                    
-                    
-                    
+                    }         
                 } else if (dstIdx == idxs.length + 1) {
                     if (!Validator.memo(ps.typedMemo)) {
                         ps.errText = "Memo cannot contain dots or slashes";
@@ -3403,7 +3415,8 @@ public class AdvancedClient  {
         tidxs = new int[wallets.length - cnt];
         for (int i = 0; i < wallets.length; i++) {
             if (wallets[i].isSkyWallet()) {
-                options[j] = wallets[i].getName() + "." + Config.DDNS_DOMAIN + " - " + wallets[i].getTotal() + " CC";
+                //options[j] = wallets[i].getName() + "." + Config.DDNS_DOMAIN + " - " + wallets[i].getTotal() + " CC";
+                options[j] = wallets[i].getName() + " - " + wallets[i].getTotal() + " CC";
                 fidxs[j] = i;
                 j++;
             } else {
@@ -3570,7 +3583,7 @@ public class AdvancedClient  {
                 int total;
                 total = ps.srcWallet.getTotal();
                 if (total == 0) {
-                    ps.errText = ps.srcWallet.getName() + "." + Config.DDNS_DOMAIN + " is empty";
+                    ps.errText = ps.srcWallet.getName() + " is empty";
                     showScreen();
                     return;
                 }
@@ -3615,6 +3628,7 @@ public class AdvancedClient  {
     }
     
     public void showDepositScreen() {
+        boolean isError = !ps.errText.equals("");
         
         showLeftScreen();
 
@@ -3679,6 +3693,7 @@ public class AdvancedClient  {
         gridbag.setConstraints(cbox.getComboBox(), c);
         oct.add(cbox.getComboBox());
 
+
         y++;
         // Password
         c.gridx = GridBagConstraints.RELATIVE;
@@ -3717,6 +3732,7 @@ public class AdvancedClient  {
 
         if (!ps.typedMemo.isEmpty())
             memo.setData(ps.typedMemo);
+        
         oct.add(memo.getTextField());
         
         
@@ -3748,6 +3764,12 @@ public class AdvancedClient  {
                 }
             } 
         });
+        
+        if (ps.dstWallet != null) {
+            cbox.setDefault(ps.dstWallet.getName());
+        }
+        
+        
 
         int ddWidth = 701;
         
@@ -3815,6 +3837,7 @@ public class AdvancedClient  {
                 Wallet w;
                 
                 ps.typedMemo = memo.getText();
+                ps.typedPassword = password.getText();
                 
                 w = sm.getWalletByName(walletName);
                 if (w == null) {
@@ -3823,6 +3846,7 @@ public class AdvancedClient  {
                     return;
                 }
                 
+                ps.dstWallet = w;                        
                 if (ps.files.size() == 0) {
                     ps.errText = "No files selected";
                     showScreen();
@@ -3885,8 +3909,7 @@ public class AdvancedClient  {
                     }
                 }
                 
-                ps.dstWallet = w;          
-                ps.typedPassword = password.getText();
+                
                 ps.currentScreen = ProgramState.SCREEN_IMPORTING;
                 
                 showScreen();
@@ -4026,7 +4049,7 @@ public class AdvancedClient  {
             
             for (int i = 0; i < wallets.length; i++) {
                 if (wallets[i].isSkyWallet()) {
-                    sl = new JLabel(wallets[i].getName() + "." + Config.DDNS_DOMAIN);
+                    sl = new JLabel(wallets[i].getName());
                     AppUI.setFont(sl, 18);
                     c.insets = new Insets(0, 0, 4, 0); 
                     c.gridx = GridBagConstraints.RELATIVE;
@@ -5530,7 +5553,7 @@ public class AdvancedClient  {
 
         y++;
         
-        final MyTextField tf0 = new MyTextField("JohnDoe." + Config.DDNS_DOMAIN, false);
+        final MyTextField tf0 = new MyTextField("JohnDoe.SkyWallet.cc", false);
         c.insets = new Insets(0, 0, 4, 0);
         c.gridx = 0;
         c.gridy = y;
@@ -5564,6 +5587,11 @@ public class AdvancedClient  {
                 }
             }
         });
+        
+        if (!ps.chosenFile.isEmpty()) 
+            tf1.setData(new File(ps.chosenFile).getName());
+        
+        
 
         c.insets = new Insets(0, 0, 0, 0);
         c.gridx = 0;
@@ -5668,7 +5696,7 @@ public class AdvancedClient  {
         subInnerCore.add(bp);  
     }
     
-    public void showCreateWalletScreen() {
+    public void showCreateWalletScreen() {       
         JLabel x;
         String str;
         MyTextField walletName = null;
