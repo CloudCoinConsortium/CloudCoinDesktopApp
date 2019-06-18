@@ -48,7 +48,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.0.5";
+    String version = "2.0.6";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -2401,16 +2401,16 @@ public class AdvancedClient  {
         
 
         JLabel res = new JLabel("<html><div style='width:500px; text-align:center'>"
-                + "You have now created a sky wallet on third-party trusted transfer sever.<br>" 
+                + "You have now created a sky wallet on a third party trusted transfer sever.<br>" 
                 + "Your address is <b>" + ps.domain + "." + ps.trustedServer + "</b>.<br><br> "
                 + "This sky wallet allows you to receive CloudCoins "
                 + "that you know are authentic. <br>The sender will also know that "
                 + "the coins they send are authentic.<br><br>  NOTE: The CloudCoin Consortium owns the "
                 + "SkyWallet.cc domain name but it does not own the trusted transfer server "
-                + "that the name is pointing too. The trusted transfer server that "
+                + "that the name is pointing to. The trusted transfer server that "
                 + "SkyWallet.cc points to is called \"TeleportNow.\" TeleportNow has data supremacy "
                 + "just like the RAIDA. Teleport now cannot be brought down or hacked "
-                + "and there is no information about transaction that are stored.</div></html> ");
+                + "and there is no information about transactions that are stored.</div></html> ");
         
         AppUI.setFont(res, 18);
         AppUI.alignCenter(res);
@@ -5651,19 +5651,30 @@ public class AdvancedClient  {
                         ps.errText = "Wallet name can't be empty";
                         showScreen();
                         return;
-                    }
-                    
+                    }                  
                 }
 
+                if (!Validator.domain(domain + "." + ps.trustedServer)) {
+                    ps.errText = "Account name does not follow the rules of a DNS Host name";
+                    showScreen();
+                    return;
+                }
+                
                 DNSSn d = new DNSSn(domain, ps.trustedServer, wl);
-                if (rb1.isSelected()) {                  
+                int sn = d.getSN();
+                if (rb1.isSelected()) {                 
+                    if (sn >= 0) {
+                        ps.errText = "DNS name already exists";
+                        showScreen();
+                        return;
+                    }
+                    
                     if (!d.setRecord(ps.chosenFile, sm.getSR())) {
                         ps.errText = "Failed to set record. Check if the coin is valid";
                         showScreen();
                         return;
                     }
                 } else {
-                    int sn = d.getSN();
                     if (sn <= 0) {
                         ps.errText = "Wallet does not exist";
                         showScreen();

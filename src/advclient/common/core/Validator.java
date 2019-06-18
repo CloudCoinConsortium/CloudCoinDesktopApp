@@ -5,6 +5,9 @@
  */
 package advclient.common.core;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  *
  * @author Alexander
@@ -36,6 +39,13 @@ public class Validator {
             return false;
         
         return true;
+    }
+    
+    public static boolean domain(String domain) {
+        Pattern p = Pattern.compile("(?=^.{4,253}$)(^((?!-)[a-zA-Z0-9-]{1,63}(?<!-)\\.)+[a-zA-Z]{2,63}$)");
+        Matcher m = p.matcher(domain);
+        
+        return m.matches();
     }
     
 }
