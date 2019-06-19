@@ -419,6 +419,10 @@ public class AppUI {
         c.setFont(osSemiBoldFont.deriveFont(Font.PLAIN, 14));
     }
     
+    public static void setCommonTableFontSize(Component c, int size) {
+        c.setFont(osRegFont.deriveFont(Font.PLAIN, size));
+    }
+    
     
     public static Component hr(int size) {
         return Box.createRigidArea(new Dimension(0, size));

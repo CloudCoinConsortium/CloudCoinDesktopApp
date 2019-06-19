@@ -48,7 +48,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.0.6";
+    String version = "2.0.7";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -1087,9 +1087,9 @@ public class AdvancedClient  {
             String status;
             
             x = new JLabel("RAIDA" + i);
-            AppUI.setFont(x, fontSize);
+            AppUI.setCommonTableFontSize(x, fontSize);
             c.gridwidth = 1;
-            c.anchor = GridBagConstraints.EAST;
+            c.anchor = GridBagConstraints.WEST;
             c.insets = new Insets(0, 0, 2, 0); 
             c.gridx = 0;
             c.gridy = y;
@@ -1103,8 +1103,8 @@ public class AdvancedClient  {
             }
             
             x = new JLabel(status);
-            AppUI.setFont(x, fontSize);
-            c.anchor = GridBagConstraints.WEST;
+            AppUI.setCommonTableFontSize(x, fontSize);
+            c.anchor = GridBagConstraints.EAST;
             c.insets = new Insets(0, 40, 2, 0); 
             c.gridx = GridBagConstraints.RELATIVE;
             c.gridy = y;
@@ -1121,9 +1121,9 @@ public class AdvancedClient  {
                 break;
             
             x = new JLabel("RAIDA" + j);
-            AppUI.setFont(x, fontSize);
+            AppUI.setCommonTableFontSize(x, fontSize);
             c.gridwidth = 1;
-            c.anchor = GridBagConstraints.EAST;
+            c.anchor = GridBagConstraints.WEST;
             c.insets = new Insets(0, 100, 2, 0); 
             c.gridx = GridBagConstraints.RELATIVE;
             c.gridy = y;
@@ -1137,8 +1137,8 @@ public class AdvancedClient  {
             }
             
             x = new JLabel(status);
-            AppUI.setFont(x, fontSize);
-            c.anchor = GridBagConstraints.WEST;
+            AppUI.setCommonTableFontSize(x, fontSize);
+            c.anchor = GridBagConstraints.EAST;
             c.insets = new Insets(0, 40, 2, 0); 
             c.gridx = GridBagConstraints.RELATIVE;
             c.gridy = y;
