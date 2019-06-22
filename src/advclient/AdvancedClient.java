@@ -48,7 +48,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.0.7";
+    String version = "2.0.8";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -143,15 +143,20 @@ public class AdvancedClient  {
         if (cntLabel == null)
             return;
         
-        cntLabel.setText(strCnt);
-        
+        cntLabel.setText(strCnt);        
+        int fsize;
         if (total < 9999)
-            AppUI.setFont(cntLabel, 18);
+            fsize = 18;
         else if (total < 999999999)
-            AppUI.setFont(cntLabel, 16);
+            fsize = 16;
         else 
-            AppUI.setFont(cntLabel, 14);
-        
+            fsize = 14;
+            
+        if (ps.currentWallet == w) {
+            AppUI.setBoldFont(cntLabel, fsize);
+        } else {
+            AppUI.setFont(cntLabel, fsize);
+        }
         cntLabel.repaint();
     }
     
@@ -5036,8 +5041,21 @@ public class AdvancedClient  {
         
         JLabel ltitle = AppUI.getTitle(w.getName() + " - " + w.getTotal() + " CC");   
         ct.add(ltitle);
+        
+
+        
+        if (!w.getEmail().isEmpty()) {
+            AppUI.hr(ct, 10);
+            // Email
+            JLabel el = new JLabel("Recovery Email: " + w.getEmail());
+            AppUI.setFont(el, 14);
+            AppUI.alignCenter(el);
+            ct.add(el);
+        }
+        
         AppUI.hr(ct, 20);
 
+        
         
         // Coins
         int[][] counters = w.getCounters();   
@@ -6127,9 +6145,13 @@ public class AdvancedClient  {
         }
     
         JLabel l = new JLabel(name);
-        AppUI.setFont(l, 22);
-        if (isDisabled)
+        
+        if (isDisabled) {
             AppUI.setColor(l, AppUI.getDisabledColor2());
+            AppUI.setFont(l, 22);
+        } else {
+            AppUI.setBoldFont(l, 22);
+        }
         
         AppUI.alignCenter(l);    
         c.gridwidth = 3;
