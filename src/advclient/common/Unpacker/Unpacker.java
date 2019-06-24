@@ -79,7 +79,7 @@ public class Unpacker extends Servant {
             for (CloudCoin tcc : rccs) {
                 if (tcc.sn == cc.sn) {
                     logger.debug(ltag, "Duplicate sn " + tcc.sn + " in the " + folder);
-                    return tcc.sn;
+                    globalResult.duplicates.add(tcc);
                 }
             }       
         }
@@ -150,12 +150,12 @@ public class Unpacker extends Servant {
             globalResult.status = UnpackerResult.STATUS_ERROR;
             return;
         }
-        
+        /*
         if (sn != 0) {
             globalResult.status = UnpackerResult.STATUS_ERROR;
             globalResult.errText = "Error. Coin " + sn + " exists in the Bank";
             return;
-        }
+        }*/
         
         
         sn = checkCoinsInFolder(Config.DIR_VAULT);
@@ -163,48 +163,40 @@ public class Unpacker extends Servant {
             globalResult.status = UnpackerResult.STATUS_ERROR;
             return;
         }
-        
+        /*
         if (sn != 0) {
             globalResult.status = UnpackerResult.STATUS_ERROR;
             globalResult.errText = "Error. Coin " + sn + " exists in the Vault";
             return;
         }
-        
+        */
         sn = checkCoinsInFolder(Config.DIR_FRACKED);
         if (sn == -1) {
             globalResult.status = UnpackerResult.STATUS_ERROR;
             return;
         }
-        
+        /*
         if (sn != 0) {
             globalResult.status = UnpackerResult.STATUS_ERROR;
             globalResult.errText = "Error. Coin " + sn + " exists in the Fracked";
             return;
         }
-        
+        */
         sn = checkCoinsInFolder(Config.DIR_LOST);
         if (sn == -1) {
             globalResult.status = UnpackerResult.STATUS_ERROR;
             return;
         }
         
+        /*
         if (sn != 0) {
             globalResult.status = UnpackerResult.STATUS_ERROR;
             globalResult.errText = "Error. Coin " + sn + " exists in the Lost";
             return;
         }
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+        */
+
+        rccs.removeAll(globalResult.duplicates);
         for (CloudCoin cc : rccs) {
             if (!saveCoin(cc)) {
                 globalResult.status = UnpackerResult.STATUS_ERROR;

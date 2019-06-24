@@ -5,6 +5,7 @@
  */
 package advclient;
 
+import global.cloudcoin.ccbank.core.CloudCoin;
 import global.cloudcoin.ccbank.core.Wallet;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -131,6 +132,7 @@ public class ProgramState {
     
     int selectedFromIdx, selectedToIdx;
 
+    ArrayList<CloudCoin> duplicates;
     
     public ProgramState() {
         currentScreen = SCREEN_AGREEMENT;
@@ -190,6 +192,8 @@ public class ProgramState {
         isShowingCoins = false;
         
         selectedFromIdx = selectedToIdx = -1;
+        
+        duplicates = new ArrayList<CloudCoin>();
         
     }
  

@@ -251,7 +251,7 @@ public class AdvancedClient  {
         totalText.repaint();
     }
     
-    public void showCoinsGoNext() {
+    public synchronized void showCoinsGoNext() {
         if (wallets.length > ps.currentWalletIdx) {  
             if (!wallets[ps.currentWalletIdx].isSkyWallet()) {
                 sm.changeServantUser("ShowCoins", wallets[ps.currentWalletIdx].getName());
@@ -1005,7 +1005,6 @@ public class AdvancedClient  {
             public void actionPerformed(ActionEvent e) {
                 sm.cancel("FrackFixer");
 
-                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
                 showScreen();
             }
         });
@@ -1058,7 +1057,6 @@ public class AdvancedClient  {
     }
     
     public void showEchoRAIDAFinishedScreen() {
-        System.out.println("done");
         JPanel subInnerCore = getModalJPanel("RAIDA Status");
         maybeShowError(subInnerCore);
 
@@ -1115,13 +1113,8 @@ public class AdvancedClient  {
             c.gridy = y;
             gridbag.setConstraints(x, c);
             ct.add(x);
-            
-            
-            
-            
-            
+       
             int j = i + 13;
-            System.out.println("i=" + i + "," +j);
             if (j == 25)
                 break;
             
@@ -1759,6 +1752,32 @@ public class AdvancedClient  {
         c.gridy = y;
         gridbag.setConstraints(x, c);
         ct.add(x);
+        
+        y++;
+        
+        // Previously imported
+        x = new JLabel("Previously Imported Coins:");
+        AppUI.setCommonFont(x);
+        c.anchor = GridBagConstraints.EAST;
+        c.insets = new Insets(10, 0, 4, 10);
+        c.gridx = 0;
+        c.gridy = y;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+        
+        x = new JLabel("" + ps.duplicates.size());
+        AppUI.setCommonBoldFont(x);
+        c.anchor = GridBagConstraints.WEST;
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+        
+        
+        
+        
+        
+        
         
         JPanel bp = getTwoButtonPanelCustom("Next Deposit", "Continue", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -2651,6 +2670,12 @@ public class AdvancedClient  {
         JPanel rightPanel = getRightPanel();     
     }
     
+    public String getNonEmptyFolderError(String folder) {
+        return "<html><div style='font-size:10px; text-align:center'>" + folder + " Folder is not empty. Please remove coins from your " + folder + " Folder and try again. "
+                + "Go to tools and then Show Folders to see the location of your " + folder + " Folder. Then cut your coins from the folder and put them in a place where you can find them. "
+                + "Please click cancel below to reset. Then deposit them again.</div></html>";
+    }
+    
     public void showDepositSkyWalletScreen() {
            
         showLeftScreen();
@@ -2817,21 +2842,21 @@ public class AdvancedClient  {
                 
                 int cnt = AppCore.getFilesCount(Config.DIR_SUSPECT, w.getParent().getName());
                 if (cnt != 0) {
-                    ps.errText = "Suspect folder is not empty. Please import your coins first";
+                    ps.errText = getNonEmptyFolderError("Suspect");
                     showScreen();
                     return;
                 }
                 
                 cnt = AppCore.getFilesCount(Config.DIR_IMPORT, w.getParent().getName());
                 if (cnt != 0) {
-                    ps.errText = "Import folder is not empty. Please import your coins first";
+                    ps.errText = getNonEmptyFolderError("Import");
                     showScreen();
                     return;
                 }
                 
                 cnt = AppCore.getFilesCount(Config.DIR_DETECTED, w.getName());
                 if (cnt != 0) {
-                    ps.errText = "Detected folder is not empty. Please import your coins first";
+                    ps.errText = getNonEmptyFolderError("Detected");
                     showScreen();
                     return;
                 }
@@ -3573,14 +3598,14 @@ public class AdvancedClient  {
                 
                 int cnt = AppCore.getFilesCount(Config.DIR_SUSPECT, w.getName());
                 if (cnt != 0) {
-                    ps.errText = "Suspect folder is not empty. Please import your coins first";
+                    ps.errText = getNonEmptyFolderError("Suspect");
                     showScreen();
                     return;
                 }
                 
                 cnt = AppCore.getFilesCount(Config.DIR_IMPORT, w.getName());
                 if (cnt != 0) {
-                    ps.errText = "Import folder is not empty. Please import your coins first";
+                    ps.errText = getNonEmptyFolderError("Import");
                     showScreen();
                     return;
                 }
@@ -3649,7 +3674,7 @@ public class AdvancedClient  {
         AppUI.alignTop(ct);
         AppUI.alignTop(ltitle);
         
-        AppUI.hr(ct, 10);
+        AppUI.hr(ct, 2);
         
         maybeShowError(ct);
         
@@ -3745,7 +3770,7 @@ public class AdvancedClient  {
         // Total files selected
         final JLabel tl = new JLabel("Total files selected: " + ps.files.size());
         AppUI.setCommonFont(tl);
-        c.insets = new Insets(28, 18, 0, 0); 
+        c.insets = new Insets(22, 18, 0, 0); 
         c.gridx = GridBagConstraints.RELATIVE;
         c.gridwidth = 2;
         c.anchor = GridBagConstraints.CENTER;
@@ -3894,21 +3919,21 @@ public class AdvancedClient  {
                     
                     cnt = AppCore.getFilesCount(Config.DIR_SUSPECT, w.getName());
                     if (cnt != 0) {
-                        ps.errText = "Suspect folder is not empty. Please import your coins first";
+                        ps.errText = getNonEmptyFolderError("Suspect");
                         showScreen();
                         return;
                     }
                     
                     cnt = AppCore.getFilesCount(Config.DIR_IMPORT, w.getName());
                     if (cnt != 0) {
-                        ps.errText = "Import folder is not empty. Please import your coins first";
+                        ps.errText = getNonEmptyFolderError("Import");
                         showScreen();
                         return;
                     }
                     
                     cnt = AppCore.getFilesCount(Config.DIR_DETECTED, w.getName());
                     if (cnt != 0) {
-                        ps.errText = "Detected folder is not empty. Please import your coins first";
+                        ps.errText = getNonEmptyFolderError("Detected");
                         showScreen();
                         return;
                     }
@@ -5694,7 +5719,7 @@ public class AdvancedClient  {
                     }
                 } else {
                     if (sn <= 0) {
-                        ps.errText = "Wallet does not exist";
+                        ps.errText = "Wallet does not exist or network error occured";
                         showScreen();
                         return;
                     }
@@ -6564,6 +6589,8 @@ public class AdvancedClient  {
                 return;
             }
 
+            ps.duplicates = ur.duplicates;
+            
             setRAIDAProgress(0, 0, AppCore.getFilesCount(Config.DIR_SUSPECT, sm.getActiveWallet().getName()));
             sm.startAuthenticatorService(new AuthenticatorCb());
         }
@@ -6586,7 +6613,7 @@ public class AdvancedClient  {
                 });
                 return;
             } else if (ar.status == AuthenticatorResult.STATUS_FINISHED) {
-                sm.startGraderService(new GraderCb());
+                sm.startGraderService(new GraderCb(), ps.duplicates);
                 return;
             } else if (ar.status == AuthenticatorResult.STATUS_CANCELLED) {
                 sm.resumeAll();
@@ -6664,7 +6691,7 @@ public class AdvancedClient  {
 
             EventQueue.invokeLater(new Runnable() {         
                 public void run() {
-                    pbarText.setText("Fixing lost coins ...");
+                    pbarText.setText("Recovering lost coins ...");
                     pbarText.repaint();
                 }
             });
@@ -6694,7 +6721,7 @@ public class AdvancedClient  {
             } else if (fr.status == FrackFixerResult.STATUS_FINISHED) {
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {
-                        pbarText.setText("Fixing lost coins ...");
+                        pbarText.setText("Recovering lost coins ...");
                         pbarText.repaint();
                     }
                 });

@@ -147,8 +147,8 @@ public class Sender extends Servant {
         }
         
 
-        saveReceipt(user, a, 0, 0, 0, e);
-        saveReceipt(dstUser, a, 0, 0, 0, e);
+        saveReceipt(user, a, 0, 0, 0, e, 0);
+        saveReceipt(dstUser, a, 0, 0, 0, e, 0);
         
         SenderResult sr = new SenderResult();
         if (globalResult.status != SenderResult.STATUS_ERROR)
@@ -337,7 +337,7 @@ public class Sender extends Servant {
         globalResult.totalAuthenticValue = av;
         globalResult.totalFrackedValue = fv;
         
-        saveReceipt(user, a, c, f, 0, 0);
+        saveReceipt(user, a, c, f, 0, 0, 0);
         
         copyFromGlobalResult(sr);
         if (cb != null)

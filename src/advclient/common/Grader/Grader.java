@@ -15,6 +15,7 @@ import global.cloudcoin.ccbank.core.Config;
 import global.cloudcoin.ccbank.core.GLogger;
 import global.cloudcoin.ccbank.core.RAIDA;
 import global.cloudcoin.ccbank.core.Servant;
+import java.util.ArrayList;
 
 public class Grader extends Servant {
     String ltag = "Grader";
@@ -24,7 +25,7 @@ public class Grader extends Servant {
         super("Grader", rootDir, logger);
     }
 
-    public void launch(CallbackInterface icb) {
+    public void launch(CallbackInterface icb, ArrayList<CloudCoin> duplicates) {
         this.cb = icb;
 
         gr = new GraderResult();
@@ -32,12 +33,14 @@ public class Grader extends Servant {
 
         receiptId = AppCore.generateHex();
         gr.receiptId = receiptId;
+        
+        final ArrayList<CloudCoin> fduplicates = duplicates;
 
         launchThread(new Runnable() {
             @Override
             public void run() {
                 logger.info(ltag, "RUN Grader");
-                doGrade();
+                doGrade(fduplicates);
 
                 if (cb != null)
                     cb.callback(gr);
@@ -45,7 +48,7 @@ public class Grader extends Servant {
         });
     }
 
-    public void doGrade() {
+    public void doGrade(ArrayList<CloudCoin> duplicates) {
         String fullPath = AppCore.getUserDir(Config.DIR_DETECTED, user);
         CloudCoin cc;
         boolean graded = false;
@@ -68,10 +71,33 @@ public class Grader extends Servant {
 
             gradeCC(cc);
         }
+        
+        int dups = 0;
+        if (duplicates != null && duplicates.size() != 0) {
+            graded = true;
+            dups = duplicates.size();
+            for (CloudCoin dcc : duplicates) {
+                for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++)
+                    dcc.setDetectStatus(i, CloudCoin.STATUS_UNTRIED);
+                
+                dcc.setPownStringFromDetectStatus();
+                
+                addCoinToReceipt(dcc, "Duplicate (The Coin has already been deposited)", Config.DIR_TRASH);
+                logger.info(ltag, "Removing dup coin: " + dcc.sn);
+                
+                String ccFile = AppCore.getUserDir(Config.DIR_TRASH, user) + File.separator + dcc.getFileName();
+                if (!AppCore.saveFile(ccFile, dcc.getJson(false))) {
+                    logger.error(ltag, "Failed to save file: " + ccFile);
+                    continue;
+                }
+                
+                AppCore.deleteFile(dcc.originalFile);
+            }
+        }
 
         if (graded) {
             saveReceipt(user, gr.totalAuthentic, gr.totalCounterfeit, gr.totalFracked,
-                gr.totalLost, gr.totalUnchecked);
+                gr.totalLost, gr.totalUnchecked, dups);
         }
     }
 
@@ -154,4 +180,8 @@ public class Grader extends Servant {
 
         AppCore.deleteFile(cc.originalFile);
     }
+    
+    
+    
+    
 }

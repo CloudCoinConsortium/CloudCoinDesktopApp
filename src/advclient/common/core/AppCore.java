@@ -370,19 +370,6 @@ public class AppCore {
         String jsonData = "";
         BufferedReader br = null;
         try {
-            /*
-            String line;
-            StringBuilder sb = new StringBuilder();
-            br = new BufferedReader(new FileReader(fileName));
-            System.out.println("loading2");
-            while ((line = br.readLine()) != null) {
-                System.out.println("loading3 " + line);
-                //jsonData += line + "\n";
-                sb.append(line);
-            }
-            System.out.println("loading4");
-            */
-            
             byte[] encoded = Files.readAllBytes(Paths.get(fileName));
             jsonData = new String(encoded);
             
@@ -740,7 +727,7 @@ public class AppCore {
             int total_counterfeit = o.optInt("total_counterfeit");
             int total_lost = o.optInt("total_lost");
             int total_unchecked = o.optInt("total_unchecked");
-            
+            int total_prevs = o.optInt("prev_imported");
             
             
             sb.append("<p>Receipt <b>#");
@@ -758,6 +745,8 @@ public class AppCore {
             sb.append(total_lost);
             sb.append("</b></p><p>Total Unchecked: <b>");
             sb.append(total_unchecked);
+            sb.append("</b></p><p>Total Previously Deposited: <b>");
+            sb.append(total_prevs);
             sb.append("</b></p><br><br><p>Details:</p><br>");
             
             JSONArray a = o.getJSONArray("receipt_detail");
@@ -807,7 +796,6 @@ public class AppCore {
         
         File fdst = new File(mainTrashDir);
         
-        System.out.println("Deleting dir " + path + " to " + mainTrashDir);
         logger.debug(ltag, "Deleting dir " + path + " to " + mainTrashDir);
         try {
             Files.move(fsrc.toPath(), fdst.toPath(),  StandardCopyOption.REPLACE_EXISTING);

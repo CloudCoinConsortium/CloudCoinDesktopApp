@@ -174,7 +174,7 @@ public class Receiver extends Servant {
         }
 
         
-        saveReceipt(user, a, c, 0, 0, e);      
+        saveReceipt(user, a, c, 0, 0, e, 0);      
         copyFromGlobalResult(rr);
         if (cb != null)
             cb.callback(rr);

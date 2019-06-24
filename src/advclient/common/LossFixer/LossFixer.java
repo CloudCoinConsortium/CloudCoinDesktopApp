@@ -264,6 +264,17 @@ public class LossFixer extends Servant {
         cc.setPownStringFromDetectStatus();
         logger.debug(ltag, "Coin Pown after " + cc.getPownString());
 
+
+        for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+            int status = cc.getDetectStatus(i);
+            
+            if (status == CloudCoin.STATUS_FAIL) {
+                logger.debug(ltag, "Counterfeit on RAIDA " + i + " Moving to Fracked");
+                moveCoinToFracked(cc);
+                return;
+            }
+        }
+        
         for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
             int status = cc.getDetectStatus(i);
 
@@ -272,9 +283,23 @@ public class LossFixer extends Servant {
                 return;
             }
         }
-    
+        
         moveCoin(cc);
         lr.recovered++;
+    }
+    
+    public void moveCoinToFracked(CloudCoin cc) {
+        String dir = AppCore.getUserDir(Config.DIR_FRACKED, user);
+        String file;
+
+        file = dir + File.separator + cc.getFileName();
+        logger.info(ltag, "Saving coin " + file);
+        if (!AppCore.saveFile(file, cc.getJson(false))) {
+            logger.error(ltag, "Failed to move coin to Fracked: " + cc.getFileName());
+            return;
+        }
+
+        AppCore.moveToImported(cc.originalFile, user);
     }
 
     public void moveCoin(CloudCoin cc) {
@@ -284,7 +309,7 @@ public class LossFixer extends Servant {
         file = dir + File.separator + cc.getFileName();
         logger.info(ltag, "Saving coin " + file);
         if (!AppCore.saveFile(file, cc.getJson(false))) {
-            logger.error(ltag, "Failed to move coin to Imported: " + cc.getFileName());
+            logger.error(ltag, "Failed to move coin to Bank: " + cc.getFileName());
             return;
         }
 

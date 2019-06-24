@@ -87,17 +87,7 @@ public class MyRadioButton {
 
         }
         
-        deselect();
-        //rb.setActionCommand(birdString);
-        //rb.setSelected(true);
-        /*
-        rb.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                JRadioButton rb = (JRadioButton) e.getSource();
-                System.out.println("xxx"+e.getActionCommand() + " e=" + e.getSource());
-            } 
-        });*/
-        
+        deselect();    
         rb.addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {
                 Icon img;

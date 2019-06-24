@@ -31,6 +31,7 @@ import global.cloudcoin.ccbank.core.Servant;
 import global.cloudcoin.ccbank.core.ServantRegistry;
 import global.cloudcoin.ccbank.core.Wallet;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Hashtable;
@@ -288,12 +289,12 @@ public class ServantManager {
 	at.launch(cb);
     }
     
-    public void startGraderService(CallbackInterface cb) {
+    public void startGraderService(CallbackInterface cb, ArrayList<CloudCoin> duplicates) {
         if (sr.isRunning("Grader"))
             return;
         
 	Grader gd = (Grader) sr.getServant("Grader");
-	gd.launch(cb);
+	gd.launch(cb, duplicates);
     }
     
     

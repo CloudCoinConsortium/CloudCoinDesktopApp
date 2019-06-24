@@ -171,7 +171,7 @@ public class Exporter extends Servant {
                 addCoinToReceipt(cc, "authentic", Config.DIR_EXPORT);
             }
         
-            saveReceipt(user, coinsPicked.size(), 0, 0, 0, 0);
+            saveReceipt(user, coinsPicked.size(), 0, 0, 0, 0, 0);
         }
         
         er.status = ExporterResult.STATUS_FINISHED;

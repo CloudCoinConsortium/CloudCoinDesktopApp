@@ -927,8 +927,8 @@ public class Servant {
         csb.append("\"}");
     }
     
-    public void saveReceipt(String duser, int a, int c, int f, int l, int u) {
-        logger.debug(ltag, "Saving receipt " + duser + ": " + a + "," + c + "," + f + "," + l + "," + u);
+    public void saveReceipt(String duser, int a, int c, int f, int l, int u, int dups) {
+        logger.debug(ltag, "Saving receipt " + duser + ": " + a + "," + c + "," + f + "," + l + "," + u + "," + dups);
         
         StringBuilder rsb = new StringBuilder();
 
@@ -955,6 +955,8 @@ public class Servant {
         rsb.append(l);
         rsb.append(", \"total_unchecked\": ");
         rsb.append(u);
+        rsb.append(", \"prev_imported\": ");
+        rsb.append(dups);
         rsb.append(", \"receipt_detail\": [");
         rsb.append(csb);
         rsb.append("]}");

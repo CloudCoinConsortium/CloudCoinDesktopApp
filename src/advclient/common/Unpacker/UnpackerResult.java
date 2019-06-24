@@ -6,6 +6,9 @@
  */
 package global.cloudcoin.ccbank.Unpacker;
 
+import global.cloudcoin.ccbank.core.CloudCoin;
+import java.util.ArrayList;
+
 /**
  *
  * @author Alexander
@@ -18,10 +21,13 @@ public class UnpackerResult {
     
     public String errText;
     
+    public ArrayList<CloudCoin> duplicates;
+    
     public int status;
     
     public UnpackerResult() {
         status = STATUS_PROCESSING;
+        duplicates = new ArrayList<CloudCoin>();
     }
     
 }
