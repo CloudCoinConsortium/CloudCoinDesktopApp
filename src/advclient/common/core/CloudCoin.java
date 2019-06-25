@@ -162,18 +162,36 @@ public class CloudCoin {
 		ed = month + "-" + year;
         }
         
+        public void setMissingANs() {
+            for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+                if (ans[i] == null) {
+                    ans[i] = generatePan();
+                    detectStatus[i] = CloudCoin.STATUS_FAIL;
+                }
+            }
+            
+            setPownStringFromDetectStatus();
+        }
+        
+        public void setMissingPANs() {
+            for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+                if (pans[i] == null) {
+                    pans[i] = generatePan();
+                }
+            }
+        }
+        
+        
 	public String getJson(boolean includePans) {
 		String json;
 
+                setMissingANs();
                 setEd();
 
 		json = "{\"cloudcoin\":[{\"nn\":" + nn + ",\"sn\":" + sn + ",\"an\":[\"";
 		for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
                     String an = ans[i];
-                    
-                    if (an == null)
-                        an = "00000000000000000000000000000000";
-                    
+
                     json += an;
                     if (i != RAIDA.TOTAL_RAIDA_COUNT - 1) {
 			json += "\",\"";
@@ -181,12 +199,10 @@ public class CloudCoin {
 		}
 
 		if (includePans) {
+                        setMissingPANs();
 			json += "\"], \"pan\":[\"";
 			for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
                             String pan = pans[i];
-                            
-                            if (pan == null)
-                                pan = "00000000000000000000000000000000";
                             
                             json += pan;
                             if (i != RAIDA.TOTAL_RAIDA_COUNT - 1) {
@@ -206,13 +222,12 @@ public class CloudCoin {
 	public String getSimpleJson() {
 		String json;
 
+                setMissingANs();
+                
 		json = "{" + ls + "\t\t\"nn\":\"" + nn + "\"," + ls + "\t\t\"sn\":\"" + sn + "\"," + ls + "\t\t\"an\":[\"";
 		for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
                     String an = ans[i];
-                    
-                    if (an == null)
-                        an = "00000000000000000000000000000000";
-                    
+                                       
                     json += an;
                     if (i != RAIDA.TOTAL_RAIDA_COUNT - 1) {
 			json += "\", \"";

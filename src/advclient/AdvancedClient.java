@@ -233,7 +233,11 @@ public class AdvancedClient  {
    
         Thread t = new Thread(new Runnable() {
             public void run(){
-                showCoinsGoNext();
+                try {
+                    showCoinsGoNext();
+                } catch (Exception e) {
+                    wl.error(ltag, "ShowCoins failed: " + e.getMessage());
+                }
             }
         });
         
@@ -258,8 +262,6 @@ public class AdvancedClient  {
                 sm.startShowCoinsService(new ShowCoinsCb());
             } else {
                 sm.changeServantUser("ShowEnvelopeCoins", wallets[ps.currentWalletIdx].getParent().getName());
-                if (wallets[ps.currentWalletIdx] == null)
-                    return;
                 sm.startShowSkyCoinsService(new ShowEnvelopeCoinsCb(), wallets[ps.currentWalletIdx].getIDCoin().sn);
             }      
             ps.currentWalletIdx++;
