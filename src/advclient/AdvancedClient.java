@@ -3441,7 +3441,7 @@ public class AdvancedClient  {
         options[j++] = "- FileSystem";
         options[j++] = "- Add Sky Vault";
       
-        final RoundedCornerComboBox cbox = new RoundedCornerComboBox(AppUI.getColor2(), "Select Destination", options);
+        final RoundedCornerComboBox cbox = new RoundedCornerComboBox(AppUI.getColor2(), "Select Source", options);
         gridbag.setConstraints(cbox.getComboBox(), c);
         oct.add(cbox.getComboBox());
 
