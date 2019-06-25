@@ -3523,6 +3523,19 @@ public class AdvancedClient  {
                 } else {
                     cboxto.getComboBox().setVisible(true);
                     dto.setVisible(true);
+                    
+                    int cidxn = cboxto.getSelectedIndex();
+                    if (cidxn != 0) {
+                        cidxn = tidxs[cidxn - 1];
+                        Wallet w = wallets[cidxn];
+                        if (w.isEncrypted()) {
+                            password.getTextField().setVisible(true);
+                            pText.setVisible(true);
+                        } else {
+                            password.getTextField().setVisible(false);
+                            pText.setVisible(false);
+                        }
+                    }
                 }
             }
         });
