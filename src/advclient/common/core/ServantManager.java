@@ -423,7 +423,7 @@ public class ServantManager {
              
             return true;
         }
-System.out.println("zzz0=" + remoteWalletName);
+
         logger.debug(ltag, "send to sn " + sn + " dstWallet " + dstWallet);
         startSenderService(sn, dstWallet, amount, memo, remoteWalletName, scb);
         
@@ -521,8 +521,7 @@ System.out.println("zzz0=" + remoteWalletName);
             this.sn = sn;
             this.dstFolder = dstFolder;
             this.remoteWalletName = remoteWalletName;
-            
-            System.out.println("zzz=" + remoteWalletName);
+
         }
         
 	public void callback(final Object result) {
