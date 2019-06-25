@@ -21,6 +21,7 @@ import java.util.Date;
 public class Sender extends Servant {
     String ltag = "Sender";
     SenderResult globalResult;
+    String remoteWalletName;
     
     int a, c, e, f;
     
@@ -30,7 +31,8 @@ public class Sender extends Servant {
         super("Sender", rootDir, logger);
     }
 
-    public void launch(int tosn, String dstFolder, int[] values, int amount, String envelope, CallbackInterface icb) {
+    public void launch(int tosn, String dstFolder, int[] values, int amount, 
+            String envelope, String remoteWalletName, CallbackInterface icb) {
         this.cb = icb;
 
         final int ftosn = tosn;
@@ -38,6 +40,8 @@ public class Sender extends Servant {
         final String fenvelope = envelope;
         final int famount = amount;
         final String fdstFolder = dstFolder;
+
+        this.remoteWalletName = remoteWalletName;
 
         coinsPicked = new ArrayList<CloudCoin>();
         valuesPicked = new int[AppCore.getDenominations().length];
@@ -367,7 +371,7 @@ public class Sender extends Servant {
             if (passed >= Config.PASS_THRESHOLD) {
                 logger.info(ltag, "Moving to Sent: " + cc.sn);
                 globalResult.amount += cc.getDenomination();
-                addCoinToReceipt(cc, "authentic", "Remote Wallet");
+                addCoinToReceipt(cc, "authentic", "Remote Wallet " + remoteWalletName);
                 a++;
                 av += cc.getDenomination();
                 AppCore.moveToFolder(cc.originalFile, Config.DIR_SENT, user);

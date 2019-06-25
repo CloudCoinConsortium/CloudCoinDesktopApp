@@ -330,9 +330,9 @@ public class ServantManager {
 	b.launch(dstDir, cb);
     }
     
-    public void startSenderService(int sn, String dstFolder, int amount, String memo, CallbackInterface cb) {
+    public void startSenderService(int sn, String dstFolder, int amount, String memo, String remoteWalletName, CallbackInterface cb) {
 	Sender s = (Sender) sr.getServant("Sender");
-	s.launch(sn, dstFolder, null, amount, memo, cb);
+	s.launch(sn, dstFolder, null, amount, memo, remoteWalletName, cb);
     }
      
     
@@ -368,9 +368,9 @@ public class ServantManager {
     
     
     public boolean transferCoins(String srcWallet, String dstWallet, int amount, 
-            String memo, CallbackInterface scb, CallbackInterface rcb) {
+            String memo, String remoteWalletName, CallbackInterface scb, CallbackInterface rcb) {
         
-        logger.debug(ltag, "Transferring " + amount + " from " + srcWallet + " to " + dstWallet);
+        logger.debug(ltag, "Transferring " + amount + " from " + srcWallet + " to " + dstWallet + " rn=" + remoteWalletName);
         int sn = 0;
         
         Wallet srcWalletObj, dstWalletObj; 
@@ -408,6 +408,7 @@ public class ServantManager {
             }
         }
                  
+        
         if (dstWalletObj != null && dstWalletObj.isSkyWallet()) {
             logger.debug(ltag, "Dst wallet is sky");
             sn = dstWalletObj.getIDCoin().sn;
@@ -418,13 +419,13 @@ public class ServantManager {
             logger.debug(ltag, "Src wallet is encrypted");
             Vaulter v = (Vaulter) sr.getServant("Vaulter");
             v.unvault(srcWalletObj.getPassword(), amount, null, 
-               new rVaulterCb(sn, dstWallet, amount, memo, scb));
+               new rVaulterCb(sn, dstWallet, amount, memo, remoteWalletName, scb));
              
             return true;
         }
-
+System.out.println("zzz0=" + remoteWalletName);
         logger.debug(ltag, "send to sn " + sn + " dstWallet " + dstWallet);
-        startSenderService(sn, dstWallet, amount, memo, scb);
+        startSenderService(sn, dstWallet, amount, memo, remoteWalletName, scb);
         
         return true;
         
@@ -510,14 +511,18 @@ public class ServantManager {
         String memo;
         String dstFolder;
         int sn;
+        String remoteWalletName;
     
         public rVaulterCb(int sn, String dstFolder, int amount, 
-                String memo, CallbackInterface cb) {
+                String memo, String remoteWalletName, CallbackInterface cb) {
             this.cb = cb;
             this.amount = amount;
             this.memo = memo;
             this.sn = sn;
             this.dstFolder = dstFolder;
+            this.remoteWalletName = remoteWalletName;
+            
+            System.out.println("zzz=" + remoteWalletName);
         }
         
 	public void callback(final Object result) {
@@ -538,7 +543,7 @@ public class ServantManager {
             }
             
             logger.debug(ltag, "send sn " + sn + " dstWallet " + dstFolder);
-            startSenderService(sn, dstFolder, amount, memo, cb);
+            startSenderService(sn, dstFolder, amount, memo, remoteWalletName, cb);
 	}
     }
     

@@ -258,6 +258,8 @@ public class AdvancedClient  {
                 sm.startShowCoinsService(new ShowCoinsCb());
             } else {
                 sm.changeServantUser("ShowEnvelopeCoins", wallets[ps.currentWalletIdx].getParent().getName());
+                if (wallets[ps.currentWalletIdx] == null)
+                    return;
                 sm.startShowSkyCoinsService(new ShowEnvelopeCoinsCb(), wallets[ps.currentWalletIdx].getIDCoin().sn);
             }      
             ps.currentWalletIdx++;
@@ -1142,29 +1144,7 @@ public class AdvancedClient  {
             c.gridy = y;
             gridbag.setConstraints(x, c);
             ct.add(x);
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
+
             y++;
         }
 
@@ -1269,7 +1249,7 @@ public class AdvancedClient  {
 
                 wl.debug(ltag, "Sending to dst " + dstName);
                 sm.transferCoins(ps.srcWallet.getName(), dstName, 
-                        ps.typedAmount, ps.typedMemo,  new SenderCb(), new ReceiverCb());
+                        ps.typedAmount, ps.typedMemo, ps.typedRemoteWallet, new SenderCb(), new ReceiverCb());
             }
         });
         
@@ -3290,7 +3270,7 @@ public class AdvancedClient  {
                     
                     DNSSn d = new DNSSn(ps.typedRemoteWallet, null, wl);
                     if (!d.recordExists()) {
-                        ps.errText = "Domain " + ps.typedRemoteWallet + " does not exist";
+                        ps.errText = "Sky Vault " + ps.typedRemoteWallet + " does not exist";
                         showScreen();
                         return;
                     }         
@@ -6574,7 +6554,7 @@ public class AdvancedClient  {
             wl.debug(ltag, "UnpackerForSender sn=" + sn);
 
             setRAIDAProgress(0, 0, AppCore.getFilesCount(Config.DIR_SUSPECT, sm.getActiveWallet().getName()));
-            sm.startSenderService(sn, null, 0, ps.typedMemo, new SenderDepositCb());
+            sm.startSenderService(sn, null, 0, ps.typedMemo, sm.getActiveWallet().getName(), new SenderDepositCb());
 
         }
     }
@@ -7100,7 +7080,7 @@ public class AdvancedClient  {
             Thread t = new Thread(new Runnable() {
                 public void run(){
                     sm.transferCoins(ps.srcWallet.getName(), ps.dstWallet.getName(), 
-                        ps.typedAmount, ps.typedMemo,  new SenderCb(), new ReceiverCb());
+                        ps.typedAmount, ps.typedMemo, ps.typedRemoteWallet, new SenderCb(), new ReceiverCb());
                 }
             });
         
