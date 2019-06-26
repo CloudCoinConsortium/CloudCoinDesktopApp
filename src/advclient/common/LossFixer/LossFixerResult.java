@@ -10,6 +10,9 @@ public class LossFixerResult {
     public int failed;
     public int status;
 
+    public int recoveredValue;
+    public String receiptId;
+    
     public LossFixerResult() {
         status = STATUS_PROCESSING;
     }

@@ -6890,6 +6890,12 @@ public class AdvancedClient  {
             }
             
             wl.debug(ltag, "LossFixer finished");
+            
+            
+            if (lr.recovered > 0) {
+                sm.getActiveWallet().appendTransaction("LossFixer Recovered", lr.recoveredValue, lr.receiptId);
+            }
+            
 
             if (sm.getActiveWallet().isEncrypted()) {
                 EventQueue.invokeLater(new Runnable() {         

@@ -35,6 +35,8 @@ public class LossFixer extends Servant {
             return;
         }
 
+        receiptId = AppCore.generateHex();
+        lr.receiptId = receiptId;
 
         launchThread(new Runnable() {
             @Override
@@ -145,6 +147,7 @@ public class LossFixer extends Servant {
         if (failed > RAIDA.TOTAL_RAIDA_COUNT - Config.PASS_THRESHOLD) {
             logger.error(ltag, "Too many counterfeit responses");
             AppCore.moveToTrash(cc.originalFile, user);
+            addCoinToReceipt(cc, "counterfeit", Config.DIR_COUNTERFEIT);
             lr.failed++;
             return;
         }
@@ -152,6 +155,7 @@ public class LossFixer extends Servant {
         if (rcnt == 0) {
             logger.error(ltag, "Coin can not be recovered: " + cc.sn);
             AppCore.moveToTrash(cc.originalFile, user);
+            addCoinToReceipt(cc, "counterfeit", Config.DIR_COUNTERFEIT);
             lr.failed++;
             return;
         }
@@ -271,6 +275,8 @@ public class LossFixer extends Servant {
             if (status == CloudCoin.STATUS_FAIL) {
                 logger.debug(ltag, "Counterfeit on RAIDA " + i + " Moving to Fracked");
                 moveCoinToFracked(cc);
+                lr.recoveredValue += cc.getDenomination();
+                addCoinToReceipt(cc, "fracked", Config.DIR_FRACKED);
                 return;
             }
         }
@@ -286,6 +292,8 @@ public class LossFixer extends Servant {
         
         moveCoin(cc);
         lr.recovered++;
+        lr.recoveredValue += cc.getDenomination();
+        addCoinToReceipt(cc, "bank", Config.DIR_BANK);
     }
     
     public void moveCoinToFracked(CloudCoin cc) {
