@@ -280,56 +280,63 @@ public class Receiver extends Servant {
                 strStatus = rrs[i][j].status;
 
                 found = false;
+                int cstatus;
                 if (strStatus.equals(Config.REQUEST_STATUS_PASS)) {
-                    rsn = rrs[i][j].sn;
-                    ran = rrs[i][j].message;
-                    rnn = rrs[i][j].nn;
-                    for (int k = 0; k < sccs.length; k++) {
-                        if (sccs[k] == null)
-                            continue;
+                    logger.info(ltag, "OK response from raida " + i);
+                    cstatus = CloudCoin.STATUS_PASS;
+                } else if (strStatus.equals(Config.REQUEST_STATUS_FAIL)) {
+                    logger.error(ltag, "Counterfeit response from raida " + i);
+                    cstatus = CloudCoin.STATUS_FAIL;
+                } else {
+                    logger.error(ltag, "Unknown coin status from RAIDA" + i + ": " + strStatus);
+                    cstatus = CloudCoin.STATUS_ERROR;
+                }
+                
+                rsn = rrs[i][j].sn;
+                ran = rrs[i][j].message;
+                rnn = rrs[i][j].nn;
+                for (int k = 0; k < sccs.length; k++) {
+                    if (sccs[k] == null)
+                        continue;
 
-                        if (sccs[k].sn == rsn) {
-                            sccs[k].ans[i] = ran;
-                            sccs[k].setDetectStatus(i, CloudCoin.STATUS_PASS);
+                    if (sccs[k].sn == rsn) {
+                        sccs[k].ans[i] = ran;
+                        sccs[k].setDetectStatus(i, cstatus);
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found) {
+                    for (int k = 0; k < sccs.length; k++) {
+                        if (sccs[k] == null) {
                             found = true;
+                            sccs[k] = new CloudCoin(rnn, rsn);
+                            sccs[k].ans[i] = ran;
+                            sccs[k].setDetectStatus(i, cstatus);
                             break;
                         }
                     }
 
                     if (!found) {
-                        for (int k = 0; k < sccs.length; k++) {
-                            if (sccs[k] == null) {
-                                found = true;
-                                sccs[k] = new CloudCoin(rnn, rsn);
-                                sccs[k].ans[i] = ran;
-                                sccs[k].setDetectStatus(i, CloudCoin.STATUS_PASS);
-                                break;
-                            }
-                        }
-
-                        if (!found) {
-                            logger.error(ltag, "Can't find a coin for rsn=" + rsn);
-                            continue;
-                        }
+                        logger.error(ltag, "Can't find a coin for rsn=" + rsn);
+                        continue;
                     }
-
-                    
-                    logger.info(ltag, " sn=" + rsn + " nn=" + rnn + " an=" + ran);
-                } else if (strStatus.equals(Config.REQUEST_STATUS_FAIL)) {     
-                    logger.error(ltag, "Counterfeit response from raida " + i);
-                } else {
-                    logger.error(ltag, "Unknown coin status from RAIDA" + i + ": " + strStatus);
                 }
-
+    
+                logger.info(ltag, " sn=" + rsn + " nn=" + rnn + " an=" + ran);
                 logger.info(ltag, "raida" + i + " v=" + rrs[i][j].status + " m="+rrs[i][j].message);
             }
         }
 
-        String dir = AppCore.getUserDir(Config.DIR_BANK, user);
+        String dir = AppCore.getUserDir(Config.DIR_DETECTED, user);
         String file;
+        
+        int passed, failed;
         for (i = 0; i < sccs.length; i++) {
             if (sccs[i] == null) {
-            //    addCoinToReceipt(sccs[i], "counterfeit", "None");
+                logger.error(ltag, "Skipping as counterfeit coin: " + ccs.get(i));
+                //addCoinToReceipt(ccs.get(i), "counterfeit", "None");
                 c++;
                 continue;
             }
@@ -338,8 +345,8 @@ public class Receiver extends Servant {
             file = dir + File.separator + sccs[i].getFileName();
             logger.info(ltag, "Saving coin " + file);
             if (!AppCore.saveFile(file, sccs[i].getJson(false))) {
-                logger.error(ltag, "Failed to move coin to Bank: " + sccs[i].getFileName());
-                addCoinToReceipt(sccs[i], "error", "None");
+                logger.error(ltag, "Failed to move coin to Detected: " + sccs[i].getFileName());
+                //addCoinToReceipt(sccs[i], "error", "None");
                 e++;
                 continue;
             }
@@ -348,7 +355,7 @@ public class Receiver extends Servant {
             
             globalResult.amount += sccs[i].getDenomination();
             a++;
-            addCoinToReceipt(sccs[i], "authentic", Config.DIR_BANK);
+            //addCoinToReceipt(sccs[i], "authentic", Config.DIR_BANK);
         }
 
         logger.info(ltag, "Received " + cc.sn);

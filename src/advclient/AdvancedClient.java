@@ -6637,7 +6637,27 @@ public class AdvancedClient  {
             ps.receiptId = gr.receiptId;
             
             if (ps.statToBankValue != 0) {
-                sm.getActiveWallet().appendTransaction(ps.typedMemo, ps.statToBankValue, ps.receiptId);
+                Wallet w = sm.getActiveWallet();
+                Wallet wsrc = ps.srcWallet;
+                if (wsrc != null && wsrc.isSkyWallet()) {
+                    wl.debug(ltag, "Appending sky transactions");
+                        
+                    Enumeration<String> enumeration = ps.cenvelopes.keys();
+                    while (enumeration.hasMoreElements()) {
+                        String key = enumeration.nextElement();
+                        String[] data = ps.cenvelopes.get(key);
+
+                        int total = 0;
+                        try {
+                            total = Integer.parseInt(data[1]);
+                        } catch (NumberFormatException e) {        
+                        }
+ 
+                        ps.dstWallet.appendTransaction(data[0], total, ps.receiptId, data[2]); 
+                    }
+                } else {
+                    w.appendTransaction(ps.typedMemo, ps.statToBankValue, ps.receiptId);
+                }
             }
             
             EventQueue.invokeLater(new Runnable() {         
@@ -7095,6 +7115,9 @@ public class AdvancedClient  {
 	public void callback(Object result) {
             final ReceiverResult rr = (ReceiverResult) result;
             
+            
+            ps.receiverReceiptId = rr.receiptId;
+            
             wl.debug(ltag, "Receiver finished: " + rr.status);
             if (rr.status == ReceiverResult.STATUS_PROCESSING) {
                 setRAIDATransferProgress(rr.totalRAIDAProcessed, rr.totalFilesProcessed, rr.totalFiles);
@@ -7130,59 +7153,68 @@ public class AdvancedClient  {
 		return;
             } 
             
-            if (rr.amount > 0) {
-                wl.debug(ltag, "rramount " + rr.amount + " typed " + ps.typedAmount);
-                if (ps.typedAmount != rr.amount) {
-                    ps.typedAmount = rr.amount;
-                    ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
-                    ps.errText = "Not all coins were received. Please check the logs";
-                    showScreen();
-                    return;
-                }
-                
-                ps.typedAmount = rr.amount;
-                
-                Wallet srcWallet = ps.srcWallet;
-                Wallet dstWallet = ps.dstWallet;
-                
-                srcWallet.appendTransaction(ps.typedMemo, rr.amount * -1, rr.receiptId);
-                if (dstWallet != null) {
-                    if (srcWallet.isSkyWallet()) {
-                        wl.debug(ltag, "Appending sky transactions");
-                        
-                        Enumeration<String> enumeration = ps.cenvelopes.keys();
-                        while (enumeration.hasMoreElements()) {
-                            String key = enumeration.nextElement();
-                            String[] data = ps.cenvelopes.get(key);
-
-                            int total = 0;
-                            try {
-                                total = Integer.parseInt(data[1]);
-                            } catch (NumberFormatException e) {        
-                            }
- 
-                            ps.dstWallet.appendTransaction(data[0], total, rr.receiptId, data[2]); 
-                        }
-                    } else {
-                        dstWallet.appendTransaction(ps.typedMemo, rr.amount, rr.receiptId);
-                    }
-                    if (dstWallet.isEncrypted()) {
-                        sm.changeServantUser("Vaulter", dstWallet.getName());
-                        sm.startVaulterService(new VaulterCb(), dstWallet.getPassword());          
-                    } else {
-                        ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
-                        showScreen();
-                    }
-                }      
-                
-                return;
-            } else {
+            if (rr.amount <= 0) {
                 ps.typedAmount = 0;
-                ps.errText = "Coins were not received. Please check the logs";     
+                ps.errText = "Coins were not received. Please check the logs";
+                ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                showScreen();
+                return;
             }
             
+            
+            
+            wl.debug(ltag, "rramount " + rr.amount + " typed " + ps.typedAmount);
+            sm.startGraderService(new GraderCb(), null);
+            /*
+            if (ps.typedAmount != rr.amount) {
+                ps.typedAmount = rr.amount;
+                ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                ps.errText = "Not all coins were received. Please check the logs";
+                showScreen();
+                return;
+            }
+            */
+            
+            /*
+            ps.typedAmount = rr.amount;
+                
+            Wallet srcWallet = ps.srcWallet;
+            Wallet dstWallet = ps.dstWallet;
+                
+            srcWallet.appendTransaction(ps.typedMemo, rr.amount * -1, rr.receiptId);
+            if (dstWallet != null) {
+                if (srcWallet.isSkyWallet()) {
+                    wl.debug(ltag, "Appending sky transactions");
+                        
+                    Enumeration<String> enumeration = ps.cenvelopes.keys();
+                    while (enumeration.hasMoreElements()) {
+                        String key = enumeration.nextElement();
+                        String[] data = ps.cenvelopes.get(key);
+
+                        int total = 0;
+                        try {
+                            total = Integer.parseInt(data[1]);
+                        } catch (NumberFormatException e) {        
+                        }
+ 
+                        ps.dstWallet.appendTransaction(data[0], total, rr.receiptId, data[2]); 
+                    }
+                } else {
+                    dstWallet.appendTransaction(ps.typedMemo, rr.amount, rr.receiptId);
+                }
+                
+                if (dstWallet.isEncrypted()) {
+                    sm.changeServantUser("Vaulter", dstWallet.getName());
+                    sm.startVaulterService(new VaulterCb(), dstWallet.getPassword());          
+                } else {
+                    ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                    showScreen();
+                }
+            }
+                      
             ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
             showScreen();
+                    */
 	}
     }
     

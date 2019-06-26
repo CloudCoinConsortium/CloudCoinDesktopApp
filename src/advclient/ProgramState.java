@@ -134,6 +134,8 @@ public class ProgramState {
 
     ArrayList<CloudCoin> duplicates;
     
+    String receiverReceiptId;
+    
     public ProgramState() {
         currentScreen = SCREEN_AGREEMENT;
         cwalletRecoveryRequested = cwalletPasswordRequested = false;
@@ -194,6 +196,8 @@ public class ProgramState {
         selectedFromIdx = selectedToIdx = -1;
         
         duplicates = new ArrayList<CloudCoin>();
+        
+        receiverReceiptId = "";
         
     }
  

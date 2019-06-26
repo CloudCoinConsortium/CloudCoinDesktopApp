@@ -341,7 +341,7 @@ public class Sender extends Servant {
         globalResult.totalAuthenticValue = av;
         globalResult.totalFrackedValue = fv;
         
-        saveReceipt(user, a, c, f, 0, 0, 0);
+        saveReceipt(user, a, c, f, 0, e, 0);
         
         copyFromGlobalResult(sr);
         if (cb != null)
@@ -383,16 +383,14 @@ public class Sender extends Servant {
                     
                     AppCore.moveToFolder(cc.originalFile, Config.DIR_COUNTERFEIT, user);
                 } else {
-                    logger.info(ltag, "Moving to Fracked: " + cc.sn);
-                    addCoinToReceipt(cc, "error", Config.DIR_COUNTERFEIT);
-                    f++;
-                    fv += cc.getDenomination();
-                    AppCore.moveToFolder(cc.originalFile, Config.DIR_FRACKED, user);
+                    logger.info(ltag, "Moving to Lost: " + cc.sn);
+                    addCoinToReceipt(cc, "error", Config.DIR_LOST);
+                    e++;
+                    //fv += cc.getDenomination();
+                    AppCore.moveToFolder(cc.originalFile, Config.DIR_LOST, user);
                 }
             }
-        }
-        
-
+        }      
     }
 
 
@@ -470,7 +468,6 @@ public class Sender extends Servant {
         CommonResponse errorResponse;
         SenderResponse[][] ar;
         Object[] o;
-
         
         ar = new SenderResponse[RAIDA.TOTAL_RAIDA_COUNT][];
         for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {

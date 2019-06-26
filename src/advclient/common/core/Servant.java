@@ -925,6 +925,7 @@ public class Servant {
         csb.append("\", \"note\": \"Moved to ");
         csb.append(dstFolder);
         csb.append("\"}");
+
     }
     
     public void saveReceipt(String duser, int a, int c, int f, int l, int u, int dups) {
