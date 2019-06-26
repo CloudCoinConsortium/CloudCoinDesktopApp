@@ -192,9 +192,6 @@ public class Wallet {
             } catch (NumberFormatException e) {
                 rest = 0;
             }
-            if (rest <= 0)
-                rest = 0;
-            
         }
                 
         String result = rMemo + "," + date + ",";
