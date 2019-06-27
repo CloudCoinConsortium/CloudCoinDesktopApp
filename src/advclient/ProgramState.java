@@ -54,6 +54,7 @@ public class ProgramState {
     final public static int SCREEN_SHOW_FOLDERS = 36;
     final public static int SCREEN_ECHO_RAIDA = 37;
     final public static int SCREEN_ECHO_RAIDA_FINISHED = 38;
+    final public static int SCREEN_MAKING_CHANGE = 39;
     
     
     final static int CB_STATE_INIT = 1;

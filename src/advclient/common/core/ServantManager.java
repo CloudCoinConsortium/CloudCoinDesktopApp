@@ -477,6 +477,12 @@ public class ServantManager {
 	v.unvault(password, amount, null, new eVaulterCb(exportType, amount, tag, dir, keepSrc, cb));
     }
     
+    
+    public void makeChange(Wallet w) {
+        
+    }
+    
+    
     class eVaulterCb implements CallbackInterface {
         CallbackInterface cb;
         int exportType;

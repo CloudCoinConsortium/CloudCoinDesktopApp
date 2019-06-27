@@ -136,8 +136,7 @@ public class AdvancedClient  {
     
     public void walletSetTotal(Wallet w, int total) {
         JLabel cntLabel = (JLabel) w.getuiRef();
-        
-        
+             
         w.setTotal(total);
         String strCnt = AppCore.formatNumber(total);
         if (cntLabel == null)
@@ -790,7 +789,11 @@ public class AdvancedClient  {
     
     public void showScreen() {
         clear();
-
+/*
+        showMakingChangeScreen();
+        if(1==1)
+            return;
+        */
         wl.debug(ltag, "SCREEN " + ps.currentScreen + ": " + ps.toString());
         
         switch (ps.currentScreen) {
@@ -912,6 +915,9 @@ public class AdvancedClient  {
             case ProgramState.SCREEN_ECHO_RAIDA_FINISHED:
                 showEchoRAIDAFinishedScreen();
                 break;
+            case ProgramState.SCREEN_MAKING_CHANGE:
+                showMakingChangeScreen();
+                break;
                 
         }
         
@@ -943,7 +949,7 @@ public class AdvancedClient  {
         pbar.setVisible(true);
         pbar.setValue(raidaProcessed);
         
-        pbarText.setText(totalFilesProcessed + " / " + totalFiles + " Deposited");
+        pbarText.setText(totalFilesProcessed + " / " + totalFiles + " Notes Deposited");
         pbarText.repaint();
     }
     
@@ -951,7 +957,7 @@ public class AdvancedClient  {
         pbar.setVisible(true);
         pbar.setValue(raidaProcessed);
         
-        pbarText.setText(totalFilesProcessed + " / " + totalFiles + " Transferred");
+        pbarText.setText(totalFilesProcessed + " / " + totalFiles + " Notes Transferred");
         pbarText.repaint();
     }
     
@@ -960,7 +966,7 @@ public class AdvancedClient  {
         pbar.setValue(raidaProcessed);
         
         pbarText.setText("<html><div style='text-align:center'>Round #" + round + " Fixing on RAIDA " + 
-                fixingRAIDA + "<br>" + totalFilesProcessed + " / " + totalFiles + " Fixed</div></html>");
+                fixingRAIDA + "<br>" + totalFilesProcessed + " / " + totalFiles + " Notes Fixed</div></html>");
         pbarText.repaint();
     }
     
@@ -1152,6 +1158,104 @@ public class AdvancedClient  {
 
     }
     
+    public void showMakingChangeScreen() {
+        JPanel subInnerCore = getModalJPanel("Request Change");
+        maybeShowError(subInnerCore);
+
+        JPanel ct = new JPanel();
+        AppUI.noOpaque(ct);
+        subInnerCore.add(ct);
+        
+        GridBagLayout gridbag = new GridBagLayout();
+        GridBagConstraints c = new GridBagConstraints();      
+        ct.setLayout(gridbag);
+               
+        pbarText = new JLabel("");
+        AppUI.setCommonFont(pbarText);
+        c.insets = new Insets(40, 20, 4, 0);
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = 1;
+        gridbag.setConstraints(pbarText, c);
+        ct.add(pbarText);
+        
+        // ProgressBar
+        pbar = new JProgressBar();
+        pbar.setStringPainted(true);
+        AppUI.setMargin(pbar, 0);
+        AppUI.setSize(pbar, (int) (tw / 2.6f) , 50);
+        pbar.setMinimum(0);
+        pbar.setMaximum(24);
+        pbar.setValue(0);
+        pbar.setUI(new FancyProgressBar());
+        AppUI.noOpaque(pbar);
+        
+        c.insets = new Insets(20, 20, 4, 0);
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = 2;
+        gridbag.setConstraints(pbar, c);
+        ct.add(pbar);
+        
+        JPanel bp = getOneButtonPanelCustom("Cancel", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                sm.cancel("Sender");
+
+                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                showScreen();
+            }
+        });
+       
+        subInnerCore.add(bp);  
+        
+        Thread t = new Thread(new Runnable() {
+            public void run(){
+                if (1==1)
+                    return;
+                pbar.setVisible(false);
+                if (!ps.isEchoFinished) {
+                    pbarText.setText("Checking RAIDA ...");
+                    pbarText.repaint();
+                }
+                
+                try {
+                    Thread.sleep(200);
+                } catch (InterruptedException e) {}
+                
+                while (!ps.isEchoFinished) {
+                    try {
+                        Thread.sleep(300);
+                    } catch (InterruptedException e) {}
+                }
+                
+
+                String dstName =  (ps.foundSN == 0) ? ps.dstWallet.getName() : "" + ps.foundSN;
+                
+                if (ps.isSkyDeposit) {
+                    wl.debug(ltag, "sky deposit");
+                    if (ps.srcWallet.getIDCoin() == null) {
+                        pbarText.setText("Failed to find ID coin");
+                        pbarText.repaint();
+                        return;
+                    }
+                    int sn = ps.srcWallet.getIDCoin().sn;
+                    
+                    pbarText.setText("Querying coins ...");
+                    pbarText.repaint();
+                    
+                    sm.startShowSkyCoinsService(new ShowEnvelopeCoinsForReceiverCb(), sn);
+                    return;
+                }
+                
+
+                wl.debug(ltag, "Sending to dst " + dstName);
+                sm.transferCoins(ps.srcWallet.getName(), dstName, 
+                        ps.typedAmount, ps.typedMemo, ps.typedRemoteWallet, new SenderCb(), new ReceiverCb());
+            }
+        });
+        
+        t.start();
+        
+    }
+    
     public void showSendingScreen() {
         JPanel subInnerCore = getModalJPanel("Transfer in Progress");
         maybeShowError(subInnerCore);
@@ -1164,7 +1268,7 @@ public class AdvancedClient  {
         GridBagConstraints c = new GridBagConstraints();      
         ct.setLayout(gridbag);
         
-        // Password Label
+        // Warning Label
         JLabel x = new JLabel("<html><div style='width:480px;text-align:center'>Do not close the application until all CloudCoins are transferred!</div></html>");
         AppUI.setCommonFont(x);
         AppUI.setColor(x, AppUI.getErrorColor());
@@ -2159,7 +2263,6 @@ public class AdvancedClient  {
                 
                 sm.setActiveWalletObj(ps.srcWallet);
                 if (ps.sendType == ProgramState.SEND_TYPE_FOLDER) {                
-                    
                     if (ps.srcWallet.isEncrypted()) {
                         sm.startSecureExporterService(Config.TYPE_STACK, ps.typedAmount, ps.typedMemo, ps.chosenFile, false, new ExporterCb());
                     } else {
@@ -2590,6 +2693,14 @@ public class AdvancedClient  {
             
             setTotalCoins();
             return;
+        } else {
+            for (int i = 0; i < wallets.length; i++) {
+                JLabel cntLabel = (JLabel) wallets[i].getuiRef();
+                if (cntLabel == null)
+                    continue;
+                
+                cntLabel.setText("Counting");
+            }
         }
 
         if (!ps.isShowCoinsFinished)
