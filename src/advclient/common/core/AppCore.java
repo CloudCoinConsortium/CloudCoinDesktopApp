@@ -707,13 +707,17 @@ public class AppCore {
         return cc;
     }
     
-    public static CloudCoin findCoinBySN(String dir, int sn) {
-        logger.debug(ltag, "Looking for sn " + sn + " into dir: " + dir);
+    public static CloudCoin findCoinBySN(String dir, String user, int sn) {
+        String dirPath = AppCore.getUserDir(dir, user);
+        logger.debug(ltag, "Looking for sn " + sn + " into dir: " + dirPath);
     
         CloudCoin cc;
         int denomination;
         
-        File dirObj = new File(dir);
+        File dirObj = new File(dirPath);
+        if (dirObj.listFiles() == null) 
+            return null;
+        
         for (File file: dirObj.listFiles()) {
             if (file.isDirectory())
                 continue;

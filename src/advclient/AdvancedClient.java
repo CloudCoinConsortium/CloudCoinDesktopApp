@@ -463,14 +463,10 @@ public class AdvancedClient  {
             AppUI.setTitleFont(titleText, 16);
             AppUI.setSize(titleText, 40, 40);
             AppUI.alignBottom(titleText);
-            AppUI.setMargin(titleText, 0, 6, 0, 0);
-            
+            AppUI.setMargin(titleText, 0, 6, 0, 0);    
             wrp.add(titleText);
             
             gridbag.setConstraints(wrp, c);
-            //p.add(titleText);
-            
-            
             p.add(wrp);
             
             c.anchor = GridBagConstraints.CENTER;
@@ -789,7 +785,8 @@ public class AdvancedClient  {
     
     public void showScreen() {
         clear();
-/*
+
+        /*
         showMakingChangeScreen();
         if(1==1)
             return;
@@ -1234,16 +1231,25 @@ public class AdvancedClient  {
                 // <= 14680064 - 100
                 // <= 16777216 - 250
    
-                ps.srcWallet = new Wallet("x", "x", false, "z", wl);
-                int[] sss = {16777215,16777214,4194304,16777213,14680064};
+                ps.srcWallet = new Wallet("ccc", "x", true, "z", wl);
+                ps.srcWallet.setPassword("qwerty");
+                int[] sss = {7391980,7391982};
                 ps.srcWallet.setSNs(sss);
                 ps.typedAmount = 21;
-                sm.makeChange(ps.srcWallet, ps.typedAmount, new CallbackInterface() {
+                sm.setActiveWalletObj(ps.srcWallet);
+                boolean rv = sm.makeChange(ps.srcWallet, ps.typedAmount, new CallbackInterface() {
                     public void callback(Object o) {
                         String text = (String) o;
                         pbarText.setText(text);
                     }                   
                 });
+                
+                if (!rv) {
+                    ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                    ps.errText = "Failed to make change. Pless check the logs";
+                    showScreen();
+                    return;
+                }
                 
                 
                 if (1==1)
@@ -1258,11 +1264,9 @@ public class AdvancedClient  {
                         pbarText.repaint();
                         return;
                     }
-                    int sn = ps.srcWallet.getIDCoin().sn;
-                    
-
-                    
+                    int sn = ps.srcWallet.getIDCoin().sn;            
                     sm.startShowSkyCoinsService(new ShowEnvelopeCoinsForReceiverCb(), sn);
+                    
                     return;
                 }
                 
@@ -2288,8 +2292,7 @@ public class AdvancedClient  {
              
         JPanel bp = getTwoButtonPanel(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                ps.srcWallet.setPassword(ps.typedSrcPassword);
-                
+                ps.srcWallet.setPassword(ps.typedSrcPassword);                
                 sm.setActiveWalletObj(ps.srcWallet);
                 if (ps.sendType == ProgramState.SEND_TYPE_FOLDER) {                
                     if (ps.srcWallet.isEncrypted()) {
@@ -2311,8 +2314,7 @@ public class AdvancedClient  {
                         return;
                     }
                     
-                    ps.foundSN = sn;
-                    
+                    ps.foundSN = sn;                 
                     ps.currentScreen = ProgramState.SCREEN_SENDING;
                     showScreen();
                 }
@@ -3488,8 +3490,7 @@ public class AdvancedClient  {
                             return;
                         }
                     }
-                    
-                    
+                                      
                     ps.dstWallet = dstWallet;
                     ps.sendType = ProgramState.SEND_TYPE_WALLET;
                 }
@@ -5210,7 +5211,7 @@ public class AdvancedClient  {
 
         
         if (!w.getEmail().isEmpty()) {
-            AppUI.hr(ct, 10);
+            AppUI.hr(ct, 6);
             // Email
             JLabel el = new JLabel("Recovery Email: " + w.getEmail());
             AppUI.setFont(el, 14);
@@ -5218,7 +5219,7 @@ public class AdvancedClient  {
             ct.add(el);
         }
         
-        AppUI.hr(ct, 20);
+        AppUI.hr(ct, 10);
 
         
         
