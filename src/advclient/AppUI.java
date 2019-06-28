@@ -39,6 +39,8 @@ import javax.swing.JRootPane;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTable;
+
+
 import javax.swing.JTextArea;
 import javax.swing.SpinnerModel;
 import javax.swing.SpinnerNumberModel;
@@ -60,9 +62,10 @@ public class AppUI {
     static int tw, th;
     static double ratio;
     
-    
-    static Font regFont, semiBoldFont, boldFont;
-    static Font osRegFont, osSemiBoldFont;
+    //AGIEEE
+    static Font montLight, montMedium, montReg;
+   // static Font regFont, semiBoldFont, boldFont;
+    //static Font osRegFont, osSemiBoldFont;
     
     public static void init(int tw, int th) {
         AppUI.tw = tw;
@@ -75,17 +78,18 @@ public class AppUI {
             
             cl = AppUI.class.getClassLoader();
             
-            semiBoldFont = Font.createFont(Font.TRUETYPE_FONT, cl.getResourceAsStream("resources/Montserrat-SemiBold.otf"));
-            boldFont = Font.createFont(Font.TRUETYPE_FONT, cl.getResourceAsStream("resources/Montserrat-Bold.otf"));
-            regFont = Font.createFont(Font.TRUETYPE_FONT, cl.getResourceAsStream("resources/Montserrat-Regular.otf"));
+            //AGIEEE
+            montLight = Font.createFont(Font.TRUETYPE_FONT, cl.getResourceAsStream("resources/Montserrat-Light.ttf"));
+            montMedium = Font.createFont(Font.TRUETYPE_FONT, cl.getResourceAsStream("resources/Montserrat-Medium.ttf"));
+            montReg = Font.createFont(Font.TRUETYPE_FONT, cl.getResourceAsStream("resources/Montserrat-Regular.ttf"));
             
-            GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(regFont);
-            GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(boldFont);
-            GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(semiBoldFont);
+            GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(montReg);
+            GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(montMedium);
+            GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(montLight);
             
             
-            osRegFont = Font.createFont(Font.TRUETYPE_FONT, cl.getResourceAsStream("resources/OpenSans-Regular.ttf"));
-            osSemiBoldFont = Font.createFont(Font.TRUETYPE_FONT, cl.getResourceAsStream("resources/OpenSans-Semibold.ttf"));
+            //osRegFont = Font.createFont(Font.TRUETYPE_FONT, cl.getResourceAsStream("resources/Montserrat-Medium.ttf"));
+            //osSemiBoldFont = Font.createFont(Font.TRUETYPE_FONT, cl.getResourceAsStream("resources/Montserrat-Semibold.ttf"));
             
         } catch(Exception e){
             System.out.println("Failed to load font: " + e.getMessage());
@@ -198,59 +202,59 @@ public class AppUI {
         c.setMaximumSize(new Dimension(w, h));
     }
     
-    public static Color getColor0() {
-        return new Color(0x0061E1);
+       public static Color getColor0() {
+        return new Color(0x1c2340);
     }
     
     public static Color getColor1() {
-        return new Color(0xC9DBEE);
+        return new Color(0x151935);
     }
     
     public static Color getColor2() {
-        return new Color(0xDFEAF5);
+        return new Color(0x1c2340);
     }
     
     public static Color getColor3() {
         //return new Color(0xBFFFFFFF, true);
-        return new Color(0xE9F0F8);
+        return new Color(0x1c2340);
     }
     
     public static Color getColor4() {
-        return new Color(0x665FA8FF, true);
+        return new Color(0x1f222b, true);
     }
     
     public static Color getColor5() {
-        return Color.WHITE;
+        return new Color(0x338fff);
     }
     public static Color getColor6() {
-        return new Color(0x5FA8FF);
+        return new Color(0x2c303d);
     }
     public static Color getColor7() {
-        return new Color(0x90C1FE);
+        return new Color(0x2c303d);
     }
     
     public static Color getColor8() {
-        return new Color(0xE5E5E5);
+        return new Color(0x2c303d);
     }
     
     public static Color getColor9() {
-        return new Color(0x5FA8FF);
+        return new Color(0x338fff);
     }
     
     public static Color getColor10() {
-        return new Color(0x777777);
+        return new Color(0x151935);
     }
     
     public static Color getColor11() {
-        return new Color(0xF2F6FB);
+        return new Color(0x1c2340);
     }
     
     public static Color getColor12() {
-        return new Color(0xF7F9FC);
+        return new Color(0x1c2340);
     }
        
     public static Color getColor13() {
-        return new Color(0x919396);
+        return new Color(0x151935);
     }
     
     
@@ -359,6 +363,7 @@ public class AppUI {
         c.setBorder(new RoundedBorder(radius, color, cb));
     }
     
+    //AGIEEE
     public static void underLine(Component label) {
         Font font = label.getFont();
         Map attributes = font.getAttributes();
@@ -375,30 +380,33 @@ public class AppUI {
     
     
     public static void setTitleFont(Component c, int size) {
-        c.setFont(regFont.deriveFont(Font.PLAIN, size));
-        c.setForeground(Color.WHITE);
+        c.setFont(montReg.deriveFont(Font.PLAIN, size));
+        c.setForeground(getColor5());
     }
     
     public static void setTitleBoldFont(Component c, int size) {
-        c.setFont(boldFont.deriveFont(Font.BOLD, size));
-        c.setForeground(Color.WHITE);
+        c.setFont(montReg.deriveFont(Font.BOLD, size));
+        c.setForeground(getColor5());
     }
     
     public static void setTitleSemiBoldFont(Component c, int size) {
-        c.setFont(semiBoldFont.deriveFont(Font.PLAIN, size));
-        c.setForeground(Color.WHITE);
+        c.setFont(montMedium.deriveFont(Font.PLAIN, size));
+        c.setForeground(getColor5());
     }
     
     public static void setFont(Component c, int size) {
-        c.setFont(regFont.deriveFont(Font.PLAIN, size));
+        c.setFont(montReg.deriveFont(Font.PLAIN, size));
+        c.setForeground(Color.lightGray);
     }
     
     public static void setSemiBoldFont(Component c, int size) {
-        c.setFont(semiBoldFont.deriveFont(Font.PLAIN, size));
+        c.setFont(montMedium.deriveFont(Font.PLAIN, size));
+        c.setForeground(Color.lightGray);
     }
     
     public static void setBoldFont(Component c, int size) {
-        c.setFont(boldFont.deriveFont(Font.PLAIN, size));
+        c.setFont(montReg.deriveFont(Font.PLAIN, size));
+        c.setForeground(getColor5());
     }
     
     
@@ -412,15 +420,15 @@ public class AppUI {
     }
     
     public static void setCommonTableFont(Component c) {
-        c.setFont(osRegFont.deriveFont(Font.PLAIN, 14));
+        c.setFont(montLight.deriveFont(Font.PLAIN, 14));
     }
     
     public static void setCommonBoldTableFont(Component c) {
-        c.setFont(osSemiBoldFont.deriveFont(Font.PLAIN, 14));
+        c.setFont(montMedium.deriveFont(Font.PLAIN, 14));
     }
     
     public static void setCommonTableFontSize(Component c, int size) {
-        c.setFont(osRegFont.deriveFont(Font.PLAIN, size));
+        c.setFont(montLight.deriveFont(Font.PLAIN, size));
     }
     
     
@@ -452,18 +460,18 @@ public class AppUI {
         frame.setSize(new Dimension(tw, th));
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
-        frame.setResizable(false);
+        frame.setResizable(true);
         frame.setVisible(true);
         
         return frame;
     }
    
-    public static JPanel createRoundedPanel(JPanel parent) {
-        return createRoundedPanel(parent, AppUI.getColor2(), 60, 20);
+   public static JPanel createRoundedPanel(JPanel parent) {
+        return createRoundedPanel(parent, AppUI.getColor2(), 0, 0);
     }
     
     public static JPanel createRoundedPanel(JPanel parent, Color color, int sideMargin) {
-        return createRoundedPanel(parent, color, sideMargin, 20);
+        return createRoundedPanel(parent, color, sideMargin, 0);
     }
    
     public static JPanel createRoundedPanel(JPanel parent, Color color, int sideMargin, int radius) {
@@ -489,7 +497,7 @@ public class AppUI {
         return subInnerCore;
     }
     
-    
+    //AGIEEE
     public static JLabel getTitle(String s) {
         JLabel str = new JLabel(s);
         AppUI.alignCenter(str);
@@ -590,15 +598,17 @@ public class AppUI {
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                 lbl = (JLabel) hr.getTableCellRendererComponent(table, value, true, true, row, column);
                 lbl.setHorizontalAlignment(SwingConstants.LEFT);
-
+                    //internal transaction table margins
                 AppUI.setMargin(lbl, 2, 10, 2, 2);
                 AppUI.setBackground(lbl, AppUI.getColor0());
                 return lbl;
             }
         });
         
+        
+        //This is the wallet table size 
         JScrollPane scrollPane = new JScrollPane(table);
-        AppUI.setSize(scrollPane, 660, 325);
+        AppUI.setSize(scrollPane, 660, 275);
         scrollPane.getVerticalScrollBar().setUI(new BasicScrollBarUI() {       
             @Override
             protected JButton createDecreaseButton(int orientation) {
@@ -620,10 +630,10 @@ public class AppUI {
                 return jbutton;
             }
             
-            @Override 
+         @Override 
             protected void configureScrollBarColors(){
-                this.trackColor = AppUI.getColor6();
-                this.thumbColor = AppUI.getColor7();
+                this.trackColor = AppUI.getColor1();
+                this.thumbColor = AppUI.getColor0();
             }
         });
         

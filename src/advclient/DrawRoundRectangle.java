@@ -1,3 +1,4 @@
+
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
@@ -25,7 +26,7 @@ public class DrawRoundRectangle extends JComponent {
         double y = 50;
         double w = x + 250;
         double h = y + 100;
-        g2.draw(new RoundRectangle2D.Double(x, y, w, h, 50, 50));
+        g2.draw(new RoundRectangle2D.Double(x, y, w, h, 0, 0));
     }
 
     /*

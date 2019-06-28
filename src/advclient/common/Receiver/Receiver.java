@@ -69,7 +69,6 @@ public class Receiver extends Servant {
         if (!updateRAIDAStatus()) {
             logger.error(ltag, "Can't proceed. RAIDA is unavailable");
             rr.status = ReceiverResult.STATUS_ERROR;
-            rr.errText = AppCore.raidaErrText;
             if (cb != null)
                 cb.callback(rr);
             return;

@@ -194,7 +194,6 @@ public class Sender extends Servant {
         SenderResult sr = new SenderResult();
         if (!updateRAIDAStatus()) {
             globalResult.status = SenderResult.STATUS_ERROR;
-            globalResult.errText = AppCore.raidaErrText;
             sr = new SenderResult();
             logger.error(ltag, "Can't proceed. RAIDA is unavailable");
             copyFromGlobalResult(sr);

@@ -44,11 +44,8 @@ public class AppCore {
 
     static private ExecutorService service;
 
-    static public String raidaErrText = "Cannot Connect to the RAIDA. "
-            + "Check that local routers are not blocking your connection.";
-   
-    
-    static public void createDirectory(String dirName) {
+
+   static public void createDirectory(String dirName) {
         String idPath;
 
         idPath = rootPath + File.separator + dirName;
@@ -705,37 +702,6 @@ public class AppCore {
         }
         
         return cc;
-    }
-    
-    public static CloudCoin findCoinBySN(String dir, String user, int sn) {
-        String dirPath = AppCore.getUserDir(dir, user);
-        logger.debug(ltag, "Looking for sn " + sn + " into dir: " + dirPath);
-    
-        CloudCoin cc;
-        int denomination;
-        
-        File dirObj = new File(dirPath);
-        if (dirObj.listFiles() == null) 
-            return null;
-        
-        for (File file: dirObj.listFiles()) {
-            if (file.isDirectory())
-                continue;
-
-            try {
-                cc = new CloudCoin(file.toString());
-            } catch (JSONException e) {
-                logger.error(ltag, "Failed to parse coin: " + file.toString() +
-                        " error: " + e.getMessage());
-
-                continue;
-            }
-            
-            if (cc.sn == sn)
-                return cc;
-        }
-        
-        return null;
     }
     
     

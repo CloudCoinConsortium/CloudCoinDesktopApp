@@ -555,8 +555,6 @@ public class Servant {
             coinsPicked.add(cc);
         }
     }
-    
-    
 
     public boolean pickCoinsInDir(String dir, int[] values) {
         logger.debug(ltag, "Looking into dir: " + dir);

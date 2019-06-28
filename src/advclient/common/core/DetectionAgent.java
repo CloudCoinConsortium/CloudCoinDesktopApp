@@ -30,13 +30,13 @@ class DetectionAgent {
 
     private int lastStatus;
 
-    public DetectionAgent(int RAIDANumber, GLogger logger) {
+    public DetectionAgent(int RAIDANumber, int timeout, GLogger logger) {
 
         this.RAIDANumber = RAIDANumber;
 
         // TODO: remove +5 seconds. Now it is a workaround for slow RAIDAs
-        this.readTimeout = Config.READ_TIMEOUT;
-        this.connectionTimeout = Config.CONNECTION_TIMEOUT;
+        this.readTimeout = timeout + 5000;
+        this.connectionTimeout = timeout;
         this.ltag += "" + this.RAIDANumber;
 
         this.logger = logger;
@@ -53,8 +53,6 @@ class DetectionAgent {
     public void setDefaultFullUrl() {
         this.fullURL = "https://RAIDA" + this.RAIDANumber + ".cloudcoin.global";
     //    this.fullURL = "https://RAIDA" + this.RAIDANumber + ".lab.shurafom.eu";
-        
-        
     }
 
     public void setFullUrl(String ip, int basePortArg) {

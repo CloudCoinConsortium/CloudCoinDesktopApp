@@ -32,7 +32,6 @@ import global.cloudcoin.ccbank.core.ServantRegistry;
 import global.cloudcoin.ccbank.core.Wallet;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Hashtable;
@@ -479,162 +478,8 @@ public class ServantManager {
     }
     
     
-    public boolean makeChange(Wallet w, int amount, CallbackInterface cb) {
-        int min5sn, min25sn, min100sn, min250sn;
-                
-        logger.debug(ltag, "Make Change");
-      
-        int sns[] = w.getSNs();
+    public void makeChange(Wallet w) {
         
-        logger.debug(ltag, "Making change for " + w.getName() + " amount: " + amount);
-        
-        if (w.isSkyWallet()) {
-            logger.error(ltag, "Can't make change in SkyWallet");
-            return false;
-        }      
-
-        min5sn = min25sn = min100sn = min250sn = 0;
-        for (int i = 0; i < sns.length; i++) {
-            CloudCoin cc = new CloudCoin(Config.DEFAULT_NN, sns[i]);
-            int denomination = cc.getDenomination();
-            
-            if (denomination == 1)
-                continue;
-            
-            switch (denomination) {
-                case 5:
-                    if (min5sn == 0 || min5sn < denomination) 
-                        min5sn = sns[i];
-                    break;
-                case 25:
-                    if (min25sn == 0 || min25sn < denomination)
-                        min25sn = sns[i];
-                    break;
-                case 100:
-                    if (min100sn == 0 || min100sn < denomination)
-                        min100sn = sns[i];
-                    break;
-                case 250:
-                    if (min250sn == 0 || min250sn < denomination)
-                        min250sn = sns[i];
-                    break;
-            }
-        }
-        
-        int[] ds = { min5sn, min25sn, min100sn, min250sn };
-        int idx;
-        if (amount < 5)
-            idx = 0;
-        else if (amount < 25)
-            idx = 1;
-        else if (amount < 100)
-            idx = 2;
-        else 
-            idx = 3;
-            
-        logger.debug(ltag, "idx = " + idx + " ds " + Arrays.toString(ds));
-        
-        int sn = 0;
-        int gidx = ds.length - 1;
-        while (gidx >= 0) {   
-            for (int i = idx; i < ds.length; i++) {
-                if (ds[i] != 0) {
-                    sn = ds[i];
-                    break;
-                }
-            }
-            
-            logger.debug(ltag, "gidx " + gidx + " sn = " + sn);
-            if (sn != 0)
-                break;
-            
-            gidx--;
-        }
-        
-        if (sn == 0) {
-            logger.error(ltag, "Failed to find SN to change");
-            return false;
-        }
-
-        cb.callback(new String("Breaking coin #" + sn));
-        
-        CloudCoin cc;
-        
-        String user = w.getName();
-        if (w.isEncrypted()) {
-            cc = AppCore.findCoinBySN(Config.DIR_VAULT, user, sn);
-        } else {
-            cc = AppCore.findCoinBySN(Config.DIR_BANK, user, sn);
-        }
-        
-        if (cc == null) {
-            logger.debug(ltag, "Failed to find in the Main Folder. Searching in Fracked");
-            cc = AppCore.findCoinBySN(Config.DIR_FRACKED, user, sn);
-            if (cc == null) {
-                logger.error(ltag, "Failed to find coin");
-                return false;
-            }
-        }
-        
-        if (w.isEncrypted()) {
-            logger.debug(ltag, "Wallet is encrypted");
-            
-            String password = w.getPassword();
-            if (password.isEmpty()) {
-                logger.error(ltag, "Empty password. Internal error");
-                return false;      
-            }
-            
-            Vaulter v = (Vaulter) sr.getServant("Vaulter");
-            v.unvault(password, 0, cc, new eVaulterChangeCb(cc, cb));
-            
-            return true;
-        }
-        
-        return sendToChange(cc, cb);
-    }
-    
-    public boolean sendToChange(CloudCoin cc, CallbackInterface cb) {
-        if (cb != null)
-            cb.callback("Sending coin " + cc.sn + " to the SkyWallet");
-        
-        
-        System.out.println("SEND11");
-        
-        return true;
-        
-    }
-    
-    class eVaulterChangeCb implements CallbackInterface {
-        CallbackInterface mcb;
-        CloudCoin cc;
-        
-        
-        public eVaulterChangeCb(CloudCoin cc, CallbackInterface mcb) {
-            this.mcb = mcb;
-            this.cc = cc;
-        }
-                 
-        public void callback(final Object result) {
-            final Object fresult = result;
-            VaulterResult vresult = (VaulterResult) fresult;
-            
-            logger.debug(ltag, "ChangeVault finished with status " + vresult.status);
-            
-            if (vresult.status == VaulterResult.STATUS_ERROR) {
-                if (this.mcb != null)
-                    this.mcb.callback("Failed to decrypt coin");
-                
-                return;
-            }
-            
-            if (vresult.status == VaulterResult.STATUS_FINISHED) {
-                sendToChange(cc, mcb);
-            }
-
-            
-        }
-    
     }
     
     
@@ -781,10 +626,4 @@ public class ServantManager {
     public void resumeAll() {
         sr.resumeAll();
     }
-    
-    
-    public boolean isRAIDAOK() {
-        return sr.getServant("Echoer").updateRAIDAStatus();
-    }
-    
 }
