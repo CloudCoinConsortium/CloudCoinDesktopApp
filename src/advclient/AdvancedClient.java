@@ -794,6 +794,7 @@ public class AdvancedClient  {
         if(1==1)
             return;
         */
+               
         wl.debug(ltag, "SCREEN " + ps.currentScreen + ": " + ps.toString());
         
         switch (ps.currentScreen) {
@@ -1208,8 +1209,6 @@ public class AdvancedClient  {
         
         Thread t = new Thread(new Runnable() {
             public void run(){
-                if (1==1)
-                    return;
                 pbar.setVisible(false);
                 if (!ps.isEchoFinished) {
                     pbarText.setText("Checking RAIDA ...");
@@ -1226,7 +1225,30 @@ public class AdvancedClient  {
                     } catch (InterruptedException e) {}
                 }
                 
-
+                pbarText.setText("Querying coins ...");
+                pbarText.repaint();
+                
+                // <= 2097152 - 1
+                // <= 4194304 - 5
+                // <= 6291456 - 25
+                // <= 14680064 - 100
+                // <= 16777216 - 250
+   
+                ps.srcWallet = new Wallet("x", "x", false, "z", wl);
+                int[] sss = {16777215,16777214,4194304,16777213,14680064};
+                ps.srcWallet.setSNs(sss);
+                ps.typedAmount = 21;
+                sm.makeChange(ps.srcWallet, ps.typedAmount, new CallbackInterface() {
+                    public void callback(Object o) {
+                        String text = (String) o;
+                        pbarText.setText(text);
+                    }                   
+                });
+                
+                
+                if (1==1)
+                    return;
+                
                 String dstName =  (ps.foundSN == 0) ? ps.dstWallet.getName() : "" + ps.foundSN;
                 
                 if (ps.isSkyDeposit) {
@@ -1238,8 +1260,7 @@ public class AdvancedClient  {
                     }
                     int sn = ps.srcWallet.getIDCoin().sn;
                     
-                    pbarText.setText("Querying coins ...");
-                    pbarText.repaint();
+
                     
                     sm.startShowSkyCoinsService(new ShowEnvelopeCoinsForReceiverCb(), sn);
                     return;
@@ -1451,6 +1472,14 @@ public class AdvancedClient  {
                     } catch (InterruptedException e) {}
 
                 }
+                
+                if (!sm.isRAIDAOK()) {
+                    pbarText.setText("RAIDA is not ready. Import stopped");
+                    pbarText.repaint();
+                    ps.isEchoFinished = false;
+                    return;
+                }
+                
                 
                 ps.dstWallet.setPassword(ps.typedPassword);
                 sm.setActiveWalletObj(ps.dstWallet);
@@ -1885,7 +1914,7 @@ public class AdvancedClient  {
     }
     
     public void showDeleteWalletDoneScreen() {
-                boolean isError = !ps.errText.equals("");      
+        boolean isError = !ps.errText.equals("");      
         JPanel subInnerCore;
         
         if (isError) {
@@ -3413,7 +3442,8 @@ public class AdvancedClient  {
                     ps.sendType = ProgramState.SEND_TYPE_FOLDER;    
                     
                     setActiveWallet(ps.srcWallet);
-                    ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
+                    //ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
+                    ps.currentScreen = ProgramState.SCREEN_CONFIRM_TRANSFER;
                     showScreen();
                     
                     return;                    
@@ -4109,7 +4139,22 @@ public class AdvancedClient  {
             gridbag.setConstraints(sl, c); 
             gct.add(sl);
             
-            sl = new JLabel(AppCore.getRootUserDir(wallets[i].getName()));
+            
+            final String fdir = AppCore.getRootUserDir(wallets[i].getName());
+            sl = AppUI.getHyperLink(fdir, "javascript:void(0)", 20);
+            sl.addMouseListener(new MouseAdapter() {
+                public void mouseReleased(MouseEvent e) {
+                    if (!Desktop.isDesktopSupported()) 
+                        return;
+                    try {
+                        Desktop.getDesktop().open(new File(fdir));
+                    } catch (IOException ie) {
+                        wl.error(ltag, "Failed to open browser: " + ie.getMessage());
+                    }
+                }
+            });
+            
+           // sl = new JLabel(AppCore.getRootUserDir(wallets[i].getName()));
             AppUI.setFont(sl, 18);
             c.insets = new Insets(0, 10, 4, 0); 
             c.anchor = GridBagConstraints.WEST;
@@ -4199,18 +4244,7 @@ public class AdvancedClient  {
             topMargin = 26;
         }
             
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+           
         c.anchor = GridBagConstraints.CENTER;
         c.insets = new Insets(topMargin, 0, 4, 0); 
         c.gridx = GridBagConstraints.RELATIVE;
@@ -5230,6 +5264,17 @@ public class AdvancedClient  {
         
         // File saver
         if (ps.sendType == ProgramState.SEND_TYPE_FOLDER) {
+            if (Desktop.isDesktopSupported()) {
+                try {
+                    Desktop.getDesktop().open(new File(ps.chosenFile));
+                } catch (IOException e) {
+                    wl.error(ltag, "Failed to open browser: " + e.getMessage());
+                }
+
+            }
+        }
+        /*
+        if (ps.sendType == ProgramState.SEND_TYPE_FOLDER) {
             Thread t = new Thread(new Runnable() {
                 public void run(){
                     //UIManager.put("FileChooser.readOnly", Boolean.TRUE);  
@@ -5253,6 +5298,7 @@ public class AdvancedClient  {
         
             t.start();  
         }
+        */
         
         // Create transactions
         final String[][] trs;
@@ -6712,7 +6758,11 @@ public class AdvancedClient  {
             if (ar.status == AuthenticatorResult.STATUS_ERROR) {
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {
-                        ps.errText = "Failed to Authencticate Coins";
+                        if (!ar.errText.isEmpty())
+                            ps.errText = "<html><div style='text-align:center; width: 520px'>" + ar.errText + "</div></html>";
+                        else
+                            ps.errText = "Failed to Authencticate Coins";
+                        
                         ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
                         showScreen();
                     }
@@ -6881,7 +6931,10 @@ public class AdvancedClient  {
                         ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
                         if (!er.errText.isEmpty()) {
                             if (er.errText.equals(Config.PICK_ERROR_MSG)) {
-                                ps.errText = getPickError(ps.srcWallet);
+                                ps.currentScreen = ProgramState.SCREEN_MAKING_CHANGE;
+                                showScreen();
+                                return;
+                                //ps.errText = getPickError(ps.srcWallet);
                             } else {
                                 ps.errText = er.errText;
                             }
@@ -6910,7 +6963,9 @@ public class AdvancedClient  {
                 sm.getActiveWallet().appendTransaction(ps.typedMemo, er.totalExported * -1, er.receiptId);
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {
-                        ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                        //ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                        ps.isUpdatedWallets = false;
+                        ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
                         showScreen();
                     }
                 });
@@ -7178,7 +7233,7 @@ public class AdvancedClient  {
                     public void run() {
                         ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
                         if (!sr.errText.isEmpty())
-                            ps.errText = sr.errText;
+                            ps.errText = "<html><div style='text-align:center; width: 520px'>" + sr.errText + "</div></html>";
                         else  
                             ps.errText = "Error occurred. Please check the logs";
                         
@@ -7260,7 +7315,7 @@ public class AdvancedClient  {
                     public void run() {
                         ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
                         if (!rr.errText.isEmpty())
-                            ps.errText = rr.errText;
+                            ps.errText = "<html><div style='text-align:center; width: 520px'>" + rr.errText + "</div>";
                         else  
                             ps.errText = "Error occurred. Please check the logs";
                         

@@ -478,7 +478,104 @@ public class ServantManager {
     }
     
     
-    public void makeChange(Wallet w) {
+    public void makeChange(Wallet w, int amount, CallbackInterface cb) {
+        int sns[] = w.getSNs();
+        
+        if (w.isSkyWallet()) {
+            logger.error(ltag, "Can't make change in SkyWallet");
+            return;
+        }
+        
+        int min5sn, min25sn, min100sn, min250sn;
+        
+        logger.debug(ltag, "Making change in wallet " + w.getName() + " amount " + amount);
+        min5sn = min25sn = min100sn = min250sn = 0;
+        for (int i = 0; i < sns.length; i++) {
+            CloudCoin cc = new CloudCoin(Config.DEFAULT_NN, sns[i]);
+            int denomination = cc.getDenomination();
+            
+            if (denomination == 1)
+                continue;
+            
+            switch (denomination) {
+                case 5:
+                    if (min5sn == 0 || min5sn < denomination) 
+                        min5sn = sns[i];
+                    break;
+                case 25:
+                    if (min25sn == 0 || min25sn < denomination)
+                        min25sn = sns[i];
+                    break;
+                case 100:
+                    if (min100sn == 0 || min100sn < denomination)
+                        min100sn = sns[i];
+                    break;
+                case 250:
+                    if (min250sn == 0 || min250sn < denomination)
+                        min250sn = sns[i];
+                    break;
+            }
+        }
+        
+        int[] ds = { min5sn, min25sn, min100sn, min250sn };
+        int idx;
+        if (amount < 5)
+            idx = 0;
+        else if (amount < 25)
+            idx = 1;
+        else if (amount < 100)
+            idx = 2;
+        else 
+            idx = 3;
+            
+        logger.debug(ltag, "idx = " + idx + " ds " + ds);
+        
+        int sn = 0;
+        int gidx = ds.length - 1;
+        while (gidx >= 0) {   
+            for (int i = idx; i < ds.length; i++) {
+                if (ds[i] != 0) {
+                    sn = ds[i];
+                    break;
+                }
+            }
+            
+            logger.debug(ltag, "gidx " + gidx + " sn = " + sn);
+            if (sn != 0)
+                break;
+            
+            gidx--;
+        }
+        
+        if (sn == 0) {
+            logger.error(ltag, "Failed to find SN to change");
+            return;
+        }
+        
+        System.out.println("sn=" + sn);
+        
+        cb.callback(new String("Found SN"));
+        
+        CloudCoin cc;
+        
+        
+        if (w.isEncrypted()) {
+            cc = AppCore.findCoinBySN(Config.DIR_FRACKED, sn);
+            if (cc != null) {
+                return;
+            }
+        } else {
+            cc = AppCore.findCoinBySN(Config.DIR_BANK, sn);
+        }
+        
+        if (cc == null) {
+            logger.debug(ltag, "Failed to find in the Main Folder. Searching in Fracked");
+            cc = AppCore.findCoinBySN(Config.DIR_FRACKED, sn);
+            if (cc == null) {
+                logger.error(ltag, "Failed to find coin");
+                return;
+            }
+        }
         
     }
     
@@ -626,4 +723,10 @@ public class ServantManager {
     public void resumeAll() {
         sr.resumeAll();
     }
+    
+    
+    public boolean isRAIDAOK() {
+        return sr.getServant("Echoer").updateRAIDAStatus();
+    }
+    
 }

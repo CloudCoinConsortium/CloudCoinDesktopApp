@@ -11,6 +11,8 @@ public class AuthenticatorResult {
     public static int STATUS_FINISHED = 2;
     public static int STATUS_ERROR = 3;
     public static int STATUS_CANCELLED = 4;
+    
+    public String errText;
 
     public AuthenticatorResult() {
         totalFilesProcessed = totalRAIDAProcessed = 0;
