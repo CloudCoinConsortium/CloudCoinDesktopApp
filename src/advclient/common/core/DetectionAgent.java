@@ -16,7 +16,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import java.security.cert.X509Certificate;
 
-class DetectionAgent {
+public class DetectionAgent {
 
     private GLogger logger;
     String ltag = "DetectionAgent";
@@ -46,6 +46,11 @@ class DetectionAgent {
         setDefaultFullUrl();
     }
 
+    
+    public void setReadTimeout(int timeout) {
+        this.readTimeout = timeout;
+    }
+    
     public void setExactFullUrl(String url) {
         this.fullURL = url;
     }

@@ -44,6 +44,8 @@ public class Config {
 
     public static int READ_TIMEOUT = 2000; // ms
     public static int CONNECTION_TIMEOUT = 2000; // ms
+    
+    public static int REQUEST_CHANGE_READ_TIMEOUT = 40000; // ms
 
     public static int MAX_ALLOWED_FAILED_RAIDAS = 3;
 
@@ -100,6 +102,7 @@ public class Config {
     public static String SENDER_DOMAIN = "teleportnow.cc";
 
     public static int RAIDANUM_TO_QUERY_BY_DEFAULT = 7;
+    public static int RAIDANUM_TO_QUERY_REQUEST_CHANGE = 18;
 
     public static int MAX_COMMON_LOG_LENGTH_MB = 128;
 
@@ -139,4 +142,10 @@ public class Config {
     final public static String PICK_ERROR_MSG = "PickError";
     
     final public static String DEFAULT_DIR_MARKER = ".default.wallet";
+    
+    final public static String CHANGE_SKY_DOMAIN = "change.skywallet.cc";
+    
+    
+    
+    
 }

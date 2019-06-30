@@ -5,6 +5,8 @@
  */
 package global.cloudcoin.ccbank.ServantManager;
 
+import advclient.ProgramState;
+import advclient.common.core.RequestChange;
 import global.cloudcoin.ccbank.Authenticator.Authenticator;
 import global.cloudcoin.ccbank.Backupper.Backupper;
 import global.cloudcoin.ccbank.Echoer.Echoer;
@@ -25,6 +27,7 @@ import global.cloudcoin.ccbank.core.AppCore;
 import global.cloudcoin.ccbank.core.CallbackInterface;
 import global.cloudcoin.ccbank.core.CloudCoin;
 import global.cloudcoin.ccbank.core.Config;
+import global.cloudcoin.ccbank.core.DNSSn;
 import global.cloudcoin.ccbank.core.GLogger;
 import global.cloudcoin.ccbank.core.RAIDA;
 import global.cloudcoin.ccbank.core.Servant;
@@ -344,6 +347,11 @@ public class ServantManager {
         r.launch(sn, sns, dstFolder, amount, cb);
     }
     
+    public void startSenderServiceForChange(int sn, int[] values, String memo, CallbackInterface cb) {
+        Sender s = (Sender) sr.getServant("Sender");
+	s.launch(sn, null, values, 0, memo, null, cb);
+    }
+    
     public int getRemoteSn(String dstWallet) {
         int sn;
         
@@ -479,16 +487,20 @@ public class ServantManager {
     }
     
     
-    public boolean makeChange(Wallet w, int amount, CallbackInterface cb) {
+    public boolean makeChange(Wallet w, int amount, int skySN, CallbackInterface cb) {
         int min5sn, min25sn, min100sn, min250sn;
+        makeChangeResult mcr = new makeChangeResult();
                 
         logger.debug(ltag, "Make Change");
       
         int sns[] = w.getSNs();
         
-        logger.debug(ltag, "Making change for " + w.getName() + " amount: " + amount);
+        logger.debug(ltag, "Making change for " + w.getName() + " amount: " + amount + " skySN: " + skySN);
         
         if (w.isSkyWallet()) {
+            mcr.errText = "Can't make change in SkyWallet";
+            if (cb != null)
+                cb.callback(mcr);
             logger.error(ltag, "Can't make change in SkyWallet");
             return false;
         }      
@@ -531,12 +543,11 @@ public class ServantManager {
             idx = 2;
         else 
             idx = 3;
-            
+               
         logger.debug(ltag, "idx = " + idx + " ds " + Arrays.toString(ds));
         
         int sn = 0;
-        int gidx = ds.length - 1;
-        while (gidx >= 0) {   
+        while (idx >= 0) {   
             for (int i = idx; i < ds.length; i++) {
                 if (ds[i] != 0) {
                     sn = ds[i];
@@ -544,19 +555,26 @@ public class ServantManager {
                 }
             }
             
-            logger.debug(ltag, "gidx " + gidx + " sn = " + sn);
+            logger.debug(ltag, "idx " + idx + " sn = " + sn);
             if (sn != 0)
                 break;
             
-            gidx--;
+            idx--;
         }
         
         if (sn == 0) {
+            mcr.errText = "Failed to find SN to change";
+            if (cb != null)
+                cb.callback(mcr);
             logger.error(ltag, "Failed to find SN to change");
             return false;
         }
 
-        cb.callback(new String("Breaking coin #" + sn));
+        if (cb != null) {
+            mcr.status = 0;
+            mcr.text = "Breaking coin #" + sn;
+            cb.callback(mcr);
+        }
         
         CloudCoin cc;
         
@@ -571,6 +589,9 @@ public class ServantManager {
             logger.debug(ltag, "Failed to find in the Main Folder. Searching in Fracked");
             cc = AppCore.findCoinBySN(Config.DIR_FRACKED, user, sn);
             if (cc == null) {
+                mcr.errText = "Failed to find the Coin";
+                if (cb != null)
+                    cb.callback(mcr);
                 logger.error(ltag, "Failed to find coin");
                 return false;
             }
@@ -581,23 +602,64 @@ public class ServantManager {
             
             String password = w.getPassword();
             if (password.isEmpty()) {
+                mcr.errText = "Empty password. Internal error";
+                if (cb != null)
+                    cb.callback(mcr);
                 logger.error(ltag, "Empty password. Internal error");
                 return false;      
             }
             
             Vaulter v = (Vaulter) sr.getServant("Vaulter");
-            v.unvault(password, 0, cc, new eVaulterChangeCb(cc, cb));
+            v.unvault(password, 0, cc, new eVaulterChangeCb(cc, skySN, cb));
             
             return true;
         }
         
-        return sendToChange(cc, cb);
+        return sendToChange(cc, skySN, cb);
     }
     
-    public boolean sendToChange(CloudCoin cc, CallbackInterface cb) {
-        if (cb != null)
-            cb.callback("Sending coin " + cc.sn + " to the SkyWallet");
+    public boolean sendToChange(CloudCoin cc, int skySN, CallbackInterface cb) {
+        makeChangeResult mcr = new makeChangeResult();
+        mcr.status = 1;
+        mcr.text = "Sending coin " + cc.sn + " to the SkyWallet";
+        mcr.progress = 0;
+        if (cb != null) {
+            cb.callback(mcr);
+        }
+               
+        logger.debug(ltag, "Sending to the Change.skywallet.cc " + cc.sn);
         
+        DNSSn d = new DNSSn(Config.CHANGE_SKY_DOMAIN, null, logger);
+        int sn = d.getSN();
+        if (sn < 0) {
+            logger.error(ltag, "Failed to query change service");
+            mcr.errText = "Failed to query " + Config.CHANGE_SKY_DOMAIN;
+            if (cb != null) {
+                cb.callback(mcr);
+            }
+       
+            return false;
+        }
+        
+        String memoUUID = AppCore.generateHex();
+        
+        logger.debug(ltag, "Generated hex " + memoUUID);
+        
+        int[] denominations = AppCore.getDenominations();
+        int[] values = new int[denominations.length];
+        for (int i = 0; i < denominations.length; i++) {
+            if (cc.getDenomination() == denominations[i]) {
+                values[i] = 1;
+                break;
+            }
+        }
+        
+        logger.debug(ltag, "values " + Arrays.toString(values));
+        
+        //logger.debug(ltag, "send sn " + sn + " dstWallet " + dstFolder);
+        //startSenderService(sn, dstFolder, amount, memo, remoteWalletName, cb);
+        
+        startSenderServiceForChange(sn, values, memoUUID, new eSenderChangeCb(cb, memoUUID, cc.getDenomination(), skySN));
         
         System.out.println("SEND11");
         
@@ -605,14 +667,99 @@ public class ServantManager {
         
     }
     
+    public void requestChange(CallbackInterface cb, String memoUUID, int denomination, int skySN) {
+        makeChangeResult mcr = new makeChangeResult();
+        mcr.status = 0;
+        mcr.text = "Requesting Change";
+        if (cb != null) {
+            cb.callback(mcr);
+        }
+        
+        logger.debug(ltag, "request change " + memoUUID + " d=" + denomination + " sky=" + skySN);
+        System.out.println("request change " + memoUUID + " d=" + denomination + " sky=" + skySN);
+        
+        RequestChange rc = new RequestChange(skySN, memoUUID, denomination, logger);
+        if (!rc.request(getSR())) {
+            mcr.errText = "Failed to query RequestChange service";
+            if (cb != null) {
+               cb.callback(mcr);
+            }
+            
+            return;
+        }
+        
+        mcr.text = "Downloading Change";
+        if (cb != null) {
+            cb.callback(mcr);
+        }
+       
+        //startReceiverService(skySN, sns, 0, 0, "", rcb);
+        
+    }
+    
+    class eSenderChangeCb implements CallbackInterface {
+        CallbackInterface cb;
+        makeChangeResult mcr;
+        String memoUUID;
+        int denomination;
+        int skySN;
+        
+        public eSenderChangeCb(CallbackInterface cb, String memoUUID, int denomination, int skySN) {
+            this.cb = cb;
+            this.memoUUID = memoUUID;
+            this.denomination = denomination;
+            this.skySN = skySN;
+            mcr = new makeChangeResult();
+        }
+        
+        public void callback(final Object result) {
+            final SenderResult sr = (SenderResult) result;
+            
+            logger.debug(ltag, "Sender (Change) finished: " + sr.status);
+            if (sr.status == SenderResult.STATUS_PROCESSING) {
+                mcr.status = 1;
+                mcr.progress = sr.totalRAIDAProcessed;
+                mcr.text = "Sending coin to SkyChange";
+                if (this.cb != null) {
+                    this.cb.callback(mcr);
+                }
+                return;
+            }
+            
+            
+            if (sr.status == SenderResult.STATUS_CANCELLED) {
+                mcr.errText = "Sender Cancelled";
+                if (this.cb != null) {
+                    this.cb.callback(mcr);
+                }
+                
+                return;
+            }
+      
+            if (sr.status == SenderResult.STATUS_ERROR || sr.amount != denomination) {
+                mcr.errText = "Failed to send coins to the Change Wallet. Check if they were valid";
+                if (this.cb != null) {
+                    this.cb.callback(mcr);
+                }
+		return;
+            }   
+            
+            requestChange(this.cb, memoUUID, denomination, skySN);
+                 
+        }
+        
+    }
+    
     class eVaulterChangeCb implements CallbackInterface {
         CallbackInterface mcb;
         CloudCoin cc;
+        int skySN;
         
         
-        public eVaulterChangeCb(CloudCoin cc, CallbackInterface mcb) {
+        public eVaulterChangeCb(CloudCoin cc, int skySN, CallbackInterface mcb) {
             this.mcb = mcb;
             this.cc = cc;
+            this.skySN = skySN;
         }
                  
         public void callback(final Object result) {
@@ -622,14 +769,17 @@ public class ServantManager {
             logger.debug(ltag, "ChangeVault finished with status " + vresult.status);
             
             if (vresult.status == VaulterResult.STATUS_ERROR) {
-                if (this.mcb != null)
-                    this.mcb.callback("Failed to decrypt coin");
+                if (this.mcb != null) {
+                    makeChangeResult mcr = new makeChangeResult();
+                    mcr.errText = "Failed to decrypt coin";
+                    this.mcb.callback(mcr);
+                }
                 
                 return;
             }
             
             if (vresult.status == VaulterResult.STATUS_FINISHED) {
-                sendToChange(cc, mcb);
+                sendToChange(cc, skySN, mcb);
             }
 
             
@@ -785,6 +935,16 @@ public class ServantManager {
     
     public boolean isRAIDAOK() {
         return sr.getServant("Echoer").updateRAIDAStatus();
+    }
+    
+    
+    public class makeChangeResult {
+        public int status;
+        
+        public String text;
+        public String errText = "";
+        
+        public int progress;
     }
     
 }

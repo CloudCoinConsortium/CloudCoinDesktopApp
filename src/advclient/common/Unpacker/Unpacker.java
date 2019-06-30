@@ -99,8 +99,6 @@ public class Unpacker extends Servant {
         String fileName, extension;
         int index;
         
-        
-
         File dirObj = new File(importFolder);
         for (File file: dirObj.listFiles()) {
             if (file.isDirectory())

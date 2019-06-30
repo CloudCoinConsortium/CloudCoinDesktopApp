@@ -11,6 +11,7 @@ import global.cloudcoin.ccbank.LossFixer.LossFixerResult;
 import global.cloudcoin.ccbank.Receiver.ReceiverResult;
 import global.cloudcoin.ccbank.Sender.SenderResult;
 import global.cloudcoin.ccbank.ServantManager.ServantManager;
+import global.cloudcoin.ccbank.ServantManager.ServantManager.makeChangeResult;
 import global.cloudcoin.ccbank.ShowCoins.ShowCoinsResult;
 import global.cloudcoin.ccbank.ShowEnvelopeCoins.ShowEnvelopeCoinsResult;
 import global.cloudcoin.ccbank.Unpacker.UnpackerResult;
@@ -218,9 +219,7 @@ public class AdvancedClient  {
         if (ps.currentWalletIdx <= 0)
             return;
         
-        Wallet w = wallets[ps.currentWalletIdx - 1];
-        
-     
+        Wallet w = wallets[ps.currentWalletIdx - 1];     
         int totalCnt = AppCore.getTotal(counters[Config.IDX_FOLDER_BANK]) +
 			AppCore.getTotal(counters[Config.IDX_FOLDER_FRACKED]) +
                         AppCore.getTotal(counters[Config.IDX_FOLDER_VAULT]);
@@ -1156,6 +1155,18 @@ public class AdvancedClient  {
 
     }
     
+    public int getSkyWalletSN() {
+        int skySN = 0;
+        for (int i = 0; i < wallets.length; i++) {
+            if (!wallets[i].isSkyWallet())
+                continue;
+        
+            skySN = wallets[i].getIDCoin().sn;
+        }
+        
+        return skySN;
+    }
+    
     public void showMakingChangeScreen() {
         JPanel subInnerCore = getModalJPanel("Request Change");
         maybeShowError(subInnerCore);
@@ -1204,9 +1215,27 @@ public class AdvancedClient  {
        
         subInnerCore.add(bp);  
         
+        pbar.setVisible(false);
+        int cnt = AppCore.getFilesCount(Config.DIR_DETECTED, ps.srcWallet.getName());
+        if (cnt != 0) {
+            ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+            ps.errText = getNonEmptyFolderError("Detected");
+            showScreen();
+            return;
+        }
+                
+        final int skySN = getSkyWalletSN();
+        if (skySN == 0) {
+            ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+            ps.errText = "Failed to get your SkyWallet ID";
+            showScreen();
+            return;
+        }
+
         Thread t = new Thread(new Runnable() {
-            public void run(){
-                pbar.setVisible(false);
+            public void run() {
+
+                
                 if (!ps.isEchoFinished) {
                     pbarText.setText("Checking RAIDA ...");
                     pbarText.repaint();
@@ -1231,27 +1260,33 @@ public class AdvancedClient  {
                 // <= 14680064 - 100
                 // <= 16777216 - 250
    
-                ps.srcWallet = new Wallet("ccc", "x", true, "z", wl);
-                ps.srcWallet.setPassword("qwerty");
-                int[] sss = {7391980,7391982};
-                ps.srcWallet.setSNs(sss);
-                ps.typedAmount = 21;
+                //ps.srcWallet = new Wallet("ccc", "x", true, "z", wl);
+                //ps.srcWallet.setPassword("qwerty");
+                //int[] sss = {7391980,7391982};
+                //ps.srcWallet.setSNs(sss);
+                //ps.typedAmount = 21;
                 sm.setActiveWalletObj(ps.srcWallet);
-                boolean rv = sm.makeChange(ps.srcWallet, ps.typedAmount, new CallbackInterface() {
+                boolean rv = sm.makeChange(ps.srcWallet, ps.typedAmount, skySN, new CallbackInterface() {
                     public void callback(Object o) {
-                        String text = (String) o;
-                        pbarText.setText(text);
+                        makeChangeResult mcr = (makeChangeResult) o;
+                        
+                        pbarText.setText(mcr.text);
+                        if (mcr.status == 1) {
+                            pbar.setVisible(true);
+                            pbar.setValue(mcr.progress);
+                        } else {
+                            pbar.setVisible(false);
+                        }
+                        
+                        if (!mcr.errText.isEmpty()) {
+                            ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                            ps.errText = mcr.errText;
+                            showScreen();
+                            return;
+                        }
                     }                   
                 });
-                
-                if (!rv) {
-                    ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
-                    ps.errText = "Failed to make change. Pless check the logs";
-                    showScreen();
-                    return;
-                }
-                
-                
+            
                 if (1==1)
                     return;
                 
@@ -3336,11 +3371,6 @@ public class AdvancedClient  {
                 }
             
                 
-                if (srcIdx == dstIdx) {
-                    ps.errText = "You can not transfer to the same wallet";
-                    showScreen();
-                    return;
-                }
                 
                 try {
                     ps.typedAmount = Integer.parseInt(amount.getText());
@@ -3451,6 +3481,12 @@ public class AdvancedClient  {
                     return;                    
                 } else {
                     dstIdx = idxs[dstIdx];
+                    if (srcIdx == dstIdx) {
+                        ps.errText = "You can not transfer to the same wallet";
+                        showScreen();
+                        return;
+                    }
+                                       
                     // Wallet
                     Wallet dstWallet = wallets[dstIdx];
                     if (dstWallet.isEncrypted()) {
@@ -6755,7 +6791,7 @@ public class AdvancedClient  {
             
             final Object fresult = result;
 	
-            AuthenticatorResult ar = (AuthenticatorResult) fresult;
+            final AuthenticatorResult ar = (AuthenticatorResult) fresult;
             if (ar.status == AuthenticatorResult.STATUS_ERROR) {
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {

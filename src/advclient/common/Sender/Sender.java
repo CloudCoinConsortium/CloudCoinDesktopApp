@@ -66,7 +66,7 @@ public class Sender extends Servant {
                 if (fdstFolder != null) {
                     doSendLocal(famount, fdstFolder);
                 } else {
-                    doSend(ftosn, null, famount, fenvelope);
+                    doSend(ftosn, fvalues, famount, fenvelope);
                 }
             }
         });
