@@ -44,11 +44,8 @@ public class AppCore {
 
     static private ExecutorService service;
 
-    static public String raidaErrText = "Cannot Connect to the RAIDA. "
-            + "Check that local routers are not blocking your connection.";
-   
-    
-    static public void createDirectory(String dirName) {
+
+   static public void createDirectory(String dirName) {
         String idPath;
 
         idPath = rootPath + File.separator + dirName;
@@ -707,7 +704,7 @@ public class AppCore {
         return cc;
     }
     
-    public static CloudCoin findCoinBySN(String dir, String user, int sn) {
+        public static CloudCoin findCoinBySN(String dir, String user, int sn) {
         String dirPath = AppCore.getUserDir(dir, user);
         logger.debug(ltag, "Looking for sn " + sn + " into dir: " + dirPath);
     
@@ -737,7 +734,6 @@ public class AppCore {
         
         return null;
     }
-    
     
     public static String getReceiptHtml(String hash, String user) {
         String receiptsFile = AppCore.getUserDir(Config.DIR_RECEIPTS, user);

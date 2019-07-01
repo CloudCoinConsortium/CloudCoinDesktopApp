@@ -29,7 +29,7 @@ public class RAIDA {
                 intLatencies = new int[TOTAL_RAIDA_COUNT];
                 totalLatencies = new int[TOTAL_RAIDA_COUNT];
 		for (int i = 0; i < TOTAL_RAIDA_COUNT; i++) {
-			agents[i] = new DetectionAgent(i, logger);
+			agents[i] = new DetectionAgent(i, Config.CONNECTION_TIMEOUT, logger);
 		}
 
 		this.logger = logger;

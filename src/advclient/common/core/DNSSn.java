@@ -121,7 +121,7 @@ public class DNSSn {
         sb.append(cc.getDenomination());
 
 
-        DetectionAgent da = new DetectionAgent(raidaNum, logger);        
+        DetectionAgent da = new DetectionAgent(raidaNum, Config.CONNECTION_TIMEOUT, logger);        
         String result = da.doRequest("/service/multi_get_ticket", sb.toString());
         if (result == null) {
             logger.error(ltag, "Failed to get tickets. Setting triad to failed");
@@ -155,7 +155,7 @@ public class DNSSn {
         
         String rq = "/ddns.php?sn=" + cc.sn + "&username=" + name + "&ticket=" + message + "&raidanumber=" + raidaNum;
 
-        DetectionAgent daFake = new DetectionAgent(RAIDA.TOTAL_RAIDA_CNT * 10000, logger);
+        DetectionAgent daFake = new DetectionAgent(RAIDA.TOTAL_RAIDA_CNT * 10000, Config.CONNECTION_TIMEOUT, logger);
         daFake.setExactFullUrl(Config.DDNSSN_SERVER);
         result = daFake.doRequest(rq, null);
         if (result == null) {

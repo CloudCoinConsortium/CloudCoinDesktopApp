@@ -946,5 +946,5 @@ public class ServantManager {
         
         public int progress;
     }
-    
+
 }

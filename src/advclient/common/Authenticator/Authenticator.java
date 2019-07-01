@@ -52,7 +52,6 @@ public class Authenticator extends Servant {
         aResult.totalRAIDAProcessed = globalResult.totalRAIDAProcessed;
         aResult.totalFiles = globalResult.totalFiles;
         aResult.status = globalResult.status;
-        aResult.errText = globalResult.errText;
     }
 
     private void setCoinStatus(ArrayList<CloudCoin> ccs, int idx, int status) {
@@ -223,12 +222,14 @@ public class Authenticator extends Servant {
         }
     }
 
+    public void sendError() {
+        globalResult.status = AuthenticatorResult.STATUS_ERROR;
+        cb.callback(globalResult);
+    }
+
     public void doAuthencticate() {
-        if (!updateRAIDAStatus()) {           
-            globalResult.status = AuthenticatorResult.STATUS_ERROR;
-            globalResult.errText = AppCore.raidaErrText;
-            if (cb != null)
-                cb.callback(globalResult);
+        if (!updateRAIDAStatus()) {
+            sendError();
             logger.error(ltag, "Can't proceed. RAIDA is unavailable");
             return;
         }
