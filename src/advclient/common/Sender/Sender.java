@@ -52,11 +52,8 @@ public class Sender extends Servant {
         csb = new StringBuilder();
         receiptId = AppCore.generateHex();
         globalResult.receiptId = receiptId;
-           
-
-        
-        av = fv = 0;
-        
+     
+        av = fv = 0;        
         a = c = e = f = 0;
         launchThread(new Runnable() {
             @Override
