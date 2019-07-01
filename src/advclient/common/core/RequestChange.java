@@ -46,7 +46,7 @@ public class RequestChange {
 
         logger.debug(ltag, "Quety raida " + raidaNum + ": " + sb.toString());
         
-        DetectionAgent da = new DetectionAgent(raidaNum, logger);  
+        DetectionAgent da = new DetectionAgent(raidaNum, Config.CONNECTION_TIMEOUT, logger);  
         da.setReadTimeout(Config.REQUEST_CHANGE_READ_TIMEOUT);
         String result = da.doRequest("/service/request_change?" + sb.toString(), null);
         if (result == null) {

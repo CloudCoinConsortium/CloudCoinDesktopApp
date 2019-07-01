@@ -20,6 +20,7 @@ import global.cloudcoin.ccbank.Sender.Sender;
 import global.cloudcoin.ccbank.Sender.SenderResult;
 import global.cloudcoin.ccbank.ShowCoins.ShowCoins;
 import global.cloudcoin.ccbank.ShowEnvelopeCoins.ShowEnvelopeCoins;
+import global.cloudcoin.ccbank.ShowEnvelopeCoins.ShowEnvelopeCoinsResult;
 import global.cloudcoin.ccbank.Unpacker.Unpacker;
 import global.cloudcoin.ccbank.Vaulter.Vaulter;
 import global.cloudcoin.ccbank.Vaulter.VaulterResult;
@@ -38,6 +39,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
 import org.json.JSONException;
@@ -692,9 +694,50 @@ public class ServantManager {
         if (cb != null) {
             cb.callback(mcr);
         }
-       
+    
+        startShowSkyCoinsService(new eShowSkyCoinsCb(memoUUID, cb), skySN);
+        
         //startReceiverService(skySN, sns, 0, 0, "", rcb);
         
+    }
+    
+    class eShowSkyCoinsCb implements CallbackInterface {
+        
+        String hash;
+        CallbackInterface cb;
+        
+        public eShowSkyCoinsCb(String hash, CallbackInterface cb) {
+            this.hash = hash;
+            this.cb = cb;
+        }
+        
+        public void callback(final Object result) {
+            ShowEnvelopeCoinsResult sc = (ShowEnvelopeCoinsResult) result;
+            
+            
+            
+            logger.debug(ltag, "ShowSky finished: " + sc.status);
+            Enumeration<String> enumeration = sc.envelopes.keys();
+            while (enumeration.hasMoreElements()) {
+                String key = enumeration.nextElement();
+                
+                
+                logger.debug(ltag, "env " + key);
+                String[] data = sc.envelopes.get(key);
+                if (data == null)
+                    continue;
+                
+                
+                
+                
+            }
+            /*
+            
+            for (int i = 0; i < sc.envelopes.; i++)
+                        ps.envelopes = er.envelopes;
+            setSNs(er.coins);
+            showCoinsDone(er.counters);*/
+        }
     }
     
     class eSenderChangeCb implements CallbackInterface {

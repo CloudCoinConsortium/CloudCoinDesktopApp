@@ -1257,7 +1257,7 @@ public class AdvancedClient  {
 
         Thread t = new Thread(new Runnable() {
             public void run() {
-                if (!ps.isEchoFinished) {
+                if (!ps.isEchoFinished || !ps.isShowCoinsFinished) {
                     pbarText.setText("Checking RAIDA ...");
                     pbarText.repaint();
                 }
@@ -1266,7 +1266,7 @@ public class AdvancedClient  {
                     Thread.sleep(200);
                 } catch (InterruptedException e) {}
                 
-                while (!ps.isEchoFinished) {
+                while (!ps.isEchoFinished || !ps.isShowCoinsFinished) {
                     try {
                         Thread.sleep(300);
                     } catch (InterruptedException e) {}
