@@ -1535,6 +1535,13 @@ public class AdvancedClient  {
 
                 }
                 
+                if (!sm.isRAIDAOK()) {
+                    pbarText.setText("RAIDA is not ready. Import stopped");
+                    pbarText.repaint();
+                    ps.isEchoFinished = false;
+                    return;
+                }
+                
                 ps.dstWallet.setPassword(ps.typedPassword);
                 sm.setActiveWalletObj(ps.dstWallet);
                 
@@ -3491,7 +3498,7 @@ public class AdvancedClient  {
                     ps.sendType = ProgramState.SEND_TYPE_FOLDER;    
                     
                     setActiveWallet(ps.srcWallet);
-                    ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
+                    ps.currentScreen = ProgramState.SCREEN_CONFIRM_TRANSFER;
                     showScreen();
                     
                     return;                    
@@ -5267,12 +5274,13 @@ public class AdvancedClient  {
         AppUI.setBoxLayout(ct, true);
         AppUI.noOpaque(ct);
         rightPanel.add(ct);
-       wl.debug(ltag, "SCREEN " + ps.currentScreen + ": " + ps.toString());
-       Rectangle rsize = rightPanel.getBounds();
         
-       int Stw =  rsize.width;
+        wl.debug(ltag, "SCREEN " + ps.currentScreen + ": " + ps.toString());
+        Rectangle rsize = rightPanel.getBounds();
+        
+        int Stw =  rsize.width;
 
-       int Sth = rsize.height;
+        int Sth = rsize.height;
 
         
         JLabel ltitle = AppUI.getTitle(w.getName() + " - " + w.getTotal() + " CC");   
@@ -7000,7 +7008,7 @@ public class AdvancedClient  {
                                 showScreen();
                                 return;
 
-                                ps.errText = getPickError(ps.srcWallet);
+                                //ps.errText = getPickError(ps.srcWallet);
                             } else {
                                 ps.errText = er.errText;
                             }

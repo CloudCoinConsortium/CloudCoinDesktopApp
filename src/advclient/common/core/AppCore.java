@@ -43,9 +43,11 @@ public class AppCore {
     static private GLogger logger;
 
     static private ExecutorService service;
+    
+    static public String raidaErrText = "Cannot Connect to the RAIDA. "
+            + "Check that local routers are not blocking your connection.";
 
-
-   static public void createDirectory(String dirName) {
+    static public void createDirectory(String dirName) {
         String idPath;
 
         idPath = rootPath + File.separator + dirName;
