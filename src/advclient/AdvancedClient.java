@@ -796,14 +796,13 @@ public class AdvancedClient  {
     
     public void showScreen() {
         wl.debug(ltag, "SCREEN " + ps.currentScreen + ": " + ps.toString());
-       Rectangle iop = mainFrame.getBounds();
+        Rectangle iop = mainFrame.getBounds();
         
-       int Xtw =  iop.width;
-       tw = Xtw;
-       int Xth = iop.height;
-       th = Xth;
+        int Xtw =  iop.width;
+        tw = Xtw;
+        int Xth = iop.height;
+        th = Xth;
       
-       System.out.print(Xtw);
         clear();
 /*
         showMakingChangeScreen();
@@ -6823,7 +6822,12 @@ public class AdvancedClient  {
             if (ar.status == AuthenticatorResult.STATUS_ERROR) {
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {
-                        ps.errText = "Failed to Authencticate Coins";
+                        if (!ar.errText.isEmpty())
+                            ps.errText = "<html><div style='text-align:center; width: 520px'>" + ar.errText + "</div></html>";
+                        else
+                            ps.errText = "Failed to Authencticate Coins";
+
+                        //ps.errText = "Failed to Authencticate Coins";
                         ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
                         showScreen();
                     }
@@ -6992,6 +6996,10 @@ public class AdvancedClient  {
                         ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
                         if (!er.errText.isEmpty()) {
                             if (er.errText.equals(Config.PICK_ERROR_MSG)) {
+                                ps.currentScreen = ProgramState.SCREEN_MAKING_CHANGE;
+                                showScreen();
+                                return;
+
                                 ps.errText = getPickError(ps.srcWallet);
                             } else {
                                 ps.errText = er.errText;
@@ -7021,7 +7029,9 @@ public class AdvancedClient  {
                 sm.getActiveWallet().appendTransaction(ps.typedMemo, er.totalExported * -1, er.receiptId);
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {
-                        ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                        ps.isUpdatedWallets = false;
+                        ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
+                        //ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
                         showScreen();
                     }
                 });
@@ -7207,7 +7217,8 @@ public class AdvancedClient  {
                             if (sr.errText.equals(Config.PICK_ERROR_MSG)) {
                                 ps.errText = getPickError(ps.srcWallet);
                             } else {
-                                ps.errText = sr.errText;
+                                ps.errText = "<html><div style='text-align:center; width: 520px'>" + sr.errText + "</div></html>";
+                                //ps.errText = sr.errText;
                             }
                         } else {
                             ps.errText = "Error occurred. Please check the logs";
@@ -7289,7 +7300,8 @@ public class AdvancedClient  {
                     public void run() {
                         ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
                         if (!sr.errText.isEmpty())
-                            ps.errText = sr.errText;
+                            ps.errText = "<html><div style='text-align:center; width: 520px'>" + sr.errText + "</div>";
+                            //ps.errText = sr.errText;
                         else  
                             ps.errText = "Error occurred. Please check the logs";
                         
@@ -7371,7 +7383,8 @@ public class AdvancedClient  {
                     public void run() {
                         ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
                         if (!rr.errText.isEmpty())
-                            ps.errText = rr.errText;
+                            //ps.errText = rr.errText;
+                            ps.errText = "<html><div style='text-align:center; width: 520px'>" + rr.errText + "</div>";
                         else  
                             ps.errText = "Error occurred. Please check the logs";
                         
