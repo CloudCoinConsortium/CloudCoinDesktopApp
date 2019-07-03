@@ -113,7 +113,7 @@ public class ProgramState {
     
     boolean needBackup;
     
-    public Hashtable<String, String[]> envelopes, cenvelopes;
+    public Hashtable<String, String[]> cenvelopes;
     
     String domain;
     
@@ -174,7 +174,6 @@ public class ProgramState {
         
         needBackup = false;
         
-        envelopes = null;
         cenvelopes = null;
         
         statTotalFracked = statTotalFixed = statFailedToFix = 0;

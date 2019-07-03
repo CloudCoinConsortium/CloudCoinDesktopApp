@@ -6,6 +6,7 @@
 package global.cloudcoin.ccbank.core;
 
 import java.io.File;
+import java.util.Hashtable;
 
 
 /**
@@ -27,6 +28,7 @@ public class Wallet {
     String passwordHash;
     int[] sns;
     int[][] counters;
+    public Hashtable<String, String[]> envelopes;
     
     public Wallet(String name, String email, boolean isEncrypted, String password, GLogger logger) {
         this.name = name;
@@ -41,6 +43,15 @@ public class Wallet {
         logger.debug(ltag, "wallet " + name + " e=" + email + " is="+isEncrypted+ " p="+password);
         lsep = System.getProperty("line.separator");
     }
+    
+    public void setEnvelopes(Hashtable<String, String[]> envelopes) {
+        this.envelopes = envelopes;
+    }
+    
+    public Hashtable<String, String[]> getEnvelopes() {
+        return this.envelopes;
+    }
+    
     
     public boolean isDefaultWallet() {
         return name.equals(AppCore.getDefaultWalletName());

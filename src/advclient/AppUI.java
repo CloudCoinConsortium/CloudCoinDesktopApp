@@ -656,7 +656,7 @@ public class AppUI {
         else
             AppUI.setFont(l, fontSize);
         
-        AppUI.setColor(l, AppUI.getColor0());
+        AppUI.setColor(l, AppUI.getColor1());
         AppUI.underLine(l);
         AppUI.setHandCursor(l);
         l.addMouseListener(new MouseAdapter() {

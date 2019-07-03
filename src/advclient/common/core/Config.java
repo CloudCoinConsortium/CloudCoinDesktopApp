@@ -88,7 +88,7 @@ public class Config {
     public static String DEFAULT_TAG = "CC";
     public static String BACKUP_TAG = "BACKUP";
 
-    public static int DEFAULT_MAX_COINS_MULTIDETECT = 400;
+    public static int DEFAULT_MAX_COINS_MULTIDETECT = 4000;
 
 
     public static int PASS_THRESHOLD = 20;

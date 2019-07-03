@@ -695,48 +695,75 @@ public class ServantManager {
             cb.callback(mcr);
         }
     
-        startShowSkyCoinsService(new eShowSkyCoinsCb(memoUUID, cb), skySN);
+        startShowSkyCoinsService(new eShowSkyCoinsCb(memoUUID, denomination, skySN, cb), skySN);
         
         //startReceiverService(skySN, sns, 0, 0, "", rcb);
         
     }
     
+    public void receiveFromSkyWallet(CallbackInterface cb, ArrayList<Integer> coins, int skySN) {
+        makeChangeResult mcr = new makeChangeResult();
+        mcr.status = 0;
+        mcr.text = "Receiving change";
+        if (cb != null) {
+            cb.callback(mcr);
+        }
+        
+        logger.debug(ltag, "Receive from skywallet: " + skySN);
+    }
+    
+    
     class eShowSkyCoinsCb implements CallbackInterface {
         
         String hash;
         CallbackInterface cb;
+        int denomination;
+        makeChangeResult mcr;
+        int skySN;
         
-        public eShowSkyCoinsCb(String hash, CallbackInterface cb) {
+        public eShowSkyCoinsCb(String hash, int denomination, int skySN, CallbackInterface cb) {
             this.hash = hash;
             this.cb = cb;
+            this.denomination = denomination;
+            this.skySN = skySN;
+            mcr = new makeChangeResult();
         }
         
         public void callback(final Object result) {
             ShowEnvelopeCoinsResult sc = (ShowEnvelopeCoinsResult) result;
+
+
+            ArrayList<Integer> coins = new ArrayList<Integer>();
             
-            
-            
-            logger.debug(ltag, "ShowSky finished: " + sc.status);
-            Enumeration<String> enumeration = sc.envelopes.keys();
-            while (enumeration.hasMoreElements()) {
-                String key = enumeration.nextElement();
-                
-                
-                logger.debug(ltag, "env " + key);
-                String[] data = sc.envelopes.get(key);
-                if (data == null)
-                    continue;
-                
-                
-                
-                
+            logger.debug(ltag, "ShowSky finished: " + sc.status + " coins: " + sc.coins.length);
+            for (int i = 0; i < sc.tags.length; i++) {
+                if (sc.tags[i].equals(hash)) {
+                    logger.debug(ltag, "Our coin: " + sc.coins[i]);
+                    coins.add(sc.coins[i]);
+                }
             }
-            /*
             
-            for (int i = 0; i < sc.envelopes.; i++)
-                        ps.envelopes = er.envelopes;
-            setSNs(er.coins);
-            showCoinsDone(er.counters);*/
+            int total = 0;
+            for (int sn : coins) {
+                CloudCoin cc = new CloudCoin(Config.DEFAULT_NN, sn);
+                
+                logger.debug(ltag, "sn: " + sn + " d: " + cc.getDenomination());
+                
+                total += cc.getDenomination();
+            }
+            
+            
+            if (total != denomination) {
+                logger.error(ltag, "Amount mismatch");
+                mcr.errText = "Failed to find coins in your SkyWallet. We found only " + total;
+                if (this.cb != null) {
+                    this.cb.callback(mcr);
+                }
+                
+                return;
+            }
+       
+            receiveFromSkyWallet(this.cb, coins, skySN);
         }
     }
     

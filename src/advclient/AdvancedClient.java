@@ -127,6 +127,15 @@ public class AdvancedClient  {
     }
        
     
+    public void setEnvelopes(Hashtable<String, String[]> envelopes) {
+        if (ps.currentWalletIdx <= 0)
+            return;
+        
+        Wallet w = wallets[ps.currentWalletIdx - 1];
+        
+        w.setEnvelopes(envelopes);
+    }
+    
     public void setSNs(int[] sns) {
         if (ps.currentWalletIdx <= 0)
             return;
@@ -3188,7 +3197,7 @@ public class AdvancedClient  {
         // Remote User
         c.gridx = GridBagConstraints.RELATIVE;
         c.gridy = y;   
-        final JLabel rwText = new JLabel("To Sky Vault");
+        final JLabel rwText = new JLabel("To Sky Wallet");
         gridbag.setConstraints(rwText, c);
         AppUI.setCommonFont(rwText);
         oct.add(rwText);
@@ -3451,7 +3460,7 @@ public class AdvancedClient  {
                     }
                     
                     if (ps.srcWallet.isSkyWallet()) {
-                        ps.errText = "Transfer from Sky Vault to Remote Vault is not supported";
+                        ps.errText = "Transfer from Sky Wallet to Remote Wallet is not supported";
                         showScreen();
                         return;
                     }
@@ -3468,7 +3477,7 @@ public class AdvancedClient  {
                     
                     DNSSn d = new DNSSn(ps.typedRemoteWallet, null, wl);
                     if (!d.recordExists()) {
-                        ps.errText = "Sky Vault " + ps.typedRemoteWallet + " does not exist";
+                        ps.errText = "Sky Wallet " + ps.typedRemoteWallet + " does not exist";
                         showScreen();
                         return;
                     }         
@@ -3487,7 +3496,7 @@ public class AdvancedClient  {
                     }
                     
                     if (ps.srcWallet.isSkyWallet()) {
-                        ps.errText = "Transfer from Sky Vault to Local Folder is not supported";
+                        ps.errText = "Transfer from Sky Wallet to Local Folder is not supported";
                         showScreen();
                         return;
                     }
@@ -3641,7 +3650,7 @@ public class AdvancedClient  {
         }
         
         options[j++] = "- FileSystem";
-        options[j++] = "- Add Sky Vault";
+        options[j++] = "- Add Sky Wallet";
       
         final RoundedCornerComboBox cbox = new RoundedCornerComboBox(AppUI.getColor2(), "Select Source", options);
         gridbag.setConstraints(cbox.getComboBox(), c);
@@ -4202,6 +4211,23 @@ public class AdvancedClient  {
             
             sl = new JLabel(AppCore.getRootUserDir(wallets[i].getName()));
             AppUI.setFont(sl, 18);
+            
+            final String fdir = AppCore.getRootUserDir(wallets[i].getName());
+            sl = AppUI.getHyperLink(fdir, "javascript:void(0)", 20);
+            sl.addMouseListener(new MouseAdapter() {
+                public void mouseReleased(MouseEvent e) {
+                    if (!Desktop.isDesktopSupported())
+                        return;
+                    try {
+                        Desktop.getDesktop().open(new File(fdir));
+                    } catch (IOException ie) {
+                        wl.error(ltag, "Failed to open browser: " + ie.getMessage());
+                    }
+                }
+            });
+
+            
+            
             //only tested on windows
 //            Desktop desktop = Desktop.getDesktop();
 //            File dirToOpen = null;
@@ -4279,7 +4305,7 @@ public class AdvancedClient  {
          
         int topMargin = 0;
         if (tsw != 0) {
-            JLabel sl = new JLabel("Your Sky Vaults:");
+            JLabel sl = new JLabel("Your Sky Wallets:");
             AppUI.setFont(sl, 22);
             gridbag.setConstraints(sl, c); 
             gct.add(sl);
@@ -5335,6 +5361,17 @@ public class AdvancedClient  {
         
         // File saver
         if (ps.sendType == ProgramState.SEND_TYPE_FOLDER) {
+             if (Desktop.isDesktopSupported()) {
+                try {
+                    Desktop.getDesktop().open(new File(ps.chosenFile));
+                } catch (IOException e) {
+                    wl.error(ltag, "Failed to open browser: " + e.getMessage());
+                }
+            }
+        }
+        
+        /*
+        if (ps.sendType == ProgramState.SEND_TYPE_FOLDER) {
             Thread t = new Thread(new Runnable() {
                 public void run(){
                     //UIManager.put("FileChooser.readOnly", Boolean.TRUE);  
@@ -5358,6 +5395,7 @@ public class AdvancedClient  {
         
             t.start();  
         }
+        */
         
         // Create transactions
         final String[][] trs;
@@ -5365,9 +5403,10 @@ public class AdvancedClient  {
         String[] headers;
         
         if (isSky) {
+            Hashtable<String, String[]> envelopes = sm.getActiveWallet().getEnvelopes();
             trLabel = new JLabel("Wallet Info");
-            if (ps.envelopes == null || ps.envelopes.size() == 0) {
-                trLabel = new JLabel("No transactions");
+            if (envelopes == null || envelopes.size() == 0) {
+                trLabel = new JLabel("No Envelopes");
                 AppUI.setSemiBoldFont(trLabel, 20);
                 AppUI.alignCenter(trLabel);
                 ct.add(trLabel);
@@ -5375,13 +5414,13 @@ public class AdvancedClient  {
             }
  
             
-            Enumeration<String> enumeration = ps.envelopes.keys();
+            Enumeration<String> enumeration = envelopes.keys();
 
-            trs = new String[ps.envelopes.size()][];
+            trs = new String[envelopes.size()][];
             int i = 0;
             while (enumeration.hasMoreElements()) {
                 String key = enumeration.nextElement();
-                String[] data = ps.envelopes.get(key);
+                String[] data = envelopes.get(key);
 
                 trs[i] = new String[4];
                 trs[i][0] = data[0];
@@ -5712,7 +5751,7 @@ public class AdvancedClient  {
         chooser.setFileFilter(filter);
         
         
-        JPanel subInnerCore = getModalJPanel("Create Sky Vault");
+        JPanel subInnerCore = getModalJPanel("Create Sky Wallet");
         maybeShowError(subInnerCore);
       
         AppUI.hr(subInnerCore, 4);
@@ -6070,7 +6109,7 @@ public class AdvancedClient  {
         gridbag.setConstraints(rb0.getRadioButton(), c);
         ct.add(rb0.getRadioButton());
         rb0.attachToGroup(passwordGroup);
-        rb0.select();
+        
         
         MyRadioButton rb1 = new MyRadioButton();
         c.gridx = GridBagConstraints.RELATIVE;;
@@ -6078,6 +6117,7 @@ public class AdvancedClient  {
         gridbag.setConstraints(rb1.getRadioButton(), c);
         ct.add(rb1.getRadioButton());
         rb1.attachToGroup(passwordGroup);
+        rb1.select();
       
         // Next Y
         x = new JLabel("Enable Coin Recovery by Email");
@@ -6094,7 +6134,7 @@ public class AdvancedClient  {
         gridbag.setConstraints(rb2.getRadioButton(), c);
         ct.add(rb2.getRadioButton());
         rb2.attachToGroup(recoveryGroup);
-        rb2.select();
+        
         
         MyRadioButton rb3 = new MyRadioButton();
         c.gridx = GridBagConstraints.RELATIVE;;
@@ -6102,6 +6142,7 @@ public class AdvancedClient  {
         gridbag.setConstraints(rb3.getRadioButton(), c);
         ct.add(rb3.getRadioButton());
         rb3.attachToGroup(recoveryGroup);
+        rb3.select();
               
         // Buttons
         final MyRadioButton frb0 = rb0;
@@ -6292,8 +6333,8 @@ public class AdvancedClient  {
         // List wallets
         wallets = sm.getWallets();
         for (int i = 0; i < wallets.length; i++) {
-            if (wallets[i].isSkyWallet())
-                continue;
+        //    if (wallets[i].isSkyWallet())
+        //        continue;
             
             walletWidget = getWallet(wallets[i], 0);
             wpanel.add(walletWidget);
@@ -6302,7 +6343,7 @@ public class AdvancedClient  {
         // "Add" Button
         wpanel.add(getWallet(null, TYPE_ADD_BUTTON));
         
-        // "Add Sky Vault" Button
+        // "Add Sky Wallet" Button
         if (ps.defaultWalletCreated)
             wpanel.add(getWallet(null, TYPE_ADD_SKY));
  
@@ -6386,7 +6427,7 @@ public class AdvancedClient  {
             if (type == TYPE_ADD_BUTTON)
                 name = "Add Wallet";
             else if (type == TYPE_ADD_SKY)
-                name = "Add Sky Vault";
+                name = "Add Sky Wallet";
             else
                 name = "";
         } else {
@@ -7333,7 +7374,7 @@ public class AdvancedClient  {
 	public void callback(Object result) {
             ShowEnvelopeCoinsResult er = (ShowEnvelopeCoinsResult) result;
  
-            ps.envelopes = er.envelopes;
+            setEnvelopes(er.envelopes);
             setSNs(er.coins);
             showCoinsDone(er.counters);
         }

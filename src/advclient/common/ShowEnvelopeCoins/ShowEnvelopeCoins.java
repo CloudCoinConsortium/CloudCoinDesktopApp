@@ -37,6 +37,7 @@ public class ShowEnvelopeCoins extends Servant {
 
         result = new ShowEnvelopeCoinsResult();
         result.coins = new int[0];
+        result.tags = new String[0];
         result.envelopes = new Hashtable<String, String[]>();
         result.counters = new int[Config.IDX_FOLDER_LAST][5];
         
@@ -119,6 +120,7 @@ public class ShowEnvelopeCoins extends Servant {
         logger.debug(ltag, "Returned length " + o.length);
         
         result.coins = new int[o.length];
+        result.tags = new String[o.length];
         
         String key;
         ShowEnvelopeCoinsResponse[] er;
@@ -155,13 +157,14 @@ public class ShowEnvelopeCoins extends Servant {
             }    
             
             result.coins[j] = rsn;
+            result.tags[j] = tag;
             key = ts + "." + tag;
             
             String[] coinData = new String[3];
             coinData[0] = tag;
             coinData[1] = "" + rcc.getDenomination();
             coinData[2] = AppCore.getDate("" + ts);
-            
+
             if (!result.envelopes.containsKey(key)) {
                 result.envelopes.put(key, coinData);
             } else {

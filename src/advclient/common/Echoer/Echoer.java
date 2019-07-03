@@ -109,7 +109,7 @@ public class Echoer extends Servant {
             }
         }
 
-        if (cntErr > Config.MAX_ALLOWED_FAILED_RAIDAS) {
+        if (cntErr == RAIDA.TOTAL_RAIDA_COUNT) {
             logger.debug(ltag, "Failed: " + cntErr);
 
             return false;
