@@ -137,6 +137,8 @@ public class ProgramState {
     
     String receiverReceiptId;
     
+    boolean triedToChange;
+    
     public ProgramState() {
         currentScreen = SCREEN_AGREEMENT;
         cwalletRecoveryRequested = cwalletPasswordRequested = false;
@@ -198,6 +200,8 @@ public class ProgramState {
         duplicates = new ArrayList<CloudCoin>();
         
         receiverReceiptId = "";
+        
+        triedToChange = false;
         
     }
  

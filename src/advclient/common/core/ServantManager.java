@@ -13,9 +13,13 @@ import global.cloudcoin.ccbank.Echoer.Echoer;
 import global.cloudcoin.ccbank.Eraser.Eraser;
 import global.cloudcoin.ccbank.Exporter.Exporter;
 import global.cloudcoin.ccbank.FrackFixer.FrackFixer;
+import global.cloudcoin.ccbank.FrackFixer.FrackFixerResult;
 import global.cloudcoin.ccbank.Grader.Grader;
+import global.cloudcoin.ccbank.Grader.GraderResult;
 import global.cloudcoin.ccbank.LossFixer.LossFixer;
+import global.cloudcoin.ccbank.LossFixer.LossFixerResult;
 import global.cloudcoin.ccbank.Receiver.Receiver;
+import global.cloudcoin.ccbank.Receiver.ReceiverResult;
 import global.cloudcoin.ccbank.Sender.Sender;
 import global.cloudcoin.ccbank.Sender.SenderResult;
 import global.cloudcoin.ccbank.ShowCoins.ShowCoins;
@@ -612,15 +616,15 @@ public class ServantManager {
             }
             
             Vaulter v = (Vaulter) sr.getServant("Vaulter");
-            v.unvault(password, 0, cc, new eVaulterChangeCb(cc, skySN, cb));
+            v.unvault(password, 0, cc, new eVaulterChangeCb(cc, w, skySN, cb));
             
             return true;
         }
         
-        return sendToChange(cc, skySN, cb);
+        return sendToChange(cc, w, skySN, cb);
     }
     
-    public boolean sendToChange(CloudCoin cc, int skySN, CallbackInterface cb) {
+    public boolean sendToChange(CloudCoin cc, Wallet w, int skySN, CallbackInterface cb) {
         makeChangeResult mcr = new makeChangeResult();
         mcr.status = 1;
         mcr.text = "Sending coin " + cc.sn + " to the SkyWallet";
@@ -661,15 +665,14 @@ public class ServantManager {
         //logger.debug(ltag, "send sn " + sn + " dstWallet " + dstFolder);
         //startSenderService(sn, dstFolder, amount, memo, remoteWalletName, cb);
         
-        startSenderServiceForChange(sn, values, memoUUID, new eSenderChangeCb(cb, memoUUID, cc.getDenomination(), skySN));
-        
-        System.out.println("SEND11");
+        startSenderServiceForChange(sn, values, memoUUID, new eSenderChangeCb(cb, w, memoUUID, cc.getDenomination(), skySN));
+
         
         return true;
         
     }
     
-    public void requestChange(CallbackInterface cb, String memoUUID, int denomination, int skySN) {
+    public void requestChange(CallbackInterface cb, Wallet w, String memoUUID, int denomination, int skySN) {
         makeChangeResult mcr = new makeChangeResult();
         mcr.status = 0;
         mcr.text = "Requesting Change";
@@ -695,13 +698,13 @@ public class ServantManager {
             cb.callback(mcr);
         }
     
-        startShowSkyCoinsService(new eShowSkyCoinsCb(memoUUID, denomination, skySN, cb), skySN);
+        startShowSkyCoinsService(new eShowSkyCoinsCb(memoUUID, w, denomination, skySN, cb), skySN);
         
         //startReceiverService(skySN, sns, 0, 0, "", rcb);
         
     }
     
-    public void receiveFromSkyWallet(CallbackInterface cb, ArrayList<Integer> coins, int skySN) {
+    public void receiveFromSkyWallet(CallbackInterface cb, Wallet w, ArrayList<Integer> coins, int total, int skySN) {
         makeChangeResult mcr = new makeChangeResult();
         mcr.status = 0;
         mcr.text = "Receiving change";
@@ -709,8 +712,159 @@ public class ServantManager {
             cb.callback(mcr);
         }
         
-        logger.debug(ltag, "Receive from skywallet: " + skySN);
+        if (coins.size() == 0) {
+            logger.error(ltag, "Size is zero");
+            mcr.errText = "No coins received from your wallet";
+            if (cb != null) {
+                cb.callback(mcr);
+            }
+            return;
+        }
+        
+        logger.debug(ltag, "Receive from Skywallet: " + skySN + " to " + w.getName());
+        
+        //sr.getServant("Receiver").changeUser(w.getName());
+        
+        int[] sns = new int[coins.size()];
+        int i = 0;
+        
+        for (int sn : coins) {
+            sns[i] = sn;
+            i++;
+        }
+        
+        startReceiverService(skySN, sns, null, total, "Receive change", new eReceiverChangeCb(cb, w));
+        //public void startReceiverService(int sn, int sns[], 
+          //  String dstFolder, int amount, String memo, CallbackInterface cb) {
     }
+    
+    class eReceiverChangeCb implements CallbackInterface {
+        CallbackInterface cb;
+        makeChangeResult mcr;
+        Wallet w;
+
+        
+        public eReceiverChangeCb(CallbackInterface cb, Wallet w) {
+            this.cb = cb;
+            this.w = w;
+            mcr = new makeChangeResult();
+            
+        }
+        public void callback(final Object result) {
+            ReceiverResult rr = (ReceiverResult) result;
+            
+            logger.debug(ltag, "Change Receiver finished: " + rr.status);
+            if (rr.status == ReceiverResult.STATUS_PROCESSING) {
+                mcr.status = 1;
+                mcr.progress = rr.totalRAIDAProcessed;
+                mcr.text = "Receiving change from the SkyWallet";
+                if (this.cb != null) {
+                    this.cb.callback(mcr);
+                }
+                return;
+            }
+            
+            if (rr.status == ReceiverResult.STATUS_CANCELLED) {
+                mcr.errText = "Receiver Cancelled";
+                if (this.cb != null) {
+                    this.cb.callback(mcr);
+                }
+                
+                return;
+            }
+            
+            if (rr.status == ReceiverResult.STATUS_ERROR) {
+                mcr.errText = "Receiver Error";
+                if (this.cb != null) {
+                    this.cb.callback(mcr);
+                }
+                
+                return;
+            }
+            
+            mcr.text = "Grading coins";
+            if (cb != null)
+                cb.callback(mcr);
+            
+            startGraderService(new eGraderCb(cb, w), null);
+        }
+    }
+    
+    class eGraderCb implements CallbackInterface {
+        Wallet w;
+        makeChangeResult mcr;
+        CallbackInterface cb;
+        
+        
+        public eGraderCb(CallbackInterface cb, Wallet w) {
+            this.w = w;
+            this.cb = cb;
+            mcr = new makeChangeResult();
+        }
+        
+        public void callback(Object result) {
+            GraderResult gr = (GraderResult) result;
+            
+            logger.debug(ltag, "Change Grader finished");
+            
+            mcr.text = "Fixing coins";
+            if (cb != null)
+                cb.callback(mcr);
+            
+            startFrackFixerService(new eFrackFixerCb(cb, w));
+        }
+    }
+    
+    class eFrackFixerCb implements CallbackInterface {
+        Wallet w;
+        makeChangeResult mcr;
+        CallbackInterface cb;
+        
+        
+        public eFrackFixerCb(CallbackInterface cb, Wallet w) {
+            this.w = w;
+            this.cb = cb;
+            mcr = new makeChangeResult();
+        }
+        
+        public void callback(Object result) {
+            FrackFixerResult fr = (FrackFixerResult) result;
+            
+            logger.debug(ltag, "Change FrackFixer finished: " + fr.status);
+            
+            mcr.text = "Recovering Lost Coins";
+            if (cb != null)
+                cb.callback(mcr);
+            
+            startLossFixerService(new eLossFixerCb(cb, w));
+        }
+    }
+    
+    
+    class eLossFixerCb implements CallbackInterface {
+        Wallet w;
+        makeChangeResult mcr;
+        CallbackInterface cb;
+        
+        
+        public eLossFixerCb(CallbackInterface cb, Wallet w) {
+            this.w = w;
+            this.cb = cb;
+            mcr = new makeChangeResult();
+        }
+        
+        public void callback(Object result) {
+            LossFixerResult lr = (LossFixerResult) result;
+            
+            logger.debug(ltag, "Change LossFixer finished: " + lr.status);
+            
+            mcr.text = "Change Done";
+            mcr.status = 2;
+            if (cb != null)
+                cb.callback(mcr);
+        }
+    }
+    
     
     
     class eShowSkyCoinsCb implements CallbackInterface {
@@ -720,12 +874,14 @@ public class ServantManager {
         int denomination;
         makeChangeResult mcr;
         int skySN;
+        Wallet w;
         
-        public eShowSkyCoinsCb(String hash, int denomination, int skySN, CallbackInterface cb) {
+        public eShowSkyCoinsCb(String hash, Wallet w, int denomination, int skySN, CallbackInterface cb) {
             this.hash = hash;
             this.cb = cb;
             this.denomination = denomination;
             this.skySN = skySN;
+            this.w = w;
             mcr = new makeChangeResult();
         }
         
@@ -763,7 +919,7 @@ public class ServantManager {
                 return;
             }
        
-            receiveFromSkyWallet(this.cb, coins, skySN);
+            receiveFromSkyWallet(this.cb, w, coins, total, skySN);
         }
     }
     
@@ -773,12 +929,14 @@ public class ServantManager {
         String memoUUID;
         int denomination;
         int skySN;
+        Wallet w;
         
-        public eSenderChangeCb(CallbackInterface cb, String memoUUID, int denomination, int skySN) {
+        public eSenderChangeCb(CallbackInterface cb, Wallet w, String memoUUID, int denomination, int skySN) {
             this.cb = cb;
             this.memoUUID = memoUUID;
             this.denomination = denomination;
             this.skySN = skySN;
+            this.w = w;
             mcr = new makeChangeResult();
         }
         
@@ -814,7 +972,7 @@ public class ServantManager {
 		return;
             }   
             
-            requestChange(this.cb, memoUUID, denomination, skySN);
+            requestChange(this.cb, w, memoUUID, denomination, skySN);
                  
         }
         
@@ -824,12 +982,14 @@ public class ServantManager {
         CallbackInterface mcb;
         CloudCoin cc;
         int skySN;
+        Wallet w;
         
         
-        public eVaulterChangeCb(CloudCoin cc, int skySN, CallbackInterface mcb) {
+        public eVaulterChangeCb(CloudCoin cc, Wallet w, int skySN, CallbackInterface mcb) {
             this.mcb = mcb;
             this.cc = cc;
             this.skySN = skySN;
+            this.w = w;
         }
                  
         public void callback(final Object result) {
@@ -849,12 +1009,9 @@ public class ServantManager {
             }
             
             if (vresult.status == VaulterResult.STATUS_FINISHED) {
-                sendToChange(cc, skySN, mcb);
+                sendToChange(cc, w, skySN, mcb);
             }
-
-            
-        }
-    
+        }    
     }
     
     

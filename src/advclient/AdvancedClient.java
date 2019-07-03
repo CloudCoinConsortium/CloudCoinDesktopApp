@@ -1303,6 +1303,21 @@ public class AdvancedClient  {
                         if (mcr.status == 1) {
                             pbar.setVisible(true);
                             pbar.setValue(mcr.progress);
+                        } else if (mcr.status == 2) {
+                            wl.debug(ltag, "Change done successfully. Retrying");
+                            System.out.println("cs="+ps.currentScreen + " am="+ps.typedAmount + " m=" + ps.typedMemo + " cf=" + ps.chosenFile + " ps=" + ps.triedToChange);
+                            EventQueue.invokeLater(new Runnable() {         
+                                public void run() {                                    
+                                    if (ps.srcWallet.isEncrypted()) {
+                                        sm.startSecureExporterService(Config.TYPE_STACK, ps.typedAmount, ps.typedMemo, ps.chosenFile, false, new ExporterCb());
+                                    } else {
+                                        sm.startExporterService(Config.TYPE_STACK, ps.typedAmount, ps.typedMemo, ps.chosenFile, false, new ExporterCb());
+                                    }
+                                    
+                                    ps.currentScreen = ProgramState.SCREEN_ECHO_RAIDA_FINISHED;
+                                    showScreen();
+                                }
+                            });
                         } else {
                             pbar.setVisible(false);
                         }
@@ -7045,10 +7060,14 @@ public class AdvancedClient  {
                         ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
                         if (!er.errText.isEmpty()) {
                             if (er.errText.equals(Config.PICK_ERROR_MSG)) {
-                                ps.currentScreen = ProgramState.SCREEN_MAKING_CHANGE;
-                                showScreen();
-                                return;
-
+                                if (ps.triedToChange) {
+                                    ps.errText = getPickError(ps.srcWallet);
+                                } else {   
+                                    ps.triedToChange = true;
+                                    ps.currentScreen = ProgramState.SCREEN_MAKING_CHANGE;
+                                    showScreen();
+                                    return;
+                                }
                                 //ps.errText = getPickError(ps.srcWallet);
                             } else {
                                 ps.errText = er.errText;
@@ -7412,9 +7431,7 @@ public class AdvancedClient  {
                 setRAIDATransferProgress(rr.totalRAIDAProcessed, rr.totalFilesProcessed, rr.totalFiles);
                 return;
             }
-            
-            
-            wl.debug(ltag, "Receiver finished");
+
             if (rr.status == ReceiverResult.STATUS_CANCELLED) {
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {
