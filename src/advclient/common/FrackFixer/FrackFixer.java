@@ -47,6 +47,8 @@ public class FrackFixer extends Servant {
             public void run() {
                 logger.info(ltag, "RUN (Detached) FrackFixer");
                 doFrackFix();
+                
+                raida.setReadTimeout(Config.READ_TIMEOUT);
             }
         });
     }
@@ -161,6 +163,8 @@ public class FrackFixer extends Servant {
 
             return;
         }
+        
+        raida.setReadTimeout(Config.FIX_FRACKED_TIMEOUT);
         
         String fullPath = AppCore.getUserDir(Config.DIR_FRACKED, user);
         CloudCoin cc;

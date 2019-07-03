@@ -46,6 +46,8 @@ public class Config {
     public static int CONNECTION_TIMEOUT = 2000; // ms
     
     public static int REQUEST_CHANGE_READ_TIMEOUT = 40000; // ms
+    
+    public static int FIX_FRACKED_TIMEOUT = 30000; // ms
 
 
     public static int MAX_ALLOWED_FAILED_RAIDAS = 3;

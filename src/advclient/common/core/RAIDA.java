@@ -53,6 +53,12 @@ public class RAIDA {
             return totalLatencies;
         }
 
+        public void setReadTimeout(int timeout) {
+            for (int i = 0; i < TOTAL_RAIDA_COUNT; i++) {
+                agents[i].setReadTimeout(timeout);
+            }
+        }
+        
 	public void setExactUrls(String[] urls) {
 		for (int i = 0; i < TOTAL_RAIDA_COUNT; i++) {
 			logger.info(ltag, "Set RAIDA url to " + urls[i]);
