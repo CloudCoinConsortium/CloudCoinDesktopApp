@@ -1193,6 +1193,7 @@ public class AdvancedClient  {
                 continue;
         
             skySN = wallets[i].getIDCoin().sn;
+            break;
         }
         
         return skySN;
@@ -1258,7 +1259,7 @@ public class AdvancedClient  {
         final int skySN = getSkyWalletSN();
         if (skySN == 0) {
             ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
-            ps.errText = "Failed to get your SkyWallet ID";
+            ps.errText = "<html><div style='width:690; text-align:center'>You don't have the exact change.<br>Either specify an exact amount or create a Skywallet to receive change</div></html>";
             showScreen();
             return;
         }
@@ -7061,7 +7062,8 @@ public class AdvancedClient  {
                         if (!er.errText.isEmpty()) {
                             if (er.errText.equals(Config.PICK_ERROR_MSG)) {
                                 if (ps.triedToChange) {
-                                    ps.errText = getPickError(ps.srcWallet);
+                                    //ps.errText = getPickError(ps.srcWallet);
+                                    ps.errText = "Failed to change coins";
                                 } else {   
                                     ps.triedToChange = true;
                                     ps.currentScreen = ProgramState.SCREEN_MAKING_CHANGE;

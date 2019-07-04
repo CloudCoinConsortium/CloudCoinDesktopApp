@@ -533,7 +533,9 @@ public class FrackFixer extends Servant {
         }
 
         for (CloudCoin cc : ccs) {
+            cc.createAn(raidaIdx);
             posts[0] += "&pans[]=" + cc.ans[raidaIdx];
+            //posts[0] += "&pans[]=" + cc.ans[raidaIdx];
         }
              
         posts[0] += "&nn=" + nn;

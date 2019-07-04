@@ -51,6 +51,11 @@ public class DetectionAgent {
         this.readTimeout = timeout;
     }
     
+    public int getReadTimeout() {
+        return this.readTimeout;
+    }
+    
+    
     public void setExactFullUrl(String url) {
         this.fullURL = url;
     }

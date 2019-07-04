@@ -337,9 +337,13 @@ public class CloudCoin {
 	}
 
 	private String generatePan() {
-		return AppCore.generateHex();
+            return AppCore.generateHex();
 	}
-
+        
+        public void createAn(int idx) {
+            ans[idx] = generatePan().toLowerCase();
+        }
+        
 	public int getDenomination() {  
 		if (this.sn < 1 )
 			return 0;

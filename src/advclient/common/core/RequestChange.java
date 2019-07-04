@@ -53,7 +53,7 @@ public class RequestChange {
             logger.error(ltag, "Failed to query RequestChange");
             return false;
         }
-        
+
         CommonResponse cr = (CommonResponse) sr.getServant("FrackFixer").parseResponse(result, CommonResponse.class);
         if (cr == null) {
             logger.error(ltag, "Failed to parse result " + result);

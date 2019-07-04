@@ -164,7 +164,7 @@ public class RAIDA {
 
 		for (Future<Runnable> f : futures) {
 			try {
-				f.get(Config.CONNECTION_TIMEOUT * 2, TimeUnit.MILLISECONDS);
+				f.get(agents[0].getReadTimeout() * 2, TimeUnit.MILLISECONDS);
 			} catch (ExecutionException e) {
 				logger.error(ltag, "Error executing the task");
 			} catch (TimeoutException e) {
