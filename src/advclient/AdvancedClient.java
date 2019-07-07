@@ -667,6 +667,8 @@ public class AdvancedClient  {
                     JMenuItem jMenuItem = (JMenuItem) evt.getSource();
                     popupMenu.setVisible(false);
                     
+                    resetState();
+                    
                     String action = jMenuItem.getActionCommand();
                     if (action.equals("0")) {
                         ps.currentScreen = ProgramState.SCREEN_BACKUP;
@@ -4229,7 +4231,7 @@ public class AdvancedClient  {
             AppUI.setFont(sl, 18);
             
             final String fdir = AppCore.getRootUserDir(wallets[i].getName());
-            sl = AppUI.getHyperLink(fdir, "javascript:void(0)", 20);
+            sl = AppUI.getHyperLink(fdir, "javascript:void(0); return false", 20);
             sl.addMouseListener(new MouseAdapter() {
                 public void mouseReleased(MouseEvent e) {
                     if (!Desktop.isDesktopSupported())
@@ -4407,10 +4409,10 @@ public class AdvancedClient  {
         y++;
         
         // Get proton
-        l = AppUI.getHyperLink("Terms & Conditions", "javascript:void(0)", 20);
+        l = AppUI.getHyperLink("Instructions, Terms and Conditions", "javascript:void(0); return false", 20);
         l.addMouseListener(new MouseAdapter() {
             public void mouseReleased(MouseEvent e) {
-                final JDialog f = new JDialog(mainFrame, "Terms and Conditions", true);
+                final JDialog f = new JDialog(mainFrame, "Instructions, Terms and Conditions", true);
                 f.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
                 AppUI.noOpaque((JComponent) f.getContentPane());
                 AppUI.setSize(f, (int) (tw / 1.2), (int) (th / 1.2)); 
@@ -6644,7 +6646,7 @@ public class AdvancedClient  {
         AppUI.alignCenter(agreementPanel);
              
         // Title 
-        text = new JLabel("Terms and Conditions");
+        text = new JLabel("Instructions, Terms and Conditions");
         AppUI.alignCenter(text);
         AppUI.setBoldFont(text, 24);
         agreementPanel.add(text);

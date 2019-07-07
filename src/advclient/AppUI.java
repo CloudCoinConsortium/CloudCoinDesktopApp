@@ -5,6 +5,8 @@
  */
 package advclient;
 
+import global.cloudcoin.ccbank.core.AppCore;
+import global.cloudcoin.ccbank.core.Config;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -17,6 +19,7 @@ import java.awt.GraphicsEnvironment;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.font.TextAttribute;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -99,6 +102,15 @@ public class AppUI {
     }
     
     public static String getAgreementText() {
+        ClassLoader cl;            
+        cl = AppUI.class.getClassLoader();
+            
+        
+        InputStream is = cl.getResourceAsStream("resources/TermsAndConditions.html");
+        String aText = AppCore.loadFileFromInputStream(is);
+        
+        return aText;
+        /*
         String agreement = "<br><p>Please read these terms and conditions carefully before using this application "
                 + "distributed by the CloudCoin Consortium.</p><br>"
                 + "<p>Conditions of Use</p><br>"
@@ -187,6 +199,7 @@ public class AppUI {
                 + "with respect to the same.<br><br>";
         
         return agreement;
+                */
     }
     
     

@@ -1,0 +1,126 @@
+<br><p>Please read these terms and conditions carefully before using this application 
+                distributed by the CloudCoin Consortium.</p><br>
+				
+				<h4>CloudCoin Consortium</h4>
+				<p>The CloudCoin Consortium is not a legal entity and it does not operate under any government juristiction. Beware that this free and open source software has no warrenties or guarantees and was created by volunteers. CloudCoins can be recovered if lost and they are protected against theft. But we cannot guarantee that everything will be perfect. <p>
+			
+				<h4>Local Wallet</h4>
+				<p>The Local Wallet is a set of folders on your hard drive that store CloudCoin. You should not need to access these files manually. Mannually accessing these files could lead to unexpected results in cluding coins becomming counterfeit. <p>
+				<h4>Sky Wallet</h4>
+				<p>The sky wallet is an account on a CloudBank that allows for Trusted Transfer. This means that a sender can send CloudCoins to a receiver with the sender being completely anonymous. The CloudBank will only recieve authentic CloudCoins and the reciever will know that their CloudCoin are authentic. So both the sender and the receiver will know that the transaction was true. Your SkyWallet allows you to access your CloudCoins from anywhere and any device that has Internet connetivity. However, you will need to have the same CloudCoin ID on all your devices. <p>
+				<h4>CloudCoin ID</h4>
+				<p>In order to recieve CloudCoin fromo a CloudBank such as SkyWallet, you will need to have a CloudCoin ID. This is a coin that is placed in your ID folder and used to recieve CloudCoins, use the exchange, make online purchases with the option of getting change and a refund. Also, IDs will allow you to send RAIDA Mail and use RAIDA Data in the future. The CloudCoin Consortium Recoments you store your CloudCoin ID in a server such as SecureSafe.com so that you can access it from any device. <p>
+				<h4>DNS Name</h4>
+				<p>Your CloudCoin ID will be a Network number and a Serial number. These numbers can be seen by opening you CloudCoin ID stack file with a text editor. You may turn this ID into a DNS name. Suppose that your CloudCoin nn=1 and your sn=16555123. You would convert these numbers into dotted decimal by doing to:http://www.geektools.com/cgi-bin/ipconv.cgi Then you would turn 16555123 into 0.252.156.115. Then because the network number is 1, you would change it to "1.252.156.115". You may now create an A record in your DNS server that you control. Suppose you owned the "Microsoft.com" domain. You could add a record: BillGates.Microsoft.com  1.252.156.115. Now, when someone wants to send you CloudCoin, they use the advanced client to send to BillGates.Microsoft.com.The CloudCoin Wallet would use DNS to lookup the IP number, then convert it to a CloudCoin nn and sn. 
+				<h4>Deposit</h4>
+				<p>When you Deposit CloudCoins into your CloudCoin Wallet, several things will happen. Your cloudcoins are first "Unpacked" and put in the Suspect folder. Any jpeg images will have their CloudCoins removed  and stack files with many coins will be broken into individual coins. The Unpacker will only unpack files with the correct file extensions including .stack and .jpg. The unpacked files will be placed in the "Imported" Folder. Any files that do not seem to contain CloudCoins will be moved to the "Trash" folder. The Unpacker checks with the Bank, Fracked, Vault and other folders to make sure the coin is not already in the system. If the coin has already been imported/deposited, the unpacker will tell user. <p>
+				<p>After the coins are unpacked, they will be powned by the Authenticator. The Authenticator first puts a copy of the coins is the Predeted folder. If the user wants their email embeeded in the Authentictiy Number, the Authenticator will do so here. Then the Authenticator sends the coins to the RAIDA. When the coins return, the coins are put in the Detected folder. <p>
+<p>After the coins have been placed in the Detected folder, the "Grader" process starts. The Grader looks inside the coins for a field that looks like "pown":"ppppppppppppppppppppppppp". pown means Password Own. There are 25 codes in the pown string. The codes can be "p" for perfect. 'u' for untryed (This happen when a server does not echo so the software ignores that RAIDA. A 'n' for No Reply. I we have enough No Replies, then we don't know if the ANs are the same of if they have changed to the PANs. This forces us to put the coin in the Lost foder and use the "LostFixer" to check the AN and PAN to see which one is correct. 'f' mains failed to authenticat (counterfeit) and 'e' means error from the RAIDA.</p> The Grader will put the coins in an appropriate folder. If there are any 'f's then the coins is said to be "fracked" and it is placed in the Fracked folder. If there are too many 'f's, then the coin is considered counterfeit and placed in the Counterfeit folder. Lots of 'n's put it in the Lost folder. <p>
+<p>The program will now call on the Frack Fixer and Loss Fixers to go to work. They will attempt to fix losses and fracked coins. If they are successful, the coins will be moved to the bank folder. </p>
+<p>Lastly, if the user wants their coins to be password protected, the "Vaulter" will prompt the user for their password and use it to move all the coins in the Bank folder to the Vault folder. Now they are save from theft. 
+</p>
+<h4>Wallet Passwords</h4>
+				<p>Your password allows for your wallet to be enctyped. The strenght of the encryption depends on the
+				strength of your password. Store your password in a safe place like SecureSafe.com. Any coins that are encrypted will be stored in the Vault folder. If you lose  your password, you may recover your coins by either recovering them by email or filing a lost coins report and waiting two years if you did not file a lost coin report. <p>
+				
+				
+				<h4>Wallet Email Recovery</h4>
+				<p>Recovery by email allows you to embed a hash of your email address inside the Authenticty numbers in your CloudCoins. Recovery does add a privacy consert. Hackers could force the RAIDA to send your CloudCoin to your email address. The hash is irriversable and is unlikely to provide any other security issues. For maxium privacy, you would not want to use this feature. <p>
+
+
+				<h4>Transfer</h4>
+				<p>
+				Thansfer allow you to take CloudCoins out of your Bank or Vault folder so you can spend them. You can also transfer them from one wallet to another. </p>
+				To transfer to a remote user, ask them for their account name like Jim.SkyWallet.cc and the server that they bank on (Right now there is only one: SkyWallet.cc.). If you do not have the perfect amount, the software will make change for you automatically. It will send a large note to "Change.SkyWallet.cc". Then the software tells the change servier that money has been sent. The Change server will check that money has been send and then send change to the users account. The user can then receive these coins and use them to make the transfer. All of the change making happens in 4 or 5 seconds. 
+				<p>
+				<h4>Backup</h4>
+				<p>When you backup you coins, all the coins are decrypted and put in a single stack file. To protect these coins, you should send them to a safe server like SecureSafe.com. To import  your backup, all you need to do is click deposite and choose the backup file. If you deposite your backup file and the same coins are still in your bank and vault folders, the Unpacker will ignore these coins and move them to Trash.  <p>
+				<h4>List Serials</h4>
+				<p>You may want to list your serial number from time to time. The serial number list can be used to file a lost coin report. </p>
+				<h4>Clear History</h4>
+				<p>The CloudCoin wallet tracks your transactions. However, you may not appreaciate this feature. Clearning your history will get rid of all files that describe what has been done. Your coins will not be deleted. <p>
+				<h4>Fix Fracked</h4>
+				<p>Sometimes, RAIDA are not availbe and the coins become fracked meaning that one or more of the RAIDA think the coin is counterfeit. This can be fixed using the Frack Fix process. Normally, this process happends automatically but sometimes the process cannot finish because one of the RAIDA is down. In this case you can fix fracked later when the RAIDA is up and working. <p>
+				<h4>Echo Raida</h4>
+				<p>This shows the state of the RAIDA. Uptime is generally over 99.9%. But, sometimes network routers (Especcially at your work space) may block your access. Echo Raida allow you to see the connections. <p>
+				<h4>Show Folders</h4>
+				<p>Allows you to see where your files are. <p>
+				<h4>Delete Wallet</h4>
+				<p>Transfer money out before deleting. The Default wallet cannot be deleted. <p>
+				<h4></h4>
+				<p><p>
+                <p>Conditions of Use</p><br>
+                <p>The CloudCoin Consortium provides this software free of cost, and as is. 
+                Every time you utilize this application or its services, you accept the following conditions. 
+                Therefore, the CloudCoin Consortium urges you to read them carefully.</p>
+                <p>Privacy Policy</p><br>
+                <p>The CloudCoin consortium does not collect or store any user data. 
+                All transactions are anonymous and no user information is ever collected 
+                by the RAIDA or the CloudCoin Consortium.</p><br>
+                <p>Copyright</p><br>
+               
+                All graphics, logos, images, and text herein are considered the property of the 
+                CloudCoin Consortium and protected by international copyright laws. 
+                This software is considered open source and not owned by either 
+                the CloudCoin Consortium or any of its affiliates.</p><br>
+                <p>Communications</p><br>
+                <p>All communication with the CloudCoin Consortium, RAIDA, or 
+                affiliates is electronic. Any time you use the RAIDA to pown, send, or transfer coins
+                 you are going to be communicating with us. If you subscribe to the newsletter 
+                through the Consortium, you are going to receive regular emails from us. 
+                We will continue to communicate with you by posting newsletters and notices 
+                by sending you emails. You also agree that all notices, disclosures, 
+                agreements, and other communications we provide to you electronically meet 
+                the legal requirements that such communications be in writing.</p><br>
+                <p>Emails</p><br>
+                <p>Users may send emails to the support staff for this software as long 
+                as it is not obscene, illegal, defamatory, threatening, infringing of 
+                intellectual property rights, invasive of privacy or injurious in 
+                any other way to third parties.</p><br>
+                <p>We reserve all rights to refuse service to individuals involved in such transmission.</p><br>
+                <p>Ability to Accept Terms of Service</p><br>
+                
+                <p>NO WARRANTY</p><br>
+                <p>You expressly acknowledge and agree that the use of this application 
+                is at your sole risk. CloudCoin Advanced Client Software and any services performed 
+                or provided by the CloudCoin Consortium are provided “as is” and “as available,” 
+                with all faults and without warranty of any kind, and the CloudCoin Consortium 
+                hereby disclaims all warranties and conditions with respect 
+                to the CloudCoin Advanced Client Software and any services, 
+                either express, implied, or statutory, including, but not limited to, 
+                the implied warranties and/or conditions of satisfactory quality, 
+                of fitness for a particular purpose, of accuracy, of quiet enjoyment, 
+                and of non infringement of third-party rights. </p><br><p>No oral or written 
+                information or advice given by the CloudCoin Consortium or any authorized 
+                representative of the CloudCoin Consortium shall create a warranty of any kind. 
+                Should the application or services prove defective, you as the user assume the 
+                entire cost of any loss, broken coins, or correction of.</p><br> 
+                <p>Limitation of Liability</p><br>
+                <p>In no event shall the CloudCoin Consortium, nor any of its officers,
+                 directors, or members be liable to you for anything arising out of or in any 
+                way connected with your use of this service, whether such liability is under contract, 
+                tort or otherwise, and the CloudCoin Consortium, including its officers, directors, 
+                and members shall not be liable for any indirect, consequential or special 
+                liability arising out of or in any way related to your use of this service.</p><br>
+                <p>Indemnification</p><br>
+                <p>You hereby indemnify to the fullest extent the CloudCoin Consortium 
+                from and against any and all liabilities, costs, demands, causes of action, 
+                damages, and expenses (including reasonable attorney’s fees) arising out of or in any 
+                way related to your breach of any of the provisions of these Terms.</p><br>
+                <p>Variation of Terms</p><br>
+                <p>The CloudCoin Consortium is permitted to revise these Terms at any time 
+                as it sees fit, and by using this software you are expected to review such 
+                Terms on a regular basis to ensure you understand all terms and conditions 
+                governing the use of this software.</p><br>
+                <p>Assignment</p><br>
+                <p>The CloudCoin Consortium shall be permitted to assign, transfer, 
+                and subcontract its rights and/or obligations under these Terms without 
+                any notification or consent required. However, you shall not be permitted 
+                to assign, transfer, or subcontract any of your rights 
+                and/or obligations under these Terms.</p><br>
+                <p>Entire Agreement</p><br>
+                <p>These Terms, including any legal notices and disclaimers contained 
+                in this software, constitute the entire agreement between 
+                the CloudCoin Consortium, you and in relation to your use of this 
+                software, and supersede all prior agreements and understandings 
+                with respect to the same.<br><br>;

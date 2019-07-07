@@ -148,7 +148,7 @@ public class Config {
     
     final public static String CHANGE_SKY_DOMAIN = "change.skywallet.cc";
     
-    
+    final public static String AGREEMENT_FILE = "agreement.html";
     
     
 }

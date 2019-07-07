@@ -10,6 +10,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
@@ -408,6 +409,24 @@ public class AppCore {
         return getBytes;
     }
 
+    static public String loadFileFromInputStream(InputStream is) {
+        StringBuilder out = new StringBuilder();
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                out.append(line);
+            }          
+            reader.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return out.toString();
+    }
+    
     static public boolean saveFile(String path, String data) {
         return saveFileAppend(path, data, false);
     }
