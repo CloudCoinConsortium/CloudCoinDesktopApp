@@ -38,6 +38,8 @@ public class Authenticator extends Servant {
             public void run() {
                 logger.info(ltag, "RUN Authenticator");
                 doAuthencticate();
+                
+                raida.setReadTimeout(Config.READ_TIMEOUT);
             }
         });
     }
@@ -259,6 +261,7 @@ public class Authenticator extends Servant {
             return;
         }
 
+        raida.setReadTimeout(Config.MULTI_DETECT_TIMEOUT);
         logger.info(ltag, "total files "+ globalResult.totalFiles);
 
         File dirObj = new File(fullPath);

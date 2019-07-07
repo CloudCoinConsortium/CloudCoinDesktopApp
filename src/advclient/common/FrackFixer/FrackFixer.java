@@ -471,7 +471,7 @@ public class FrackFixer extends Servant {
 
         posts = new String[1];
         posts[0] = "";
-     
+        
         gtr = new GetTicketResponse[triadSize][];
         for (int i = 0; i < results.length; i++) {
             logger.info(ltag, "rai=" + i + " res=" + results[i]);
@@ -519,15 +519,20 @@ public class FrackFixer extends Servant {
                 if (message == null || message.length() != 44) {
                     logger.error(ltag, "Invalid ticket from RAIDA" + triad[i]);
                     return false;
+                    //continue;
                 }
 
                 if (i != 0 || j != 0)
                     posts[0] += "&";
+                //if (!posts[0].isEmpty())
+                //    posts[0] += "&";
                     
                 //posts[0] += "fromserver" + (i + 1) + "[]=" + triad[i] + "&message" + (i + 1) + "[]=" + message;
                 posts[0] += "message" + (i + 1) + "[]=" + message;
 
                 logger.info(ltag, "raida" + triad[i] + " v=" + strStatus + " m="+message);
+                //logger.debug(ltag, "adding " + j);
+                
             }
 
         }
@@ -558,6 +563,7 @@ public class FrackFixer extends Servant {
             return false;
         }
 
+        //if (o.length != ccs.size()) {
         if (o.length != ccs.size()) {
             logger.error(ltag, "Fix Return size mismatch: " + o.length + " vs " + ccs.size());
             raida.setFailed(raidaIdx);

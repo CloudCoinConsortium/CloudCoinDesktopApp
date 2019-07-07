@@ -675,13 +675,13 @@ public class ServantManager {
     public void requestChange(CallbackInterface cb, Wallet w, String memoUUID, int denomination, int skySN) {
         makeChangeResult mcr = new makeChangeResult();
         mcr.status = 0;
-        mcr.text = "Requesting Change";
+        mcr.text = "Requesting Change from the ChangeServer";
         if (cb != null) {
             cb.callback(mcr);
         }
         
         logger.debug(ltag, "request change " + memoUUID + " d=" + denomination + " sky=" + skySN);
-        System.out.println("request change " + memoUUID + " d=" + denomination + " sky=" + skySN);
+
         
         RequestChange rc = new RequestChange(skySN, memoUUID, denomination, logger);
         if (!rc.request(getSR())) {
@@ -830,6 +830,30 @@ public class ServantManager {
         public void callback(Object result) {
             FrackFixerResult fr = (FrackFixerResult) result;
             
+            if (fr.status == FrackFixerResult.STATUS_PROCESSING) {
+                logger.debug(ltag, "Still processing coins");
+                
+                //String txt
+                
+                //fr.totalRAIDAProcessed, fr.totalFilesProcessed, fr.totalFiles, fr.fixingRAIDA, fr.round
+                mcr.status = 1;
+                mcr.progress = fr.totalRAIDAProcessed;
+                mcr.text = "Fixing on RAIDA#" + fr.fixingRAIDA + ", round #" + fr.round + " Files: " + fr.totalFilesProcessed + "/" + fr.totalFiles;
+                if (this.cb != null)
+                    this.cb.callback(mcr);
+                
+		return;
+            }
+
+            if (fr.status == FrackFixerResult.STATUS_ERROR) {
+                mcr.errText = "FrackFixer Error";
+                if (this.cb != null) {
+                    this.cb.callback(mcr);
+                }
+                
+                return;
+            }
+            
             logger.debug(ltag, "Change FrackFixer finished: " + fr.status);
             
             mcr.text = "Recovering Lost Coins";
@@ -856,7 +880,29 @@ public class ServantManager {
         public void callback(Object result) {
             LossFixerResult lr = (LossFixerResult) result;
             
+            if (lr.status == LossFixerResult.STATUS_PROCESSING) {
+                
+                mcr.status = 1;
+                mcr.progress = lr.totalRAIDAProcessed;
+                mcr.text = "Recovering Lost Coins. Processed Notes: " + lr.totalFilesProcessed + "/" + lr.totalFiles;
+                if (this.cb != null)
+                    this.cb.callback(mcr);
+                return;
+            }
+            
             logger.debug(ltag, "Change LossFixer finished: " + lr.status);
+            
+            
+            if (w.isEncrypted()) {
+                mcr.text = "Encrypting Change";
+                if (cb != null)
+                    cb.callback(mcr);
+                
+                logger.debug(ltag, "Ecnrypting change");
+                startVaulterService(new ecVaulterCb(cb, w), w.getPassword());
+                
+                return;
+            }
             
             mcr.text = "Change Done";
             mcr.status = 2;
@@ -865,6 +911,30 @@ public class ServantManager {
         }
     }
     
+    class ecVaulterCb implements CallbackInterface {
+        Wallet w;
+        makeChangeResult mcr;
+        CallbackInterface cb;
+        
+        
+        public ecVaulterCb(CallbackInterface cb, Wallet w) {
+            this.w = w;
+            this.cb = cb;
+            mcr = new makeChangeResult();
+        }
+        
+        public void callback(Object result) {
+            VaulterResult vr = (VaulterResult) result;
+            
+            logger.debug(ltag, "Change Vaulter finished: " + vr.status);
+            
+            mcr.text = "Change Done";
+            mcr.status = 2;
+            if (cb != null)
+                cb.callback(mcr);
+            
+        }
+    }
     
     
     class eShowSkyCoinsCb implements CallbackInterface {

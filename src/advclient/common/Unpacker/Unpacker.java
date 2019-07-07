@@ -37,6 +37,8 @@ public class Unpacker extends Servant {
         this.cb = icb;
 
         globalResult = new UnpackerResult();
+        globalResult.errText = "";
+        
         rccs = new ArrayList<CloudCoin>();
         
         launchThread(new Runnable() {
@@ -100,6 +102,11 @@ public class Unpacker extends Servant {
         int index;
         
         File dirObj = new File(importFolder);
+        if (dirObj.listFiles() == null) {
+            globalResult.status = UnpackerResult.STATUS_ERROR;
+            logger.error(ltag, "Import Dir doesn't exist");
+            return;
+        }
         for (File file: dirObj.listFiles()) {
             if (file.isDirectory())
                 continue;

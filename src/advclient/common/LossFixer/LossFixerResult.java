@@ -6,6 +6,12 @@ public class LossFixerResult {
     public static int STATUS_ERROR = 3;
     public static int STATUS_CANCELLED = 4;
 
+    
+    public int totalFilesProcessed;
+    public int totalFiles;
+    public int totalRAIDAProcessed;
+
+    
     public int recovered;
     public int failed;
     public int status;

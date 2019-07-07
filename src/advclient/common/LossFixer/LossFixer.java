@@ -37,6 +37,7 @@ public class LossFixer extends Servant {
 
         receiptId = AppCore.generateHex();
         lr.receiptId = receiptId;
+        csb = new StringBuilder();
 
         launchThread(new Runnable() {
             @Override
@@ -52,6 +53,9 @@ public class LossFixer extends Servant {
         nlr.failed = lr.failed;
         nlr.recovered = lr.recovered;
         nlr.status = lr.status;
+        nlr.totalFiles = lr.totalFiles;
+        nlr.totalFilesProcessed = lr.totalFilesProcessed;
+        nlr.totalRAIDAProcessed = lr.totalRAIDAProcessed;
     }
 
     public void doLossFix() {
@@ -64,6 +68,8 @@ public class LossFixer extends Servant {
         int totalToFix = AppCore.getFilesCount(Config.DIR_LOST, user);
         
         logger.debug(ltag, "Need to check: " + totalToFix + " coins");
+        
+        lr.totalFiles = totalToFix;
         
         File dirObj = new File(fullLostPath);
         for (File file : dirObj.listFiles()) {
@@ -97,6 +103,9 @@ public class LossFixer extends Servant {
             logger.info(ltag, "doing recovery " + cc.sn);
             doRecoverCoin(cc);
 
+            lr.totalFilesProcessed++;
+            lr.totalRAIDAProcessed = 0;
+            
             LossFixerResult lfr = new LossFixerResult();
             copyFromMainFr(lfr);
             if (cb != null)
@@ -169,8 +178,23 @@ public class LossFixer extends Servant {
                 j++;
             }
         }
+        
+        CallbackInterface lcb = new CallbackInterface() {
+            final GLogger gl = logger;
+            final CallbackInterface myCb = cb;
 
-        results = raida.query(requests, null, null, rlist);
+            @Override
+            public void callback(Object result) {
+                lr.totalRAIDAProcessed++;
+                if (myCb != null) {
+                    LossFixerResult lfr = new LossFixerResult();
+                    copyFromMainFr(lfr);
+                    myCb.callback(lfr);
+                }
+            }
+        };
+
+        results = raida.query(requests, null, lcb, rlist);
         if (results == null) {
             logger.error(ltag, "Failed to query raida");
             lr.failed++;
@@ -238,7 +262,9 @@ public class LossFixer extends Servant {
             }
         }
 
-        results = raida.query(requests, null, null, rlist);
+        lr.totalRAIDAProcessed = 0;
+        
+        results = raida.query(requests, null, lcb, rlist);
         if (results == null) {
             logger.error(ltag, "Failed to query raida");
             lr.failed++;

@@ -40,14 +40,18 @@ public class Config {
     public static String DIR_MAIN_TRASH = "Trash";
     public static String DIR_BACKUPS = "Backups";
 
-    public static int THREAD_POOL_SIZE = 50;
+    public static int THREAD_POOL_SIZE = 80;
 
-    public static int READ_TIMEOUT = 2000; // ms
+    public static int READ_TIMEOUT = 25000; // ms
     public static int CONNECTION_TIMEOUT = 2000; // ms
     
     public static int REQUEST_CHANGE_READ_TIMEOUT = 40000; // ms
     
     public static int FIX_FRACKED_TIMEOUT = 30000; // ms
+    public static int MULTI_FIX_TIMEOUT = 30000; // ms
+    public static int MULTI_DETECT_TIMEOUT = 30000; // ms
+    public static int ECHO_TIMEOUT = 2000;
+
 
 
     public static int MAX_ALLOWED_FAILED_RAIDAS = 3;

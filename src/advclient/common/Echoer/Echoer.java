@@ -31,7 +31,10 @@ public class Echoer extends Servant {
             @Override
             public void run() {
                 logger.info(ltag, "RUN Echoer");
+                
+                raida.setReadTimeout(Config.ECHO_TIMEOUT);
                 doEcho();
+                raida.setReadTimeout(Config.READ_TIMEOUT);
 
                 if (cb != null)
                     cb.callback(null);
