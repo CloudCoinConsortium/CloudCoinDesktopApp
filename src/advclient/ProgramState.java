@@ -139,6 +139,8 @@ public class ProgramState {
     
     boolean triedToChange;
     
+    boolean changeFromExport;
+    
     public ProgramState() {
         currentScreen = SCREEN_AGREEMENT;
         cwalletRecoveryRequested = cwalletPasswordRequested = false;
@@ -202,6 +204,8 @@ public class ProgramState {
         receiverReceiptId = "";
         
         triedToChange = false;
+        
+        changeFromExport = false;
         
     }
  

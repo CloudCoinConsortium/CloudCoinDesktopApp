@@ -34,6 +34,8 @@ public class Vaulter extends Servant {
         vr = new VaulterResult();
         coinsPicked = new ArrayList<CloudCoin>();
         valuesPicked = new int[AppCore.getDenominations().length];
+        
+        vr.errText = "";
 
         launchThread(new Runnable() {
             @Override
@@ -166,6 +168,7 @@ public class Vaulter extends Servant {
 
         if (!getCoins(fullVaultPath, amount, cc, fullFrackedPath)) {
             logger.error(ltag, "Failed to get coins");
+            vr.errText = Config.PICK_ERROR_MSG;
             vr.status = VaulterResult.STATUS_ERROR;
             return;
         }

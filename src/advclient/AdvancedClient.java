@@ -1308,19 +1308,26 @@ public class AdvancedClient  {
                             pbar.setValue(mcr.progress);
                         } else if (mcr.status == 2) {
                             wl.debug(ltag, "Change done successfully. Retrying");
-                            System.out.println("cs="+ps.currentScreen + " am="+ps.typedAmount + " m=" + ps.typedMemo + " cf=" + ps.chosenFile + " ps=" + ps.triedToChange);
-                            EventQueue.invokeLater(new Runnable() {         
-                                public void run() {                                    
-                                    if (ps.srcWallet.isEncrypted()) {
-                                        sm.startSecureExporterService(Config.TYPE_STACK, ps.typedAmount, ps.typedMemo, ps.chosenFile, false, new ExporterCb());
-                                    } else {
-                                        sm.startExporterService(Config.TYPE_STACK, ps.typedAmount, ps.typedMemo, ps.chosenFile, false, new ExporterCb());
+                            if (ps.changeFromExport) {
+                                EventQueue.invokeLater(new Runnable() {         
+                                    public void run() {                                    
+                                        if (ps.srcWallet.isEncrypted()) {
+                                            sm.startSecureExporterService(Config.TYPE_STACK, ps.typedAmount, ps.typedMemo, ps.chosenFile, false, new ExporterCb());
+                                        } else {
+                                            sm.startExporterService(Config.TYPE_STACK, ps.typedAmount, ps.typedMemo, ps.chosenFile, false, new ExporterCb());
+                                        }                                    
                                     }
-                                    
-                                    ps.currentScreen = ProgramState.SCREEN_ECHO_RAIDA_FINISHED;
-                                    showScreen();
-                                }
-                            });
+                                });
+                            } else {
+                                EventQueue.invokeLater(new Runnable() {         
+                                    public void run() {  
+                                        String dstName =  (ps.foundSN == 0) ? ps.dstWallet.getName() : "" + ps.foundSN;
+                                        
+                                        sm.transferCoins(ps.srcWallet.getName(), dstName, 
+                                            ps.typedAmount, ps.typedMemo, ps.typedRemoteWallet, new SenderCb(), new ReceiverCb());
+                                    }
+                                });
+                            }
                         } else {
                             pbar.setVisible(false);
                         }
@@ -7066,7 +7073,8 @@ public class AdvancedClient  {
                                 if (ps.triedToChange) {
                                     //ps.errText = getPickError(ps.srcWallet);
                                     ps.errText = "Failed to change coins";
-                                } else {   
+                                } else { 
+                                    ps.changeFromExport = true;
                                     ps.triedToChange = true;
                                     ps.currentScreen = ProgramState.SCREEN_MAKING_CHANGE;
                                     showScreen();
@@ -7287,7 +7295,16 @@ public class AdvancedClient  {
                         ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
                         if (!sr.errText.isEmpty()) {
                             if (sr.errText.equals(Config.PICK_ERROR_MSG)) {
-                                ps.errText = getPickError(ps.srcWallet);
+                                if (ps.triedToChange) {
+                                    ps.errText = "Failed to change coins";
+                                } else { 
+                                    ps.changeFromExport = false;
+                                    ps.triedToChange = true;
+                                    ps.currentScreen = ProgramState.SCREEN_MAKING_CHANGE;
+                                    showScreen();
+                                    return;
+                                }
+                                //ps.errText = getPickError(ps.srcWallet);
                             } else {
                                 ps.errText = "<html><div style='text-align:center; width: 520px'>" + sr.errText + "</div></html>";
                                 //ps.errText = sr.errText;

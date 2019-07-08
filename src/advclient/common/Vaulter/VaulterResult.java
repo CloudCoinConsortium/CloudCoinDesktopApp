@@ -6,6 +6,8 @@ public class VaulterResult {
     public static int STATUS_ERROR = 3;
 
     public int status;
+    
+    public String errText;
 
     public VaulterResult() {
         status = STATUS_PROCESSING;

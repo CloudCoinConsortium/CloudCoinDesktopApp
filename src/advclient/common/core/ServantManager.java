@@ -1143,6 +1143,8 @@ public class ServantManager {
                 if (cb != null)  {
                     SenderResult sr = new SenderResult();
                     sr.status = SenderResult.STATUS_ERROR;
+                    sr.errText = vresult.errText;
+                    
                     cb.callback(sr);
                 }
                 
