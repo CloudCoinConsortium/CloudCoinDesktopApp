@@ -6953,7 +6953,8 @@ public class AdvancedClient  {
                         } catch (NumberFormatException e) {        
                         }
  
-                        ps.dstWallet.appendTransaction(data[0], total, ps.receiptId, data[2]); 
+                        //ps.dstWallet.appendTransaction(data[0], total, ps.receiptId, data[2]); 
+                        ps.dstWallet.appendTransaction(data[0], total, ps.receiptId); 
                     }
                 } else {
                     w.appendTransaction(ps.typedMemo, ps.statToBankValue, ps.receiptId);
