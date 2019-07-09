@@ -26,7 +26,7 @@ public class DrawRoundRectangle extends JComponent {
         double y = 50;
         double w = x + 250;
         double h = y + 100;
-        g2.draw(new RoundRectangle2D.Double(x, y, w, h, 0, 0));
+        g2.draw(new RoundRectangle2D.Double(x, y, w, h, 50, 50));
     }
 
     /*

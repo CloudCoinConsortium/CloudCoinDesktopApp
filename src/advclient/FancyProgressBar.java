@@ -48,7 +48,7 @@ public class FancyProgressBar extends BasicProgressBarUI {
         int width = progressBar.getWidth();
         int height = progressBar.getHeight();
 
-        RoundRectangle2D outline = new RoundRectangle2D.Double(0, 0, width - 1, height - 1, 0, 0);
+        RoundRectangle2D outline = new RoundRectangle2D.Double(0, 0, width - 1, height - 1, 20, 20);
         g2d.fill(outline);
 
         double dProgress = progressBar.getPercentComplete();
@@ -61,7 +61,7 @@ public class FancyProgressBar extends BasicProgressBarUI {
         width = (int) Math.round(width * dProgress);
 
         g2d.setColor(AppUI.getColor5());
-        RoundRectangle2D fill = new RoundRectangle2D.Double(0, 0, width, height - 1, 0, 0);
+        RoundRectangle2D fill = new RoundRectangle2D.Double(0, 0, width, height - 1, 20, 20);
 
         g2d.fill(fill);
 

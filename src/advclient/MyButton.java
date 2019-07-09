@@ -73,7 +73,7 @@ public class MyButton {
             }
         };
         
-        AppUI.roundCorners(button, AppUI.getColor5(), 0, cb);
+        AppUI.roundCorners(button, AppUI.getColor0(), 18, cb);
         AppUI.noOpaque(button);
         button.setContentAreaFilled(false);
         AppUI.setSize(button, 224, 50);
