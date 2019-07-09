@@ -755,7 +755,7 @@ public class AdvancedClient  {
         
         
         // Icon Support
-        //c.insets = new Insets(0, 10, 0, 40); 
+        c.insets = new Insets(0, 10, 0, 40); 
         AppUI.noOpaque(icon1);
         AppUI.setHandCursor(icon1);
         gridbag.setConstraints(icon1, c);
@@ -774,7 +774,7 @@ public class AdvancedClient  {
         AppUI.noOpaque(icon2);
         AppUI.setHandCursor(icon2);
         gridbag.setConstraints(icon2, c);
-        p.add(icon2);
+        //p.add(icon2);
  
         headerPanel.add(p);
     }
