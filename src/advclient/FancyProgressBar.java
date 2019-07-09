@@ -60,7 +60,7 @@ public class FancyProgressBar extends BasicProgressBarUI {
 
         width = (int) Math.round(width * dProgress);
 
-        g2d.setColor(AppUI.getColor5());
+        g2d.setColor(AppUI.getColor6());
         RoundRectangle2D fill = new RoundRectangle2D.Double(0, 0, width, height - 1, 20, 20);
 
         g2d.fill(fill);

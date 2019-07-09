@@ -3410,9 +3410,7 @@ public class AdvancedClient  {
                     showScreen();
                     return;
                 }
-            
-                
-                
+       
                 try {
                     ps.typedAmount = Integer.parseInt(amount.getText());
                 } catch (NumberFormatException ex) {
