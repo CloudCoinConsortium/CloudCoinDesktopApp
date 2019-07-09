@@ -1,7 +1,4 @@
 
-
-
-
 package advclient;
 
 import java.awt.*;
@@ -104,17 +101,18 @@ public class RoundedCornerComboBox {
     
     public JPanel makeUI() { 
         background = AppUI.blendColors(AppUI.getColor4(), outerBgColor);
+        foreground = background;
 
-        UIManager.put("ComboBox.selectionForeground", Color.lightGray);
-        UIManager.put("ComboBox.selectionBackground", AppUI.getColor1());
+        UIManager.put("ComboBox.selectionForeground", Color.BLACK);
+        UIManager.put("ComboBox.selectionBackground", background);
         
         combo1 = new JComboBox<>();
         AppUI.setSize(combo1, (int) AppUI.getBoxWidth(), (int) AppUI.getBoxHeight());  
         AppUI.setFont(combo1, 18);
-        AppUI.setBackground(combo1, AppUI.getColor1());
-        AppUI.setColor(combo1, AppUI.getColor1());
+        AppUI.setBackground(combo1, background);
+        AppUI.setColor(combo1, AppUI.getDisabledColor());
         combo1.setBorder(new RoundedCornerBorder(this.outerBgColor));
-        combo1.setUI(new ColorArrowUI(Color.black));
+        combo1.setUI(new ColorArrowUI(background));
         
         Object o = combo1.getAccessibleContext().getAccessibleChild(0);
         if (o instanceof JComponent) {
@@ -171,7 +169,7 @@ class MyComboBoxModel extends DefaultComboBoxModel {
     @Override
     public void setSelectedItem(Object anObject) {
         if (!placeholder.equals(anObject)) {
-            AppUI.setColor(combo1, Color.lightGray);
+            AppUI.setColor(combo1, Color.BLACK);
             super.setSelectedItem(anObject);
         } else if (selectionAllowed) {
             AppUI.setColor(combo1, AppUI.getDisabledColor2());
@@ -228,7 +226,7 @@ class HeavyWeightContainerListener implements PopupMenuListener {
 
 class RoundedCornerBorder extends AbstractBorder {
     protected Color outerBgColor;
-    protected static final int ARC = 0;
+    protected static final int ARC = 12;
     
     public RoundedCornerBorder(Color outerBgColor) {
         this.outerBgColor = outerBgColor;
@@ -243,7 +241,7 @@ class RoundedCornerBorder extends AbstractBorder {
         int w = width  - 1;
         int h = height - 1;
         
-        Area round = new Area(new RoundRectangle2D.Float(x, y, w, h, 0, 0));
+        Area round = new Area(new RoundRectangle2D.Float(x, y, w, h, r, r));
         if (c instanceof JPopupMenu) {
             g2.setPaint(c.getBackground());
             g2.fill(round);
@@ -313,7 +311,7 @@ class RoundedCornerBorder2 extends RoundedCornerBorder {
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
        
-        int r = 0;
+        int r = ARC;
         int w = width  - 1 + 1;
         int h = height - 1;
 
@@ -423,9 +421,9 @@ class ComboBoxRenderer extends JPanel implements ListCellRenderer {
         if (value != null)
             text.setText(value.toString());
         if (index == 0) {
-            text.setForeground(Color.lightGray);
+            text.setForeground(AppUI.getDisabledColor2());
         } else if (index > -1) {
-            text.setForeground(Color.white);
+            text.setForeground(Color.BLACK);
         }
             
         if (isSelected) {

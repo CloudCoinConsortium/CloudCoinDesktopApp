@@ -74,7 +74,7 @@ public class MyTextField  {
 
         AppUI.noOpaque(tf);
         AppUI.setSize(tf, (int) AppUI.getBoxWidth(), (int) AppUI.getBoxHeight());
-        AppUI.setBackground(tf, AppUI.getColor1());
+        AppUI.setBackground(tf, AppUI.getColor4());
         AppUI.setFont(tf, 18);
         AppUI.setMargin(tf, 10);
         tf.setLayout(new BorderLayout());
