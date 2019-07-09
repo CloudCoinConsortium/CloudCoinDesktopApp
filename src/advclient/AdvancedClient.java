@@ -3214,6 +3214,8 @@ public class AdvancedClient  {
         c.gridy = y;     
         final MyTextField remoteWalledId = new MyTextField("JohnDoe.SkyWallet.cc", false);
         gridbag.setConstraints(remoteWalledId.getTextField(), c);
+        if (!ps.typedRemoteWallet.isEmpty())
+            remoteWalledId.setData("" + ps.typedRemoteWallet);
         oct.add(remoteWalledId.getTextField());     
         y++;
         
@@ -3394,6 +3396,7 @@ public class AdvancedClient  {
                 
                 ps.selectedFromIdx = cboxfrom.getSelectedIndex();
                 ps.selectedToIdx =  cboxto.getSelectedIndex();
+                ps.typedRemoteWallet = remoteWalledId.getText();
        
                 if (srcIdx < 0 || srcIdx >= idxs.length) {                    
                     ps.errText = "Please select From Wallet";
@@ -6900,7 +6903,10 @@ public class AdvancedClient  {
                 Wallet wsrc = ps.srcWallet;
                 if (wsrc != null && wsrc.isSkyWallet()) {
                     wl.debug(ltag, "Appending sky transactions");
-                        
+                      
+                    StringBuilder nsb = new StringBuilder();
+                    int wholeTotal = 0;
+                    
                     Enumeration<String> enumeration = ps.cenvelopes.keys();
                     while (enumeration.hasMoreElements()) {
                         String key = enumeration.nextElement();
@@ -6909,12 +6915,21 @@ public class AdvancedClient  {
                         int total = 0;
                         try {
                             total = Integer.parseInt(data[1]);
-                        } catch (NumberFormatException e) {        
+                        } catch (NumberFormatException e) {
+                            wl.error(ltag, "Failed to parse number " + e.getMessage());
+                            continue;
                         }
  
+                        wholeTotal += total;
+                        if (!nsb.toString().equals(""))
+                            nsb.append(",");
+                                    
+                        nsb.append(data[0]);
                         //ps.dstWallet.appendTransaction(data[0], total, ps.receiptId, data[2]); 
-                        ps.dstWallet.appendTransaction(data[0], total, ps.receiptId); 
+                        
                     }
+                    
+                    ps.dstWallet.appendTransaction(nsb.toString(), wholeTotal, ps.receiptId); 
                 } else {
                     w.appendTransaction(ps.typedMemo, ps.statToBankValue, ps.receiptId);
                 }
