@@ -49,7 +49,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.1";
+    String version = "2.1.2";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -2634,7 +2634,14 @@ public class AdvancedClient  {
         subInnerCore.add(res);
 
             
-        JPanel bp = getOneButtonPanel();     
+        JPanel bp = getOneButtonPanelCustom("Continue", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+
+                sm.setActiveWallet(ps.domain + "." + ps.trustedServer);
+                ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
+                showScreen();
+            }
+        });     
         subInnerCore.add(bp);      
     }
     
@@ -5596,11 +5603,20 @@ public class AdvancedClient  {
             public void actionPerformed(ActionEvent e) {
                 Wallet w = sm.getActiveWallet();
                 JFileChooser c = new JFileChooser();
-                c.setSelectedFile(new File(w.getName() + "-transactions.csv"));
+                
+                File f = new File(w.getName() + "-transactions.csv");
+                c.setSelectedFile(f);
 
                 int rVal = c.showSaveDialog(null);
                 if (rVal == JFileChooser.APPROVE_OPTION) {
                     w.saveTransations(c.getSelectedFile().getAbsolutePath());
+                    if (!Desktop.isDesktopSupported())
+                        return;
+                    try {
+                        Desktop.getDesktop().open(c.getSelectedFile().getParentFile());
+                    } catch (IOException ie) {
+                        wl.error(ltag, "Failed to open browser: " + ie.getMessage());
+                    }
                 }
             }
         });
