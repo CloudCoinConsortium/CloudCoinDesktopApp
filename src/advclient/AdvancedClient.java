@@ -49,7 +49,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.2";
+    String version = "2.1.3";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -111,7 +111,7 @@ public class AdvancedClient  {
         wl = new WLogger();
         
         String home = System.getProperty("user.home");
-        home += File.separator + "DebugX";
+        home += File.separator + "CloudCoinWallet";
             
         sm = new ServantManager(wl, home);
         if (!sm.init()) {
@@ -2594,9 +2594,16 @@ public class AdvancedClient  {
             AppUI.hr(subInnerCore, 12);
         }
             
-        resetState();
+        //resetState();
         
-        JPanel bp = getOneButtonPanel();     
+        //JPanel bp = getOneButtonPanel();  
+        JPanel bp = getOneButtonPanelCustom("Continue", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                sm.setActiveWallet(ps.typedWalletName);
+                ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
+                showScreen();
+            }
+        });  
         subInnerCore.add(bp);      
     }
     
@@ -3047,6 +3054,19 @@ public class AdvancedClient  {
                     return;
                 }
                 
+                if (!Validator.memoLength(ps.typedMemo)) {
+                    ps.errText = "Memo too long. Only 64 characters are allowed";
+                    showScreen();
+                    return;
+                }
+                
+                if (!Validator.memo(ps.typedMemo)) {
+                    ps.errText = "Memo: Non alpha number characters are not allowed";
+                    showScreen();
+                    return;
+                }
+                
+                
                 int cnt = AppCore.getFilesCount(Config.DIR_SUSPECT, w.getParent().getName());
                 if (cnt != 0) {
                     ps.errText = getNonEmptyFolderError("Suspect");
@@ -3396,7 +3416,7 @@ public class AdvancedClient  {
         JPanel bp = getTwoButtonPanel(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 
-                ps.typedMemo = memo.getText();
+                ps.typedMemo = memo.getText().trim();
               
                 int srcIdx = cboxfrom.getSelectedIndex() - 1;
                 int dstIdx = cboxto.getSelectedIndex() - 1;
@@ -3433,6 +3453,18 @@ public class AdvancedClient  {
                     ps.errText = "Invalid amount";
                     showScreen();
                     return;  
+                }
+                
+                if (!Validator.memoLength(ps.typedMemo)) {
+                    ps.errText = "Memo too long. Only 64 characters are allowed";
+                    showScreen();
+                    return;
+                }
+                
+                if (!Validator.memo(ps.typedMemo)) {
+                    ps.errText = "Memo: Non alpha number characters are not allowed";
+                    showScreen();
+                    return;
                 }
                 
 
@@ -3503,7 +3535,7 @@ public class AdvancedClient  {
                         showScreen();
                         return;
                     }
-                    
+                                        
                     // Local folder
                     if (ps.chosenFile.isEmpty()) {
                         ps.errText = "Folder is not chosen";
@@ -3573,6 +3605,9 @@ public class AdvancedClient  {
                             showScreen();
                             return;
                         }
+                        
+                        
+                        
                     }
                     
                     
@@ -4088,7 +4123,7 @@ public class AdvancedClient  {
                 String walletName = cbox.getSelectedValue();
                 Wallet w;
                 
-                ps.typedMemo = memo.getText();
+                ps.typedMemo = memo.getText().trim();
                 ps.typedPassword = password.getText();
                 
                 w = sm.getWalletByName(walletName);
@@ -4312,6 +4347,7 @@ public class AdvancedClient  {
         c.gridx = GridBagConstraints.RELATIVE;
         c.gridy = y;
 
+        /*
         int tsw = 0;
         for (int i = 0; i < wallets.length; i++) {
             if (wallets[i].isSkyWallet()) {
@@ -4342,6 +4378,9 @@ public class AdvancedClient  {
             
             topMargin = 26;
         }       
+        */
+        
+        int topMargin = 26;
         
         c.anchor = GridBagConstraints.CENTER;
         c.insets = new Insets(topMargin, 0, 4, 0); 
@@ -4427,9 +4466,46 @@ public class AdvancedClient  {
         });
         c.gridx = GridBagConstraints.RELATIVE;
         c.gridy = y;
-        c.insets = new Insets(80, 0, 4, 0); 
+        c.insets = new Insets(40, 0, 4, 0); 
         gridbag.setConstraints(l, c); 
         gct.add(l);
+        
+        y++;
+        
+        // Support Portal
+        vl = new JLabel("Support Portal");
+        AppUI.setCommonFont(vl);
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+        c.insets = new Insets(40, 0, 4, 0); 
+        gridbag.setConstraints(vl, c); 
+        gct.add(vl);
+        y++;
+        
+        
+        urlName = "https://cloudcoinsupport.atlassian.net/servicedesk/customer/portals";
+        l = AppUI.getHyperLink(urlName, urlName, 14);
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+        c.insets = new Insets(4, 0, 4, 0); 
+        gridbag.setConstraints(l, c); 
+        gct.add(l);
+        
+        y++;
+        
+        
+        
+        https://cloudcoinsupport.atlassian.net/servicedesk/customer/portals
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         
         
         ct.add(gct);
@@ -5403,9 +5479,9 @@ public class AdvancedClient  {
         
         if (isSky) {
             Hashtable<String, String[]> envelopes = sm.getActiveWallet().getEnvelopes();
-            trLabel = new JLabel("Wallet Info");
+            trLabel = new JLabel("Skywallet Contents. Click Deposit to Download");
             if (envelopes == null || envelopes.size() == 0) {
-                trLabel = new JLabel("No Envelopes");
+                trLabel = new JLabel("No Coins");
                 AppUI.setSemiBoldFont(trLabel, 20);
                 AppUI.alignCenter(trLabel);
                 ct.add(trLabel);

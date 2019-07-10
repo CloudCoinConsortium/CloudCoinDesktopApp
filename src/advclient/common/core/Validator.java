@@ -34,11 +34,15 @@ public class Validator {
         return email.matches(regex);
     }
     
+    public static boolean memoLength(String tag) {
+        return tag.length() <= 64;
+    }
+    
     public static boolean memo(String tag) {
-        if (tag.indexOf('.') != -1 || tag.indexOf('/') != -1 || tag.indexOf('\\') != -1)
-            return false;
+        Pattern p = Pattern.compile("[\\w ]+", Pattern.UNICODE_CHARACTER_CLASS);
+        Matcher m = p.matcher(tag);
         
-        return true;
+        return m.matches();
     }
     
     public static boolean domain(String domain) {

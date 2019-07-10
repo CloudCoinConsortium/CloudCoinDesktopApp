@@ -379,13 +379,13 @@ public class Sender extends Servant {
                     addCoinToReceipt(cc, "counterfeit", Config.DIR_COUNTERFEIT);
                     c++;
                     
-                    AppCore.moveToFolder(cc.originalFile, Config.DIR_COUNTERFEIT, user);
+                    //AppCore.moveToFolder(cc.originalFile, Config.DIR_COUNTERFEIT, user);
                 } else {
                     logger.info(ltag, "Moving to Lost: " + cc.sn);
                     addCoinToReceipt(cc, "error", Config.DIR_LOST);
                     e++;
                     //fv += cc.getDenomination();
-                    AppCore.moveToFolder(cc.originalFile, Config.DIR_LOST, user);
+                    //AppCore.moveToFolder(cc.originalFile, Config.DIR_LOST, user);
                 }
             }
         }      

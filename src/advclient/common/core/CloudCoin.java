@@ -188,7 +188,7 @@ public class CloudCoin {
                 setMissingANs();
                 setEd();
 
-		json = "{\"cloudcoin\":[{\"nn\":" + nn + ",\"sn\":" + sn + ",\"an\":[\"";
+		json = "{\"cloudcoin\":[{\"nn\":\"" + nn + "\",\"sn\":\"" + sn + "\",\"an\":[\"";
 		for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
                     String an = ans[i];
 
