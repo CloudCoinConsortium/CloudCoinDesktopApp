@@ -258,6 +258,8 @@ public class Sender extends Servant {
         if (maxCoins == -1)
             maxCoins = Config.DEFAULT_MAX_COINS_MULTIDETECT;
         
+        maxCoins = AppCore.maxCoinsWorkAround(maxCoins);
+        
         logger.debug(ltag, "Maxcoins: " + maxCoins);
         globalResult.totalFiles = coinsPicked.size();
         globalResult.totalRAIDAProcessed = 0;

@@ -42,15 +42,15 @@ public class Config {
 
     public static int THREAD_POOL_SIZE = 80;
 
-    public static int READ_TIMEOUT = 25000; // ms
-    public static int CONNECTION_TIMEOUT = 2000; // ms
+    public static int READ_TIMEOUT = 30000; // ms
+    public static int CONNECTION_TIMEOUT = 3000; // ms
     
-    public static int REQUEST_CHANGE_READ_TIMEOUT = 40000; // ms
+    public static int REQUEST_CHANGE_READ_TIMEOUT = 50000; // ms
     
-    public static int FIX_FRACKED_TIMEOUT = 30000; // ms
-    public static int MULTI_FIX_TIMEOUT = 30000; // ms
-    public static int MULTI_DETECT_TIMEOUT = 30000; // ms
-    public static int ECHO_TIMEOUT = 2000;
+    public static int FIX_FRACKED_TIMEOUT = 35000; // ms
+    public static int MULTI_FIX_TIMEOUT = 35000; // ms
+    public static int MULTI_DETECT_TIMEOUT = 35000; // ms
+    public static int ECHO_TIMEOUT = 3000;
 
 
 

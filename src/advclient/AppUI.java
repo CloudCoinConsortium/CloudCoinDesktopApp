@@ -560,11 +560,11 @@ public class AppUI {
     }
     
     public static String getRemoteUserOption() {
-        return "- To Remote User";
+        return "- Remote User";
     }
     
     public static String getLocalFolderOption() {
-        return "- To Local Folder";
+        return "- Local Folder";
     }
 
     public static JScrollPane setupTable(JTable table, String[] columnNames, String[][] data, DefaultTableCellRenderer r) {

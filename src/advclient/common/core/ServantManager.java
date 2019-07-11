@@ -105,10 +105,16 @@ public class ServantManager {
     }
     
     public boolean init() {
+        boolean rv; 
+        
         AppCore.initPool();
         
         try {
-            AppCore.initFolders(new File(home), logger);
+            rv = AppCore.initFolders(new File(home), logger);
+            if (!rv) {
+                logger.error(ltag, "Failed to create folders");
+                return false;
+            }
         } catch (Exception e) {
             logger.error(ltag, "Failed to init root dir " + home);
             return false;

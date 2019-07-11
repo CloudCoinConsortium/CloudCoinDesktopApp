@@ -206,6 +206,8 @@ public class FrackFixer extends Servant {
         if (maxCoins == -1)
             maxCoins = Config.DEFAULT_MAX_COINS_MULTIDETECT;
 
+        maxCoins = AppCore.maxCoinsWorkAround(maxCoins);
+        
         logger.debug(ltag, "maxcoins " + maxCoins);
 
         ArrayList<CloudCoin> ccactive = new ArrayList<CloudCoin>();

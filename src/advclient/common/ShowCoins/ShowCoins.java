@@ -108,7 +108,7 @@ public class ShowCoins extends Servant {
 
         logger.debug(ltag, "Total coins in " + folder + ": " + ccs.size());
 
-        createStatFile(folder, result.counters[idx]);
+        //createStatFile(folder, result.counters[idx]);
     }
 
     public void createStatFile(String folder, int[] counters) {
@@ -119,7 +119,7 @@ public class ShowCoins extends Servant {
         File file = new File(privateLogDir + File.separator + fileName);
         try {
             if (!file.createNewFile()) {
-                logger.error(ltag, "Failed to create file " + fileName);
+                logger.error(ltag, "Failed to create new file " + fileName);
             }
         } catch (IOException e) {
             logger.error(ltag, "Failed to create file " + fileName);

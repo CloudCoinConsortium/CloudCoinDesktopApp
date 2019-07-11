@@ -49,7 +49,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.3";
+    String version = "2.1.4";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -94,7 +94,11 @@ public class AdvancedClient  {
         initMainScreen();
         
         if (!ps.errText.equals("")) {
-            mainPanel.add(new JLabel("Failed to init app: " + ps.errText));
+            JLabel x = new JLabel(ps.errText);
+            AppUI.setFont(x, 16);
+            AppUI.setMargin(x, 8);
+            AppUI.alignCenter(x);
+            mainPanel.add(x);
             return;
         }
         
@@ -115,7 +119,8 @@ public class AdvancedClient  {
             
         sm = new ServantManager(wl, home);
         if (!sm.init()) {
-            ps.errText = "Failed to init ServantManager";
+            resetState();
+            ps.errText = "Failed to init program. Make sure you have correct folder permissions (" + home + ")";
             return;
         }
         
@@ -148,6 +153,8 @@ public class AdvancedClient  {
     public void walletSetTotal(Wallet w, int total) {
         JLabel cntLabel = (JLabel) w.getuiRef();
              
+        wl.debug(ltag, "Set Total: " + w.getName() + " total = " + total);
+        
         w.setTotal(total);
         String strCnt = AppCore.formatNumber(total);
         if (cntLabel == null)
@@ -226,14 +233,17 @@ public class AdvancedClient  {
     
     
     public void showCoinsDone(int[][] counters) {
-        if (ps.currentWalletIdx <= 0)
+        if (ps.currentWalletIdx <= 0) {
+            wl.error(ltag, "curIdx " + ps.currentWalletIdx);
             return;
+        }
         
         Wallet w = wallets[ps.currentWalletIdx - 1];     
         int totalCnt = AppCore.getTotal(counters[Config.IDX_FOLDER_BANK]) +
 			AppCore.getTotal(counters[Config.IDX_FOLDER_FRACKED]) +
                         AppCore.getTotal(counters[Config.IDX_FOLDER_VAULT]);
         
+        wl.debug(ltag, "ShowCoins done");
         
         ps.counters = counters;
         walletSetTotal(w, totalCnt);
@@ -791,6 +801,9 @@ public class AdvancedClient  {
     
     public void resetState() {
         ps = new ProgramState();
+        if (sm == null) 
+            return;
+        
         if (sm.getWallets().length != 0) {
             ps.defaultWalletCreated = true;
             ps.defaultWalletName = AppCore.getDefaultWalletName();
@@ -908,9 +921,11 @@ public class AdvancedClient  {
                 showConfirmDeleteWalletScreen();
                 break;
             case ProgramState.SCREEN_DELETE_WALLET_DONE:
+                ps.isUpdatedWallets = false;
                 showDeleteWalletDoneScreen();
                 break;
             case ProgramState.SCREEN_SKY_WALLET_CREATED:
+                ps.isUpdatedWallets = false;
                 showSkyWalletCreatedScreen();
                 break;
             case ProgramState.SCREEN_PREDEPOSIT:
@@ -1870,7 +1885,7 @@ public class AdvancedClient  {
         String totalFailed = AppCore.formatNumber(ps.statFailed);
         String totalLost = AppCore.formatNumber(ps.statLost);
         
-        JLabel x = new JLabel("<html><div style='width:400px; text-align:center'>Deposited <b>" +  total +  " CloudCoins</b> to <b>" + ps.dstWallet.getName() + " </b></div></html>");
+        JLabel x = new JLabel("<html><div style='width:400px; text-align:center'>Deposited <b>" +  total +  " Notes</b> to <b>" + ps.dstWallet.getName() + " </b></div></html>");
         AppUI.setCommonFont(x);
  
         int y = 0;
@@ -1965,12 +1980,6 @@ public class AdvancedClient  {
         c.gridy = y;
         gridbag.setConstraints(x, c);
         ct.add(x);
-        
-        
-        
-        
-        
-        
         
         JPanel bp = getTwoButtonPanelCustom("Next Deposit", "Continue", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -2160,6 +2169,7 @@ public class AdvancedClient  {
     
     public void showConfirmDeleteWalletScreen() {
         JPanel subInnerCore = getModalJPanel("Confirmation");
+        maybeShowError(subInnerCore);
      
         // Container
         JPanel ct = new JPanel();
@@ -2182,14 +2192,19 @@ public class AdvancedClient  {
         gridbag.setConstraints(x, c);
         ct.add(x);
 
-        String txt = "Are you sure you want to delete Wallet <b>" + ps.srcWallet.getName() + "</b> ?";
- 
-        
         y++;
+        
+        String txt;
+        txt = "Are you sure you want to delete Wallet <b>" + ps.srcWallet.getName() + "</b> ?";
+ 
+        if (ps.srcWallet.isSkyWallet()) {
+            txt += "<br><br>Your ID coin will be put back into your Bank. You will not be able to receive Coins at this address again";    
+        }
+           
         // Q
         x = new JLabel("<html><div style='width:460px;text-align:center'>" + txt + "</div></html>");
         AppUI.setCommonBoldFont(x);
-        c.insets = new Insets(42, 0, 4, 0);
+        c.insets = new Insets(32, 0, 4, 0);
         c.anchor = GridBagConstraints.CENTER;
         c.gridx = GridBagConstraints.RELATIVE;;
         c.gridy = y;
@@ -2198,7 +2213,37 @@ public class AdvancedClient  {
         ct.add(x);
                
         y++; 
-             
+        
+        Wallet dstWallet = sm.getWalletByName(AppCore.getDefaultWalletName());
+        MyTextField tf0 = null;
+        if (dstWallet.isEncrypted() && ps.srcWallet.isSkyWallet()) {
+            // Password Label
+            JLabel n = new JLabel("Password");
+            AppUI.setCommonFont(n);
+            c.anchor = GridBagConstraints.EAST;
+            c.insets = new Insets(24, 32, 4, 0); 
+            c.gridx = GridBagConstraints.RELATIVE;
+            c.gridy = y;
+            c.gridwidth = 1;
+            gridbag.setConstraints(n, c);
+            ct.add(n);
+
+            tf0 = new MyTextField("Dst Wallet Password");
+            c.insets = new Insets(24, 10, 4, 0);
+            c.gridx = GridBagConstraints.RELATIVE;
+            c.anchor = GridBagConstraints.WEST;
+            c.gridy = y;
+            c.gridwidth = 1;
+            gridbag.setConstraints(tf0.getTextField(), c);
+            ct.add(tf0.getTextField());
+            
+            y++;
+                
+            c.gridwidth = 2;
+        }
+        
+        final MyTextField mtf0 = tf0;
+        
         JPanel bp = getTwoButtonPanel(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 if (ps.srcWallet.getTotal() != 0) {
@@ -2208,14 +2253,95 @@ public class AdvancedClient  {
                 }
                 
                 wl.debug(ltag, "Deleting Wallet " + ps.srcWallet.getName());
-                if (!AppCore.moveFolderToTrash(ps.srcWallet.getName())) {
-                    ps.errText = "Failed to delete Wallet";
-                    showScreen();
-                    return;
+                
+                
+                if (ps.srcWallet.isSkyWallet()) {
+                    String defWalletName = dstWallet.getName();
+                    String origName = ps.srcWallet.getIDCoin().originalFile;
+                    String name = ps.srcWallet.getIDCoin().getFileName();
+                     
+                    System.out.println("Moving id " + origName + " " + defWalletName + " " + name);
+                    wl.debug(ltag, "Moving id " + origName + " to " + defWalletName + " name");
+                    
+                    if (dstWallet.isEncrypted()) {
+                        if (mtf0 == null)
+                            return;
+                        
+                        if (mtf0.getText().isEmpty()) {
+                            ps.errText = "Password is empty";
+                            showScreen();
+                            return;
+                        }
+                    
+                        String wHash = dstWallet.getPasswordHash();
+                        String providedHash = AppCore.getMD5(mtf0.getText());
+                        if (wHash == null) {
+                            ps.errText = "Dst Wallet is corrupted";
+                            showScreen();
+                            return;
+                        }
+                    
+                        if (!wHash.equals(providedHash)) {
+                            ps.errText = "Password is incorrect";
+                            showScreen();
+                            return;
+                        } 
+                    
+                        dstWallet.setPassword(mtf0.getText());
+                         
+                    }
+                    
+                    if (!AppCore.moveToFolderNewName(origName, Config.DIR_BANK, defWalletName, name)) {
+                        ps.errText = "Failed to delete Wallet";
+                        showScreen();
+                        return;
+                    }
+
+                    
+                    if (dstWallet.isEncrypted()) {
+                        wl.debug(ltag, "Start Vaulter");
+                        
+                        sm.changeServantUser("Vaulter", dstWallet.getName());
+                        sm.startVaulterService(new CallbackInterface() {
+                            public void callback(Object o) {
+                                VaulterResult vr = (VaulterResult) o;
+                                
+                                wl.debug(ltag, "DeleteWallet Vaulter finished: " + vr.status);
+                                if (vr.status != VaulterResult.STATUS_FINISHED) {
+                                    EventQueue.invokeLater(new Runnable() {         
+                                        public void run() {
+                                            ps.errText = "Failed to encrypt ID coin";
+                                            ps.currentScreen = ProgramState.SCREEN_DELETE_WALLET_DONE;
+                                            showScreen();
+                                        }
+                                    });
+                                
+                                    return;
+                                }
+                                
+                                System.out.println("sss");
+                                EventQueue.invokeLater(new Runnable() {         
+                                    public void run() {
+                                        sm.initWallets();                
+                                        ps.currentScreen = ProgramState.SCREEN_DELETE_WALLET_DONE;
+                                        showScreen();
+                                    }
+                                });
+                            }
+                        }, dstWallet.getPassword());
+                        
+                        return;
+                    }
+                    
+                } else {
+                    if (!AppCore.moveFolderToTrash(ps.srcWallet.getName())) {
+                        ps.errText = "Failed to delete Wallet";
+                        showScreen();
+                        return;
+                    }
                 }
                 
-                sm.initWallets();
-                
+                sm.initWallets();                
                 ps.currentScreen = ProgramState.SCREEN_DELETE_WALLET_DONE;
                 showScreen();
             }
@@ -2643,7 +2769,6 @@ public class AdvancedClient  {
             
         JPanel bp = getOneButtonPanelCustom("Continue", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-
                 sm.setActiveWallet(ps.domain + "." + ps.trustedServer);
                 ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
                 showScreen();
@@ -4901,14 +5026,18 @@ public class AdvancedClient  {
     }
     
 
-    
     public optRv setOptionsForWallets(boolean checkFracked, boolean needEmpty) {
+        return setOptionsForWalletsCommon(checkFracked, needEmpty, false);
+    }
+    
+    
+    public optRv setOptionsForWalletsCommon(boolean checkFracked, boolean needEmpty, boolean includeSky) {
         optRv rv = new optRv();
         
         int cnt = 0;
         int fc = 0;
         for (int i = 0; i < wallets.length; i++) {
-            if (wallets[i].isSkyWallet())
+            if (!includeSky && wallets[i].isSkyWallet())
                 continue;
             
             if (wallets[i].getTotal() == 0) {
@@ -4942,7 +5071,7 @@ public class AdvancedClient  {
               
         int j = 0;
         for (int i = 0; i < wallets.length; i++) {
-            if (wallets[i].isSkyWallet())
+            if (!includeSky && wallets[i].isSkyWallet())
                 continue;
             
             if (wallets[i].getTotal() == 0) {
@@ -4955,14 +5084,17 @@ public class AdvancedClient  {
                     continue;
             }
             
+            int wTotal = wallets[i].getTotal();
             if (checkFracked) {
                 fc = AppCore.getFilesCount(Config.DIR_FRACKED, wallets[i].getName());
                 if (fc == 0) 
                     continue;  
+                
+                wTotal = fc;
             }
             
             
-            rv.options[j] = wallets[i].getName() + " - " + AppCore.formatNumber(wallets[i].getTotal()) + " CC";
+            rv.options[j] = wallets[i].getName() + " - " + AppCore.formatNumber(wTotal) + " CC";
             rv.idxs[j] = i;
             j++;
         }
@@ -4985,7 +5117,7 @@ public class AdvancedClient  {
         
         maybeShowError(ct);
            
-        final optRv rv = setOptionsForWallets(false, true);
+        final optRv rv = setOptionsForWalletsCommon(false, true, true);
         if (rv.idxs.length == 0) {
             JLabel nx = new JLabel("You have no empty wallets to delete");
             AppUI.setSemiBoldFont(nx, 20);
@@ -5363,8 +5495,7 @@ public class AdvancedClient  {
     
     public void showTransactionsScreen() {        
         boolean isSky = sm.getActiveWallet().isSkyWallet() ? true : false;
-
-        
+    
         showLeftScreen();
  
         Wallet w = sm.getActiveWallet();   
@@ -5390,10 +5521,7 @@ public class AdvancedClient  {
             
             AppUI.hr(ct, 10);
         }
-        
-        
-        
-
+  
         // Coins
         int[][] counters = w.getCounters();   
         if (counters != null && counters.length != 0) {
@@ -5550,7 +5678,7 @@ public class AdvancedClient  {
                 lbl = (JLabel) this;
                 if (column == 0) {                          
                     String hash = trs[row][trs[0].length - 1];                
-                    String html = AppCore.getReceiptHtml(hash, ps.currentWallet.getName());
+                    String html = AppCore.getReceiptHtml(hash, sm.getActiveWallet().getName());
                     if (html != null) {
                         AppUI.setColor(lbl, AppUI.getColor0());
                         AppUI.underLine(lbl);

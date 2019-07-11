@@ -48,18 +48,23 @@ public class AppCore {
     static public String raidaErrText = "Cannot Connect to the RAIDA. "
             + "Check that local routers are not blocking your connection.";
 
-    static public void createDirectory(String dirName) {
+    static public boolean createDirectory(String dirName) {
         String idPath;
 
         idPath = rootPath + File.separator + dirName;
-        logger.info(ltag, "Creating " + idPath);
+        
         File idPathFile = new File(idPath);
+        if (idPathFile.exists())
+            return true;
+        
+        logger.info(ltag, "Creating " + idPath);
         if (!idPathFile.mkdirs()) {
             logger.error(ltag, "Can not create directory " + dirName);
-            return;
+            return false;
         }
 
         logger.info(ltag, "CREATED " + idPath);
+        return true;
     }
 
     static public void createDirectoryPath(String path) {
@@ -73,18 +78,28 @@ public class AppCore {
         }
     }
    
-    static public void initFolders(File path, GLogger logger) throws Exception {
+    static public boolean initFolders(File path, GLogger logger) throws Exception {
         rootPath = path;
         AppCore.logger = logger;
 
-        createDirectory(Config.DIR_ROOT);
+        if (!createDirectory(Config.DIR_ROOT))
+            return false;
+        
         rootPath = new File(path, Config.DIR_ROOT);
 
-        createDirectory(Config.DIR_ACCOUNTS);
-        createDirectory(Config.DIR_MAIN_LOGS);
-        createDirectory(Config.DIR_MAIN_TRASH);
-        createDirectory(Config.DIR_BACKUPS);
-        createDirectory("Commands");
+        if (!createDirectory(Config.DIR_ACCOUNTS))
+            return false;
+        
+        if (!createDirectory(Config.DIR_MAIN_LOGS))
+            return false;
+        
+        if (!createDirectory(Config.DIR_MAIN_TRASH))
+            return false;
+        
+        if (!createDirectory(Config.DIR_BACKUPS))
+            return false;
+        
+        return true;
     }
    
     static public void initUserFolders(String user) throws Exception {
@@ -725,7 +740,7 @@ public class AppCore {
         return cc;
     }
     
-        public static CloudCoin findCoinBySN(String dir, String user, int sn) {
+    public static CloudCoin findCoinBySN(String dir, String user, int sn) {
         String dirPath = AppCore.getUserDir(dir, user);
         logger.debug(ltag, "Looking for sn " + sn + " into dir: " + dirPath);
     
@@ -909,5 +924,18 @@ public class AppCore {
         
     }
     
+    
+    public static int maxCoinsWorkAround(int maxCoins) {
+        String javaVersion = System.getProperty("java.version");
+        
+        logger.debug(ltag, "Java version: " + javaVersion);
+        
+        if (javaVersion.equals("1.8.0_211")) {
+            logger.debug(ltag, "MaxCoins WorkAround applied");
+            return 20;
+        }
+
+        return maxCoins;
+    }
     
 }

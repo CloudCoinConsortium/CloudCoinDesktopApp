@@ -246,6 +246,8 @@ public class Authenticator extends Servant {
         int maxCoins = getIntConfigValue("max-coins-to-multi-detect");
         if (maxCoins == -1)
             maxCoins = Config.DEFAULT_MAX_COINS_MULTIDETECT;
+        
+        maxCoins = AppCore.maxCoinsWorkAround(maxCoins);
 
         String email = getConfigValue("email");
         if (email != null)
