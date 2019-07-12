@@ -2215,6 +2215,7 @@ public class AdvancedClient  {
         y++; 
         
         Wallet dstWallet = sm.getWalletByName(AppCore.getDefaultWalletName());
+        System.out.println("d=" + dstWallet + " x="+ps.srcWallet);
         MyTextField tf0 = null;
         if (dstWallet.isEncrypted() && ps.srcWallet.isSkyWallet()) {
             // Password Label
@@ -2260,7 +2261,6 @@ public class AdvancedClient  {
                     String origName = ps.srcWallet.getIDCoin().originalFile;
                     String name = ps.srcWallet.getIDCoin().getFileName();
                      
-                    System.out.println("Moving id " + origName + " " + defWalletName + " " + name);
                     wl.debug(ltag, "Moving id " + origName + " to " + defWalletName + " name");
                     
                     if (dstWallet.isEncrypted()) {
@@ -2318,8 +2318,7 @@ public class AdvancedClient  {
                                 
                                     return;
                                 }
-                                
-                                System.out.println("sss");
+
                                 EventQueue.invokeLater(new Runnable() {         
                                     public void run() {
                                         sm.initWallets();                
