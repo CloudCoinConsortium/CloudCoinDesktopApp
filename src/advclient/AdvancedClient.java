@@ -12,7 +12,9 @@ import global.cloudcoin.ccbank.Receiver.ReceiverResult;
 import global.cloudcoin.ccbank.Sender.SenderResult;
 import global.cloudcoin.ccbank.ServantManager.ServantManager;
 import global.cloudcoin.ccbank.ServantManager.ServantManager.makeChangeResult;
+import global.cloudcoin.ccbank.ShowCoins.ShowCoins;
 import global.cloudcoin.ccbank.ShowCoins.ShowCoinsResult;
+import global.cloudcoin.ccbank.ShowEnvelopeCoins.ShowEnvelopeCoins;
 import global.cloudcoin.ccbank.ShowEnvelopeCoins.ShowEnvelopeCoinsResult;
 import global.cloudcoin.ccbank.Unpacker.UnpackerResult;
 import global.cloudcoin.ccbank.Vaulter.VaulterResult;
@@ -49,7 +51,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.4";
+    String version = "2.1.5";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -2214,7 +2216,7 @@ public class AdvancedClient  {
                
         y++; 
         
-        Wallet dstWallet = sm.getWalletByName(AppCore.getDefaultWalletName());
+        final Wallet dstWallet = sm.getWalletByName(AppCore.getDefaultWalletName());
         System.out.println("d=" + dstWallet + " x="+ps.srcWallet);
         MyTextField tf0 = null;
         if (dstWallet.isEncrypted() && ps.srcWallet.isSkyWallet()) {
@@ -2927,7 +2929,75 @@ public class AdvancedClient  {
         subInnerCore.add(bp);   
     }
     
+    
     public void updateWalletAmount() {
+        if (wallets == null)
+            wallets = sm.getWallets();
+        
+        for (int i = 0; i < wallets.length; i++) {
+            JLabel cntLabel = (JLabel) wallets[i].getuiRef();
+            if (cntLabel == null)
+                continue;
+                
+            cntLabel.setText("Counting");
+            cntLabel.invalidate();
+            cntLabel.repaint();
+        }
+        
+        setTotalCoins();
+        
+        for (int i = 0; i < wallets.length; i++) {
+            final Wallet w = wallets[i];
+            
+            String rpath = AppCore.getRootPath() + File.separator + w.getName();
+            wl.debug(ltag, "Counting for " + w.getName());
+            if (w.isSkyWallet()) {
+                ShowEnvelopeCoins sc = new ShowEnvelopeCoins(rpath, wl);
+                int snID = w.getIDCoin().sn;
+                sc.launch(snID, "", new CallbackInterface() {
+                    public void callback(Object o) {
+                        ShowEnvelopeCoinsResult scresult = (ShowEnvelopeCoinsResult) o;
+            
+                        wl.debug(ltag, "ShowEnvelopeCoins done");
+                        w.setSNs(scresult.coins);
+                        w.setEnvelopes(scresult.envelopes);
+                                
+                        int[][] counters = scresult.counters;                        
+                        int totalCnt = AppCore.getTotal(counters[Config.IDX_FOLDER_BANK]) +
+			AppCore.getTotal(counters[Config.IDX_FOLDER_FRACKED]) +
+                        AppCore.getTotal(counters[Config.IDX_FOLDER_VAULT]);
+
+                        walletSetTotal(w, totalCnt);
+                        w.setCounters(counters);
+                    }
+                });
+            } else {
+                
+                ShowCoins sc = new ShowCoins(rpath, wl);
+                sc.launch(new CallbackInterface() {
+                    public void callback(Object o) {
+                        ShowCoinsResult scresult = (ShowCoinsResult) o;
+            
+                        wl.debug(ltag, "ShowCoins done");
+                        w.setSNs(scresult.coins);
+                                
+                        int[][] counters = scresult.counters;                        
+                        int totalCnt = AppCore.getTotal(counters[Config.IDX_FOLDER_BANK]) +
+			AppCore.getTotal(counters[Config.IDX_FOLDER_FRACKED]) +
+                        AppCore.getTotal(counters[Config.IDX_FOLDER_VAULT]);
+
+                        walletSetTotal(w, totalCnt);
+                        w.setCounters(counters);
+                    }
+                });
+            
+                
+            }
+        }
+        
+    }
+    
+    public void updateWalletAmount2() {
         if (wallets == null)
             wallets = sm.getWallets();
        
@@ -5089,7 +5159,9 @@ public class AdvancedClient  {
                 if (fc == 0) 
                     continue;  
                 
-                wTotal = fc;
+                int[][] counters = wallets[i].getCounters();
+                wTotal = AppCore.getTotal(counters[Config.IDX_FOLDER_FRACKED]);
+                //wTotal = fc;
             }
             
             
