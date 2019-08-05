@@ -5,6 +5,9 @@ public class AuthenticatorResult {
     public int totalFiles;
     public int totalRAIDAProcessed;
 
+    public int totalCoins;
+    public int totalCoinsProcessed;
+    
     public int status;
 
     public static int STATUS_PROCESSING = 1;
@@ -17,6 +20,7 @@ public class AuthenticatorResult {
     public AuthenticatorResult() {
         totalFilesProcessed = totalRAIDAProcessed = 0;
         totalFiles = 0;
+        totalCoins = totalCoinsProcessed = 0;
         status = STATUS_PROCESSING;
     }
 }

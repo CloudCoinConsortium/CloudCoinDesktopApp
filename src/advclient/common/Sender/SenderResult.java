@@ -5,6 +5,9 @@ public class SenderResult {
     public int totalFiles;
     public int totalRAIDAProcessed;
     
+    public int totalCoins;
+    public int totalCoinsProcessed;
+    
     public static int STATUS_PROCESSING = 1;
     public static int STATUS_FINISHED = 2;
     public static int STATUS_ERROR = 3;

@@ -115,9 +115,12 @@ public class FrackFixer extends Servant {
     public void copyFromMainFr(FrackFixerResult nfr) {
         nfr.failed = fr.failed;
         nfr.fixed = fr.fixed;
+        nfr.fixedValue = fr.fixedValue;
         nfr.status = fr.status;
         nfr.totalFilesProcessed = fr.totalFilesProcessed;
         nfr.totalFiles = fr.totalFiles;
+        nfr.totalCoins = fr.totalCoins;
+        nfr.totalCoinsProcessed = fr.totalCoinsProcessed;
         nfr.totalRAIDAProcessed = fr.totalRAIDAProcessed;
         nfr.fixingRAIDA = fr.fixingRAIDA;
         nfr.round = fr.round;
@@ -140,6 +143,7 @@ public class FrackFixer extends Servant {
                 logger.info(ltag, "Coin " + cc.sn + " is fixed. Moving to bank");
                 AppCore.moveToBank(cc.originalFile, user);
                 fr.fixed++;
+                fr.fixedValue += cc.getDenomination();
             } else {
                 logger.debug(ltag, "Not ready to move. Failed to fix. Only passed:" + cnt);
             }
@@ -178,7 +182,7 @@ public class FrackFixer extends Servant {
             if (cb != null)
                 cb.callback(fr);
         }
-        
+               
         for (File file : listOfFiles) {
             if (file.isDirectory())
                 continue;
@@ -193,6 +197,7 @@ public class FrackFixer extends Servant {
                 continue;
             }
 
+            fr.totalCoins += cc.getDenomination();
             ccall.add(cc);
         }
 
@@ -205,9 +210,7 @@ public class FrackFixer extends Servant {
         int maxCoins = getIntConfigValue("max-coins-to-multi-detect");
         if (maxCoins == -1)
             maxCoins = Config.DEFAULT_MAX_COINS_MULTIDETECT;
-
-        maxCoins = AppCore.maxCoinsWorkAround(maxCoins);
-        
+     
         logger.debug(ltag, "maxcoins " + maxCoins);
 
         ArrayList<CloudCoin> ccactive = new ArrayList<CloudCoin>();
@@ -220,7 +223,10 @@ public class FrackFixer extends Servant {
             fr.round = 1;
             fr.fixingRAIDA = i;
             fr.totalFilesProcessed = 0;
+            fr.totalCoinsProcessed = 0;
             fr.totalRAIDAProcessed = 0;
+            
+            int curValProcessed = 0;
             for (CloudCoin tcc : ccall) {
                 if (tcc.getDetectStatus(i) == CloudCoin.STATUS_PASS)
                     continue;
@@ -239,6 +245,8 @@ public class FrackFixer extends Servant {
                 }
                 
                 ccactive.add(tcc);
+                curValProcessed += tcc.getDenomination();
+                
                 if (ccactive.size() == maxCoins) {
                     logger.info(ltag, "Doing fix. maxCoins " + maxCoins);
                     doRealFix(i, ccactive);
@@ -247,7 +255,8 @@ public class FrackFixer extends Servant {
                     nfr = new FrackFixerResult();
                     fr.totalRAIDAProcessed = 0;
                     fr.totalFilesProcessed += maxCoins;
-                    
+                    fr.totalCoinsProcessed = curValProcessed;
+
                     copyFromMainFr(nfr);
                     if (cb != null)
                         cb.callback(nfr);   
@@ -255,8 +264,9 @@ public class FrackFixer extends Servant {
             }
 
             if (ccactive.size() > 0) {
+                logger.info(ltag, "Doing rest fix.  " + ccactive.size());
                 doRealFix(i, ccactive);            
-                ccactive.clear();
+                ccactive.clear();  
             }         
         }
         
@@ -269,6 +279,9 @@ public class FrackFixer extends Servant {
             fr.fixingRAIDA = i;
             fr.totalFilesProcessed = 0;
             fr.totalRAIDAProcessed = 0;
+            fr.totalCoinsProcessed = 0;
+            
+            int curValProcessed = 0;
             for (CloudCoin tcc : ccall) {
                 if (tcc.getDetectStatus(i) == CloudCoin.STATUS_PASS)
                     continue;
@@ -287,6 +300,8 @@ public class FrackFixer extends Servant {
                 }
                 
                 ccactive.add(tcc);
+                curValProcessed += tcc.getDenomination();
+                
                 if (ccactive.size() == maxCoins) {
                     logger.info(ltag, "Doing fix. maxCoins " + maxCoins);
                     doRealFix(i, ccactive);
@@ -295,7 +310,8 @@ public class FrackFixer extends Servant {
                     nfr = new FrackFixerResult();
                     fr.totalRAIDAProcessed = 0;
                     fr.totalFilesProcessed += maxCoins;
-                    
+                    fr.totalCoinsProcessed = curValProcessed;
+
                     copyFromMainFr(nfr);
                     if (cb != null)
                         cb.callback(nfr);   
@@ -303,6 +319,7 @@ public class FrackFixer extends Servant {
             }
 
             if (ccactive.size() > 0) {
+                logger.info(ltag, "Doing rest fix.  " + ccactive.size());
                 doRealFix(i, ccactive);            
                 ccactive.clear();
             }         

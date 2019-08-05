@@ -160,6 +160,7 @@ public class Grader extends Servant {
                 logger.debug(ltag, "Coin " + cc.sn + " is counterfeit");
 
                 gr.totalCounterfeit++;
+                gr.totalCounterfeitValue += cc.getDenomination();
                 dst = dstFolder = Config.DIR_COUNTERFEIT;
                 if (fsource != null) 
                     dst += " from " + fsource;
@@ -173,6 +174,7 @@ public class Grader extends Servant {
                 if (fsource != null) 
                     dst += " from " + fsource;
 
+                gr.totalLostValue += cc.getDenomination();
                 addCoinToReceipt(cc, "lost", dst);
                 includePans = true;
             }

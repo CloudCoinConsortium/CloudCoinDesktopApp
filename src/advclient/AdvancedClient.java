@@ -314,7 +314,7 @@ public class AdvancedClient  {
             AppCore.setDefaultWallet(ps.typedWalletName);
         }
             
-        AppCore.copyTemplatesFromJar(ps.typedWalletName);
+        //AppCore.copyTemplatesFromJar(ps.typedWalletName);
     }
     
     public boolean isActiveWallet(Wallet wallet) {
@@ -353,7 +353,7 @@ public class AdvancedClient  {
         AppUI.setSize(mainPanel, tw, th);
         AppUI.setBackground(mainPanel, AppUI.getColor1());
     
-        mainFrame = AppUI.getMainFrame();
+        mainFrame = AppUI.getMainFrame(version);
         mainFrame.setContentPane(mainPanel);
     }
     
@@ -867,6 +867,9 @@ public class AdvancedClient  {
             case ProgramState.SCREEN_CREATE_SKY_WALLET:
                 showCreateSkyWalletScreen();
                 break;
+            case ProgramState.SCREEN_SETTING_DNS_RECORD:
+                showSetDNSRecordScreen();
+                break;
             case ProgramState.SCREEN_SHOW_TRANSACTIONS:
                 showTransactionsScreen();
                 break;
@@ -897,6 +900,9 @@ public class AdvancedClient  {
                 break;
             case ProgramState.SCREEN_BACKUP:
                 showBackupScreen();
+                break;
+            case ProgramState.SCREEN_DOING_BACKUP:
+                showDoingBackupScreen();
                 break;
             case ProgramState.SCREEN_SENDING:
                 showSendingScreen();
@@ -987,6 +993,19 @@ public class AdvancedClient  {
         }
     }
     
+    private void setRAIDAProgressCoins(int raidaProcessed, int totalCoinsProcessed, int totalCoins) {
+        pbar.setVisible(true);
+        pbar.setValue(raidaProcessed);
+        
+        String stc = AppCore.formatNumber(totalCoinsProcessed);
+        String tc = AppCore.formatNumber(totalCoins);
+        
+        pbarText.setText("Deposited " + stc + " / " + tc + " CloudCoins");
+        pbarText.repaint();
+        
+    }
+    
+    /*
     private void setRAIDAProgress(int raidaProcessed, int totalFilesProcessed, int totalFiles) {
         pbar.setVisible(true);
         pbar.setValue(raidaProcessed);
@@ -994,7 +1013,8 @@ public class AdvancedClient  {
         pbarText.setText(totalFilesProcessed + " / " + totalFiles + " Notes Deposited");
         pbarText.repaint();
     }
-    
+    */
+    /*
     private void setRAIDATransferProgress(int raidaProcessed, int totalFilesProcessed, int totalFiles) {
         pbar.setVisible(true);
         pbar.setValue(raidaProcessed);
@@ -1002,7 +1022,32 @@ public class AdvancedClient  {
         pbarText.setText(totalFilesProcessed + " / " + totalFiles + " Notes Transferred");
         pbarText.repaint();
     }
+    */
+    private void setRAIDATransferProgressCoins(int raidaProcessed, int totalCoinsProcessed, int totalCoins) {
+        pbar.setVisible(true);
+        pbar.setValue(raidaProcessed);
+        
+        String stc = AppCore.formatNumber(totalCoinsProcessed);
+        String tc = AppCore.formatNumber(totalCoins);
+        
+        pbarText.setText("Transferred " + stc + " / " + tc + " CloudCoins");
+        pbarText.repaint();
+    }
     
+    private void setRAIDAFixingProgressCoins(int raidaProcessed, int totalCoinsProcessed, int totalCoins, int fixingRAIDA, int round) {
+        pbar.setVisible(true);
+        pbar.setValue(raidaProcessed);
+        
+        String stc = AppCore.formatNumber(totalCoinsProcessed);
+        String tc = AppCore.formatNumber(totalCoins);
+        
+        pbarText.setText("<html><div style='text-align:center'>Round #" + round + " Fixing on RAIDA " + 
+                fixingRAIDA + "<br>" + stc + " / " + tc + " CloudCoins Fixed</div></html>");
+        
+        pbarText.repaint();
+    }
+    
+    /*
     private void setRAIDAFixingProgress(int raidaProcessed, int totalFilesProcessed, int totalFiles, int fixingRAIDA, int round) {
         pbar.setVisible(true);
         pbar.setValue(raidaProcessed);
@@ -1011,7 +1056,7 @@ public class AdvancedClient  {
                 fixingRAIDA + "<br>" + totalFilesProcessed + " / " + totalFiles + " Notes Fixed</div></html>");
         pbarText.repaint();
     }
-    
+    */
     
     public void showFixingfrackedScreen() {
         JPanel subInnerCore = getModalJPanel("Fixing in Progress");
@@ -1250,6 +1295,8 @@ public class AdvancedClient  {
         gridbag.setConstraints(pbar, c);
         ct.add(pbar);
         
+        // Cancel button
+        /*
         JPanel bp = getOneButtonPanelCustom("Cancel", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 sm.cancel("Sender");
@@ -1260,6 +1307,8 @@ public class AdvancedClient  {
         });
        
         subInnerCore.add(bp);  
+        */
+        subInnerCore.add(AppUI.hr(120));
         
         pbar.setVisible(false);
         int cnt = AppCore.getFilesCount(Config.DIR_DETECTED, ps.srcWallet.getName());
@@ -1269,11 +1318,11 @@ public class AdvancedClient  {
             showScreen();
             return;
         }
-                
+            
         final int skySN = getSkyWalletSN();
         if (skySN == 0) {
             ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
-            ps.errText = "<html><div style='width:690; text-align:center'>You don't have the exact change.<br>Either specify an exact amount or create a Skywallet to receive change</div></html>";
+            ps.errText = "<html><div style='width:690; text-align:center'>Transaction cannot be completed. You must have the exact denominations of CloudCoin notes or use the Change Maker.  You must have at least one Sky Wallet created to access the Change Maker</div></html>";
             showScreen();
             return;
         }
@@ -1372,24 +1421,50 @@ public class AdvancedClient  {
         GridBagConstraints c = new GridBagConstraints();      
         ct.setLayout(gridbag);
         
+        String fwallet = ps.srcWallet.getName();
+        String twallet;
+        if (ps.sendType == ProgramState.SEND_TYPE_REMOTE) {              
+            twallet = ps.typedRemoteWallet;
+        } else {
+            twallet = ps.dstWallet.getName();
+        }
+        
+        int y = 0;
+        
+        // Info
+        JLabel x = new JLabel("<html><div style='width:480px;text-align:center'>From Wallet <b>" + fwallet + " </b> To Wallet <b>" + twallet + "</b></div></html>");
+        AppUI.setFont(x, 18);
+        c.anchor = GridBagConstraints.CENTER;
+        c.insets = new Insets(4, 0, 4, 0); 
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+        
+        y++;
+        
         // Warning Label
-        JLabel x = new JLabel("<html><div style='width:480px;text-align:center'>Do not close the application until all CloudCoins are transferred!</div></html>");
+        x = new JLabel("<html><div style='width:480px;text-align:center'>Do not close the application until all CloudCoins are transferred!</div></html>");
         AppUI.setCommonFont(x);
         AppUI.setColor(x, AppUI.getErrorColor());
         c.anchor = GridBagConstraints.CENTER;
         c.insets = new Insets(20, 0, 4, 0); 
         c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = 0;
+        c.gridy = y;
         gridbag.setConstraints(x, c);
         ct.add(x);
+        
+        y++;
         
         pbarText = new JLabel("");
         AppUI.setCommonFont(pbarText);
         c.insets = new Insets(40, 20, 4, 0);
         c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = 1;
+        c.gridy = y;
         gridbag.setConstraints(pbarText, c);
         ct.add(pbarText);
+        
+        y++;
         
         // ProgressBar
         pbar = new JProgressBar();
@@ -1404,10 +1479,14 @@ public class AdvancedClient  {
         
         c.insets = new Insets(20, 20, 4, 0);
         c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = 2;
+        c.gridy = y;
         gridbag.setConstraints(pbar, c);
         ct.add(pbar);
         
+        y++;
+        
+        // Cancel Button
+        /*
         JPanel bp = getOneButtonPanelCustom("Cancel", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 sm.cancel("Sender");
@@ -1417,7 +1496,10 @@ public class AdvancedClient  {
             }
         });
        
+        
         subInnerCore.add(bp);  
+        */
+        subInnerCore.add(AppUI.hr(120));
         
         Thread t = new Thread(new Runnable() {
             public void run(){
@@ -1437,7 +1519,17 @@ public class AdvancedClient  {
                     } catch (InterruptedException e) {}
                 }
                 
-
+                if (!sm.isRAIDAOK()) {
+                    ps.errText = "<html><div style='width:520px;text-align:center'>RAIDA cannot be contacted. "
+                            + "This is usually caused by company routers blocking outgoing traffic. "
+                            + "Please Echo RAIDA and try again.</div></html>";
+                    ps.isEchoFinished = false;
+                    ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                    showScreen();
+                    return;
+                }
+                
+                
                 String dstName =  (ps.foundSN == 0) ? ps.dstWallet.getName() : "" + ps.foundSN;
                 
                 if (ps.isSkyDeposit) {
@@ -1488,7 +1580,7 @@ public class AdvancedClient  {
         //AppUI.setBoldFont(x, 16);
         AppUI.setColor(x, AppUI.getErrorColor());
         c.anchor = GridBagConstraints.CENTER;
-        c.insets = new Insets(20, 0, 4, 0); 
+        c.insets = new Insets(10, 0, 4, 0); 
         c.gridx = GridBagConstraints.RELATIVE;
         c.gridy = 0;
         gridbag.setConstraints(x, c);
@@ -1519,6 +1611,8 @@ public class AdvancedClient  {
         gridbag.setConstraints(pbar, c);
         ct.add(pbar);
         
+        // Cancel button
+        /*
         JPanel bp = getOneButtonPanelCustom("Cancel", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 sm.cancel("Unpacker");
@@ -1532,13 +1626,12 @@ public class AdvancedClient  {
                 }
                 
                 resetState();
-                //ps.currentScreen = ProgramState.SCREEN_DEFAULT;
-                //showScreen();
             }
         });
-  
         
         subInnerCore.add(bp);  
+        */
+        subInnerCore.add(AppUI.hr(120));
         
         Thread t = new Thread(new Runnable() {
             public void run(){
@@ -1557,9 +1650,12 @@ public class AdvancedClient  {
                 }
                 
                 if (!sm.isRAIDAOK()) {
-                    pbarText.setText("RAIDA is not ready. Import stopped");
-                    pbarText.repaint();
+                    ps.errText = "<html><div style='width:520px;text-align:center'>RAIDA cannot be contacted. "
+                            + "This is usually caused by company routers blocking outgoing traffic. "
+                            + "Please Echo RAIDA and try again.</div></html>";
                     ps.isEchoFinished = false;
+                    ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
+                    showScreen();
                     return;
                 }
                 
@@ -1605,10 +1701,15 @@ public class AdvancedClient  {
             return;
         }
         
-        String total = AppCore.formatNumber(ps.statTotalFracked);
+        //String total = AppCore.formatNumber(ps.statTotalFracked);
         String totalFixed = AppCore.formatNumber(ps.statTotalFixed);
-        String totalFailedToFix = AppCore.formatNumber(ps.statFailedToFix);
+        //String totalFailedToFix = AppCore.formatNumber(ps.statFailedToFix);
         
+        
+        String total = AppCore.formatNumber(ps.statTotalFrackedValue);
+        String totalFixedValue = AppCore.formatNumber(ps.statTotalFixedValue);
+        //String totalFailedToFixValue = AppCore.formatNumber(ps.statTotalFrackedValue - ps.statTotalFixedValue);
+
         subInnerCore = getModalJPanel("Fix Complete");
         maybeShowError(subInnerCore);
         
@@ -1669,7 +1770,7 @@ public class AdvancedClient  {
         gridbag.setConstraints(x, c);
         ct.add(x);
         
-        x = new JLabel(totalFixed);
+        x = new JLabel(totalFixedValue);
         AppUI.setCommonBoldFont(x);
         c.anchor = GridBagConstraints.WEST;
         c.gridx = GridBagConstraints.RELATIVE;
@@ -1901,12 +2002,12 @@ public class AdvancedClient  {
         GridBagConstraints c = new GridBagConstraints();      
         ct.setLayout(gridbag);
         
-        String total = AppCore.formatNumber(ps.statToBankValue);
-        String totalBank = AppCore.formatNumber(ps.statToBank);
-        String totalFailed = AppCore.formatNumber(ps.statFailed);
-        String totalLost = AppCore.formatNumber(ps.statLost);
+        String total = AppCore.formatNumber(ps.statToBankValue + ps.statFailedValue + ps.statLostValue);
+        String totalBankValue = AppCore.formatNumber(ps.statToBankValue);
+        String totalFailedValue = AppCore.formatNumber(ps.statFailedValue);
+        String totalLostValue = AppCore.formatNumber(ps.statLostValue);
         
-        JLabel x = new JLabel("<html><div style='width:400px; text-align:center'>Deposited <b>" +  total +  " Notes</b> to <b>" + ps.dstWallet.getName() + " </b></div></html>");
+        JLabel x = new JLabel("<html><div style='width:400px; text-align:center'>Deposited <b>" +  total +  " CloudCoins</b> to <b>" + ps.dstWallet.getName() + " </b></div></html>");
         AppUI.setCommonFont(x);
  
         int y = 0;
@@ -1933,7 +2034,7 @@ public class AdvancedClient  {
         gridbag.setConstraints(x, c);
         ct.add(x);
         
-        x = new JLabel(totalBank);
+        x = new JLabel(totalBankValue);
         AppUI.setCommonBoldFont(x);
         
         c.anchor = GridBagConstraints.WEST;
@@ -1954,7 +2055,7 @@ public class AdvancedClient  {
         gridbag.setConstraints(x, c);
         ct.add(x);
         
-        x = new JLabel(totalFailed);
+        x = new JLabel(totalFailedValue);
         AppUI.setCommonBoldFont(x);
         c.anchor = GridBagConstraints.WEST;
         c.gridx = GridBagConstraints.RELATIVE;
@@ -1974,7 +2075,7 @@ public class AdvancedClient  {
         gridbag.setConstraints(x, c);
         ct.add(x);
         
-        x = new JLabel(totalLost);
+        x = new JLabel(totalLostValue);
         AppUI.setCommonBoldFont(x);
         c.anchor = GridBagConstraints.WEST;
         c.gridx = GridBagConstraints.RELATIVE;
@@ -1983,24 +2084,27 @@ public class AdvancedClient  {
         ct.add(x);
         
         y++;
-        
+ 
         // Previously imported
-        x = new JLabel("Previously Imported Coins:");
-        AppUI.setCommonFont(x);
-        c.anchor = GridBagConstraints.EAST;
-        c.insets = new Insets(10, 0, 4, 10);
-        c.gridx = 0;
-        c.gridy = y;
-        gridbag.setConstraints(x, c);
-        ct.add(x);
+        if (ps.duplicates.size() > 0) {
+            x = new JLabel("Previously Imported Coins:");
+            AppUI.setCommonFont(x);
+            c.anchor = GridBagConstraints.EAST;
+            c.insets = new Insets(10, 0, 4, 10);
+            c.gridx = 0;
+            c.gridy = y;
+            gridbag.setConstraints(x, c);
+            ct.add(x);
         
-        x = new JLabel("" + ps.duplicates.size());
-        AppUI.setCommonBoldFont(x);
-        c.anchor = GridBagConstraints.WEST;
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = y;
-        gridbag.setConstraints(x, c);
-        ct.add(x);
+            x = new JLabel("" + ps.duplicates.size());
+            AppUI.setCommonBoldFont(x);
+            c.anchor = GridBagConstraints.WEST;
+            c.gridx = GridBagConstraints.RELATIVE;
+            c.gridy = y;
+            gridbag.setConstraints(x, c);
+            ct.add(x);
+        }
+        
         
         JPanel bp = getTwoButtonPanelCustom("Next Deposit", "Continue", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -2236,7 +2340,6 @@ public class AdvancedClient  {
         y++; 
         
         final Wallet dstWallet = sm.getWalletByName(AppCore.getDefaultWalletName());
-        System.out.println("d=" + dstWallet + " x="+ps.srcWallet);
         MyTextField tf0 = null;
         if (dstWallet.isEncrypted() && ps.srcWallet.isSkyWallet()) {
             // Password Label
@@ -3186,6 +3289,7 @@ public class AdvancedClient  {
 
         // Total files selected
         final JLabel tl = new JLabel("Total files selected: " + ps.files.size());
+        //final JLabel tl = new JLabel("Selected " + ps.files.size() + " files - CloudCoins");
         AppUI.setCommonFont(tl);
         c.insets = new Insets(28, 18, 0, 0); 
         c.gridx = GridBagConstraints.RELATIVE;
@@ -3285,6 +3389,7 @@ public class AdvancedClient  {
                     return;
                 }
                 
+                ps.typedMemo = ps.typedMemo.trim();
                 
                 int cnt = AppCore.getFilesCount(Config.DIR_SUSPECT, w.getParent().getName());
                 if (cnt != 0) {
@@ -3686,6 +3791,7 @@ public class AdvancedClient  {
                     return;
                 }
                 
+                ps.typedMemo = ps.typedMemo.trim();
 
                 if (srcWallet.isEncrypted()) {
                     if (passwordSrc.getText().isEmpty()) {
@@ -3744,7 +3850,7 @@ public class AdvancedClient  {
                     
                     DNSSn d = new DNSSn(ps.typedRemoteWallet, null, wl);
                     if (!d.recordExists()) {
-                        ps.errText = "Sky Wallet " + ps.typedRemoteWallet + " does not exist";
+                        ps.errText = "<html><div style='width:660px; text-align:center'>Sky Wallet " + ps.typedRemoteWallet + " doesn't exist. If it is a newly created wallet please wait and try again later</div></html>";
                         showScreen();
                         return;
                     }         
@@ -3754,7 +3860,9 @@ public class AdvancedClient  {
                         showScreen();
                         return;
                     }
-                                        
+                    
+                    ps.typedMemo = ps.typedMemo.trim();
+                    
                     // Local folder
                     if (ps.chosenFile.isEmpty()) {
                         ps.errText = "Folder is not chosen";
@@ -3823,10 +3931,7 @@ public class AdvancedClient  {
                             ps.errText = "Memo must not be empty";
                             showScreen();
                             return;
-                        }
-                        
-                        
-                        
+                        }          
                     }
                     
                     
@@ -3920,6 +4025,13 @@ public class AdvancedClient  {
             }
         }
         
+        if (j == 0) {
+            ps.isSkyDeposit = false;
+            ps.currentScreen = ProgramState.SCREEN_DEPOSIT;
+            showScreen();
+            return;
+        } 
+        
         options[j++] = "- FileSystem";
         //options[j++] = "- Add Sky Wallet";
       
@@ -3947,8 +4059,10 @@ public class AdvancedClient  {
         final RoundedCornerComboBox cboxto = new RoundedCornerComboBox(AppUI.getColor2(), "Select Destination", doptions);
         gridbag.setConstraints(cboxto.getComboBox(), c);
         oct.add(cboxto.getComboBox());
-        
-        
+
+        if (doptions.length == 1) 
+            cboxto.setDefaultIdx(1);
+               
         cboxto.getComboBox().setVisible(false);
         dto.setVisible(false);
         
@@ -4245,7 +4359,8 @@ public class AdvancedClient  {
         
 
         // Total files selected
-        final JLabel tl = new JLabel("Total files selected: " + ps.files.size());
+        String totalCloudCoins = AppCore.calcCoinsFromFilenames(ps.files);
+        final JLabel tl = new JLabel("Selected " + ps.files.size() + " files - " + totalCloudCoins + " CloudCoins");
         AppUI.setCommonFont(tl);
         c.insets = new Insets(22, 18, 0, 0); 
         c.gridx = GridBagConstraints.RELATIVE;
@@ -4277,7 +4392,6 @@ public class AdvancedClient  {
         }
         
         
-
         int ddWidth = 701;
         
         // Drag and Drop
@@ -4307,7 +4421,11 @@ public class AdvancedClient  {
                     ps.files.add(files[i].getAbsolutePath());
                 }
                 
-                tl.setText("Total files selected: " + ps.files.size());            
+                
+                String totalCloudCoins = AppCore.calcCoinsFromFilenames(ps.files);
+                String text = "Selected " + ps.files.size() + " files - " + totalCloudCoins + " CloudCoins";
+                              
+                tl.setText(text);            
             } 
         }); 
         
@@ -4327,7 +4445,10 @@ public class AdvancedClient  {
                         ps.files.add(files[i].getAbsolutePath());
                     }
                     
-                    tl.setText("Total files selected: " + ps.files.size());   
+                    String totalCloudCoins = AppCore.calcCoinsFromFilenames(ps.files);
+                    String text = "Selected " + ps.files.size() + " files - " + totalCloudCoins + " CloudCoins";
+                              
+                    tl.setText(text);          
                 }
             }   
         });
@@ -5498,6 +5619,9 @@ public class AdvancedClient  {
                 } else {
                     sm.startExporterService(Config.TYPE_STACK, total, tag, ps.chosenFile, true, new ExporterBackupCb());
                 }
+                
+                ps.currentScreen = ProgramState.SCREEN_DOING_BACKUP;
+                showScreen();
             }
         });
         
@@ -6048,6 +6172,24 @@ public class AdvancedClient  {
         rightPanel.add(gct);
     }
     
+    public void showDoingBackupScreen() {
+        boolean isError = !ps.errText.equals("");
+        
+        JPanel subInnerCore = getModalJPanel("Doing Backup. Please wait...");
+        maybeShowError(subInnerCore);
+      
+        AppUI.hr(subInnerCore, 4);
+    }
+    
+    public void showSetDNSRecordScreen() {
+        boolean isError = !ps.errText.equals("");
+        
+        JPanel subInnerCore = getModalJPanel("Setting DNS Record. Please wait...");
+        maybeShowError(subInnerCore);
+      
+        AppUI.hr(subInnerCore, 4);
+    }
+    
     public void showCreateSkyWalletScreen() {
         boolean isError = !ps.errText.equals("");
 
@@ -6273,8 +6415,11 @@ public class AdvancedClient  {
                     return;
                 }
                 
-                DNSSn d = new DNSSn(domain, ps.trustedServer, wl);
+                final String newFileName = domain + ".stack";
+                final DNSSn d = new DNSSn(domain, ps.trustedServer, wl);
                 int sn = d.getSN();
+                
+                ps.domain = domain;
                 if (rb1.isSelected()) {                 
                     if (sn >= 0) {
                         ps.errText = "DNS name already exists";
@@ -6282,11 +6427,31 @@ public class AdvancedClient  {
                         return;
                     }
                     
-                    if (!d.setRecord(ps.chosenFile, sm.getSR())) {
-                        ps.errText = "Failed to set record. Check if the coin is valid";
-                        showScreen();
-                        return;
-                    }
+                    Thread t = new Thread(new Runnable() {
+                        public void run(){
+                            if (!d.setRecord(ps.chosenFile, sm.getSR())) {
+                                ps.errText = "Failed to set record. Check if the coin is valid";
+                                showScreen();
+                                return;
+                            } 
+
+                            if (!AppCore.moveToFolderNewName(ps.chosenFile, Config.DIR_ID, ps.defaultWalletName, newFileName)) {
+                                ps.errText = "Failed to move ID Coin to the Default Wallet";
+                                showScreen();
+                                return;
+                            }
+                    
+                            sm.initWallets();                          
+                            ps.currentScreen = ProgramState.SCREEN_SKY_WALLET_CREATED;
+                            showScreen();    
+                        }
+                    });
+        
+                    t.start();
+
+                    ps.currentScreen = ProgramState.SCREEN_SETTING_DNS_RECORD;
+                    showScreen();
+                    return;
                 } else {
                     if (sn <= 0) {
                         ps.errText = "Wallet does not exist or network error occured";
@@ -6301,7 +6466,6 @@ public class AdvancedClient  {
                     }
                 }
                 
-                String newFileName = domain + ".stack";
                 if (!AppCore.moveToFolderNewName(ps.chosenFile, Config.DIR_ID, ps.defaultWalletName, newFileName)) {
                     ps.errText = "Failed to move coin";
                     showScreen();
@@ -6309,8 +6473,6 @@ public class AdvancedClient  {
                 }
                 
                 sm.initWallets();
-                
-                ps.domain = domain;
                 ps.currentScreen = ProgramState.SCREEN_SKY_WALLET_CREATED;
                 showScreen();
             }
@@ -6546,7 +6708,7 @@ public class AdvancedClient  {
         
         return bp;
     }
-    
+
     public JPanel getOneButtonPanelCustom(String name0, ActionListener al0) {
         JPanel bp = new JPanel();
         AppUI.noOpaque(bp);
@@ -7130,7 +7292,8 @@ public class AdvancedClient  {
             int sn = sm.getActiveWallet().getIDCoin().sn;
             wl.debug(ltag, "UnpackerForSender sn=" + sn);
 
-            setRAIDAProgress(0, 0, AppCore.getFilesCount(Config.DIR_SUSPECT, sm.getActiveWallet().getName()));
+            //setRAIDAProgress(0, 0, AppCore.getFilesCount(Config.DIR_SUSPECT, sm.getActiveWallet().getName()));
+            setRAIDAProgressCoins(0, 0, 0);
             sm.startSenderService(sn, null, 0, ps.typedMemo, sm.getActiveWallet().getName(), new SenderDepositCb());
 
         }
@@ -7161,7 +7324,8 @@ public class AdvancedClient  {
 
             ps.duplicates = ur.duplicates;
             
-            setRAIDAProgress(0, 0, AppCore.getFilesCount(Config.DIR_SUSPECT, sm.getActiveWallet().getName()));
+            //setRAIDAProgress(0, 0, AppCore.getFilesCount(Config.DIR_SUSPECT, sm.getActiveWallet().getName()));
+            setRAIDAProgressCoins(0, 0, 0);
             sm.startAuthenticatorService(new AuthenticatorCb());
         }
     }
@@ -7202,7 +7366,8 @@ public class AdvancedClient  {
                 return;
             }
 
-            setRAIDAProgress(ar.totalRAIDAProcessed, ar.totalFilesProcessed, ar.totalFiles);
+            setRAIDAProgressCoins(ar.totalRAIDAProcessed, ar.totalCoinsProcessed, ar.totalCoins);
+            //setRAIDAProgress(ar.totalRAIDAProcessed, ar.totalFilesProcessed, ar.totalFiles);
 	}
     }
     
@@ -7211,6 +7376,8 @@ public class AdvancedClient  {
             GraderResult gr = (GraderResult) result;
 
             ps.statToBankValue = gr.totalAuthenticValue + gr.totalFrackedValue;
+            ps.statFailedValue = gr.totalCounterfeitValue;
+            ps.statLostValue = gr.totalLostValue;
             ps.statToBank = gr.totalAuthentic + gr.totalFracked;
             ps.statFailed = gr.totalCounterfeit;
             ps.statLost = gr.totalLost + gr.totalUnchecked;
@@ -7270,7 +7437,8 @@ public class AdvancedClient  {
             
             if (fr.status == FrackFixerResult.STATUS_PROCESSING) {
                 wl.debug(ltag, "Processing coin");
-                setRAIDAFixingProgress(fr.totalRAIDAProcessed, fr.totalFilesProcessed, fr.totalFiles, fr.fixingRAIDA, fr.round);
+                //setRAIDAFixingProgress(fr.totalRAIDAProcessed, fr.totalFilesProcessed, fr.totalFiles, fr.fixingRAIDA, fr.round);
+                setRAIDAFixingProgressCoins(fr.totalRAIDAProcessed, fr.totalCoinsProcessed, fr.totalCoins, fr.fixingRAIDA, fr.round);
 		return;
             }
 
@@ -7318,6 +7486,9 @@ public class AdvancedClient  {
             ps.statTotalFixed = fr.fixed;
             ps.statFailedToFix = fr.failed;
                       
+            ps.statTotalFrackedValue = fr.totalCoins;
+            ps.statTotalFixedValue = fr.fixedValue;
+            
             if (fr.status == FrackFixerResult.STATUS_ERROR) {
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {
@@ -7348,7 +7519,8 @@ public class AdvancedClient  {
                 return;
             }
 
-            setRAIDAFixingProgress(fr.totalRAIDAProcessed, fr.totalFilesProcessed, fr.totalFiles, fr.fixingRAIDA, fr.round);
+            //setRAIDAFixingProgress(fr.totalRAIDAProcessed, fr.totalFilesProcessed, fr.totalFiles, fr.fixingRAIDA, fr.round);
+            setRAIDAFixingProgressCoins(fr.totalRAIDAProcessed, fr.totalCoinsProcessed, fr.totalCoins, fr.fixingRAIDA, fr.round);
         }
     }
     
@@ -7566,7 +7738,7 @@ public class AdvancedClient  {
             
             wl.debug(ltag, "Sender finished: " + sr.status);
             if (sr.status == SenderResult.STATUS_PROCESSING) {
-                setRAIDATransferProgress(sr.totalRAIDAProcessed, sr.totalFilesProcessed, sr.totalFiles);
+                setRAIDATransferProgressCoins(sr.totalRAIDAProcessed, sr.totalCoinsProcessed, sr.totalCoins);
                 return;
             }
             
@@ -7661,7 +7833,8 @@ public class AdvancedClient  {
             
             wl.debug(ltag, "Sender (Depostit) finished: " + sr.status);
             if (sr.status == SenderResult.STATUS_PROCESSING) {
-                setRAIDAProgress(sr.totalRAIDAProcessed, sr.totalFilesProcessed, sr.totalFiles);
+                //setRAIDAProgress(sr.totalRAIDAProcessed, sr.totalFilesProcessed, sr.totalFiles);
+                setRAIDAProgressCoins(sr.totalRAIDAProcessed, sr.totalCoinsProcessed, sr.totalCoins);
                 return;
             }
             
@@ -7743,7 +7916,7 @@ public class AdvancedClient  {
             
             wl.debug(ltag, "Receiver finished: " + rr.status);
             if (rr.status == ReceiverResult.STATUS_PROCESSING) {
-                setRAIDATransferProgress(rr.totalRAIDAProcessed, rr.totalFilesProcessed, rr.totalFiles);
+                setRAIDATransferProgressCoins(rr.totalRAIDAProcessed, rr.totalCoinsProcessed, rr.totalCoins);
                 return;
             }
 

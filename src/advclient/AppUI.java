@@ -467,10 +467,10 @@ public class AppUI {
         c.setForeground(color);
     }
     
-    public static JFrame getMainFrame() {
+    public static JFrame getMainFrame(String version) {
         JFrame frame = new JFrame();
         
-        frame.setTitle("CloudCoin Bank");
+        frame.setTitle("CloudCoin Wallet " + version);
         frame.setLayout(new BorderLayout());
         frame.setSize(new Dimension(tw, th));
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

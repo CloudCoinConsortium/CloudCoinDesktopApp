@@ -27,6 +27,7 @@ import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Locale;
@@ -742,11 +743,9 @@ public class AppCore {
     
     public static CloudCoin findCoinBySN(String dir, String user, int sn) {
         String dirPath = AppCore.getUserDir(dir, user);
-        logger.debug(ltag, "Looking for sn " + sn + " into dir: " + dirPath);
-    
+        logger.debug(ltag, "Looking for sn " + sn + " into dir: " + dirPath);    
         CloudCoin cc;
-        int denomination;
-        
+
         File dirObj = new File(dirPath);
         if (dirObj.listFiles() == null) 
             return null;
@@ -959,6 +958,38 @@ public class AppCore {
         logger.info(ltag, "CPUS: " + cpus + " Memory for JVM, (free/avail): " + freeMemory + "/" + totalMemory + " MB");
         
        
+    }
+    
+    public static String calcCoinsFromFilenames(ArrayList<String> files) {
+        int total = 0;
+        
+        for (String filepath : files) {
+            File f = new File(filepath);
+            String filename = f.getName();
+            
+            String[] parts = filename.split("\\.");
+            if (parts.length < 3)
+                return "?";
+            
+            int ltotal;
+            try {
+                ltotal = Integer.parseInt(parts[0]);
+            } catch (NumberFormatException e) {
+                return "?";
+            }
+           
+            String identifier = parts[1].toLowerCase();
+            System.out.println(identifier);
+            if (!identifier.equals("cloudcoin") && !identifier.equals("cloudcoins"))
+                return "?";
+            
+            
+            total += ltotal;
+        }
+        
+        String totalCoins = AppCore.formatNumber(total);
+        
+        return totalCoins;
     }
     
 }

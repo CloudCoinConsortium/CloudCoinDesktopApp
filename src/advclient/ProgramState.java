@@ -55,6 +55,8 @@ public class ProgramState {
     final public static int SCREEN_ECHO_RAIDA = 37;
     final public static int SCREEN_ECHO_RAIDA_FINISHED = 38;
     final public static int SCREEN_MAKING_CHANGE = 39;
+    final public static int SCREEN_SETTING_DNS_RECORD = 40;
+    final public static int SCREEN_DOING_BACKUP = 41;
     
     
     final static int CB_STATE_INIT = 1;
@@ -95,8 +97,10 @@ public class ProgramState {
     boolean isShowCoinsFinished;
     
     int statToBankValue, statToBank, statFailed, statLost;
+    int statFailedValue, statLostValue;
     
     int statTotalFracked, statTotalFixed, statFailedToFix;
+    int statTotalFrackedValue, statTotalFixedValue, statFailedToFixValue;
     
     String receiptId;
     
@@ -159,6 +163,7 @@ public class ProgramState {
         isEchoFinished = false;
         isShowCoinsFinished = true;
         statToBankValue = statToBank = statFailed = 0;
+        statFailedValue = statLostValue = 0;
         
         isDefaultWalletBeingCreated = false;
         isAddingWallet = false;
@@ -181,6 +186,7 @@ public class ProgramState {
         cenvelopes = null;
         
         statTotalFracked = statTotalFixed = statFailedToFix = 0;
+        statTotalFrackedValue = statTotalFixedValue = statFailedToFixValue = 0;
         
         domain = "";
         trustedServer = "";

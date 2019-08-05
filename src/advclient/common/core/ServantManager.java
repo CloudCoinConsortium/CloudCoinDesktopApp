@@ -581,7 +581,7 @@ public class ServantManager {
         }
         
         if (sn == 0) {
-            mcr.errText = "Failed to find SN to change";
+            mcr.errText = "Failed to find a coin to make change";
             if (cb != null)
                 cb.callback(mcr);
             logger.error(ltag, "Failed to find SN to change");
@@ -607,7 +607,7 @@ public class ServantManager {
             logger.debug(ltag, "Failed to find in the Main Folder. Searching in Fracked");
             cc = AppCore.findCoinBySN(Config.DIR_FRACKED, user, sn);
             if (cc == null) {
-                mcr.errText = "Failed to find the Coin";
+                mcr.errText = "Failed to find a coin (SN " + sn + ") to change";
                 if (cb != null)
                     cb.callback(mcr);
                 logger.error(ltag, "Failed to find coin");
@@ -857,7 +857,7 @@ public class ServantManager {
                 //fr.totalRAIDAProcessed, fr.totalFilesProcessed, fr.totalFiles, fr.fixingRAIDA, fr.round
                 mcr.status = 1;
                 mcr.progress = fr.totalRAIDAProcessed;
-                mcr.text = "Fixing on RAIDA#" + fr.fixingRAIDA + ", round #" + fr.round + " Files: " + fr.totalFilesProcessed + "/" + fr.totalFiles;
+                mcr.text = "Fixing on RAIDA#" + fr.fixingRAIDA + ", round #" + fr.round + " Coins: " + fr.totalCoinsProcessed + "/" + fr.totalCoins;
                 if (this.cb != null)
                     this.cb.callback(mcr);
                 
@@ -903,7 +903,8 @@ public class ServantManager {
                 
                 mcr.status = 1;
                 mcr.progress = lr.totalRAIDAProcessed;
-                mcr.text = "Recovering Lost Coins. Processed Notes: " + lr.totalFilesProcessed + "/" + lr.totalFiles;
+                //mcr.text = "Recovering Lost Coins. Processed Notes: " + lr.totalFilesProcessed + "/" + lr.totalFiles;
+                mcr.text = "Recovering Lost Coins";
                 if (this.cb != null)
                     this.cb.callback(mcr);
                 return;

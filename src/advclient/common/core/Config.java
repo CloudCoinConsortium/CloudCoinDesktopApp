@@ -40,7 +40,7 @@ public class Config {
     public static String DIR_MAIN_TRASH = "Trash";
     public static String DIR_BACKUPS = "Backups";
 
-    public static int THREAD_POOL_SIZE = 50;
+    public static int THREAD_POOL_SIZE = 25;
 
     public static int READ_TIMEOUT = 30000; // ms
     public static int CONNECTION_TIMEOUT = 7000; // ms

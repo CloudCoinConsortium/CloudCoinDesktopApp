@@ -53,6 +53,8 @@ public class Authenticator extends Servant {
         aResult.totalFilesProcessed = globalResult.totalFilesProcessed;
         aResult.totalRAIDAProcessed = globalResult.totalRAIDAProcessed;
         aResult.totalFiles = globalResult.totalFiles;
+        aResult.totalCoins = globalResult.totalCoins;
+        aResult.totalCoinsProcessed = globalResult.totalCoinsProcessed;
         aResult.status = globalResult.status;
         aResult.errText = globalResult.errText;
     }
@@ -247,8 +249,6 @@ public class Authenticator extends Servant {
         if (maxCoins == -1)
             maxCoins = Config.DEFAULT_MAX_COINS_MULTIDETECT;
         
-        maxCoins = AppCore.maxCoinsWorkAround(maxCoins);
-
         String email = getConfigValue("email");
         if (email != null)
             this.email = email.toLowerCase();
@@ -280,6 +280,24 @@ public class Authenticator extends Servant {
                 AppCore.moveToTrash(file.toString(), user);
                 continue;
             }
+            
+            globalResult.totalCoins += cc.getDenomination();
+        }
+        
+        int curValProcessed = 0;
+        for (File file: dirObj.listFiles()) {
+            if (file.isDirectory())
+                continue;
+
+            try {
+                cc = new CloudCoin(file.toString());
+            } catch (JSONException e) {
+                logger.error(ltag, "Failed to parse coin: " + file.toString() +
+                        " error: " + e.getMessage());
+
+                AppCore.moveToTrash(file.toString(), user);
+                continue;
+            }
 
             if (isCancelled()) {
                 logger.info(ltag, "Cancelled");
@@ -296,6 +314,7 @@ public class Authenticator extends Servant {
             }
 
             ccs.add(cc);
+            curValProcessed += cc.getDenomination();
             if (ccs.size() == maxCoins) {
                 logger.info(ltag, "Processing");
 
@@ -314,6 +333,7 @@ public class Authenticator extends Servant {
 
                 globalResult.totalRAIDAProcessed = 0;
                 globalResult.totalFilesProcessed += maxCoins;
+                globalResult.totalCoinsProcessed = curValProcessed;
 
                 copyFromGlobalResult(ar);
                 if (cb != null)
@@ -330,6 +350,7 @@ public class Authenticator extends Servant {
             } else {
                 globalResult.status = AuthenticatorResult.STATUS_FINISHED;
                 globalResult.totalFilesProcessed += ccs.size();
+                globalResult.totalCoinsProcessed = curValProcessed;
             }
         } else {
             globalResult.status = AuthenticatorResult.STATUS_FINISHED;

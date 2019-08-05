@@ -72,6 +72,8 @@ public class Sender extends Servant {
     private void copyFromGlobalResult(SenderResult sResult) {
         sResult.totalFilesProcessed = globalResult.totalFilesProcessed;
         sResult.totalRAIDAProcessed = globalResult.totalRAIDAProcessed;
+        sResult.totalCoins = globalResult.totalCoins;
+        sResult.totalCoinsProcessed = globalResult.totalCoinsProcessed;
         sResult.totalFiles = globalResult.totalFiles;
         sResult.status = globalResult.status;
         sResult.amount = globalResult.amount;
@@ -258,12 +260,16 @@ public class Sender extends Servant {
         if (maxCoins == -1)
             maxCoins = Config.DEFAULT_MAX_COINS_MULTIDETECT;
         
-        maxCoins = AppCore.maxCoinsWorkAround(maxCoins);
-        
         logger.debug(ltag, "Maxcoins: " + maxCoins);
         globalResult.totalFiles = coinsPicked.size();
         globalResult.totalRAIDAProcessed = 0;
         globalResult.totalFilesProcessed = 0;
+        globalResult.totalCoinsProcessed = 0;
+        
+        for (CloudCoin cc : coinsPicked) {
+            globalResult.totalCoins += cc.getDenomination();
+        }
+        
         
         sr = new SenderResult();
         copyFromGlobalResult(sr);
@@ -272,6 +278,7 @@ public class Sender extends Servant {
                 
         logger.info(ltag, "total files "+ globalResult.totalFiles);
         
+        int curValProcessed = 0;
         for (CloudCoin cc : coinsPicked) {
             logger.debug(ltag, "Sending to SN " + tosn);
             
@@ -290,6 +297,8 @@ public class Sender extends Servant {
             }
             
             ccs.add(cc);
+            curValProcessed += cc.getDenomination();
+            
             if (ccs.size() == maxCoins) {
                 logger.info(ltag, "Processing");
                 sr = new SenderResult();
@@ -309,6 +318,7 @@ public class Sender extends Servant {
 
                 globalResult.totalRAIDAProcessed = 0;
                 globalResult.totalFilesProcessed += maxCoins;
+                globalResult.totalCoinsProcessed = curValProcessed;
 
                 copyFromGlobalResult(sr);
                 if (cb != null)
