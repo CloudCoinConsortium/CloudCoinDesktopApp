@@ -51,7 +51,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.6";
+    String version = "2.1.7";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -6929,7 +6929,7 @@ public class AdvancedClient  {
         AppUI.alignCenter(agreementPanel);
              
         // Title 
-        text = new JLabel("Instructions, Terms and Conditions");
+        text = new JLabel("Terms and Conditions");
         AppUI.alignCenter(text);
         AppUI.setBoldFont(text, 24);
         agreementPanel.add(text);
@@ -6937,8 +6937,12 @@ public class AdvancedClient  {
         // Space
         AppUI.hr(agreementPanel,  tw * 0.0082 * 2);
                 
+        
+        String aText = AppUI.getAgreementText();
+        aText = aText.replaceAll("<span class=\"instructions\">.+</span>", "");
+        
         // Text
-        text = new JLabel("<html><div style='padding-right: 20px; width: 720px'>" + AppUI.getAgreementText() + "</div></html>");
+        text = new JLabel("<html><div style='padding-right: 20px; width: 720px'>" + aText + "</div></html>");
         AppUI.alignCenter(text);
         AppUI.setFont(text, 18);
               
