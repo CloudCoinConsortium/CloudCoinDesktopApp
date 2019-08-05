@@ -51,7 +51,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.5";
+    String version = "2.1.6";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -91,6 +91,8 @@ public class AdvancedClient  {
         initSystem();
                 
         AppUI.init(tw, th); 
+        AppCore.logSystemInfo(version);
+        
         headerHeight = th / 10;
         
         initMainScreen();
@@ -117,7 +119,7 @@ public class AdvancedClient  {
         wl = new WLogger();
         
         String home = System.getProperty("user.home");
-        home += File.separator + "CloudCoinWallet";
+        //home += File.separator + "CloudCoinWallet";
             
         sm = new ServantManager(wl, home);
         if (!sm.init()) {
@@ -125,6 +127,8 @@ public class AdvancedClient  {
             ps.errText = "Failed to init program. Make sure you have correct folder permissions (" + home + ")";
             return;
         }
+        
+        
         
         resetState();
     }
@@ -767,7 +771,7 @@ public class AdvancedClient  {
         
         
         // Icon Support
-        c.insets = new Insets(0, 10, 0, 40); 
+        c.insets = new Insets(0, 10, 0, 20); 
         AppUI.noOpaque(icon1);
         AppUI.setHandCursor(icon1);
         gridbag.setConstraints(icon1, c);
@@ -788,6 +792,14 @@ public class AdvancedClient  {
         gridbag.setConstraints(icon2, c);
         //p.add(icon2);
  
+        // Version
+        c.insets = new Insets(0, 0, 20, 10);
+        JLabel vl = new JLabel("v. " + version);
+        AppUI.noOpaque(vl);
+        AppUI.setTitleFont(vl, 14);
+        gridbag.setConstraints(vl, c);
+        p.add(vl);
+        
         headerPanel.add(p);
     }
     
@@ -1341,31 +1353,6 @@ public class AdvancedClient  {
                     }                   
                 });
             
-                if (1==1)
-                    return;
-
-                String dstName =  (ps.foundSN == 0) ? ps.dstWallet.getName() : "" + ps.foundSN;
-                
-                if (ps.isSkyDeposit) {
-                    wl.debug(ltag, "sky deposit");
-                    if (ps.srcWallet.getIDCoin() == null) {
-                        pbarText.setText("Failed to find ID coin");
-                        pbarText.repaint();
-                        return;
-                    }
-                    int sn = ps.srcWallet.getIDCoin().sn;
-                    
-                    pbarText.setText("Querying coins ...");
-                    pbarText.repaint();
-                    
-                    sm.startShowSkyCoinsService(new ShowEnvelopeCoinsForReceiverCb(), sn);
-                    return;
-                }
-                
-
-                wl.debug(ltag, "Sending to dst " + dstName);
-                sm.transferCoins(ps.srcWallet.getName(), dstName, 
-                        ps.typedAmount, ps.typedMemo, ps.typedRemoteWallet, new SenderCb(), new ReceiverCb());
             }
         });
         
@@ -1633,8 +1620,15 @@ public class AdvancedClient  {
         GridBagConstraints c = new GridBagConstraints();      
         ct.setLayout(gridbag);
 
-        JLabel x = new JLabel("<html><div style='width:400px; text-align:center'>" +
-            "Your CloudCoins from " + ps.srcWallet.getName() + " have been fixed</div></html>");
+        
+        String txt;
+        if (!totalFixed.equals("" + total)) {
+            txt = "Not all CloudCoins from <b>" + ps.srcWallet.getName() + "</b> had been fixed. Try it again later";
+        } else {
+            txt = "Your CloudCoins from <b>" + ps.srcWallet.getName() + "</b> have been fixed";
+        }
+        
+        JLabel x = new JLabel("<html><div style='width:400px; text-align:center'>" + txt + "</div></html>");
           
         AppUI.setCommonFont(x);
  
@@ -1716,8 +1710,8 @@ public class AdvancedClient  {
         int y = 0;
         
         JLabel x = new JLabel("<html><div style='width:400px; text-align:center'>" +
-            "Your CloudCoins from " + ps.srcWallet.getName() + " have been backed up into" +
-            " " + ps.chosenFile + "</div></html>");
+            "Your CloudCoins from <b>" + ps.srcWallet.getName() + "</b> have been backed up into" +
+            "</div></html>");
           
         AppUI.setCommonFont(x);
  
@@ -1729,13 +1723,36 @@ public class AdvancedClient  {
         
         y++;
         
+        
+        final String fdir = ps.chosenFile;
+        JLabel sl = AppUI.getHyperLink(fdir, "javascript:void(0); return false", 20);
+        sl.addMouseListener(new MouseAdapter() {
+            public void mouseReleased(MouseEvent e) {
+                if (!Desktop.isDesktopSupported())
+                    return;
+                try {
+                    Desktop.getDesktop().open(new File(fdir));
+                } catch (IOException ie) {
+                    wl.error(ltag, "Failed to open browser: " + ie.getMessage());
+                }
+            }
+        });
+        
+        c.insets = new Insets(0, 0, 4, 0);
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+        gridbag.setConstraints(sl, c);
+        ct.add(sl);
+        
+        y++;
+    
         x = new JLabel("<html><div style='width:400px; text-align:center'>" +
            "All backups are unencrypted. You should save them in a secure location. The CloudCoin Consortium "
                 + "recommends opening a free account at </div></html>"
                 + "to store backups and passwords.</div></html>");
           
         AppUI.setFont(x, 18);
-         c.insets = new Insets(20, 0, 4, 0);
+        c.insets = new Insets(20, 0, 4, 0);
         c.gridx = GridBagConstraints.RELATIVE;
         c.gridy = y;
         gridbag.setConstraints(x, c);
@@ -1760,7 +1777,7 @@ public class AdvancedClient  {
         c.gridy = y;
         gridbag.setConstraints(x, c);
         ct.add(x);
-        
+        /*
         JPanel bp = getTwoButtonPanelCustom("Show Folder", "Continue", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 File file = new File(ps.chosenFile);
@@ -1775,8 +1792,10 @@ public class AdvancedClient  {
                 ps.currentScreen = ProgramState.SCREEN_DEFAULT;
                 showScreen();
             }
-        });
+        });*/
   
+        JPanel bp = this.getOneButtonPanel();
+        
         resetState();
         
         subInnerCore.add(bp);     
@@ -2573,7 +2592,7 @@ public class AdvancedClient  {
         
         y++;
          
-        // Password Label
+        // Email Label
         JLabel x = new JLabel("Email");
         AppUI.setCommonFont(x);
         c.gridwidth = 1;
@@ -2591,6 +2610,7 @@ public class AdvancedClient  {
         c.gridx = 0;
         c.gridy = y;
         gridbag.setConstraints(tf0.getTextField(), c);
+        tf0.requestFocus();
         ct.add(tf0.getTextField());
                
         y++;
@@ -2882,6 +2902,7 @@ public class AdvancedClient  {
         c.gridx = 0;
         c.gridy = 1;
         gridbag.setConstraints(tf0.getTextField(), c);
+        tf0.requestFocus();
         ct.add(tf0.getTextField());
              
         // Confirm Password Label
@@ -2969,6 +2990,9 @@ public class AdvancedClient  {
 
                         walletSetTotal(w, totalCnt);
                         w.setCounters(counters);
+                        setTotalCoins();
+                        
+                        wl.debug(ltag, "ShowEnvelopeCoins return");
                     }
                 });
             } else {
@@ -2988,6 +3012,7 @@ public class AdvancedClient  {
 
                         walletSetTotal(w, totalCnt);
                         w.setCounters(counters);
+                        setTotalCoins();
                     }
                 });
             
@@ -3870,23 +3895,24 @@ public class AdvancedClient  {
  
         int cnt = 0;
         for (int i = 0; i < wallets.length; i++)
-            if (wallets[i].isSkyWallet())
+            if (wallets[i].isSkyWallet() && wallets[i].getTotal() > 0)
                 cnt++;
            
-        final String[] options = new String[cnt + 2];
+        final String[] options = new String[cnt + 1];
         final String[] doptions = new String[wallets.length - cnt];
         int j = 0, k = 0;
         
         final int fidxs[], tidxs[];
         
-        fidxs = new int[cnt + 2];
+        fidxs = new int[cnt + 1];
         tidxs = new int[wallets.length - cnt];
         for (int i = 0; i < wallets.length; i++) {
             if (wallets[i].isSkyWallet()) {
-                //options[j] = wallets[i].getName() + "." + Config.DDNS_DOMAIN + " - " + wallets[i].getTotal() + " CC";
-                options[j] = wallets[i].getName() + " - " + wallets[i].getTotal() + " CC";
-                fidxs[j] = i;
-                j++;
+                if (wallets[i].getTotal() > 0) {
+                    options[j] = wallets[i].getName() + " - " + wallets[i].getTotal() + " CC";
+                    fidxs[j] = i;
+                    j++;
+                }
             } else {
                 doptions[k] = wallets[i].getName() + " - " + wallets[i].getTotal() + " CC";
                 tidxs[k] = i;
@@ -3895,7 +3921,7 @@ public class AdvancedClient  {
         }
         
         options[j++] = "- FileSystem";
-        options[j++] = "- Add Sky Wallet";
+        //options[j++] = "- Add Sky Wallet";
       
         final RoundedCornerComboBox cbox = new RoundedCornerComboBox(AppUI.getColor2(), "Select Source", options);
         gridbag.setConstraints(cbox.getComboBox(), c);
@@ -3952,7 +3978,7 @@ public class AdvancedClient  {
         cbox.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 int cidx = cbox.getSelectedIndex();
-                if (cidx > options.length - 2) {
+                if (cidx > options.length - 1) {
                     cboxto.getComboBox().setVisible(false);
                     dto.setVisible(false);
                     
@@ -4004,29 +4030,29 @@ public class AdvancedClient  {
         JPanel bp = getTwoButtonPanel(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 int cidx = cbox.getSelectedIndex();
-                if (cidx == options.length - 1) {
+                if (cidx == options.length) {
                     ps.isSkyDeposit = false;
                     ps.currentScreen = ProgramState.SCREEN_DEPOSIT;
                     showScreen();
                     return;
                 }
-                
+                /*
                 if (cidx == options.length) {
                     resetState();
                     ps.currentScreen = ProgramState.SCREEN_CREATE_SKY_WALLET;
                     showScreen();
                     return;
-                }
+                }*/
                 
-                cidx = fidxs[cidx - 1];
                 
-                Wallet w = wallets[cidx];
-                if (w == null) {
+                if (cidx == 0) {
                     ps.errText = "Wallet is not selected";
                     showScreen();
                     return;
                 }
                 
+                cidx = fidxs[cidx - 1];
+                Wallet w = wallets[cidx];
                 ps.srcWallet = w;
 
                 cidx = cboxto.getSelectedIndex();
@@ -5464,10 +5490,13 @@ public class AdvancedClient  {
                 sm.setActiveWalletObj(ps.srcWallet);
                 ps.srcWallet.setPassword(ps.typedPassword);
                 int total = ps.srcWallet.getTotal();
+                
+                String tag = Config.BACKUP_TAG + "-" + System.currentTimeMillis();
+                
                 if (ps.srcWallet.isEncrypted()) {
-                    sm.startSecureExporterService(Config.TYPE_STACK, total, Config.BACKUP_TAG, ps.chosenFile, true, new ExporterBackupCb());
+                    sm.startSecureExporterService(Config.TYPE_STACK, total, tag, ps.chosenFile, true, new ExporterBackupCb());
                 } else {
-                    sm.startExporterService(Config.TYPE_STACK, total, Config.BACKUP_TAG, ps.chosenFile, true, new ExporterBackupCb());
+                    sm.startExporterService(Config.TYPE_STACK, total, tag, ps.chosenFile, true, new ExporterBackupCb());
                 }
             }
         });
@@ -5620,8 +5649,8 @@ public class AdvancedClient  {
             
             String s;
             
-            s = "<b>1s: " + t1 + "</b> |  5s: <b>" + t5 + "</b> |  25s: <b>" + t25 
-                    + "</b> | 100s: <b>" + t100 + "</b> | 250s: <b>" + t250 + " </b>";
+            s = "1's: <b>" + t1 + "</b> |  5's: <b>" + t5 + "</b> |  25's: <b>" + t25 
+                    + "</b> | 100's: <b>" + t100 + "</b> | 250's: <b>" + t250 + " </b>";
         
 
             
@@ -6295,14 +6324,7 @@ public class AdvancedClient  {
         JLabel x;
         String str;
         MyTextField walletName = null;
-              
-    /*    if (!ps.isDefaultWalletBeingCreated) {
-            str = "Create Wallet";
-        } else {
-            str = "Create Default Wallet";
-        }
-        */
-        
+
         str = "Create Wallet";
         
         JPanel subInnerCore = getModalJPanel(str);
@@ -6334,6 +6356,7 @@ public class AdvancedClient  {
             AppUI.vr(hct, 50);
         
             walletName = new MyTextField("Wallet Name", false);
+            walletName.requestFocus();
             hct.add(walletName.getTextField());
 
             oct.add(hct);
@@ -6440,7 +6463,7 @@ public class AdvancedClient  {
                     return;
                 }
                     
-                ps.typedWalletName = fwalletName.getText();
+                ps.typedWalletName = fwalletName.getText().trim();
                 //}
                 
                 if (ps.cwalletPasswordRequested) {
@@ -6538,7 +6561,7 @@ public class AdvancedClient  {
         cb.addListener(al0);
         
         bp.add(cb.getButton(), gbc);           
-        AppUI.vr(bp, 26);
+        //AppUI.vr(bp, 26);
         
         return bp;
     }
@@ -6562,7 +6585,7 @@ public class AdvancedClient  {
         });
         
         bp.add(cb.getButton(), gbc);           
-        AppUI.vr(bp, 26);
+        //AppUI.vr(bp, 26);
         
         return bp;
     }
@@ -7161,7 +7184,7 @@ public class AdvancedClient  {
                 });
                 return;
             } else if (ar.status == AuthenticatorResult.STATUS_FINISHED) {
-                sm.startGraderService(new GraderCb(), ps.duplicates);
+                sm.startGraderService(new GraderCb(), ps.duplicates, null);
                 return;
             } else if (ar.status == AuthenticatorResult.STATUS_CANCELLED) {
                 sm.resumeAll();
@@ -7243,6 +7266,7 @@ public class AdvancedClient  {
             
             if (fr.status == FrackFixerResult.STATUS_PROCESSING) {
                 wl.debug(ltag, "Processing coin");
+                setRAIDAFixingProgress(fr.totalRAIDAProcessed, fr.totalFilesProcessed, fr.totalFiles, fr.fixingRAIDA, fr.round);
 		return;
             }
 
@@ -7757,8 +7781,14 @@ public class AdvancedClient  {
             
             
             
-            wl.debug(ltag, "rramount " + rr.amount + " typed " + ps.typedAmount);
-            sm.startGraderService(new GraderCb(), null);
+            
+            
+            String name = null;
+            if (ps.srcWallet != null)
+                name = ps.srcWallet.getName();
+            
+            wl.debug(ltag, "rramount " + rr.amount + " typed " + ps.typedAmount + " name=" + name);
+            sm.startGraderService(new GraderCb(), null, name);
             /*
             if (ps.typedAmount != rr.amount) {
                 ps.typedAmount = rr.amount;

@@ -938,4 +938,27 @@ public class AppCore {
         return maxCoins;
     }
     
+    
+    public static void logSystemInfo(String version) {
+        logger.info(ltag, "CloudCoin Wallet v." + version);
+        
+        String javaVersion = System.getProperty("java.runtime.version");
+        String javaName = System.getProperty("java.runtime.name");
+        
+        String osName = System.getProperty("os.name");
+        
+        int cpus = Runtime.getRuntime().availableProcessors();
+        long totalMemory =  Runtime.getRuntime().totalMemory();
+        long freeMemory =  Runtime.getRuntime().freeMemory();
+        
+        totalMemory /= (1024 * 1024);
+        freeMemory /= (1024 * 1024);
+        
+        logger.info(ltag, "JAVA " + javaName + " " + javaVersion);
+        logger.info(ltag, osName);
+        logger.info(ltag, "CPUS: " + cpus + " Memory for JVM, (free/avail): " + freeMemory + "/" + totalMemory + " MB");
+        
+       
+    }
+    
 }

@@ -292,6 +292,14 @@ public class Exporter extends Servant {
             fileName = dir;
         }
 
+        File f = new File(fileName);
+        if (f.exists()) {
+            logger.error(ltag, "File exists: " + fileName);
+            er.status = ExporterResult.STATUS_ERROR;
+            er.errText = "Exported file with the same tag already exist";
+            return false;
+        }
+        
         if (!AppCore.saveFile(fileName, sb.toString())) {
             logger.error(ltag, "Failed to save file " + fileName);
             return false;

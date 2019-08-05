@@ -305,12 +305,12 @@ public class ServantManager {
 	at.launch(cb);
     }
     
-    public void startGraderService(CallbackInterface cb, ArrayList<CloudCoin> duplicates) {
+    public void startGraderService(CallbackInterface cb, ArrayList<CloudCoin> duplicates, String source) {
         if (sr.isRunning("Grader"))
             return;
         
 	Grader gd = (Grader) sr.getServant("Grader");
-	gd.launch(cb, duplicates);
+	gd.launch(cb, duplicates, source);
     }
     
     
@@ -356,12 +356,18 @@ public class ServantManager {
             String dstFolder, int amount, String memo, CallbackInterface cb) {
 	Receiver r = (Receiver) sr.getServant("Receiver");
 	//r.launch(, new int[]{1,1}, new int[] {7050330, 7050331}, memo, cb);
-        r.launch(sn, sns, dstFolder, amount, cb);
+        r.launch(sn, sns, dstFolder, amount, false, cb);
+    }
+    
+    public void startReceiverServiceForChange(int sn, int sns[], 
+            String dstFolder, int amount, String memo, CallbackInterface cb) {
+	Receiver r = (Receiver) sr.getServant("Receiver");
+        r.launch(sn, sns, dstFolder, amount, true, cb);
     }
     
     public void startSenderServiceForChange(int sn, int[] values, String memo, CallbackInterface cb) {
         Sender s = (Sender) sr.getServant("Sender");
-	s.launch(sn, null, values, 0, memo, null, cb);
+	s.launch(sn, null, values, 0, memo, Config.CHANGE_SKY_DOMAIN, cb);
     }
     
     public int getRemoteSn(String dstWallet) {
@@ -739,7 +745,7 @@ public class ServantManager {
             i++;
         }
         
-        startReceiverService(skySN, sns, null, total, "Receive change", new eReceiverChangeCb(cb, w));
+        startReceiverServiceForChange(skySN, sns, Config.CHANGE_SKY_DOMAIN, total, "Receive change", new eReceiverChangeCb(cb, w));
         //public void startReceiverService(int sn, int sns[], 
           //  String dstFolder, int amount, String memo, CallbackInterface cb) {
     }
@@ -792,7 +798,7 @@ public class ServantManager {
             if (cb != null)
                 cb.callback(mcr);
             
-            startGraderService(new eGraderCb(cb, w), null);
+            startGraderService(new eGraderCb(cb, w, rr.receiptId), null, w.getName());
         }
     }
     
@@ -800,11 +806,13 @@ public class ServantManager {
         Wallet w;
         makeChangeResult mcr;
         CallbackInterface cb;
+        String receiptId;
         
         
-        public eGraderCb(CallbackInterface cb, Wallet w) {
+        public eGraderCb(CallbackInterface cb, Wallet w, String receiptId) {
             this.w = w;
             this.cb = cb;
+            this.receiptId = receiptId;
             mcr = new makeChangeResult();
         }
         
@@ -812,6 +820,11 @@ public class ServantManager {
             GraderResult gr = (GraderResult) result;
             
             logger.debug(ltag, "Change Grader finished");
+            
+            //receiverReceiptId = rr.receiptId;
+            int total = gr.totalAuthenticValue + gr.totalFrackedValue;
+            
+            w.appendTransaction("Received from ChangeMaker", total, receiptId);
             
             mcr.text = "Fixing coins";
             if (cb != null)
@@ -1047,6 +1060,8 @@ public class ServantManager {
                 }
 		return;
             }   
+            
+            w.appendTransaction("Sent to ChangeMaker", sr.amount * -1, sr.receiptId);
             
             requestChange(this.cb, w, memoUUID, denomination, skySN);
                  

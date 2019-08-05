@@ -35,6 +35,15 @@ public class MyTextField  {
         core = makeUI(placeholder);
     }
     
+    public void requestFocus() {
+        final RoundedTextField ftf = tf;
+        SwingUtilities.invokeLater( new Runnable() { 
+            public void run() { 
+                ftf.requestFocus();
+            } 
+        });
+    }
+    
     public void setPlaceholder(String placeholder) {
         tf.setPlaceholder(placeholder);
     }

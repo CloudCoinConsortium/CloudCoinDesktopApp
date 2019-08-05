@@ -25,7 +25,7 @@ public class Grader extends Servant {
         super("Grader", rootDir, logger);
     }
 
-    public void launch(CallbackInterface icb, ArrayList<CloudCoin> duplicates) {
+    public void launch(CallbackInterface icb, ArrayList<CloudCoin> duplicates, String source) {
         this.cb = icb;
 
         gr = new GraderResult();
@@ -34,13 +34,15 @@ public class Grader extends Servant {
         receiptId = AppCore.generateHex();
         gr.receiptId = receiptId;
         
+        final String fsource = source;
+        
         final ArrayList<CloudCoin> fduplicates = duplicates;
 
         launchThread(new Runnable() {
             @Override
             public void run() {
                 logger.info(ltag, "RUN Grader");
-                doGrade(fduplicates);
+                doGrade(fduplicates, fsource);
 
                 if (cb != null)
                     cb.callback(gr);
@@ -48,7 +50,7 @@ public class Grader extends Servant {
         });
     }
 
-    public void doGrade(ArrayList<CloudCoin> duplicates) {
+    public void doGrade(ArrayList<CloudCoin> duplicates, String source) {
         String fullPath = AppCore.getUserDir(Config.DIR_DETECTED, user);
         CloudCoin cc;
         boolean graded = false;
@@ -69,7 +71,7 @@ public class Grader extends Servant {
                 continue;
             }
 
-            gradeCC(cc);
+            gradeCC(cc, source);
         }
         
         int dups = 0;
@@ -101,7 +103,7 @@ public class Grader extends Servant {
         }
     }
 
-    public void gradeCC(CloudCoin cc) {
+    public void gradeCC(CloudCoin cc, String fsource) {
         String dstFolder;
         int untried, counterfeit, passed, error;
 
@@ -126,23 +128,28 @@ public class Grader extends Servant {
         boolean includePans = false;
         String ccFile;
 
+        String dst = "";
         if (passed >= Config.PASS_THRESHOLD) {
             if (counterfeit != 0) {
                 logger.debug(ltag, "Coin " + cc.sn + " is fracked");
 
                 gr.totalFracked++;
                 gr.totalFrackedValue += cc.getDenomination();
-                dstFolder = Config.DIR_FRACKED;
-
-                addCoinToReceipt(cc, "fracked", dstFolder);
+                dst = dstFolder = Config.DIR_FRACKED;
+                if (fsource != null) 
+                    dst += " from " + fsource;
+        
+                addCoinToReceipt(cc, "fracked", dst);
             } else {
                 logger.debug(ltag, "Coin " + cc.sn + " is authentic");
 
                 gr.totalAuthentic++;
                 gr.totalAuthenticValue += cc.getDenomination();
-                dstFolder = Config.DIR_BANK;
+                dst = dstFolder = Config.DIR_BANK;
+                if (fsource != null) 
+                    dst += " from " + fsource;
 
-                addCoinToReceipt(cc, "authentic", dstFolder);
+                addCoinToReceipt(cc, "authentic", dst);
             }
 
             cc.calcExpirationDate();
@@ -153,16 +160,20 @@ public class Grader extends Servant {
                 logger.debug(ltag, "Coin " + cc.sn + " is counterfeit");
 
                 gr.totalCounterfeit++;
-                dstFolder = Config.DIR_COUNTERFEIT;
+                dst = dstFolder = Config.DIR_COUNTERFEIT;
+                if (fsource != null) 
+                    dst += " from " + fsource;
 
-                addCoinToReceipt(cc, "counterfeit", dstFolder);
+                addCoinToReceipt(cc, "counterfeit", dst);
             } else {
                 logger.debug(ltag, "Coin " + cc.sn + " is lost");
 
                 gr.totalLost++;
-                dstFolder = Config.DIR_LOST;
+                dst = dstFolder = Config.DIR_LOST;
+                if (fsource != null) 
+                    dst += " from " + fsource;
 
-                addCoinToReceipt(cc, "lost", dstFolder);
+                addCoinToReceipt(cc, "lost", dst);
                 includePans = true;
             }
 

@@ -25,13 +25,14 @@ public class Receiver extends Servant {
     }
 
     //public void launch(String user, int tosn, int[] nns, int[] sns, String envelope, CallbackInterface icb) {
-    public void launch(int fromsn, int[] sns, String dstFolder, int amount, CallbackInterface icb) {
+    public void launch(int fromsn, int[] sns, String dstFolder, int amount, boolean needReceipt, CallbackInterface icb) {
         this.cb = icb;
 
         final int ffromsn = fromsn;
         final int[] fsns = sns;
         final String fdstFolder = dstFolder;
         final int famount = amount;
+        final boolean fneedReceipt = needReceipt;
 
         rr = new ReceiverResult();
         coinsPicked = new ArrayList<CloudCoin>();
@@ -48,7 +49,7 @@ public class Receiver extends Servant {
             @Override
             public void run() {
                 logger.info(ltag, "RUN Receiver");
-                doReceive(ffromsn, fsns, fdstFolder, famount);
+                doReceive(ffromsn, fsns, fdstFolder, famount, fneedReceipt);
             }
         });
     }
@@ -63,7 +64,7 @@ public class Receiver extends Servant {
         rResult.receiptId = globalResult.receiptId;
     }
 
-    public void doReceive(int sn, int[] sns, String fdstFolder, int amount) {
+    public void doReceive(int sn, int[] sns, String fdstFolder, int amount, boolean needReceipt) {
         int i;
 
         if (!updateRAIDAStatus()) {
@@ -138,7 +139,7 @@ public class Receiver extends Servant {
                 logger.info(ltag, "Processing");
                 rr = new ReceiverResult();
                 
-                if (!processReceive(ccs, idcc)) {
+                if (!processReceive(ccs, idcc, needReceipt, fdstFolder)) {
                    rr = new ReceiverResult();
                    globalResult.status = ReceiverResult.STATUS_ERROR;
                    copyFromGlobalResult(rr);
@@ -162,7 +163,7 @@ public class Receiver extends Servant {
         rr = new ReceiverResult();
         if (ccs.size() > 0) {
             logger.info(ltag, "adding + " + ccs.size());
-            if (!processReceive(ccs, idcc)) {
+            if (!processReceive(ccs, idcc, needReceipt, fdstFolder)) {
                 rr = new ReceiverResult();
                 globalResult.status = ReceiverResult.STATUS_ERROR;
                 copyFromGlobalResult(rr);
@@ -185,7 +186,7 @@ public class Receiver extends Servant {
     } 
         
         
-    public boolean processReceive(ArrayList<CloudCoin> ccs, CloudCoin cc)  {
+    public boolean processReceive(ArrayList<CloudCoin> ccs, CloudCoin cc, boolean needReceipt, String fdstFolder)  {
         String[] results;
         Object[] o;
         CommonResponse errorResponse;
@@ -339,7 +340,8 @@ public class Receiver extends Servant {
         for (i = 0; i < sccs.length; i++) {
             if (sccs[i] == null) {
                 logger.error(ltag, "Skipping as counterfeit coin: " + ccs.get(i));
-                //addCoinToReceipt(ccs.get(i), "counterfeit", "None");
+                if (needReceipt)
+                    addCoinToReceipt(ccs.get(i), "counterfeit", "None");
                 c++;
                 continue;
             }
@@ -349,7 +351,8 @@ public class Receiver extends Servant {
             logger.info(ltag, "Saving coin " + file);
             if (!AppCore.saveFile(file, sccs[i].getJson(false))) {
                 logger.error(ltag, "Failed to move coin to Detected: " + sccs[i].getFileName());
-                //addCoinToReceipt(sccs[i], "error", "None");
+                if (needReceipt)
+                    addCoinToReceipt(sccs[i], "error", "None");
                 e++;
                 continue;
             }
@@ -358,7 +361,8 @@ public class Receiver extends Servant {
             
             globalResult.amount += sccs[i].getDenomination();
             a++;
-            //addCoinToReceipt(sccs[i], "authentic", Config.DIR_BANK);
+            if (needReceipt)
+                addCoinToReceipt(sccs[i], "authentic", Config.DIR_BANK + " from " + fdstFolder);
         }
 
         logger.info(ltag, "Received " + cc.sn);

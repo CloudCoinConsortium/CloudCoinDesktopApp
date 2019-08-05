@@ -2,7 +2,7 @@ package global.cloudcoin.ccbank.core;
 
 public class Config {
 
-    public static String DIR_ROOT = "CloudCoin";
+    public static String DIR_ROOT = "CloudCoinWallet";
     public static String DIR_BANK = "Bank";
     public static String DIR_COUNTERFEIT = "Counterfeit";
     public static String DIR_DANGEROUS = "Dangerous";
@@ -40,17 +40,17 @@ public class Config {
     public static String DIR_MAIN_TRASH = "Trash";
     public static String DIR_BACKUPS = "Backups";
 
-    public static int THREAD_POOL_SIZE = 80;
+    public static int THREAD_POOL_SIZE = 50;
 
     public static int READ_TIMEOUT = 30000; // ms
-    public static int CONNECTION_TIMEOUT = 3000; // ms
+    public static int CONNECTION_TIMEOUT = 7000; // ms
     
     public static int REQUEST_CHANGE_READ_TIMEOUT = 50000; // ms
     
     public static int FIX_FRACKED_TIMEOUT = 35000; // ms
     public static int MULTI_FIX_TIMEOUT = 35000; // ms
     public static int MULTI_DETECT_TIMEOUT = 35000; // ms
-    public static int ECHO_TIMEOUT = 3000;
+    public static int ECHO_TIMEOUT = 5000;
 
 
 
@@ -94,7 +94,7 @@ public class Config {
     public static String DEFAULT_TAG = "CC";
     public static String BACKUP_TAG = "BACKUP";
 
-    public static int DEFAULT_MAX_COINS_MULTIDETECT = 4000;
+    public static int DEFAULT_MAX_COINS_MULTIDETECT = 400;
 
 
     public static int PASS_THRESHOLD = 20;
@@ -154,5 +154,5 @@ public class Config {
     
     final public static String AGREEMENT_FILE = "agreement.html";
     
-    
+    final public static int LOG_BUFFER_SIZE = 1024000;
 }

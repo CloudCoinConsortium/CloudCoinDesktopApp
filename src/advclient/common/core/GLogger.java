@@ -36,17 +36,17 @@ public abstract class GLogger implements GLoggerInterface {
         BufferedWriter br;
         FileWriter fr;
         
-
+        /*
         if (f.exists()) {
             double bytes = f.length();
             if (bytes > Config.MAX_COMMON_LOG_LENGTH_MB * 1024 * 1024)
                 f.delete();
-        }
+        }*/
 
         fileName = file;
         try {
             fr = new FileWriter(file, true);
-            br = new BufferedWriter(fr);
+            br = new BufferedWriter(fr, Config.LOG_BUFFER_SIZE);
             channel = new PrintWriter(br);
         } catch (IOException e) {
             return false;
@@ -91,9 +91,11 @@ public abstract class GLogger implements GLoggerInterface {
         if (!f.exists())
             return false;
         
-        String dfileName = AppCore.getCurrentBackupDir(AppCore.getBackupDir(), "all");
-        dfileName += File.separator + f.getName();
+        String dfileName = AppCore.getCurrentBackupDir(AppCore.getBackupDir(), "__all");
+        File fd = new File(dfileName);
+        fd.mkdirs();
         
+        dfileName += File.separator + f.getName();
         return AppCore.copyFile(f.getAbsolutePath(), dfileName);
     }
 }

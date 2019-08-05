@@ -214,12 +214,14 @@ public class Servant {
             }
         }
 
+        raida.setExactUrls(urls);
+        
         if (RAIDA.TOTAL_RAIDA_COUNT - cntValid > Config.MAX_ALLOWED_FAILED_RAIDAS) {
             logger.error(ltag, "Only " + cntValid + " raidas are online. Can't proceed");
             return false;
         }
 
-        raida.setExactUrls(urls);
+        
 
         return true;
     }
