@@ -2874,7 +2874,7 @@ public class AdvancedClient  {
         
 
         JLabel res = new JLabel("<html><div style='width:500px; text-align:center'>"
-                + "You have now created a sky wallet on a third party trusted transfer sever.<br>" 
+                + "You have now created a sky wallet on a third party trusted transfer server.<br>" 
                 + "Your address is <b>" + ps.domain + "." + ps.trustedServer + "</b>.<br><br> "
                 + "This sky wallet allows you to receive CloudCoins "
                 + "that you know are authentic. <br>The sender will also know that "
