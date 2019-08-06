@@ -436,10 +436,7 @@ public class AdvancedClient  {
             img = ImageIO.read(getClass().getClassLoader().getResource("resources/Help_Support Icon.png"));
             icon1 = new JLabel(new ImageIcon(img));
             
-            img = ImageIO.read(getClass().getClassLoader().getResource("resources/Brithish flag.png"));
-            icon2 = new JLabel(new ImageIcon(img));
-            
-            img = ImageIO.read(getClass().getClassLoader().getResource("resources/CloudCoinLogo2.png"));
+            img = ImageIO.read(getClass().getClassLoader().getResource("resources/WestRock Logo.png"));
             icon3 = new JLabel(new ImageIcon(img));
             
         } catch (Exception ex) {
@@ -466,8 +463,8 @@ public class AdvancedClient  {
             return;
         } else {
             JLabel titleText = new JLabel("Total Coins: ");
-            AppUI.setTitleSemiBoldFont(titleText, 32);
-            c.insets = new Insets(0, 10, 0, 0); 
+            AppUI.setTitleSemiBoldFont(titleText, 18);
+            c.insets = new Insets(2, 12, 0, 0); 
             gridbag.setConstraints(titleText, c);
             p.add(titleText);
             
@@ -475,7 +472,7 @@ public class AdvancedClient  {
             c.insets = new Insets(15, 10, 0, 0); 
             JPanel wrp = new JPanel();
             AppUI.setBoxLayout(wrp, false);
-            AppUI.setSize(wrp, 216, 32);
+            AppUI.setSize(wrp, 166, 32);
             AppUI.noOpaque(wrp);
             
             
@@ -501,12 +498,12 @@ public class AdvancedClient  {
             //p.add(titleText);
             
             
-            p.add(wrp);
-            
+            p.add(wrp);            
             c.anchor = GridBagConstraints.CENTER;
      
             // Pad
             c.weightx = 1;
+            c.insets = new Insets(15, 0, 0, 0); 
             JLabel padd0 = new JLabel();
             gridbag.setConstraints(padd0, c);
             //p.add(padd0);
@@ -786,10 +783,10 @@ public class AdvancedClient  {
         
         
         // Icon lang
-        c.insets = new Insets(0, 10, 0, 40); 
-        AppUI.noOpaque(icon2);
-        AppUI.setHandCursor(icon2);
-        gridbag.setConstraints(icon2, c);
+        //c.insets = new Insets(0, 10, 0, 40); 
+        //AppUI.noOpaque(icon2);
+        //AppUI.setHandCursor(icon2);
+        //gridbag.setConstraints(icon2, c);
         //p.add(icon2);
  
         // Version

@@ -470,7 +470,7 @@ public class AppUI {
     public static JFrame getMainFrame(String version) {
         JFrame frame = new JFrame();
         
-        frame.setTitle("CloudCoin Wallet " + version);
+        frame.setTitle("WestRock Consumer Concept");
         frame.setLayout(new BorderLayout());
         frame.setSize(new Dimension(tw, th));
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
