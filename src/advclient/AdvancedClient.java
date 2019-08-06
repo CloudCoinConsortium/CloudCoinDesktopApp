@@ -435,10 +435,7 @@ public class AdvancedClient  {
             
             img = ImageIO.read(getClass().getClassLoader().getResource("resources/Help_Support Icon.png"));
             icon1 = new JLabel(new ImageIcon(img));
-            
-            img = ImageIO.read(getClass().getClassLoader().getResource("resources/Brithish flag.png"));
-            icon2 = new JLabel(new ImageIcon(img));
-            
+
             img = ImageIO.read(getClass().getClassLoader().getResource("resources/CloudCoinLogo2.png"));
             icon3 = new JLabel(new ImageIcon(img));
             
@@ -498,9 +495,6 @@ public class AdvancedClient  {
             wrp.add(titleText);
             
             gridbag.setConstraints(wrp, c);
-            //p.add(titleText);
-            
-            
             p.add(wrp);
             
             c.anchor = GridBagConstraints.CENTER;
@@ -510,8 +504,7 @@ public class AdvancedClient  {
             JLabel padd0 = new JLabel();
             gridbag.setConstraints(padd0, c);
             //p.add(padd0);
-            
-            
+                        
             c.weightx = 0;
             c.insets = new Insets(0, 10, 0, 60); 
             
@@ -636,7 +629,6 @@ public class AdvancedClient  {
         c.fill = GridBagConstraints.NONE;
         c.gridwidth = 1;
         c.weightx = 0;
-       // c.weighty = 1;
         c.fill = GridBagConstraints.NORTH;
         
         // Icon Gear
@@ -782,15 +774,6 @@ public class AdvancedClient  {
                 showScreen();
             }
         });
-        
-        
-        
-        // Icon lang
-        c.insets = new Insets(0, 10, 0, 40); 
-        AppUI.noOpaque(icon2);
-        AppUI.setHandCursor(icon2);
-        gridbag.setConstraints(icon2, c);
-        //p.add(icon2);
  
         // Version
         c.insets = new Insets(0, 0, 20, 10);
