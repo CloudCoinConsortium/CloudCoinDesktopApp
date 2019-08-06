@@ -51,6 +51,11 @@ public class MyCheckBox {
         return cb.isSelected();
     }
     
+    public void setFont(int size, Color color) {
+        AppUI.setFont(txt, size);
+        AppUI.setColor(txt, color);
+    }
+    
     public void setBoldFont() {
         AppUI.setBoldFont(txt, 18);
     }

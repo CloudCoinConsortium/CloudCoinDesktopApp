@@ -49,7 +49,7 @@ public class MyButton {
     public void enable() {
         button.setEnabled(true);
         RoundedBorder rb = (RoundedBorder) button.getBorder();
-        rb.setColor(AppUI.getColor0());
+        rb.setColor(AppUI.getColor2());
         button.repaint();
         button.revalidate();
     }
@@ -73,11 +73,11 @@ public class MyButton {
             }
         };
         
-        AppUI.roundCorners(button, AppUI.getColor0(), 18, cb);
+        AppUI.roundCorners(button, AppUI.getColor2(), 48, cb);
         AppUI.noOpaque(button);
         button.setContentAreaFilled(false);
-        AppUI.setSize(button, 224, 50);
-        AppUI.setBoldFont(button, 20);
+        AppUI.setSize(button, 214, 48);
+        AppUI.setFont(button, 18);
         AppUI.setHandCursor(button);
  
         JPanel p = new JPanel();

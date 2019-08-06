@@ -133,34 +133,34 @@ public class AppUI {
     }
     
     public static Color getColor0() {
-        return new Color(0x0061E1);
+        return new Color(0x1C1F28);
     }
     
     public static Color getColor1() {
-        return new Color(0xC9DBEE);
+        return new Color(0x338FFF);
     }
     
     public static Color getColor2() {
-        return new Color(0xDFEAF5);
+        return new Color(0x2492E7);
     }
     
     public static Color getColor3() {
         //return new Color(0xBFFFFFFF, true);
-        return new Color(0xE9F0F8);
+        return new Color(0x303441);
     }
     
     public static Color getColor4() {
-        return new Color(0x665FA8FF, true);
+        return new Color(0x2C303D);
     }
     
     public static Color getColor5() {
         return Color.WHITE;
     }
     public static Color getColor6() {
-        return new Color(0x5FA8FF);
+        return new Color(0x1F222B);
     }
     public static Color getColor7() {
-        return new Color(0x90C1FE);
+        return new Color(0x14161E);
     }
     
     public static Color getColor8() {
@@ -247,6 +247,10 @@ public class AppUI {
         c.setAlignmentX(Component.LEFT_ALIGNMENT);
     }
     
+    public static void alignRight(JComponent c) {
+        c.setAlignmentX(Component.RIGHT_ALIGNMENT);
+    }
+    
     public static void alignCenter(JComponent c) {
         c.setAlignmentX(Component.CENTER_ALIGNMENT);
     }
@@ -262,6 +266,10 @@ public class AppUI {
     
     public static void noOpaque(JComponent c) {
         c.setOpaque(false);
+    }
+    
+    public static void opaque(JComponent c) {
+        c.setOpaque(true);
     }
     
     public static void vr(JComponent c, double size) {
@@ -308,7 +316,7 @@ public class AppUI {
     
     
     public static void setTitleFont(Component c, int size) {
-        c.setFont(regFont.deriveFont(Font.PLAIN, size));
+        c.setFont(osRegFont.deriveFont(Font.PLAIN, size));
         c.setForeground(Color.WHITE);
     }
     
