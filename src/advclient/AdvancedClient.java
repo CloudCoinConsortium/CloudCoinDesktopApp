@@ -464,7 +464,7 @@ public class AdvancedClient  {
         } else {
             JLabel titleText = new JLabel("Total Coins: ");
             AppUI.setTitleSemiBoldFont(titleText, 18);
-            c.insets = new Insets(2, 12, 0, 0); 
+            c.insets = new Insets(2, 38, 0, 0); 
             gridbag.setConstraints(titleText, c);
             p.add(titleText);
             
@@ -472,7 +472,7 @@ public class AdvancedClient  {
             c.insets = new Insets(15, 10, 0, 0); 
             JPanel wrp = new JPanel();
             AppUI.setBoxLayout(wrp, false);
-            AppUI.setSize(wrp, 166, 32);
+            AppUI.setSize(wrp, 146, 32);
             AppUI.noOpaque(wrp);
             
             
