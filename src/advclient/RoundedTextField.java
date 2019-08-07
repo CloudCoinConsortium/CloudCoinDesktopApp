@@ -84,7 +84,7 @@ public class RoundedTextField extends JPasswordField {
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
        // g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.4f));
         g.setColor(getBackground());
-        g.fillRoundRect(0, 0, getWidth()-1, getHeight()-1, 15, 15);
+        g.fillRoundRect(0, 0, getWidth()-1, getHeight()-1, 42, 42);
         if (!placeholder.equals("")) {
             g.setColor(AppUI.getDisabledColor2());        
             int width = g.getFontMetrics().stringWidth(placeholder);
@@ -109,7 +109,7 @@ public class RoundedTextField extends JPasswordField {
     
     public boolean contains(int x, int y) {
          if (shape == null || !shape.getBounds().equals(getBounds())) {
-             shape = new RoundRectangle2D.Float(0, 0, getWidth()-1, getHeight()-1, 15, 15);
+             shape = new RoundRectangle2D.Float(0, 0, getWidth()-1, getHeight()-1, 42, 42);
          }
          return shape.contains(x, y);
     }

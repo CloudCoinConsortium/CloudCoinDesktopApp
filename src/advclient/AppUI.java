@@ -16,6 +16,11 @@ import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GraphicsEnvironment;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.font.TextAttribute;
@@ -154,7 +159,8 @@ public class AppUI {
     }
     
     public static Color getColor5() {
-        return Color.WHITE;
+        return new Color(0xD4D4D4);
+        //return Color.WHITE;
     }
     public static Color getColor6() {
         return new Color(0x1F222B);
@@ -164,27 +170,27 @@ public class AppUI {
     }
     
     public static Color getColor8() {
-        return new Color(0xE5E5E5);
+        return new Color(0x1B1E26);
     }
     
     public static Color getColor9() {
-         return new Color(0x5FA8FF);
+         return new Color(0x65676B);
     }
     
     public static Color getColor10() {
-        return new Color(0x777777);
+        return new Color(0x43485A);
     }
     
     public static Color getColor11() {
-        return new Color(0xF2F6FB);
+        return new Color(0x4C5266);
     }
     
     public static Color getColor12() {
-        return new Color(0xF7F9FC);
+        return new Color(0xEB788B);
     }
        
     public static Color getColor13() {
-        return new Color(0x919396);
+        return new Color(0x62A459);
     }
     
     
@@ -226,7 +232,7 @@ public class AppUI {
     
     
     public static double getBoxWidth() {
-        return AppUI.tw / 3;
+        return AppUI.tw / 4;
     }
     
     public static double getBoxHeight() {
@@ -345,7 +351,8 @@ public class AppUI {
     
     
     public static void setCommonFont(Component c) {
-        AppUI.setFont(c, 25);
+        AppUI.setFont(c, 16);
+        AppUI.setColor(c, AppUI.getColor5());
     }
     
     public static void setCommonBoldFont(Component c) {
@@ -400,7 +407,7 @@ public class AppUI {
     }
    
    public static JPanel createRoundedPanel(JPanel parent) {
-         return createRoundedPanel(parent, AppUI.getColor2(), 60, 20);
+         return createRoundedPanel(parent, AppUI.getColor5(), 60, 20);
     }
     
     public static JPanel createRoundedPanel(JPanel parent, Color color, int sideMargin) {
@@ -412,8 +419,9 @@ public class AppUI {
         
         AppUI.setBoxLayout(p, true);
         AppUI.alignCenter(p);
-        AppUI.roundCorners(p, color, radius);
+        //AppUI.roundCorners(p, color, radius);
         AppUI.noOpaque(p);
+        AppUI.setBackground(p, color);
         
         JPanel subInnerCore = new JPanel();
         AppUI.setBoxLayout(subInnerCore, true);
@@ -490,7 +498,7 @@ public class AppUI {
         DefaultTableModel model = new DefaultTableModel(data.length, data[0].length - 1) {
             @Override
             public String getColumnName(int col) {        
-                return fcolumnNames[col];
+                return fcolumnNames[col].toUpperCase();
             }
             
             @Override
@@ -510,19 +518,20 @@ public class AppUI {
             }
         }
  
-        table.setRowHeight(table.getRowHeight() + 15);
+        table.setRowHeight(table.getRowHeight() + 35);
         table.setDefaultRenderer(String.class, r);
-        table.setIntercellSpacing(new Dimension(1, 1));
+        table.setIntercellSpacing(new Dimension(0, 1));
         table.setFocusable(false);
         table.setRowSelectionAllowed(false);
-        table.setGridColor(AppUI.getColor7());
+        table.setGridColor(AppUI.getColor10());
         
         
-        JTableHeader header = table.getTableHeader();    
-        AppUI.setColor(header, Color.WHITE);
+        JTableHeader header = table.getTableHeader();  
+        AppUI.setColor(header, AppUI.getColor11());
         AppUI.noOpaque(header);
         AppUI.setCommonTableFont(table);
-        AppUI.setCommonTableFont(header);
+        AppUI.setSemiBoldFont(header, 14);
+
         
         final TableCellRenderer hr = table.getTableHeader().getDefaultRenderer();
         header.setDefaultRenderer(new TableCellRenderer() {
@@ -530,11 +539,18 @@ public class AppUI {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                 lbl = (JLabel) hr.getTableCellRendererComponent(table, value, true, true, row, column);
-                lbl.setHorizontalAlignment(SwingConstants.LEFT);
-                
-                //internal transaction table margins
-                AppUI.setMargin(lbl, 2, 10, 2, 2);
-                AppUI.setBackground(lbl, AppUI.getColor0());
+                //lbl.setHorizontalAlignment(SwingConstants.LEFT);
+
+                if (column == 0 || column == 1)
+                    lbl.setHorizontalAlignment(SwingConstants.LEFT);
+                else
+                    lbl.setHorizontalAlignment(SwingConstants.RIGHT);
+
+                lbl.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, AppUI.getColor10()));
+                lbl.setBorder(BorderFactory.createCompoundBorder(lbl.getBorder(), BorderFactory.createEmptyBorder(0, 6, 10, 0)));
+
+                AppUI.setBackground(lbl, AppUI.getColor6());
+
                 return lbl;
             }
         });
@@ -542,7 +558,8 @@ public class AppUI {
         
         //This is the wallet table size 
         JScrollPane scrollPane = new JScrollPane(table);
-        AppUI.setSize(scrollPane, 660, 325);
+        AppUI.setSize(scrollPane, 880, 310);
+        scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(10, 0));
         scrollPane.getVerticalScrollBar().setUI(new BasicScrollBarUI() {       
             @Override
             protected JButton createDecreaseButton(int orientation) {
@@ -551,7 +568,10 @@ public class AppUI {
                 jbutton.setContentAreaFilled(false);
                 jbutton.setFocusPainted(false);
             
-                return jbutton;
+                JButton b = new JButton();
+                AppUI.setSize(b, 0, 0);
+                
+                return b;
             }
 
             @Override    
@@ -561,13 +581,16 @@ public class AppUI {
                 jbutton.setContentAreaFilled(false);
                 jbutton.setFocusPainted(false);
             
-                return jbutton;
+                JButton b = new JButton();
+                AppUI.setSize(b, 0, 0);
+                
+                return b;
             }
-            
-         @Override 
+ 
+            @Override 
             protected void configureScrollBarColors(){
-                this.trackColor = AppUI.getColor6();
-                this.thumbColor = AppUI.getColor7();
+                this.trackColor = AppUI.getColor7();
+                this.thumbColor = AppUI.getColor2();
             }
         });
         
@@ -590,7 +613,7 @@ public class AppUI {
         else
             AppUI.setFont(l, fontSize);
         
-        AppUI.setColor(l, AppUI.getColor0());
+        AppUI.setColor(l, AppUI.getColor2());
         AppUI.underLine(l);
         AppUI.setHandCursor(l);
         l.addMouseListener(new MouseAdapter() {
@@ -610,6 +633,124 @@ public class AppUI {
         });
         
         return l;
+    }
+    
+    
+    public static void getGBRow(JComponent parent, JComponent left, JComponent right, int y, GridBagLayout gridbag) {
+        GridBagConstraints c = new GridBagConstraints();
+  
+        c.anchor = GridBagConstraints.NORTHWEST;
+        c.insets = new Insets(20, 0, 0, 0);    
+        c.gridy = y;
+        c.weightx = 0;
+        c.weighty = 0;
+        
+        if (left != null) {
+            if (left instanceof JLabel) {
+                AppUI.setCommonFont(left);
+            }
+        
+            gridbag.setConstraints(left, c);
+            parent.add(left);
+        } else {
+            c.gridwidth = 2;
+        }
+        
+        c.insets = new Insets(10, 0, 0, 0);
+        c.weightx = 1;
+        
+        if (right != null) {
+            if (right instanceof JLabel) {
+                AppUI.setCommonFont(right);
+            }
+
+            gridbag.setConstraints(right, c);
+            parent.add(right);       
+        }
+    }
+    
+    public static void GBPad(JComponent parent, int y, GridBagLayout gridbag) {
+        GridBagConstraints c = new GridBagConstraints();
+        JPanel padder = new JPanel();
+        AppUI.noOpaque(padder);
+        c.anchor = GridBagConstraints.NORTHWEST;
+        c.insets = new Insets(0, 0, 0, 0);    
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+        c.weightx = 1;
+        c.weighty = 1;
+        gridbag.setConstraints(padder, c);
+        parent.add(padder);
+    }
+    
+    public static MyButton getTwoButtonPanel(JComponent parent, String name0, String name1, 
+            ActionListener al0, ActionListener al1, int y, GridBagLayout gridbag) {
+        GridBagConstraints c = new GridBagConstraints();
+        
+        c.anchor = GridBagConstraints.NORTHEAST;
+        c.insets = new Insets(20, 0, 0, 10);    
+        c.gridy = y;
+        c.weightx = 1;
+        c.weighty = 0;
+        c.gridwidth = 2;
+        
+        if (!name0.isEmpty()) {
+            MyButton cb0 = new MyButton(name0, AppUI.getColor3());
+            cb0.addListener(al0);
+   
+            gridbag.setConstraints(cb0.getButton(), c);
+            parent.add(cb0.getButton());
+        }
+        
+        MyButton cb1 = new MyButton(name1);
+        cb1.addListener(al1);
+        c.weightx = 0;
+        gridbag.setConstraints(cb1.getButton(), c);
+        parent.add(cb1.getButton());       
+        
+        return cb1;
+    }
+    
+    public static JLabel wrapDiv(String text) {
+        return new JLabel("<html><div style='width:500px; text-align:left'>" + text + "</div></html>");
+    }
+    
+    
+    public static void addInvItem(JComponent parent, String denomination, int count) {
+        JPanel invItem = new JPanel();
+        AppUI.setMargin(invItem, 0, 0, 0, 0);
+        AppUI.noOpaque(invItem);
+        AppUI.setBoxLayout(invItem, true);
+        
+        JLabel l0 = new JLabel(AppCore.formatNumber(count));
+        AppUI.alignCenter(l0);
+    
+        JPanel hyp = new JPanel();
+        AppUI.setSize(hyp, 48, 1);
+        AppUI.setBackground(hyp, AppUI.getColor9());
+        
+        JLabel l1 = new JLabel(denomination + "'s");
+        AppUI.alignCenter(l1);
+
+        AppUI.setFont(l0, 14);
+        AppUI.setFont(l1, 14);      
+        if (count > 0) {
+            AppUI.setColor(l0, AppUI.getColor5());
+            AppUI.setColor(l1, AppUI.getColor5());
+        } else {
+            AppUI.setColor(l0, AppUI.getColor9());
+            AppUI.setColor(l1, AppUI.getColor9());
+        }
+        
+        AppUI.setMargin(l0, 0, 0, 0, 0);
+        AppUI.setMargin(l1, 4);
+        
+        
+        invItem.add(l0);
+        invItem.add(hyp);
+        invItem.add(l1);
+            
+        parent.add(invItem);
     }
     
 }

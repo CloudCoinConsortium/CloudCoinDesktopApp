@@ -25,9 +25,17 @@ public class MyButton {
     
     JPanel core;
     JButton button;
+    Color color;
     
     public MyButton(String text) {
+        this.color = AppUI.getColor2();
         core = makeUI(text);
+    }
+    
+    public MyButton(String text, Color color) {
+        this.color = color;
+        core = makeUI(text);
+        
     }
     
     public JPanel getButton() {
@@ -49,7 +57,7 @@ public class MyButton {
     public void enable() {
         button.setEnabled(true);
         RoundedBorder rb = (RoundedBorder) button.getBorder();
-        rb.setColor(AppUI.getColor2());
+        rb.setColor(this.color);
         button.repaint();
         button.revalidate();
     }
@@ -73,10 +81,10 @@ public class MyButton {
             }
         };
         
-        AppUI.roundCorners(button, AppUI.getColor2(), 48, cb);
+        AppUI.roundCorners(button, this.color, 48, cb);
         AppUI.noOpaque(button);
         button.setContentAreaFilled(false);
-        AppUI.setSize(button, 214, 48);
+        AppUI.setSize(button, 190, 48);
         AppUI.setFont(button, 18);
         AppUI.setHandCursor(button);
  

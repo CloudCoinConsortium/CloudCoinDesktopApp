@@ -80,11 +80,13 @@ public class MyTextField  {
     
     public JPanel makeUI(String placeholder) {
         tf = new RoundedTextField(placeholder);
+        tf.setCaretColor(Color.WHITE);
 
         AppUI.noOpaque(tf);
         AppUI.setSize(tf, (int) AppUI.getBoxWidth(), (int) AppUI.getBoxHeight());
-        AppUI.setBackground(tf, AppUI.getColor4());
+        AppUI.setBackground(tf, AppUI.getColor8());
         AppUI.setFont(tf, 18);
+        AppUI.setColor(tf, AppUI.getColor5());
         AppUI.setMargin(tf, 10);
         tf.setLayout(new BorderLayout());
         
