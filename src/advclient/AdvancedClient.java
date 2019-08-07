@@ -341,9 +341,10 @@ public class AdvancedClient  {
         
         
         corePanel.removeAll();
-        corePanel.repaint();
-        
+        corePanel.repaint();      
         corePanel.revalidate();
+        
+        AppUI.setMargin(corePanel, 20);
     }
     
     public void initMainScreen() {
@@ -845,7 +846,9 @@ public class AdvancedClient  {
         wl.debug(ltag, "SCREEN " + ps.currentScreen + ": " + ps.toString());
 
         clear();
-     
+        
+ 
+
         switch (ps.currentScreen) {
             case ProgramState.SCREEN_AGREEMENT:
                 resetState();
@@ -4113,53 +4116,14 @@ public class AdvancedClient  {
     }
     
     public void showDepositScreen() {
-        boolean isError = !ps.errText.equals("");
-        
-        showLeftScreen();
-
-        JPanel rightPanel = getRightPanel();    
-    
-        JPanel ct = new JPanel();
-        AppUI.setBoxLayout(ct, true);
-        AppUI.noOpaque(ct);
-        rightPanel.add(ct);
-        
-        JLabel ltitle = AppUI.getTitle("Deposit");   
-        ct.add(ltitle);
-        AppUI.alignTop(ct);
-        AppUI.alignTop(ltitle);
-        
-        AppUI.hr(ct, 2);
-        
-        maybeShowError(ct);
-        
-        // Outer Container
-        JPanel oct = new JPanel();
-        AppUI.noOpaque(oct);
-        
         int y = 0;
-        
+        JLabel fname;
+        MyTextField walletName = null;
+
+        JPanel subInnerCore = getPanel("Deposit");                
         GridBagLayout gridbag = new GridBagLayout();
-        GridBagConstraints c = new GridBagConstraints(); 
-        c.gridwidth = 1;
-        c.anchor = GridBagConstraints.EAST;
-        c.insets = new Insets(12, 18, 0, 0); 
-        oct.setLayout(gridbag);
-        
-        
-        // Deposit To
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = y;   
-        c.anchor = GridBagConstraints.EAST; 
-        JLabel x = new JLabel("Deposit To");
-        gridbag.setConstraints(x, c);
-        AppUI.setCommonFont(x);
-        oct.add(x);
-        
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = y;     
-        c.anchor = GridBagConstraints.WEST; 
- 
+        subInnerCore.setLayout(gridbag);
+
         int nonSkyCnt = 0;
         for (int i = 0; i < wallets.length; i++)
             if (!wallets[i].isSkyWallet())
@@ -4173,67 +4137,68 @@ public class AdvancedClient  {
                 j++;
             }
         }
-      
-        final RoundedCornerComboBox cbox = new RoundedCornerComboBox(AppUI.getColor2(), "Select Destination", options);
-        gridbag.setConstraints(cbox.getComboBox(), c);
-        oct.add(cbox.getComboBox());
 
-
-        y++;
-        // Password
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = y;   
-        c.anchor = GridBagConstraints.EAST;   
-        final JLabel pText = new JLabel("Password");
-        gridbag.setConstraints(pText, c);
-        AppUI.setCommonFont(pText);
-        oct.add(pText);
+        fname = new JLabel("Deposit To");
+        final RoundedCornerComboBox cbox = new RoundedCornerComboBox(AppUI.getColor6(), "Select Destination", options);       
+        AppUI.getGBRow(subInnerCore, fname, cbox.getComboBox(), y, gridbag);
+        y++;     
         
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = y;     
-        c.anchor = GridBagConstraints.WEST;   
+        
+        fname = new JLabel("Password");
+        final JLabel pText = fname;
         final MyTextField password = new MyTextField("Wallet Password", true);
-        gridbag.setConstraints(password.getTextField(), c);
-        oct.add(password.getTextField());
-        
+        AppUI.getGBRow(subInnerCore, fname, password.getTextField(), y, gridbag);
+        y++;
+       
         password.getTextField().setVisible(false);
         pText.setVisible(false);
         
-        y++;
-        // Memo
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = y;   
-        c.anchor = GridBagConstraints.EAST; 
-        x = new JLabel("Memo (Note)");
-        gridbag.setConstraints(x, c);
-        AppUI.setCommonFont(x);
-        oct.add(x);
-        
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = y;     
-        c.anchor = GridBagConstraints.WEST;   
+        fname = new JLabel("Memo (Note)");
         final MyTextField memo = new MyTextField("Optional", false);
-        gridbag.setConstraints(memo.getTextField(), c);
-
         if (!ps.typedMemo.isEmpty())
             memo.setData(ps.typedMemo);
         
-        oct.add(memo.getTextField());
-        
-        
-
-        // Total files selected
+        AppUI.getGBRow(subInnerCore, fname, memo.getTextField(), y, gridbag);
+        y++; 
+ 
         String totalCloudCoins = AppCore.calcCoinsFromFilenames(ps.files);
         final JLabel tl = new JLabel("Selected " + ps.files.size() + " files - " + totalCloudCoins + " CloudCoins");
-        AppUI.setCommonFont(tl);
-        c.insets = new Insets(22, 18, 0, 0); 
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridwidth = 2;
-        c.anchor = GridBagConstraints.CENTER;
-        c.gridy = y + 3;  
-        gridbag.setConstraints(tl, c);
-        oct.add(tl);
-
+        AppUI.getGBRow(subInnerCore, null, tl, y, gridbag);
+        y++;
+  
+             
+        int ddWidth = 701;
+        JPanel ddPanel = new JPanel();
+        ddPanel.setLayout(new GridBagLayout());
+        
+        JLabel l = new JLabel("<html><div style='text-align:center; width:" + ddWidth  +"'><b>Drop files here or click<br>to select files</b></div></html>");
+        AppUI.setColor(l, AppUI.getColor13());
+        AppUI.setBoldFont(l, 32);
+        AppUI.noOpaque(ddPanel);
+        AppUI.setHandCursor(ddPanel);
+        ddPanel.setBorder(new DashedBorder(40, AppUI.getColor13()));
+        ddPanel.add(l);
+        
+        AppUI.setSize(ddPanel, (int) ddWidth, 150);
+        
+        AppUI.getGBRow(subInnerCore, null, ddPanel, y, gridbag);
+        y++;
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        AppUI.GBPad(subInnerCore, y, gridbag);        
+        y++;
+        
+        
         cbox.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 String walletName = cbox.getSelectedValue();             
@@ -4256,29 +4221,6 @@ public class AdvancedClient  {
         }
         
         
-        int ddWidth = 701;
-        
-        // Drag and Drop
-        JPanel ddPanel = new JPanel();
-       // AppUI.setBackground(ddPanel, AppUI.getColor0());
-        ddPanel.setLayout(new GridBagLayout());
-        
-        JLabel l = new JLabel("<html><div style='text-align:center; width:" + ddWidth  +"'><b>Drop files here or click<br>to select files</b></div></html>");
-        AppUI.setColor(l, AppUI.getColor13());
-        AppUI.setBoldFont(l, 40);
-        AppUI.noOpaque(ddPanel);
-        AppUI.setHandCursor(ddPanel);
-        ddPanel.setBorder(new DashedBorder(40, AppUI.getColor13()));
-        ddPanel.add(l);
-        
-        c.insets = new Insets(8, 18, 0, 0); 
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridwidth = 2;
-        c.anchor = GridBagConstraints.CENTER;
-        c.gridy = y + 4;  
-        
-        AppUI.setSize(ddPanel, (int) ddWidth, 150);
-        gridbag.setConstraints(ddPanel, c);
         new FileDrop(null, ddPanel, new FileDrop.Listener() {
             public void filesDropped( java.io.File[] files ) {   
                 for( int i = 0; i < files.length; i++ ) {
@@ -4316,14 +4258,15 @@ public class AdvancedClient  {
                 }
             }   
         });
-
-        oct.add(ddPanel);
-        rightPanel.add(oct);
         
-        // Space
-        AppUI.hr(oct, 22);
         
-        JPanel bp = getTwoButtonPanel(new ActionListener() {
+        
+        AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Continue", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                showScreen();
+            }
+        }, new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 String walletName = cbox.getSelectedValue();
                 Wallet w;
@@ -4406,10 +4349,7 @@ public class AdvancedClient  {
                 
                 showScreen();
             }
-        });
-        
-        AppUI.hr(rightPanel, 20);
-        rightPanel.add(bp);       
+        }, y, gridbag);      
     }
     
     public void showFoldersScreen() {
@@ -6651,23 +6591,7 @@ public class AdvancedClient  {
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
         lwrapperPanel.add(scrollPane);  
-        /*
-        //scrollBar.setValue(200);
-        InputMap im = scrollBar.getInputMap(JComponent.WHEN_FOCUSED);
-        ActionMap actMap = scrollBar.getActionMap();
-        //InputMap im = scrollBar.getInputMap();
 
- 
-        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0), "Up");
-        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0), "Down");
-        actMap.put("Up", new UpDownAction("Up", scrollPane.getVerticalScrollBar().getModel(), 42));
-        actMap.put("Down", new UpDownAction("Down", scrollPane.getVerticalScrollBar().getModel(), 42));
-
-        */
-        //lwrapperPanel.requestFocus();
-        //lwrapperPanel.requestFocusInWindow();
-        //lwrapperPanel.setFocusable(true);
-        
         corePanel.add(lwrapperPanel);
     }
 
@@ -6857,7 +6781,7 @@ public class AdvancedClient  {
         return wpanel;
     }
     
-    public void showAgreementScreen() {  
+    public void showAgreementScreen() {          
         AppUI.setMargin(corePanel, 40, 120, 80, 120);
 
         // Agreement Panel        
@@ -7038,8 +6962,7 @@ public class AdvancedClient  {
         
         gridbag.setConstraints(buttonWrapper, c);
         agreementPanel.add(buttonWrapper);
-        //agreementPanel.add(scrollPane);
-      
+
         corePanel.add(agreementPanel);
     }
     

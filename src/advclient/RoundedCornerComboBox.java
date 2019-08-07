@@ -100,10 +100,11 @@ public class RoundedCornerComboBox {
     
     
     public JPanel makeUI() { 
-        background = AppUI.blendColors(AppUI.getColor4(), outerBgColor);
+        background = AppUI.blendColors(AppUI.getColor8(), outerBgColor);
         foreground = background;
 
-        UIManager.put("ComboBox.selectionForeground", Color.BLACK);
+        background = AppUI.getColor8();
+        UIManager.put("ComboBox.selectionForeground", AppUI.getColor5());
         UIManager.put("ComboBox.selectionBackground", background);
         
         combo1 = new JComboBox<>();
@@ -169,7 +170,7 @@ class MyComboBoxModel extends DefaultComboBoxModel {
     @Override
     public void setSelectedItem(Object anObject) {
         if (!placeholder.equals(anObject)) {
-            AppUI.setColor(combo1, Color.BLACK);
+            AppUI.setColor(combo1, AppUI.getColor5());
             super.setSelectedItem(anObject);
         } else if (selectionAllowed) {
             AppUI.setColor(combo1, AppUI.getDisabledColor2());
@@ -226,7 +227,7 @@ class HeavyWeightContainerListener implements PopupMenuListener {
 
 class RoundedCornerBorder extends AbstractBorder {
     protected Color outerBgColor;
-    protected static final int ARC = 12;
+    protected static final int ARC = 32;
     
     public RoundedCornerBorder(Color outerBgColor) {
         this.outerBgColor = outerBgColor;
@@ -284,9 +285,10 @@ class RoundedCornerBorder1 extends RoundedCornerBorder {
         b.setBounds(b.x, b.y + r, b.width, b.height - r);
         round.add(new Area(b));
 
+        
         Container parent = c.getParent();
         if (parent != null) {
-            g2.setPaint(parent.getBackground());
+            g2.setPaint(outerBgColor);
             Area corner = new Area(new Rectangle2D.Float(x, y, width, height));
             corner.subtract(round);
             g2.fill(corner);
@@ -334,14 +336,9 @@ class RoundedCornerBorder2 extends RoundedCornerBorder {
         Area round = new Area(p);
 
         g2.setPaint(c.getBackground());
-        //g2.setPaint(Color.RED);
         g2.fill(round);
-
-        //g2.setPaint(c.getForeground());
-        //        g2.setPaint(Color.RED);
-      //  g2.draw(round);
         g2.setPaint(c.getBackground());
-              //  g2.setPaint(Color.RED);
+
         g2.drawLine(x + 1, y, x + width - 2, y);
         g2.dispose();
     }
@@ -423,7 +420,7 @@ class ComboBoxRenderer extends JPanel implements ListCellRenderer {
         if (index == 0) {
             text.setForeground(AppUI.getDisabledColor2());
         } else if (index > -1) {
-            text.setForeground(Color.BLACK);
+            text.setForeground(AppUI.getColor5());
         }
             
         if (isSelected) {
