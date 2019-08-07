@@ -315,8 +315,11 @@ public class ServantManager {
     
     
     public void startShowSkyCoinsService(CallbackInterface cb, int sn) {
-        if (sr.isRunning("ShowEnvelopeCoins"))
-            return;
+        while (sr.isRunning("ShowEnvelopeCoins")) {
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {}
+        }
 
 	ShowEnvelopeCoins sc = (ShowEnvelopeCoins) sr.getServant("ShowEnvelopeCoins");
 	sc.launch(sn, "sky", cb);
