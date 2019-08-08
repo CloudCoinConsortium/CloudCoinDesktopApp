@@ -3998,19 +3998,23 @@ public class AdvancedClient  {
         c.gridy = y;     
         c.anchor = GridBagConstraints.WEST; 
  
-        int cnt = 0;
-        for (int i = 0; i < wallets.length; i++)
+        int cnt = 0, scnt = 0;
+        for (int i = 0; i < wallets.length; i++) {
+            if (wallets[i].isSkyWallet()) {
+                scnt++;
+            }
             if (wallets[i].isSkyWallet() && wallets[i].getTotal() > 0)
                 cnt++;
+        }
            
         final String[] options = new String[cnt + 1];
-        final String[] doptions = new String[wallets.length - cnt];
+        final String[] doptions = new String[wallets.length - scnt];
         int j = 0, k = 0;
         
         final int fidxs[], tidxs[];
         
         fidxs = new int[cnt + 1];
-        tidxs = new int[wallets.length - cnt];
+        tidxs = new int[wallets.length - scnt];
         for (int i = 0; i < wallets.length; i++) {
             if (wallets[i].isSkyWallet()) {
                 if (wallets[i].getTotal() > 0) {
