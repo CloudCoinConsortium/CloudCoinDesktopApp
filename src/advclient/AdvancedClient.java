@@ -4043,6 +4043,7 @@ public class AdvancedClient  {
         gridbag.setConstraints(cbox.getComboBox(), c);
         oct.add(cbox.getComboBox());
 
+        
         y++;
         
         rightPanel.add(oct);
@@ -4141,7 +4142,11 @@ public class AdvancedClient  {
             }
         });
        
-
+        if (ps.selectedFromIdx > 0)
+            cbox.setDefaultIdx(ps.selectedFromIdx);
+        
+        if (ps.selectedToIdx > 0)
+            cboxto.setDefaultIdx(ps.selectedToIdx);
         // Space
         AppUI.hr(oct, 22);
         
@@ -4169,10 +4174,11 @@ public class AdvancedClient  {
                     return;
                 }
                 
+                ps.selectedFromIdx = cidx;
                 cidx = fidxs[cidx - 1];
                 Wallet w = wallets[cidx];
                 ps.srcWallet = w;
-
+                
                 cidx = cboxto.getSelectedIndex();
                 if (cidx == 0) {
                     ps.errText = "Destination Wallet is not selected";
@@ -4180,6 +4186,7 @@ public class AdvancedClient  {
                     return;
                 }
                 
+                ps.selectedToIdx = cidx;
                 cidx = tidxs[cidx - 1];
                 
                 w = wallets[cidx];
