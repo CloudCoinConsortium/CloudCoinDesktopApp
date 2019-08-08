@@ -51,7 +51,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.7";
+    String version = "2.1.8";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -401,7 +401,8 @@ public class AdvancedClient  {
     
     public boolean isBackupping() {
         if (ps.currentScreen == ProgramState.SCREEN_BACKUP ||
-                ps.currentScreen == ProgramState.SCREEN_BACKUP_DONE)
+                ps.currentScreen == ProgramState.SCREEN_BACKUP_DONE ||
+                ps.currentScreen == ProgramState.SCREEN_DOING_BACKUP)
             return true;
         
         return false;
@@ -667,6 +668,7 @@ public class AdvancedClient  {
         for (int i = 0; i < items.length; i++) {
             JMenuItem menuItem = new JMenuItem(items[i]);
             menuItem.setActionCommand("" + i);
+            AppUI.setHandCursor(menuItem);
     
             MouseAdapter ma = new MouseAdapter() {
                 public void mouseEntered(MouseEvent evt) {
