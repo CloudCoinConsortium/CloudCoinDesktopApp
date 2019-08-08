@@ -403,7 +403,8 @@ public class AdvancedClient  {
     
     public boolean isBackupping() {
         if (ps.currentScreen == ProgramState.SCREEN_BACKUP ||
-                ps.currentScreen == ProgramState.SCREEN_BACKUP_DONE)
+                ps.currentScreen == ProgramState.SCREEN_BACKUP_DONE ||
+                ps.currentScreen == ProgramState.SCREEN_DOING_BACKUP)
             return true;
         
         return false;
@@ -711,6 +712,7 @@ public class AdvancedClient  {
         for (int i = 0; i < items.length; i++) {
             JMenuItem menuItem = new JMenuItem(items[i]);
             menuItem.setActionCommand("" + i);
+            AppUI.setHandCursor(menuItem);
     
             MouseAdapter ma = new MouseAdapter() {
                 public void mouseEntered(MouseEvent evt) {
@@ -865,8 +867,7 @@ public class AdvancedClient  {
     public void showScreen() {
         wl.debug(ltag, "SCREEN " + ps.currentScreen + ": " + ps.toString());
 
-        clear();
-
+        clear();      
         switch (ps.currentScreen) {
             case ProgramState.SCREEN_AGREEMENT:
                 resetState();
@@ -919,7 +920,7 @@ public class AdvancedClient  {
                 ps.isUpdatedWallets = false;
                 showImportDoneScreen();
                 break;
-            case ProgramState.SCREEN_SUPPORT:
+   /**/         case ProgramState.SCREEN_SUPPORT:
                 showSupportScreen();
                 break;
             case ProgramState.SCREEN_CONFIRM_TRANSFER:
@@ -1897,19 +1898,17 @@ public class AdvancedClient  {
             resetState();
             return;
         }
- 
-        
-        
-        subInnerCore = getPanel("Transfer Complete");
-        
-        JPanel ct = new JPanel();
-        AppUI.noOpaque(ct);
-        subInnerCore.add(ct);
-        
+             
+        int y = 0;
+        JLabel fname, value;
+        MyTextField walletName = null;
+
+        subInnerCore = getPanel("Transfer Complete");                
         GridBagLayout gridbag = new GridBagLayout();
-        GridBagConstraints c = new GridBagConstraints();      
-        ct.setLayout(gridbag);
+        subInnerCore.setLayout(gridbag);
         
+        ps.dstWallet = wallets[0];
+        ps.srcWallet = wallets[1];
         String to;
         if (ps.sendType == ProgramState.SEND_TYPE_WALLET) {
             to = ps.dstWallet.getName();
@@ -1921,22 +1920,17 @@ public class AdvancedClient  {
             to = "?";
         }
         
-        String name = ps.srcWallet.getName();
-        //if (ps.srcWallet.isSkyWallet())
-        //    name += "." + Config.DDNS_DOMAIN;
+        String name = ps.srcWallet.getName();        
+        fname = AppUI.wrapDiv("<b>" + AppCore.formatNumber(ps.typedAmount) 
+                + " CC</b> have been transferred to <b>" + to + "</b> from <b>" + name + "</b>");     
+        AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
+        y++;     
+                   
+        AppUI.GBPad(subInnerCore, y, gridbag);        
+        y++;
         
-        JLabel x = new JLabel("<html><div style='width:400px; text-align:center'>"
-                + "<b>" + AppCore.formatNumber(ps.typedAmount) + " CC</b> have been transferred to <b>" + to + "</b> from <b>"
-                + name + "</b></div></html>");
-        AppUI.setCommonFont(x);
- 
-        c.insets = new Insets(0, 0, 4, 0);
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = 0;
-        gridbag.setConstraints(x, c);
-        ct.add(x);
-        
-        JPanel bp = getTwoButtonPanelCustom("Next Transfer", "Done", new ActionListener() {
+
+        AppUI.getTwoButtonPanel(subInnerCore, "Next Transfer", "Continue", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 resetState();
                 ps.currentScreen = ProgramState.SCREEN_WITHDRAW;
@@ -1954,15 +1948,10 @@ public class AdvancedClient  {
                 }
                 showScreen();
             }
-        });
-  
-        //resetState();
-        
-        subInnerCore.add(bp);        
+        }, y, gridbag);      
     }
     
-    public void showImportDoneScreen() {
-        
+    public void showImportDoneScreen() {   
         boolean isError = !ps.errText.equals("");
         JPanel subInnerCore;
         
@@ -3565,14 +3554,14 @@ public class AdvancedClient  {
                 cnt++;
         }
            
-        System.out.println("sss=" + wallets.length + " cnt="+scnt);
+
         final String[] options = new String[cnt + 1];
         final String[] doptions = new String[wallets.length - scnt];
         int j = 0, k = 0;     
         final int fidxs[], tidxs[];
         
         fidxs = new int[cnt + 1];
-        tidxs = new int[wallets.length - cnt];
+        tidxs = new int[wallets.length - scnt];
         for (int i = 0; i < wallets.length; i++) {
             if (wallets[i].isSkyWallet()) {
                 if (wallets[i].getTotal() > 0) {
@@ -3594,7 +3583,7 @@ public class AdvancedClient  {
             showScreen();
             return;
         } 
-        System.out.println("i=e="+doptions.length);
+
         options[j++] = "- FileSystem";
       
         final RoundedCornerComboBox cbox = new RoundedCornerComboBox(AppUI.getColor6(), "Select Source", options);     
@@ -3670,6 +3659,13 @@ public class AdvancedClient  {
             }
         });
         
+        if (ps.selectedFromIdx > 0)
+            cbox.setDefaultIdx(ps.selectedFromIdx);
+
+        if (ps.selectedToIdx > 0)
+            cboxto.setDefaultIdx(ps.selectedToIdx);
+
+        
         AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Continue", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 ps.currentScreen = ProgramState.SCREEN_DEFAULT;
@@ -3691,6 +3687,7 @@ public class AdvancedClient  {
                     return;
                 }
                 
+                ps.selectedFromIdx = cidx;
                 cidx = fidxs[cidx - 1];
                 Wallet w = wallets[cidx];
                 ps.srcWallet = w;
@@ -3701,7 +3698,7 @@ public class AdvancedClient  {
                     showScreen();
                     return;
                 }
-                
+                ps.selectedToIdx = cidx;
                 cidx = tidxs[cidx - 1];
                 
                 w = wallets[cidx];
@@ -4875,90 +4872,35 @@ public class AdvancedClient  {
     }
     
     public void showBackupScreen() {
-        showLeftScreen();
-        
-        JPanel rightPanel = getRightPanel();    
-        JPanel ct = new JPanel();
-        AppUI.setBoxLayout(ct, true);
-        AppUI.noOpaque(ct);
-        rightPanel.add(ct);
-        
-        JLabel ltitle = AppUI.getTitle("Backup");   
-        ct.add(ltitle);
-        AppUI.hr(ct, 20);
-        
-        maybeShowError(ct);
-           
+        int y = 0;
+        JLabel fname;
+        MyTextField walletName = null;
+
+        JPanel subInnerCore = getPanel("Backup");                
+        GridBagLayout gridbag = new GridBagLayout();
+        subInnerCore.setLayout(gridbag);
+
         final optRv rv = setOptionsForWallets(false, false);
         if (rv.idxs.length == 0) {
-            JLabel nx = new JLabel("You have no coins to backup");
-            AppUI.setSemiBoldFont(nx, 20);
-            AppUI.alignCenter(nx);
-            ct.add(nx);
+            fname = new JLabel("You have no coins to backup");   
+            AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
             return;
         }
-
-        // GridHolder Container
-        JPanel gct = new JPanel();
-        AppUI.noOpaque(gct);
-   
-        GridBagLayout gridbag = new GridBagLayout();
-        gct.setLayout(gridbag);   
-        GridBagConstraints c = new GridBagConstraints();    
         
-        int y = 0;
+        fname = new JLabel("Backup will allow you to create Backup of your CloudCoins");   
+        AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
+        y++; 
         
-        // Text
-        c.anchor = GridBagConstraints.CENTER;
-        c.insets = new Insets(0, 0, 80, 0); 
-        c.gridx = 0;
-        c.gridy = y;
-        c.gridwidth = 2;
-
-        JLabel l = new JLabel("Backup will allow you to create Backup of your CloudCoins");
-        AppUI.setCommonFont(l);
-        gridbag.setConstraints(l, c); 
-        gct.add(l);
+        fname = new JLabel("Wallet");
+        final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(AppUI.getColor6(), "Make Selection", rv.options);
+        AppUI.getGBRow(subInnerCore, fname, cboxfrom.getComboBox(), y, gridbag);
+        y++; 
         
-        y++;
-        c.gridwidth = 1;
-        c.insets = new Insets(0, 16, 10, 0); 
-        c.anchor = GridBagConstraints.EAST;
-         // Transfer from
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = y;   
-        JLabel x = new JLabel("         Wallet");
-        gridbag.setConstraints(x, c);
-        AppUI.setCommonFont(x);
-        gct.add(x);
-        
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = y;     
-        c.anchor = GridBagConstraints.WEST;
-
-        final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(AppUI.getColor2(), "Make Selection", rv.options);
-        gridbag.setConstraints(cboxfrom.getComboBox(), c);
-        gct.add(cboxfrom.getComboBox());
-
-        y++;
-
-        // Password From
-        c.anchor = GridBagConstraints.EAST;
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = y;   
         final JLabel spText = new JLabel("Password");
-        gridbag.setConstraints(spText, c);
-        AppUI.setCommonFont(spText);
-        gct.add(spText);
-        
-        c.anchor = GridBagConstraints.WEST;
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = y;     
         final MyTextField passwordSrc = new MyTextField("Wallet Password", true);
-        gridbag.setConstraints(passwordSrc.getTextField(), c);
-        gct.add(passwordSrc.getTextField());     
-        y++;
-        
+        AppUI.getGBRow(subInnerCore, spText, passwordSrc.getTextField(), y, gridbag);
+        y++; 
+
         passwordSrc.getTextField().setVisible(false);
         spText.setVisible(false);
               
@@ -4984,20 +4926,7 @@ public class AdvancedClient  {
             }
         });
         
-        
-        
-        // Backup folder
-        JLabel txt = new JLabel("Backup Folder");
-        AppUI.setCommonFont(txt);
-        AppUI.alignCenter(txt);
-        c.anchor = GridBagConstraints.EAST;
-        c.gridx = 0;
-        c.gridy = y;
-        
-        gridbag.setConstraints(txt, c);
-        gct.add(txt);
-              
-        
+        fname = new JLabel("Backup Folder");
         final JFileChooser chooser = new JFileChooser();
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         chooser.setAcceptAllFileFilterUsed(false);
@@ -5014,17 +4943,18 @@ public class AdvancedClient  {
             }
         });
 
-        c.anchor = GridBagConstraints.WEST;
-        c.gridx = GridBagConstraints.RELATIVE;;
-        c.gridy = y;
-        gridbag.setConstraints(tf1.getTextField(), c);
-        gct.add(tf1.getTextField());
-        
+        AppUI.getGBRow(subInnerCore, fname, tf1.getTextField(), y, gridbag);
+        y++; 
 
-        
-        rightPanel.add(gct); 
+        AppUI.GBPad(subInnerCore, y, gridbag);        
+        y++;
 
-        JPanel bp = getTwoButtonPanel(new ActionListener() {
+        AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Continue", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                showScreen();
+            }
+        }, new ActionListener() {
             public void actionPerformed(ActionEvent e) {              
                 int srcIdx = cboxfrom.getSelectedIndex() - 1;              
                 if (srcIdx < 0 || srcIdx >= rv.idxs.length) {
@@ -5082,10 +5012,7 @@ public class AdvancedClient  {
                 ps.currentScreen = ProgramState.SCREEN_DOING_BACKUP;
                 showScreen();
             }
-        });
-        
-        AppUI.hr(rightPanel, 20);
-        rightPanel.add(bp); 
+        }, y, gridbag);
     }
     
     public void showListSerialsDone() {
@@ -5693,16 +5620,12 @@ public class AdvancedClient  {
     }
     
     public void showDoingBackupScreen() {
-        boolean isError = !ps.errText.equals("");
-        
         JPanel subInnerCore = getPanel("Doing Backup. Please wait...");
       
         AppUI.hr(subInnerCore, 4);
     }
     
     public void showSetDNSRecordScreen() {
-        boolean isError = !ps.errText.equals("");
-        
         JPanel subInnerCore = getPanel("Setting DNS Record. Please wait...");
       
         AppUI.hr(subInnerCore, 4);
