@@ -661,10 +661,15 @@ public class AppUI {
         
         if (right != null) {
             if (right instanceof JLabel) {
-                c.insets = new Insets(20, 0, 0, 0);
+                if (left == null)
+                    c.insets = new Insets(20, 0, 20, 0); 
+                else
+                    c.insets = new Insets(20, 0, 0, 0);
                 AppUI.setCommonFont(right);
             }
 
+            
+            
             gridbag.setConstraints(right, c);
             parent.add(right);       
         }
