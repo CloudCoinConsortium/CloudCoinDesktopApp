@@ -661,6 +661,7 @@ public class AppUI {
         
         if (right != null) {
             if (right instanceof JLabel) {
+                c.insets = new Insets(20, 0, 0, 0);
                 AppUI.setCommonFont(right);
             }
 

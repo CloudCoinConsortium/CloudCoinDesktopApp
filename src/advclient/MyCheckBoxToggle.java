@@ -50,6 +50,10 @@ public class MyCheckBoxToggle {
         return cb.isSelected();
     }
     
+    public void setSelected(boolean isSelected) {
+        cb.setSelected(isSelected);
+    }
+    
     public JPanel makeUI() {
         cb = new JCheckBox();
         
