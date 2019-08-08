@@ -1233,6 +1233,22 @@ public class ServantManager {
         return null;
     }
     
+    public void openTransactions() {
+        Collection c = wallets.values();
+
+        Iterator itr = c.iterator();
+        while (itr.hasNext()) {
+            Wallet w = (Wallet) itr.next();
+
+            if (w.isSkyWallet())
+                continue;
+
+            if (w.getTotal() != 0)
+                w.appendTransaction("Opening Balance", w.getTotal(), "openingbalance");
+        }
+    }
+
+    
     public String[] getRAIDAStatuses() {
         Servant e = sr.getServant("Echoer");
         

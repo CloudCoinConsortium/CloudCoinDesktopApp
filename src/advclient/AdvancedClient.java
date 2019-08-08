@@ -2262,13 +2262,7 @@ public class AdvancedClient  {
              
         JPanel bp = getTwoButtonPanel(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                
-             //   if (!AppCore.eraseSync)
-                
                 launchErasers();
-                
-              //  ps.currentScreen = ProgramState.SCREEN_CLEAR_DONE;
-               // showScreen();
             }
         });
   
@@ -3156,6 +3150,7 @@ public class AdvancedClient  {
             
         } else {
             ps.currentScreen = ProgramState.SCREEN_CLEAR_DONE;
+            sm.openTransactions();
             
             if (ps.needBackup) {
                 if (!wl.copyMe()) {
@@ -7707,8 +7702,7 @@ public class AdvancedClient  {
         public void callback(final Object result) {
             EraserResult er = (EraserResult) result;
 
-            if (er.status == EraserResult.STATUS_ERROR) {
-                
+            if (er.status == EraserResult.STATUS_ERROR) {              
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {
                         ps.errText = "Erasing failed. Please check the logs";
