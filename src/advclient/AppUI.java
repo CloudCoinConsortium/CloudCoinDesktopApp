@@ -667,9 +667,7 @@ public class AppUI {
                     c.insets = new Insets(20, 0, 0, 0);
                 AppUI.setCommonFont(right);
             }
-
-            
-            
+   
             gridbag.setConstraints(right, c);
             parent.add(right);       
         }

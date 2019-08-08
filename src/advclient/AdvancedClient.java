@@ -2691,6 +2691,7 @@ public class AdvancedClient  {
             
         } else {
             ps.currentScreen = ProgramState.SCREEN_CLEAR_DONE;
+            sm.openTransactions();
             
             if (ps.needBackup) {
                 if (!wl.copyMe()) {
@@ -3834,9 +3835,7 @@ public class AdvancedClient  {
         for (int i = 0; i < wallets.length; i++) {
             if (wallets[i].isSkyWallet()) 
                 continue;
-     
 
-        
             JLabel sl = new JLabel(wallets[i].getName());
             final String fdir = AppCore.getRootUserDir(wallets[i].getName());
             JLabel link = AppUI.getHyperLink(fdir, "javascript:void(0); return false", 20);
@@ -3872,105 +3871,72 @@ public class AdvancedClient  {
     }
     
     public void showSupportScreen() {
-        showLeftScreen();
- 
-        Wallet w = sm.getActiveWallet();     
-
-        JPanel rightPanel = getRightPanel();    
-        JPanel ct = new JPanel();
-        AppUI.setBoxLayout(ct, true);
-        AppUI.noOpaque(ct);
-        rightPanel.add(ct);
-        
-        JLabel ltitle = AppUI.getTitle("Help & Support");   
-        ct.add(ltitle);
-       // AppUI.hr(ct, 20);
-            
-        // GridHolder Container
-        JPanel gct = new JPanel();
-        AppUI.noOpaque(gct);
-   
-        GridBagLayout gridbag = new GridBagLayout();
-        gct.setLayout(gridbag);   
-        GridBagConstraints c = new GridBagConstraints();    
-        
         int y = 0;
-        
-        c.anchor = GridBagConstraints.NORTH;
-        c.insets = new Insets(10, 0, 14, 0); 
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = y;
-        JLabel vl = new JLabel("Version: " + this.version);
-        AppUI.setFont(vl, 16);
-        gridbag.setConstraints(vl, c); 
-        gct.add(vl);
-        y++;
-               
-        c.anchor = GridBagConstraints.NORTH;
-        c.insets = new Insets(0, 0, 4, 0); 
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = y;
+        JLabel fname, value;
+        MyTextField walletName = null;
 
-        /*
-        int tsw = 0;
-        for (int i = 0; i < wallets.length; i++) {
-            if (wallets[i].isSkyWallet()) {
-                tsw++;
-            }
+        JPanel subInnerCore = getPanel("Help and Support");                
+        GridBagLayout gridbag = new GridBagLayout();
+        subInnerCore.setLayout(gridbag);
+      
+        Image img;
+        JLabel i0, i1, i2, i3;
+        try {     
+            img = ImageIO.read(getClass().getClassLoader().getResource("resources/support0.png"));
+            i0 = new JLabel(new ImageIcon(img));
+            
+            
+            
+            img = ImageIO.read(getClass().getClassLoader().getResource("resources/support1.png"));
+            i1 = new JLabel(new ImageIcon(img));
+            
+            img = ImageIO.read(getClass().getClassLoader().getResource("resources/support2.png"));
+            i2 = new JLabel(new ImageIcon(img));
+            
+            img = ImageIO.read(getClass().getClassLoader().getResource("resources/support3.png"));
+            i3 = new JLabel(new ImageIcon(img)); 
+            
+            AppUI.setSize(i0, 10, 10);
+            AppUI.setSize(i1, 10, 10);
+            AppUI.setSize(i2, 10, 10);
+        } catch (Exception ex) {              
+            return;
         }
-         
-        int topMargin = 0;
-        if (tsw != 0) {
-            JLabel sl = new JLabel("Your Sky Wallets:");
-            AppUI.setFont(sl, 22);
-            gridbag.setConstraints(sl, c); 
-            gct.add(sl);
-            y++;
-            
-            for (int i = 0; i < wallets.length; i++) {
-                if (wallets[i].isSkyWallet()) {
-                    sl = new JLabel(wallets[i].getName());
-                    AppUI.setFont(sl, 18);
-                    c.insets = new Insets(0, 0, 4, 0); 
-                    c.gridx = GridBagConstraints.RELATIVE;
-                    c.gridy = y;
-                    gridbag.setConstraints(sl, c); 
-                    gct.add(sl);
-                    y++;
-                }
-            }
-            
-            topMargin = 26;
-        }       
-        */
         
-        int topMargin = 26;
-        
-        c.anchor = GridBagConstraints.CENTER;
-        c.insets = new Insets(topMargin, 0, 4, 0); 
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = y;
-
         String urlName = "http://cloudcoinconsortium.com/use.html";
-        JLabel l = AppUI.getHyperLink(urlName, urlName, 0);
-        gridbag.setConstraints(l, c); 
-        gct.add(l);
-        
+        JLabel link = AppUI.getHyperLink(urlName, urlName, 0);
+        AppUI.getGBRow(subInnerCore, i0, link, y, gridbag);
+        AppUI.setColor(link, AppUI.getColor2());
+        AppUI.underLine(link);
         y++;
         
-        l = new JLabel("<html><div style='width:460px; text-align:center'><br>"
-                + "Support: 9 AM to 3 AM California Time (PST)<br> "
-                + "Tel: +1(530)762-1361 <br>"
-                + "Email: Support@cloudcoinmail.com</div></html>");
-        c.insets = new Insets(0, 0, 0, 0); 
-        AppUI.alignCenter(l);
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = y;
-        AppUI.setCommonFont(l);
-        gridbag.setConstraints(l, c);
-        gct.add(l);
-        
+        fname = new JLabel("9AM to 3AM California time (PST)");
+        AppUI.getGBRow(subInnerCore, i1, fname, y, gridbag);
         y++;
+        
+        fname = new JLabel("Tel: +1 (530) 762-1361");
+        AppUI.getGBRow(subInnerCore, i2, fname, y, gridbag);
+        y++;
+        
+        AppUI.GBPad(subInnerCore, y, gridbag);        
+        y++;
+        
+        if (1==1)
+            return;
+        
+        /*
+
+        AppUI.GBPad(subInnerCore, y, gridbag);        
+        y++;
+        
+        AppUI.getTwoButtonPanel(subInnerCore, "", "Continue", null,  new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                showScreen();
+            }
+        }, y, gridbag);
+        
+        
         
         l = new JLabel("<html><div style='width:480px; text-align:center; font-size: 14px'>"
                 + "(Secure if you get a free encrypted email account at ProtonMail.com)</div></html>");
@@ -4078,7 +4044,7 @@ public class AdvancedClient  {
         
         //rightPanel
         
-        
+        */
         
     }
     
@@ -4114,13 +4080,11 @@ public class AdvancedClient  {
         AppUI.getGBRow(subInnerCore, null, cb0.getCheckBox(), y, gridbag);
         y++;     
         
-        MyCheckBox cb1 = new MyCheckBox("Create Backup of History and Log files");
+        final MyCheckBox cb1 = new MyCheckBox("Create Backup of History and Log files");
         cb1.setFont(16, AppUI.getColor5());  
         AppUI.getGBRow(subInnerCore, null, cb1.getCheckBox(), y, gridbag);
         y++;   
 
-
- 
         AppUI.GBPad(subInnerCore, y, gridbag);        
         y++;
                     

@@ -191,7 +191,7 @@ public class Wallet {
         String rMemo = memo.replaceAll("\r\n", " ").replaceAll("\n", " ").replaceAll(",", " ");
         //String sAmount = Integer.toString(amount);
         
-        int rest = getTotal();
+        int rest = 0;
         String[][] tr = getTransactions();
         if (tr != null) {
         
