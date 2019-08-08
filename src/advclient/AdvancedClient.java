@@ -37,6 +37,8 @@ import java.awt.event.MouseEvent;
 import java.awt.print.PrinterException;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.*;
 import javax.imageio.ImageIO;
 import javax.swing.event.PopupMenuEvent;
@@ -3884,9 +3886,7 @@ public class AdvancedClient  {
         try {     
             img = ImageIO.read(getClass().getClassLoader().getResource("resources/support0.png"));
             i0 = new JLabel(new ImageIcon(img));
-            
-            
-            
+
             img = ImageIO.read(getClass().getClassLoader().getResource("resources/support1.png"));
             i1 = new JLabel(new ImageIcon(img));
             
@@ -3896,30 +3896,137 @@ public class AdvancedClient  {
             img = ImageIO.read(getClass().getClassLoader().getResource("resources/support3.png"));
             i3 = new JLabel(new ImageIcon(img)); 
             
-            AppUI.setSize(i0, 10, 10);
-            AppUI.setSize(i1, 10, 10);
-            AppUI.setSize(i2, 10, 10);
         } catch (Exception ex) {              
             return;
         }
         
+        
+        JPanel wr;
+        
         String urlName = "http://cloudcoinconsortium.com/use.html";
         JLabel link = AppUI.getHyperLink(urlName, urlName, 0);
-        AppUI.getGBRow(subInnerCore, i0, link, y, gridbag);
-        AppUI.setColor(link, AppUI.getColor2());
-        AppUI.underLine(link);
+        
+        wr = new JPanel();
+        AppUI.noOpaque(wr);
+        wr.add(i0);
+        wr.add(AppUI.vr(10));
+        wr.add(link);      
+        AppUI.getGBRow(subInnerCore, null, wr, y, gridbag);
         y++;
         
+        wr = new JPanel();
+        AppUI.noOpaque(wr);
+        wr.add(i1);
+        wr.add(AppUI.vr(10));
         fname = new JLabel("9AM to 3AM California time (PST)");
-        AppUI.getGBRow(subInnerCore, i1, fname, y, gridbag);
+        AppUI.setCommonFont(fname);
+        wr.add(fname);
+        AppUI.getGBRow(subInnerCore, null, wr, y, gridbag);
         y++;
         
+        
+        wr = new JPanel();
+        AppUI.noOpaque(wr);
+        wr.add(i2);
+        wr.add(AppUI.vr(10));
         fname = new JLabel("Tel: +1 (530) 762-1361");
-        AppUI.getGBRow(subInnerCore, i2, fname, y, gridbag);
+        AppUI.setCommonFont(fname);
+        wr.add(fname);
+        AppUI.getGBRow(subInnerCore, null, wr, y, gridbag);
         y++;
+        
+        
+        wr = new JPanel();
+        AppUI.noOpaque(wr);
+        wr.add(i3);
+        wr.add(AppUI.vr(10));
+        
+        JPanel wr2 = new JPanel();
+        AppUI.noOpaque(wr2);
+        AppUI.setBoxLayout(wr2, true);
+        fname = new JLabel("Email: support@protonmail.com");
+        AppUI.setCommonFont(fname);
+        wr2.add(fname);
+        fname = new JLabel("(Secure if you get a free encrypted email account at ProtonMail.com)");
+        AppUI.setFont(fname, 14);
+        AppUI.setColor(fname, AppUI.getColor14());
+        wr2.add(fname);
+        wr.add(wr2);
+        
+        MyButton pb = new MyButton("Get ProtonMail");
+        pb.addListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                if (Desktop.isDesktopSupported()) {
+                    try {
+                        URI uri = new URI("https://www.protonmail.com");
+                        Desktop.getDesktop().browse(uri);
+                    } catch (IOException ex) { 
+  
+                    } catch (URISyntaxException ex) {
+                        
+                    }
+                }
+            }
+        });
+        
+  
+        
+        
+        AppUI.getGBRow(subInnerCore, wr, pb.getButton(), y, gridbag);
+        y++;
+        
+        
+        
         
         AppUI.GBPad(subInnerCore, y, gridbag);        
         y++;
+        
+        GridBagConstraints c = new GridBagConstraints();
+        c.anchor = GridBagConstraints.CENTER;
+        c.insets = new Insets(20, 0, 0, 10);    
+        c.gridy = y;
+        c.weightx = 1;
+        c.weighty = 0;
+        c.gridwidth = 2;
+        
+        JLabel l = AppUI.getHyperLink("Instructions, Terms and Conditions", "javascript:void(0); return false", 20);
+        l.addMouseListener(new MouseAdapter() {
+            public void mouseReleased(MouseEvent e) {
+                final JDialog f = new JDialog(mainFrame, "Instructions, Terms and Conditions", true);
+                f.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
+                AppUI.noOpaque((JComponent) f.getContentPane());
+                AppUI.setSize(f, (int) (tw / 1.2), (int) (th / 1.2)); 
+
+                JTextPane tp = new JTextPane();
+                
+                
+                AppUI.setFont(tp, 12);
+                String fontfamily = tp.getFont().getFamily();
+
+                tp.setContentType("text/html"); 
+                tp.setText("<html><div style=' font-family:"+fontfamily+"; font-size: 12px'>" + AppUI.getAgreementText() + "</div></html>"); 
+                tp.setEditable(false); 
+                tp.setBackground(null);
+                tp.setCaretPosition(0);
+
+                JScrollPane scrollPane = new JScrollPane(tp);
+
+                f.add(scrollPane);
+                f.pack();
+                f.setLocationRelativeTo(mainFrame);
+                f.setVisible(true);      
+                
+                scrollPane.getVerticalScrollBar().setValue(scrollPane.getVerticalScrollBar().getMinimum());
+                scrollPane.getViewport().setViewPosition(new java.awt.Point(0, 100));
+                scrollPane.repaint();
+            }
+        });
+        
+        
+        gridbag.setConstraints(l, c);
+        subInnerCore.add(l);
+        
+    
         
         if (1==1)
             return;

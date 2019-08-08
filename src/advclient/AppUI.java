@@ -193,6 +193,9 @@ public class AppUI {
         return new Color(0x62A459);
     }
     
+    public static Color getColor14() {
+        return new Color(0x7E8084);
+    }
     
     public static Color getDisabledColor() {
         return new Color(0xCCCCCC);
@@ -648,7 +651,7 @@ public class AppUI {
         if (left != null) {
             if (left instanceof JLabel) {
                 AppUI.setCommonFont(left);
-            }
+            } 
         
             gridbag.setConstraints(left, c);
             parent.add(left);
@@ -656,8 +659,8 @@ public class AppUI {
             c.gridwidth = 2;
         }
         
-        c.insets = new Insets(10, 0, 0, 0);
-        c.weightx = 1;
+        c.insets = new Insets(8, 0, 0, 0);
+        c.weightx = 10;       
         
         if (right != null) {
             if (right instanceof JLabel) {
