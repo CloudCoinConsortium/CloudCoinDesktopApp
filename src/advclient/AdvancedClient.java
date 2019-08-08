@@ -1128,17 +1128,7 @@ public class AdvancedClient  {
         c.gridy = y;
         gridbag.setConstraints(pbar, c);
         ct.add(pbar);
-        
-        JPanel bp = getOneButtonPanelCustom("Cancel", new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                sm.cancel("FrackFixer");
-
-                showScreen();
-            }
-        });
-       
-        subInnerCore.add(bp);  
-        
+                
         Thread t = new Thread(new Runnable() {
             public void run(){
                 if (!ps.isEchoFinished) {
@@ -1219,6 +1209,7 @@ public class AdvancedClient  {
             
             x = new JLabel("RAIDA" + i);
             AppUI.setCommonTableFontSize(x, fontSize);
+            AppUI.setColor(x, AppUI.getColor5());
             c.gridwidth = 1;
             c.anchor = GridBagConstraints.WEST;
             c.insets = new Insets(0, 0, 2, 0); 
@@ -1235,6 +1226,7 @@ public class AdvancedClient  {
             
             x = new JLabel(status);
             AppUI.setCommonTableFontSize(x, fontSize);
+            AppUI.setColor(x, AppUI.getColor5());
             c.anchor = GridBagConstraints.EAST;
             c.insets = new Insets(0, 40, 2, 0); 
             c.gridx = GridBagConstraints.RELATIVE;
@@ -1248,6 +1240,7 @@ public class AdvancedClient  {
             
             x = new JLabel("RAIDA" + j);
             AppUI.setCommonTableFontSize(x, fontSize);
+            AppUI.setColor(x, AppUI.getColor5());
             c.gridwidth = 1;
             c.anchor = GridBagConstraints.WEST;
             c.insets = new Insets(0, 100, 2, 0); 
@@ -1264,6 +1257,7 @@ public class AdvancedClient  {
             
             x = new JLabel(status);
             AppUI.setCommonTableFontSize(x, fontSize);
+            AppUI.setColor(x, AppUI.getColor5());
             c.anchor = GridBagConstraints.EAST;
             c.insets = new Insets(0, 40, 2, 0); 
             c.gridx = GridBagConstraints.RELATIVE;
@@ -1685,92 +1679,57 @@ public class AdvancedClient  {
         
         if (isError) {
             subInnerCore = getPanel("Error");
-            AppUI.hr(subInnerCore, 32);
             resetState();
             return;
         }
-        
-        //String total = AppCore.formatNumber(ps.statTotalFracked);
+             
+        int y = 0;
+        JLabel fname, value;
+        MyTextField walletName = null;
+
+        subInnerCore = getPanel("Fix Complete");                
+        GridBagLayout gridbag = new GridBagLayout();
+        subInnerCore.setLayout(gridbag);
+      
         String totalFixed = AppCore.formatNumber(ps.statTotalFixed);
-        //String totalFailedToFix = AppCore.formatNumber(ps.statFailedToFix);
-        
-        
         String total = AppCore.formatNumber(ps.statTotalFrackedValue);
         String totalFixedValue = AppCore.formatNumber(ps.statTotalFixedValue);
-        //String totalFailedToFixValue = AppCore.formatNumber(ps.statTotalFrackedValue - ps.statTotalFixedValue);
-
-        subInnerCore = getPanel("Fix Complete");
-        
-        JPanel ct = new JPanel();
-        AppUI.noOpaque(ct);
-        subInnerCore.add(ct);
-        
-        GridBagLayout gridbag = new GridBagLayout();
-        GridBagConstraints c = new GridBagConstraints();      
-        ct.setLayout(gridbag);
-
-        
+          
         String txt;
         if (!totalFixed.equals("" + total)) {
             txt = "Not all CloudCoins from <b>" + ps.srcWallet.getName() + "</b> had been fixed. Try it again later";
         } else {
             txt = "Your CloudCoins from <b>" + ps.srcWallet.getName() + "</b> have been fixed";
         }
+
+        //fname = AppUI.wrapDiv("Deposited <b>" +  total +  " CloudCoins</b> to <b>" + ps.dstWallet.getName() + " </b>");  
+        fname = AppUI.wrapDiv(txt);
+        AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
+        y++;     
         
-        JLabel x = new JLabel("<html><div style='width:400px; text-align:center'>" + txt + "</div></html>");
-          
-        AppUI.setCommonFont(x);
- 
-        c.insets = new Insets(0, 0, 4, 0);
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = 0;
-        c.gridwidth = 2;
-        gridbag.setConstraints(x, c);
-        ct.add(x);
- 
-        x = new JLabel("Total Fracked Coins:");
-        AppUI.setCommonFont(x);
+        fname = new JLabel("Total Fracked Coins:");
+        value = new JLabel(total);
+        AppUI.getGBRow(subInnerCore, fname, value, y, gridbag);
+        y++; 
         
-        c.weightx = 1;
-        c.anchor = GridBagConstraints.EAST;
-        c.insets = new Insets(50, 0, 4, 10);
-        c.gridx = 0;
-        c.gridy = 1;
-        c.gridwidth = 1;
-        gridbag.setConstraints(x, c);
-        ct.add(x);
+        fname = new JLabel("Total Fixed Coins:");
+        value = new JLabel(totalFixedValue);
+        AppUI.getGBRow(subInnerCore, fname, value, y, gridbag);
+        y++; 
+                  
+        AppUI.GBPad(subInnerCore, y, gridbag);        
+        y++;
         
-        x = new JLabel(total);
-        AppUI.setCommonBoldFont(x);
-        
-        c.anchor = GridBagConstraints.WEST;
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = 1;
-        gridbag.setConstraints(x, c);
-        ct.add(x);
-        
-        x = new JLabel("Total Fixed Coins:");
-        AppUI.setCommonFont(x);
-        c.anchor = GridBagConstraints.EAST;
-        c.insets = new Insets(10, 0, 4, 10);
-        c.gridx = 0;
-        c.gridy = 2;
-        gridbag.setConstraints(x, c);
-        ct.add(x);
-        
-        x = new JLabel(totalFixedValue);
-        AppUI.setCommonBoldFont(x);
-        c.anchor = GridBagConstraints.WEST;
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = 2;
-        gridbag.setConstraints(x, c);
-        ct.add(x);
-                 
-        JPanel bp = getOneButtonPanel();
-  
-        resetState();
-        
-        subInnerCore.add(bp);       
+
+        AppUI.getTwoButtonPanel(subInnerCore, "", "Continue", null,  new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                setActiveWallet(ps.dstWallet);
+                ps.sendType = 0;
+                ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
+                showScreen();
+            }
+        }, y, gridbag);
+       
     }
     
     public void showBackupDoneScreen() {
@@ -1844,10 +1803,7 @@ public class AdvancedClient  {
                 showScreen();
             }
         }, y, gridbag); 
-        
-
-        
-        resetState();   
+ 
     }
     
     public void showTransferDoneScreen() {
@@ -1982,51 +1938,41 @@ public class AdvancedClient  {
     }
     
     public void showDeleteWalletDoneScreen() {
-        boolean isError = !ps.errText.equals("");      
+        boolean isError = !ps.errText.equals("");
         JPanel subInnerCore;
         
         if (isError) {
             subInnerCore = getPanel("Error");
-            AppUI.hr(subInnerCore, 32);
             resetState();
             return;
         }
-        
-        subInnerCore = getPanel("Confirmation");
-        
-        // Container
-        JPanel ct = new JPanel();
-        AppUI.noOpaque(ct);
-        subInnerCore.add(ct);
-   
-        GridBagLayout gridbag = new GridBagLayout();
-        GridBagConstraints c = new GridBagConstraints();      
-        ct.setLayout(gridbag);
-        
-        int y = 0;
-
-
-        String txt = "Your Wallet <b>" + ps.srcWallet.getName() + "</b> has been deleted.";
- 
-        y++;
-        // Q
-        JLabel x = new JLabel("<html><div style='width:460px;text-align:center'>" + txt + "</div></html>");
-        AppUI.setCommonBoldFont(x);
-        c.insets = new Insets(42, 0, 4, 0);
-        c.anchor = GridBagConstraints.CENTER;
-        c.gridx = GridBagConstraints.RELATIVE;;
-        c.gridy = y;
-        c.gridwidth = 2;
-        gridbag.setConstraints(x, c);
-        ct.add(x);
-               
-        y++; 
              
+        int y = 0;
+        JLabel fname, value;
+        MyTextField walletName = null;
+
+        subInnerCore = getPanel("Delete Wallet Complete");                
+        GridBagLayout gridbag = new GridBagLayout();
+        subInnerCore.setLayout(gridbag);
+        
+        String txt = "Your Wallet <b>" + ps.srcWallet.getName() + "</b> has been deleted.";
+        
+        fname = AppUI.wrapDiv(txt);
+        AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
+        y++;
+                          
+        AppUI.GBPad(subInnerCore, y, gridbag);        
+        y++;
+        
+        AppUI.getTwoButtonPanel(subInnerCore, "", "Continue", null,  new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                showScreen();
+            }
+        }, y, gridbag);   
+        
+        
         resetState();
-        
-        JPanel bp = getOneButtonPanel();
-        subInnerCore.add(bp);  
-        
     }
     
     public void showClearDoneScreen() {
@@ -2060,15 +2006,8 @@ public class AdvancedClient  {
         AppUI.GBPad(subInnerCore, y, gridbag);        
         y++;
         
-        AppUI.getTwoButtonPanel(subInnerCore, "Next Transfer", "Continue", new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                resetState();
-                ps.currentScreen = ProgramState.SCREEN_WITHDRAW;
-                showScreen();
-            }
-        },  new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                
+        AppUI.getTwoButtonPanel(subInnerCore, "", "Continue", null,  new ActionListener() {
+            public void actionPerformed(ActionEvent e) {                
                 if (ps.srcWallet != null && !ps.srcWallet.isSkyWallet()) {
                     setActiveWallet(ps.srcWallet);
                     ps.sendType = 0;
@@ -2079,9 +2018,7 @@ public class AdvancedClient  {
                 showScreen();
             }
         }, y, gridbag);   
-        
-        
-        resetState();       
+      
     }
     
     public void showConfirmClearScreen() {
@@ -2124,29 +2061,17 @@ public class AdvancedClient  {
     }
     
     public void showConfirmDeleteWalletScreen() {
-        JPanel subInnerCore = getPanel("Confirmation");
-     
-        // Container
-        JPanel ct = new JPanel();
-        AppUI.noOpaque(ct);
-        subInnerCore.add(ct);
-   
-        GridBagLayout gridbag = new GridBagLayout();
-        GridBagConstraints c = new GridBagConstraints();      
-        ct.setLayout(gridbag);
-        
         int y = 0;
-        // From Label
-        JLabel x = new JLabel("<html><div style='width:460px;text-align:center'>This is permanent and irreversible!</div></html>");
-        AppUI.setCommonFont(x);
-        c.anchor = GridBagConstraints.EAST;
-        c.insets = new Insets(0, 0, 4, 0); 
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = y;
-        c.gridwidth = 2;
-        gridbag.setConstraints(x, c);
-        ct.add(x);
+        JLabel fname, value;
+        MyTextField walletName = null;
 
+        JPanel subInnerCore = getPanel("Delete Wallet Confirmation");                
+        GridBagLayout gridbag = new GridBagLayout();
+        subInnerCore.setLayout(gridbag);
+      
+        fname = new JLabel("This is permanent and irreversible!");
+        AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
+        AppUI.setBoldFont(fname, 21);
         y++;
         
         String txt;
@@ -2155,51 +2080,30 @@ public class AdvancedClient  {
         if (ps.srcWallet.isSkyWallet()) {
             txt += "<br><br>Your ID coin will be put back into your Bank. You will not be able to receive Coins at this address again";    
         }
-           
-        // Q
-        x = new JLabel("<html><div style='width:460px;text-align:center'>" + txt + "</div></html>");
-        AppUI.setCommonBoldFont(x);
-        c.insets = new Insets(32, 0, 4, 0);
-        c.anchor = GridBagConstraints.CENTER;
-        c.gridx = GridBagConstraints.RELATIVE;;
-        c.gridy = y;
-        c.gridwidth = 2;
-        gridbag.setConstraints(x, c);
-        ct.add(x);
-               
-        y++; 
         
+        fname = AppUI.wrapDiv(txt);
+        AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
+        y++;
+                 
         final Wallet dstWallet = sm.getWalletByName(AppCore.getDefaultWalletName());
         MyTextField tf0 = null;
         if (dstWallet.isEncrypted() && ps.srcWallet.isSkyWallet()) {
-            // Password Label
-            JLabel n = new JLabel("Password");
-            AppUI.setCommonFont(n);
-            c.anchor = GridBagConstraints.EAST;
-            c.insets = new Insets(24, 32, 4, 0); 
-            c.gridx = GridBagConstraints.RELATIVE;
-            c.gridy = y;
-            c.gridwidth = 1;
-            gridbag.setConstraints(n, c);
-            ct.add(n);
-
+            fname = new JLabel("Password");
             tf0 = new MyTextField("Dst Wallet Password");
-            c.insets = new Insets(24, 10, 4, 0);
-            c.gridx = GridBagConstraints.RELATIVE;
-            c.anchor = GridBagConstraints.WEST;
-            c.gridy = y;
-            c.gridwidth = 1;
-            gridbag.setConstraints(tf0.getTextField(), c);
-            ct.add(tf0.getTextField());
-            
+            AppUI.getGBRow(subInnerCore, fname, tf0.getTextField(), y, gridbag);
             y++;
-                
-            c.gridwidth = 2;
         }
+              
+        AppUI.GBPad(subInnerCore, y, gridbag);        
+        y++;
         
         final MyTextField mtf0 = tf0;
-        
-        JPanel bp = getTwoButtonPanel(new ActionListener() {
+        AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Continue", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                showScreen();
+            }
+        }, new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 if (ps.srcWallet.getTotal() != 0) {
                     ps.errText = "The Wallet is not empty";
@@ -2207,16 +2111,13 @@ public class AdvancedClient  {
                     return;
                 }
                 
-                wl.debug(ltag, "Deleting Wallet " + ps.srcWallet.getName());
-                
-                
+                wl.debug(ltag, "Deleting Wallet " + ps.srcWallet.getName());           
                 if (ps.srcWallet.isSkyWallet()) {
                     String defWalletName = dstWallet.getName();
                     String origName = ps.srcWallet.getIDCoin().originalFile;
                     String name = ps.srcWallet.getIDCoin().getFileName();
                      
-                    wl.debug(ltag, "Moving id " + origName + " to " + defWalletName + " name");
-                    
+                    wl.debug(ltag, "Moving id " + origName + " to " + defWalletName + " name");                 
                     if (dstWallet.isEncrypted()) {
                         if (mtf0 == null)
                             return;
@@ -2241,8 +2142,7 @@ public class AdvancedClient  {
                             return;
                         } 
                     
-                        dstWallet.setPassword(mtf0.getText());
-                         
+                        dstWallet.setPassword(mtf0.getText());                        
                     }
                     
                     if (!AppCore.moveToFolderNewName(origName, Config.DIR_BANK, defWalletName, name)) {
@@ -2250,8 +2150,7 @@ public class AdvancedClient  {
                         showScreen();
                         return;
                     }
-
-                    
+                  
                     if (dstWallet.isEncrypted()) {
                         wl.debug(ltag, "Start Vaulter");
                         
@@ -2284,8 +2183,7 @@ public class AdvancedClient  {
                         }, dstWallet.getPassword());
                         
                         return;
-                    }
-                    
+                    }                    
                 } else {
                     if (!AppCore.moveFolderToTrash(ps.srcWallet.getName())) {
                         ps.errText = "Failed to delete Wallet";
@@ -2298,10 +2196,7 @@ public class AdvancedClient  {
                 ps.currentScreen = ProgramState.SCREEN_DELETE_WALLET_DONE;
                 showScreen();
             }
-        });
-  
-        
-        subInnerCore.add(bp); 
+        }, y, gridbag);   
     }
     
     public void showConfirmTransferScreen() {
@@ -3061,9 +2956,10 @@ public class AdvancedClient  {
 
         
         int nonSkyCnt = 0;
-        for (int i = 0; i < wallets.length; i++)
+        for (int i = 0; i < wallets.length; i++) {
             if (!wallets[i].isSkyWallet())
                 nonSkyCnt++;
+        }
 
         final int[] idxs = new int[nonSkyCnt];
         final String[] options = new String[nonSkyCnt];
@@ -3769,17 +3665,7 @@ public class AdvancedClient  {
         
         AppUI.getGBRow(subInnerCore, null, ddPanel, y, gridbag);
         y++;
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+
         
         AppUI.GBPad(subInnerCore, y, gridbag);        
         y++;
@@ -3812,8 +3698,7 @@ public class AdvancedClient  {
                 for( int i = 0; i < files.length; i++ ) {
                     ps.files.add(files[i].getAbsolutePath());
                 }
-                
-                
+                             
                 String totalCloudCoins = AppCore.calcCoinsFromFilenames(ps.files);
                 String text = "Selected " + ps.files.size() + " files - " + totalCloudCoins + " CloudCoins";
                               
@@ -3844,9 +3729,7 @@ public class AdvancedClient  {
                 }
             }   
         });
-        
-        
-        
+ 
         AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Continue", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 ps.currentScreen = ProgramState.SCREEN_DEFAULT;
@@ -3896,8 +3779,7 @@ public class AdvancedClient  {
                         return;
                     } 
                 }
-                
-                
+                               
                 if (!w.isSkyWallet()) {
                     int cnt;
                     /*
@@ -3929,8 +3811,7 @@ public class AdvancedClient  {
                         return;
                     }
                 }
-                
-                
+                           
                 ps.currentScreen = ProgramState.SCREEN_IMPORTING;
                 
                 showScreen();
@@ -3938,65 +3819,28 @@ public class AdvancedClient  {
         }, y, gridbag);      
     }
     
-    public void showFoldersScreen() {
-        showLeftScreen();
- 
-        Wallet w = sm.getActiveWallet();     
-
-        JPanel rightPanel = getRightPanel();    
-        JPanel ct = new JPanel();
-        AppUI.setBoxLayout(ct, true);
-        AppUI.noOpaque(ct);
-        rightPanel.add(ct);
-        
-        JLabel ltitle = AppUI.getTitle("Show Folders");   
-        ct.add(ltitle);
-       // AppUI.hr(ct, 20);
-            
-        // GridHolder Container
-        JPanel gct = new JPanel();
-        AppUI.noOpaque(gct);
-   
-        GridBagLayout gridbag = new GridBagLayout();
-        gct.setLayout(gridbag);   
-        GridBagConstraints c = new GridBagConstraints();    
-        
+    public void showFoldersScreen() {  
         int y = 0;
+        JLabel fname, value;
+        MyTextField walletName = null;
 
-        c.anchor = GridBagConstraints.NORTH;
-        c.insets = new Insets(0, 0, 24, 0); 
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = y;
-        c.gridwidth = 2;
-
-
-        JLabel sl = new JLabel("Folders:");
-        AppUI.setCommonFont(sl);
-        gridbag.setConstraints(sl, c); 
-        gct.add(sl);
-        y++;
-            
-        c.gridwidth = 1;
+        JPanel subInnerCore = getPanel("Folders");                
+        GridBagLayout gridbag = new GridBagLayout();
+        subInnerCore.setLayout(gridbag);
+      
+        Wallet w = sm.getActiveWallet();
+ 
+        
         for (int i = 0; i < wallets.length; i++) {
             if (wallets[i].isSkyWallet()) 
                 continue;
-            
-            sl = new JLabel(wallets[i].getName());
-            AppUI.setBoldFont(sl, 18);
-            c.insets = new Insets(0, 0, 4, 0); 
-            c.anchor = GridBagConstraints.EAST;
-            c.gridx = GridBagConstraints.RELATIVE;
-            c.gridy = y;
-        //    c.weightx = 2;
-            gridbag.setConstraints(sl, c); 
-            gct.add(sl);
-            
-            sl = new JLabel(AppCore.getRootUserDir(wallets[i].getName()));
-            AppUI.setFont(sl, 18);
-            
+     
+
+        
+            JLabel sl = new JLabel(wallets[i].getName());
             final String fdir = AppCore.getRootUserDir(wallets[i].getName());
-            sl = AppUI.getHyperLink(fdir, "javascript:void(0); return false", 20);
-            sl.addMouseListener(new MouseAdapter() {
+            JLabel link = AppUI.getHyperLink(fdir, "javascript:void(0); return false", 20);
+            link.addMouseListener(new MouseAdapter() {
                 public void mouseReleased(MouseEvent e) {
                     if (!Desktop.isDesktopSupported())
                         return;
@@ -4007,35 +3851,24 @@ public class AdvancedClient  {
                     }
                 }
             });
-
             
-            
-            //only tested on windows
-//            Desktop desktop = Desktop.getDesktop();
-//            File dirToOpen = null;
-//            try{
-//                String path = AppCore.getRootUserDir(wallets[i].getName());
-//                Runtime runtime = Runtime.getRuntime();
-//                runtime.exec("explorer.exe " + path);
-//            } catch(Exception E) {
-//                
-//            }
-            
-            c.insets = new Insets(0, 10, 4, 0); 
-            c.anchor = GridBagConstraints.WEST;
-            c.gridx = GridBagConstraints.RELATIVE;
-            c.gridy = y;
-        //    c.weightx = 3;
-            gridbag.setConstraints(sl, c); 
-            gct.add(sl);
-            
+            AppUI.getGBRow(subInnerCore, sl, link, y, gridbag);
+            AppUI.setColor(link, AppUI.getColor2());
+            AppUI.underLine(link);
             y++;
-                
-   
+ 
         }
-            
-   
-        ct.add(gct);
+
+        AppUI.GBPad(subInnerCore, y, gridbag);        
+        y++;
+        
+        AppUI.getTwoButtonPanel(subInnerCore, "", "Continue", null,  new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                showScreen();
+            }
+        }, y, gridbag);
+       
     }
     
     public void showSupportScreen() {
@@ -4341,6 +4174,8 @@ public class AdvancedClient  {
         if (rv.idxs.length == 0) {
             fname = new JLabel("You have no coins to list serial numbers");   
             AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
+            y++;
+            AppUI.GBPad(subInnerCore, y, gridbag); 
             return;
         }
         
@@ -4387,104 +4222,45 @@ public class AdvancedClient  {
     
     
     public void showFixfrackedScreen() {
-        showLeftScreen();
-        
-        JPanel rightPanel = getRightPanel();    
-        JPanel ct = new JPanel();
-        AppUI.setBoxLayout(ct, true);
-        AppUI.noOpaque(ct);
-        rightPanel.add(ct);
-        
-        JLabel ltitle = AppUI.getTitle("Fix Fracked");   
-        ct.add(ltitle);
-        AppUI.hr(ct, 20);
-        
-        maybeShowError(ct);
-        
+        int y = 0;
+        JLabel fname;
+        MyTextField tf0, tf1;
+
+        JPanel subInnerCore = getPanel("Fix Fracked Coins");                
+        GridBagLayout gridbag = new GridBagLayout();
+        subInnerCore.setLayout(gridbag);
+
         final optRv rv = setOptionsForWallets(true, false);
         if (rv.idxs.length == 0) {
-            JLabel nx = new JLabel("You have no fracked coins");
-            AppUI.setSemiBoldFont(nx, 20);
-            AppUI.alignCenter(nx);
-            ct.add(nx);
+            fname = AppUI.wrapDiv("You have no fracked coins");
+            AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
+            y++;
+            AppUI.GBPad(subInnerCore, y, gridbag);   
             return;
         }
-
-        // GridHolder Container
-        JPanel gct = new JPanel();
-        AppUI.noOpaque(gct);
-   
-        GridBagLayout gridbag = new GridBagLayout();
-        gct.setLayout(gridbag);   
-        GridBagConstraints c = new GridBagConstraints();    
-        
-        int y = 0;
-        
-        // Text
-        c.anchor = GridBagConstraints.CENTER;
-        c.insets = new Insets(0, 0, 80, 0); 
-        c.gridx = 0;
-        c.gridy = y;
-        c.gridwidth = 2;
-
-        JLabel l = new JLabel("Fix Fracked CloudCoins");
-        AppUI.setCommonFont(l);
-        gridbag.setConstraints(l, c); 
-        gct.add(l);
-        
-        y++;
-        c.gridwidth = 1;
-        c.insets = new Insets(0, 16, 10, 0); 
-        c.anchor = GridBagConstraints.EAST;
-         // Transfer from
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = y;   
-        JLabel x = new JLabel("         From Wallet");
-        gridbag.setConstraints(x, c);
-        AppUI.setCommonFont(x);
-        gct.add(x);
-        
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = y;     
-        c.anchor = GridBagConstraints.WEST;
-
-        final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(AppUI.getColor2(), "Make Selection", rv.options);
-        gridbag.setConstraints(cboxfrom.getComboBox(), c);
-        gct.add(cboxfrom.getComboBox());
-
-        y++;
         
         
-        // Password From
-        c.anchor = GridBagConstraints.EAST;
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = y;   
+        fname = new JLabel("From Wallet");
+        final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(AppUI.getColor6(), "Make Selection", rv.options);
+        AppUI.getGBRow(subInnerCore, fname, cboxfrom.getComboBox(), y, gridbag);
+        y++; 
+        
         final JLabel spText = new JLabel("Password");
-        gridbag.setConstraints(spText, c);
-        AppUI.setCommonFont(spText);
-        gct.add(spText);
-        
-        c.anchor = GridBagConstraints.WEST;
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = y;     
         final MyTextField passwordSrc = new MyTextField("Wallet Password", true);
-        gridbag.setConstraints(passwordSrc.getTextField(), c);
-        gct.add(passwordSrc.getTextField());     
+        AppUI.getGBRow(subInnerCore, spText, passwordSrc.getTextField(), y, gridbag);
         y++;
         
         passwordSrc.getTextField().setVisible(false);
         spText.setVisible(false);
-              
+
         cboxfrom.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 int srcIdx = cboxfrom.getSelectedIndex() - 1;              
                 if (srcIdx < 0 || srcIdx >= rv.idxs.length) 
                     return;
                 
-                srcIdx = rv.idxs[srcIdx];
-                                
+                srcIdx = rv.idxs[srcIdx];                              
                 Wallet srcWallet = wallets[srcIdx];
-
 
                 if (srcWallet.isEncrypted()) {                 
                     passwordSrc.getTextField().setVisible(true);
@@ -4495,10 +4271,17 @@ public class AdvancedClient  {
                 }
             }
         });
-    
-        rightPanel.add(gct); 
-
-        JPanel bp = getTwoButtonPanel(new ActionListener() {
+ 
+        AppUI.GBPad(subInnerCore, y, gridbag);        
+        y++;
+                    
+        // Buttons
+        AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Continue", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                showScreen();
+            }
+        }, new ActionListener() {
             public void actionPerformed(ActionEvent e) {              
                 int srcIdx = cboxfrom.getSelectedIndex() - 1;              
                 if (srcIdx < 0 || srcIdx >= rv.idxs.length) {
@@ -4541,10 +4324,7 @@ public class AdvancedClient  {
                 ps.currentScreen = ProgramState.SCREEN_FIXING_FRACKED;
                 showScreen();
             }
-        });
-        
-        AppUI.hr(rightPanel, 20);
-        rightPanel.add(bp);
+        }, y, gridbag);
     }
     
 
@@ -4627,76 +4407,47 @@ public class AdvancedClient  {
     }
 
     public void showDeleteWalletScreen() {
-        showLeftScreen();
-        
-        JPanel rightPanel = getRightPanel();    
-        JPanel ct = new JPanel();
-        AppUI.setBoxLayout(ct, true);
-        AppUI.noOpaque(ct);
-        rightPanel.add(ct);
-        
-        JLabel ltitle = AppUI.getTitle("Delete Wallet");   
-        ct.add(ltitle);
-        AppUI.hr(ct, 20);
-        
-        maybeShowError(ct);
-           
+        int y = 0;
+        JLabel fname;
+        MyTextField tf0, tf1;
+
+        JPanel subInnerCore = getPanel("Delete Wallet");                
+        GridBagLayout gridbag = new GridBagLayout();
+        subInnerCore.setLayout(gridbag);
+
         final optRv rv = setOptionsForWalletsCommon(false, true, true);
         if (rv.idxs.length == 0) {
-            JLabel nx = new JLabel("You have no empty wallets to delete");
-            AppUI.setSemiBoldFont(nx, 20);
-            AppUI.alignCenter(nx);
-            ct.add(nx);
+            fname = AppUI.wrapDiv("You have no empty wallets to delete");
+            AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
+            y++;
+            AppUI.GBPad(subInnerCore, y, gridbag);   
             return;
         }
 
-        // GridHolder Container
-        JPanel gct = new JPanel();
-        AppUI.noOpaque(gct);
-   
-        GridBagLayout gridbag = new GridBagLayout();
-        gct.setLayout(gridbag);   
-        GridBagConstraints c = new GridBagConstraints();    
         
-        int y = 0;
         
-        // Text
-        c.anchor = GridBagConstraints.CENTER;
-        c.insets = new Insets(0, 0, 80, 0); 
-        c.gridx = 0;
-        c.gridy = y;
-        c.gridwidth = 2;
-
-        JLabel l = new JLabel("You can only delete wallets that are empty");
-        AppUI.setCommonFont(l);
-        gridbag.setConstraints(l, c); 
-        gct.add(l);
-        
+        fname = new JLabel("You can only delete wallets that are empty");
+        AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
         y++;
-        c.gridwidth = 1;
-        c.insets = new Insets(0, 16, 10, 0); 
-        c.anchor = GridBagConstraints.EAST;
-         // Transfer from
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = y;   
-        JLabel x = new JLabel("         Wallet");
-        gridbag.setConstraints(x, c);
-        AppUI.setCommonFont(x);
-        gct.add(x);
+         
+        fname = new JLabel("Wallet");
+        final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(AppUI.getColor6(), "Make Selection", rv.options);
+        cboxfrom.setDefault(null);
+        AppUI.getGBRow(subInnerCore, fname, cboxfrom.getComboBox(), y, gridbag);
+        y++; 
         
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = y;     
-        c.anchor = GridBagConstraints.WEST;
 
-        final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(AppUI.getColor2(), "Make Selection", rv.options);
-        gridbag.setConstraints(cboxfrom.getComboBox(), c);
-        gct.add(cboxfrom.getComboBox());
-
+ 
+        AppUI.GBPad(subInnerCore, y, gridbag);        
         y++;
-
-        rightPanel.add(gct); 
-
-        JPanel bp = getTwoButtonPanel(new ActionListener() {
+                    
+        // Buttons
+        AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Continue", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                showScreen();
+            }
+        }, new ActionListener() {
             public void actionPerformed(ActionEvent e) {              
                 int srcIdx = cboxfrom.getSelectedIndex() - 1;              
                 if (srcIdx < 0 || srcIdx >= rv.idxs.length) {
@@ -4712,13 +4463,8 @@ public class AdvancedClient  {
                 ps.srcWallet = srcWallet;
                 ps.currentScreen = ProgramState.SCREEN_CONFIRM_DELETE_WALLET;
                 showScreen();
-
             }
-        });
-        
-        AppUI.hr(rightPanel, 20);
-        rightPanel.add(bp); 
-        
+        }, y, gridbag);       
     }
     
     public void showBackupScreen() {
@@ -4734,6 +4480,8 @@ public class AdvancedClient  {
         if (rv.idxs.length == 0) {
             fname = new JLabel("You have no coins to backup");   
             AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
+            y++;
+            AppUI.GBPad(subInnerCore, y, gridbag); 
             return;
         }
         
@@ -6057,7 +5805,7 @@ public class AdvancedClient  {
                    
             GridBagConstraints c = new GridBagConstraints();          
             c.anchor = GridBagConstraints.CENTER;
-            c.insets = new Insets(0, 8, 0, 0); 
+            c.insets = new Insets(0, 18, 0, 0); 
             c.gridx = GridBagConstraints.RELATIVE;
             c.gridy = y;   
             c.gridheight = 1;
