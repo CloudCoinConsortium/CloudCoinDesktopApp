@@ -2204,10 +2204,10 @@ public class AdvancedClient  {
 
         String txt;
         
-        if (ps.needBackup)
+        if (!ps.needBackup)
             txt = "Your Log Files and Transaction History have been permanently deleted.";
         else 
-            txt = "Your Log Files and Transaction History have been backed up to \\path\\LogTransactionBackup<br><br>They have been permanently deleted from Advanced Client.";
+            txt = "Your Log Files and Transaction History have been backed up<br><br>They have been permanently deleted from Advanced Client.";
         
         y++;
         // Q
