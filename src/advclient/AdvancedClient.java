@@ -401,7 +401,8 @@ public class AdvancedClient  {
     
     public boolean isBackupping() {
         if (ps.currentScreen == ProgramState.SCREEN_BACKUP ||
-                ps.currentScreen == ProgramState.SCREEN_BACKUP_DONE)
+                ps.currentScreen == ProgramState.SCREEN_BACKUP_DONE ||
+                ps.currentScreen == ProgramState.SCREEN_DOING_BACKUP)
             return true;
         
         return false;
@@ -659,6 +660,7 @@ public class AdvancedClient  {
         for (int i = 0; i < items.length; i++) {
             JMenuItem menuItem = new JMenuItem(items[i]);
             menuItem.setActionCommand("" + i);
+            AppUI.setHandCursor(menuItem);
     
             MouseAdapter ma = new MouseAdapter() {
                 public void mouseEntered(MouseEvent evt) {
@@ -2185,10 +2187,10 @@ public class AdvancedClient  {
 
         String txt;
         
-        if (ps.needBackup)
+        if (!ps.needBackup)
             txt = "Your Log Files and Transaction History have been permanently deleted.";
         else 
-            txt = "Your Log Files and Transaction History have been backed up to \\path\\LogTransactionBackup<br><br>They have been permanently deleted from Advanced Client.";
+            txt = "Your Log Files and Transaction History have been backed up<br><br>They have been permanently deleted from Advanced Client.";
         
         y++;
         // Q
@@ -3981,19 +3983,23 @@ public class AdvancedClient  {
         c.gridy = y;     
         c.anchor = GridBagConstraints.WEST; 
  
-        int cnt = 0;
-        for (int i = 0; i < wallets.length; i++)
+        int cnt = 0, scnt = 0;
+        for (int i = 0; i < wallets.length; i++) {
+            if (wallets[i].isSkyWallet()) {
+                scnt++;
+            }
             if (wallets[i].isSkyWallet() && wallets[i].getTotal() > 0)
                 cnt++;
+        }
            
         final String[] options = new String[cnt + 1];
-        final String[] doptions = new String[wallets.length - cnt];
+        final String[] doptions = new String[wallets.length - scnt];
         int j = 0, k = 0;
         
         final int fidxs[], tidxs[];
         
         fidxs = new int[cnt + 1];
-        tidxs = new int[wallets.length - cnt];
+        tidxs = new int[wallets.length - scnt];
         for (int i = 0; i < wallets.length; i++) {
             if (wallets[i].isSkyWallet()) {
                 if (wallets[i].getTotal() > 0) {
@@ -4022,6 +4028,7 @@ public class AdvancedClient  {
         gridbag.setConstraints(cbox.getComboBox(), c);
         oct.add(cbox.getComboBox());
 
+        
         y++;
         
         rightPanel.add(oct);
@@ -4120,7 +4127,11 @@ public class AdvancedClient  {
             }
         });
        
-
+        if (ps.selectedFromIdx > 0)
+            cbox.setDefaultIdx(ps.selectedFromIdx);
+        
+        if (ps.selectedToIdx > 0)
+            cboxto.setDefaultIdx(ps.selectedToIdx);
         // Space
         AppUI.hr(oct, 22);
         
@@ -4148,10 +4159,11 @@ public class AdvancedClient  {
                     return;
                 }
                 
+                ps.selectedFromIdx = cidx;
                 cidx = fidxs[cidx - 1];
                 Wallet w = wallets[cidx];
                 ps.srcWallet = w;
-
+                
                 cidx = cboxto.getSelectedIndex();
                 if (cidx == 0) {
                     ps.errText = "Destination Wallet is not selected";
@@ -4159,6 +4171,7 @@ public class AdvancedClient  {
                     return;
                 }
                 
+                ps.selectedToIdx = cidx;
                 cidx = tidxs[cidx - 1];
                 
                 w = wallets[cidx];
