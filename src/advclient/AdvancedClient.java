@@ -54,7 +54,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.8";
+    String version = "2.1.9";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -1890,8 +1890,7 @@ public class AdvancedClient  {
         String totalFailedValue = AppCore.formatNumber(ps.statFailedValue);
         String totalLostValue = AppCore.formatNumber(ps.statLostValue);
                 
-        //fname = AppUI.wrapDiv("Deposited <b>" +  total +  " CloudCoins</b> to <b>" + ps.dstWallet.getName() + " </b>");  
-        fname = AppUI.wrapDiv("Deposited <b>" +  total +  " CloudCoins</b> to <b>xxx </b>");
+        fname = AppUI.wrapDiv("Deposited <b>" +  total +  " CloudCoins</b> to <b>" + ps.dstWallet.getName() + " </b>");  
         AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
         y++;     
         
