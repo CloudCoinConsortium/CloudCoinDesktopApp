@@ -16,6 +16,7 @@ import global.cloudcoin.ccbank.ShowCoins.ShowCoins;
 import global.cloudcoin.ccbank.ShowCoins.ShowCoinsResult;
 import global.cloudcoin.ccbank.ShowEnvelopeCoins.ShowEnvelopeCoins;
 import global.cloudcoin.ccbank.ShowEnvelopeCoins.ShowEnvelopeCoinsResult;
+import global.cloudcoin.ccbank.Transfer.TransferResult;
 import global.cloudcoin.ccbank.Unpacker.UnpackerResult;
 import global.cloudcoin.ccbank.Vaulter.VaulterResult;
 import global.cloudcoin.ccbank.core.AppCore;
@@ -197,7 +198,7 @@ public class AdvancedClient  {
     }
     
     public String getPickError(Wallet w) {
-        String errText = "<html><div style='width: 520px; text-align: center'>"
+        String errText = ""
                 + "Cannot make change<br><br>This version of software does not support making change<br>"
                 + "You may only choose amounts that match your exact notes.<br>Please check to see if"
                 + " there is a newer version of the software.<br>In the meantime, you may transfer amounts "
@@ -239,13 +240,11 @@ public class AdvancedClient  {
                 counters[Config.IDX_FOLDER_VAULT][Config.IDX_250];
         
         
-        errText += "1 CloudCoin Notes: " + t1 + "<br>";
-        errText += "5 CloudCoin Notes: " + t5 + "<br>";
-        errText += "25 CloudCoin Notes: " + t25 + "<br>";
-        errText += "100 CloudCoin Notes: " + t100 + "<br>";
-        errText += "250 CloudCoin Notes: " + t250 + "<br>";
-
-        errText += "</div></html>";
+        errText += "1 CloudCoin Notes: <b>" + t1 + "</b><br>";
+        errText += "5 CloudCoin Notes: <b>" + t5 + "</b><br>";
+        errText += "25 CloudCoin Notes: <b>" + t25 + "</b><br>";
+        errText += "100 CloudCoin Notes: <b>" + t100 + "</b><br>";
+        errText += "250 CloudCoin Notes: <b>" + t250 + "</b><br>";
 
         return errText;
     }
@@ -1559,6 +1558,25 @@ public class AdvancedClient  {
                 
                 String dstName =  (ps.foundSN == 0) ? ps.dstWallet.getName() : "" + ps.foundSN;
                 
+                // Remote wallet
+                if (ps.srcWallet.isSkyWallet()) {
+                    if ((ps.dstWallet == null && !ps.typedRemoteWallet.isEmpty()) || ps.dstWallet.isSkyWallet()) {
+                        wl.debug(ltag, "Transfer requested");
+
+                        int fromsn = ps.srcWallet.getIDCoin().sn;
+                        int tosn;
+                        if (ps.dstWallet != null) {
+                            tosn = ps.dstWallet.getIDCoin().sn;
+                        } else {
+                            tosn = ps.foundSN;
+                        }
+
+                        sm.startTransferService(fromsn, tosn, ps.srcWallet.getSNs(), ps.typedAmount, ps.typedMemo, new TransferCb());
+
+                        return;
+                    }
+                }
+           
                 if (ps.isSkyDeposit) {
                     wl.debug(ltag, "sky deposit");
                     if (ps.srcWallet.getIDCoin() == null) {
@@ -3052,14 +3070,23 @@ public class AdvancedClient  {
                         return;
                     }
                     
+                    /*
                     if (ps.srcWallet.isSkyWallet()) {
                         ps.errText = "Transfer from Sky Wallet to Remote Wallet is not supported";
                         showScreen();
                         return;
                     }
+                    */
 
+                    String dstName = remoteWalledId.getText().trim();
+                    if (ps.srcWallet.isSkyWallet() && ps.srcWallet.getName().equals(dstName)) {
+                        ps.errText = "Src and Dst wallets cannot be the same";
+                        showScreen();
+                        return;
+                    }
+                                        
                     ps.dstWallet = null;
-                    ps.typedRemoteWallet = remoteWalledId.getText();
+                    ps.typedRemoteWallet = dstName;
                     ps.sendType = ProgramState.SEND_TYPE_REMOTE;
                     
                     DNSSn d = new DNSSn(ps.typedRemoteWallet, null, wl);
@@ -3133,12 +3160,13 @@ public class AdvancedClient  {
                         
                         ps.typedDstPassword = passwordDst.getText();
                     }
-   
+                    /*
                     if (srcWallet.isSkyWallet() && dstWallet.isSkyWallet()) {
                         ps.errText = "Transfer from Sky Wallet to Sky Wallet is not supported";
                         showScreen();
                         return;
                     }
+                    */
                     
                     if (dstWallet.isSkyWallet()) {
                         if (ps.typedMemo.isEmpty()) {
@@ -6746,69 +6774,74 @@ public class AdvancedClient  {
                 showScreen();
                 return;
             }
-            
-            
-            
-            
-            
+
             String name = null;
             if (ps.srcWallet != null)
                 name = ps.srcWallet.getName();
             
             wl.debug(ltag, "rramount " + rr.amount + " typed " + ps.typedAmount + " name=" + name);
             sm.startGraderService(new GraderCb(), null, name);
-            /*
-            if (ps.typedAmount != rr.amount) {
-                ps.typedAmount = rr.amount;
-                ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
-                ps.errText = "Not all coins were received. Please check the logs";
-                showScreen();
-                return;
-            }
-            */
-            
-            /*
-            ps.typedAmount = rr.amount;
-                
-            Wallet srcWallet = ps.srcWallet;
-            Wallet dstWallet = ps.dstWallet;
-                
-            srcWallet.appendTransaction(ps.typedMemo, rr.amount * -1, rr.receiptId);
-            if (dstWallet != null) {
-                if (srcWallet.isSkyWallet()) {
-                    wl.debug(ltag, "Appending sky transactions");
-                        
-                    Enumeration<String> enumeration = ps.cenvelopes.keys();
-                    while (enumeration.hasMoreElements()) {
-                        String key = enumeration.nextElement();
-                        String[] data = ps.cenvelopes.get(key);
-
-                        int total = 0;
-                        try {
-                            total = Integer.parseInt(data[1]);
-                        } catch (NumberFormatException e) {        
-                        }
- 
-                        ps.dstWallet.appendTransaction(data[0], total, rr.receiptId, data[2]); 
-                    }
-                } else {
-                    dstWallet.appendTransaction(ps.typedMemo, rr.amount, rr.receiptId);
-                }
-                
-                if (dstWallet.isEncrypted()) {
-                    sm.changeServantUser("Vaulter", dstWallet.getName());
-                    sm.startVaulterService(new VaulterCb(), dstWallet.getPassword());          
-                } else {
-                    ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
-                    showScreen();
-                }
-            }
-                      
-            ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
-            showScreen();
-                    */
 	}
     }
+    
+    class TransferCb implements CallbackInterface {
+       public void callback(Object result) {
+            final TransferResult tr = (TransferResult) result;
+
+            wl.debug(ltag, "Transfer finished: " + tr.status);
+            if (tr.status == TransferResult.STATUS_PROCESSING) {
+                setRAIDATransferProgressCoins(tr.totalRAIDAProcessed, tr.totalCoinsProcessed, tr.totalCoins);
+                return;
+            }
+
+            if (tr.status == TransferResult.STATUS_CANCELLED) {
+                EventQueue.invokeLater(new Runnable() {
+                    public void run() {
+                        ps.errText = "Operation Cancelled";
+                        ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                        sm.resumeAll();
+                        showScreen();
+                    }
+                });
+                
+                return;
+            }
+
+            if (tr.status == ReceiverResult.STATUS_ERROR) {
+                EventQueue.invokeLater(new Runnable() {
+                    public void run() {
+                        ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                        if (!tr.errText.isEmpty()) {
+                            if (tr.errText.equals(Config.PICK_ERROR_MSG)) {
+                                /*
+                                if (ps.triedToChange) {
+                                    ps.errText = "Failed to change coins";
+                                } else {
+                                    ps.changeFromExport = false;
+                                    ps.triedToChange = true;
+                                    ps.currentScreen = ProgramState.SCREEN_MAKING_CHANGE;
+                                    showScreen();
+                                    return;
+                                }*/
+                                ps.errText = getPickError(ps.srcWallet);
+                            } else {
+                                ps.errText = tr.errText;
+                            }
+                        }
+                        else
+                            ps.errText = "Error occurred. Please check the logs";
+
+                        showScreen();
+                    }
+                });
+               return;
+            }
+
+            ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+            showScreen();
+       }
+    }
+
     
     class optRv {
         int[] idxs;

@@ -22,6 +22,8 @@ import global.cloudcoin.ccbank.Receiver.Receiver;
 import global.cloudcoin.ccbank.Receiver.ReceiverResult;
 import global.cloudcoin.ccbank.Sender.Sender;
 import global.cloudcoin.ccbank.Sender.SenderResult;
+import global.cloudcoin.ccbank.Transfer.Transfer;
+import global.cloudcoin.ccbank.Transfer.TransferResult;
 import global.cloudcoin.ccbank.ShowCoins.ShowCoins;
 import global.cloudcoin.ccbank.ShowEnvelopeCoins.ShowEnvelopeCoins;
 import global.cloudcoin.ccbank.ShowEnvelopeCoins.ShowEnvelopeCoinsResult;
@@ -143,7 +145,8 @@ public class ServantManager {
                 "Vaulter",
                 "ShowEnvelopeCoins",
                 "Eraser",
-                "Backupper"
+                "Backupper",
+                "Transfer"
         }, AppCore.getRootPath() + File.separator + user, logger);
    
 
@@ -371,6 +374,13 @@ public class ServantManager {
     public void startSenderServiceForChange(int sn, int[] values, String memo, CallbackInterface cb) {
         Sender s = (Sender) sr.getServant("Sender");
 	s.launch(sn, null, values, 0, memo, Config.CHANGE_SKY_DOMAIN, cb);
+    }
+    
+    public void startTransferService(int fromsn, int tosn, int sns[], int amount, String tag, CallbackInterface cb) {
+        logger.debug(ltag, "Transfer from " + fromsn + " to " + tosn + " amount " + amount);
+        System.out.println("Transfer from " + fromsn + " to " + tosn + " amount " + amount);
+        Transfer tr = (Transfer) sr.getServant("Transfer");
+        tr.launch(fromsn, tosn, sns, amount, tag, cb);
     }
     
     public int getRemoteSn(String dstWallet) {
