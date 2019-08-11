@@ -99,8 +99,7 @@ public class AppUI {
             
             
             osRegFont = Font.createFont(Font.TRUETYPE_FONT, cl.getResourceAsStream("resources/Montserrat-Medium.ttf"));
-            osSemiBoldFont = Font.createFont(Font.TRUETYPE_FONT, cl.getResourceAsStream("resources/Montserrat-Semibold.ttf"));
-            
+            osSemiBoldFont = Font.createFont(Font.TRUETYPE_FONT, cl.getResourceAsStream("resources/Montserrat-Semibold.ttf"));        
         } catch(Exception e){
             System.out.println("Failed to load font: " + e.getMessage());
         }

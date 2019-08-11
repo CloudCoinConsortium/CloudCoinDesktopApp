@@ -51,7 +51,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.8";
+    String version = "2.1.9";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -86,6 +86,8 @@ public class AdvancedClient  {
        
     final static int TYPE_ADD_BUTTON = 1;
     final static int TYPE_ADD_SKY = 2;
+    
+    JLabel trTitle, trInventory;
     
     public AdvancedClient() {
         initSystem();
@@ -181,6 +183,12 @@ public class AdvancedClient  {
             AppUI.setFont(cntLabel, fsize);
         }
         cntLabel.repaint();
+        
+        if (ps.currentScreen == ProgramState.SCREEN_SHOW_TRANSACTIONS) {
+            if (w == sm.getActiveWallet()) {
+                updateTransactionWalletData(w);
+            }
+        }
     }
     
     public String getPickError(Wallet w) {
@@ -3096,12 +3104,9 @@ public class AdvancedClient  {
                         w.setCounters(counters);
                         setTotalCoins();
                     }
-                });
-            
-                
+                });              
             }
-        }
-        
+        }     
     }
     
     public void updateWalletAmount2() {
@@ -5708,7 +5713,51 @@ public class AdvancedClient  {
         rightPanel.add(bp);     
     }
     
-    public void showTransactionsScreen() {        
+    public void updateTransactionWalletData(Wallet w) {
+        if (trTitle != null) {
+            trTitle.setText(w.getName() + " - " + w.getTotal() + " CC");
+            trTitle.validate();
+            trTitle.repaint();
+        }
+        
+        if (trInventory != null) {
+            int[][] counters = w.getCounters();   
+            if (counters != null && counters.length != 0) {
+                int t1, t5, t25, t100, t250;
+        
+                t1 = counters[Config.IDX_FOLDER_BANK][Config.IDX_1] + 
+                counters[Config.IDX_FOLDER_FRACKED][Config.IDX_1] + 
+                counters[Config.IDX_FOLDER_VAULT][Config.IDX_1];
+        
+                t5 = counters[Config.IDX_FOLDER_BANK][Config.IDX_5] + 
+                counters[Config.IDX_FOLDER_FRACKED][Config.IDX_5] + 
+                counters[Config.IDX_FOLDER_VAULT][Config.IDX_5];
+        
+                t25 = counters[Config.IDX_FOLDER_BANK][Config.IDX_25] + 
+                counters[Config.IDX_FOLDER_FRACKED][Config.IDX_25] + 
+                counters[Config.IDX_FOLDER_VAULT][Config.IDX_25];
+        
+                t100 =  counters[Config.IDX_FOLDER_BANK][Config.IDX_100] + 
+                counters[Config.IDX_FOLDER_FRACKED][Config.IDX_100] + 
+                counters[Config.IDX_FOLDER_VAULT][Config.IDX_100];
+            
+                t250 = counters[Config.IDX_FOLDER_BANK][Config.IDX_250] + 
+                counters[Config.IDX_FOLDER_FRACKED][Config.IDX_250] + 
+                counters[Config.IDX_FOLDER_VAULT][Config.IDX_250];
+            
+                String s;
+            
+                s = "1's: <b>" + t1 + "</b> |  5's: <b>" + t5 + "</b> |  25's: <b>" + t25 
+                    + "</b> | 100's: <b>" + t100 + "</b> | 250's: <b>" + t250 + " </b>";
+            
+                trInventory.setText("<html><div style='text-align:center; width:668px'>" + s + "</div></html>");
+            }
+        }
+    }
+    
+    public void showTransactionsScreen() {      
+        trTitle = trInventory = null;
+        
         boolean isSky = sm.getActiveWallet().isSkyWallet() ? true : false;
     
         showLeftScreen();
@@ -5721,8 +5770,8 @@ public class AdvancedClient  {
         AppUI.noOpaque(ct);
         rightPanel.add(ct);
         
-        JLabel ltitle = AppUI.getTitle(w.getName() + " - " + w.getTotal() + " CC");   
-        ct.add(ltitle);
+        trTitle = AppUI.getTitle("");   
+        ct.add(trTitle);
    
         AppUI.hr(ct, 10);
         
@@ -5739,43 +5788,18 @@ public class AdvancedClient  {
   
         // Coins
         int[][] counters = w.getCounters();   
-        if (counters != null && counters.length != 0) {
-            int t1, t5, t25, t100, t250;
-        
-            t1 = counters[Config.IDX_FOLDER_BANK][Config.IDX_1] + 
-                counters[Config.IDX_FOLDER_FRACKED][Config.IDX_1] + 
-                counters[Config.IDX_FOLDER_VAULT][Config.IDX_1];
-        
-            t5 = counters[Config.IDX_FOLDER_BANK][Config.IDX_5] + 
-                counters[Config.IDX_FOLDER_FRACKED][Config.IDX_5] + 
-                counters[Config.IDX_FOLDER_VAULT][Config.IDX_5];
-        
-            t25 = counters[Config.IDX_FOLDER_BANK][Config.IDX_25] + 
-                counters[Config.IDX_FOLDER_FRACKED][Config.IDX_25] + 
-                counters[Config.IDX_FOLDER_VAULT][Config.IDX_25];
-        
-            t100 =  counters[Config.IDX_FOLDER_BANK][Config.IDX_100] + 
-                counters[Config.IDX_FOLDER_FRACKED][Config.IDX_100] + 
-                counters[Config.IDX_FOLDER_VAULT][Config.IDX_100];
-            
-            t250 = counters[Config.IDX_FOLDER_BANK][Config.IDX_250] + 
-                counters[Config.IDX_FOLDER_FRACKED][Config.IDX_250] + 
-                counters[Config.IDX_FOLDER_VAULT][Config.IDX_250];
-            
-            String s;
-            
-            s = "1's: <b>" + t1 + "</b> |  5's: <b>" + t5 + "</b> |  25's: <b>" + t25 
-                    + "</b> | 100's: <b>" + t100 + "</b> | 250's: <b>" + t250 + " </b>";
-        
-
-            
-            JLabel ml = new JLabel("<html><div style='text-align:center; width:668px'>" + s + "</div></html>");
-            AppUI.alignCenter(ml);
-            AppUI.setFont(ml, 14);
-            ct.add(ml);
+        if (counters != null && counters.length != 0) { 
+            trInventory = new JLabel("");
+            AppUI.alignCenter(trInventory);
+            AppUI.setFont(trInventory, 14);
+            ct.add(trInventory);
             
             AppUI.hr(ct, 20);
+            
+            
         }
+        
+        updateTransactionWalletData(w);
         
         // File saver
         if (ps.sendType == ProgramState.SEND_TYPE_FOLDER) {
