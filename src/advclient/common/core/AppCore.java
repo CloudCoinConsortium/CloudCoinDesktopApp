@@ -992,4 +992,58 @@ public class AppCore {
         return totalCoins;
     }
     
+    public static String getMS(int ms) {
+        double dms = (double) ms / 1000;
+        String s = String.format(Locale.US, "%.2f", dms);
+        
+        if (s.charAt(0) == '0')
+            s = s.substring(1, s.length());
+
+        return s + " sec";
+    }
+    
+    public static String getRAIDAString(int idx) {
+        String sidx;
+        
+        if (idx < 10)
+            sidx = "0" + idx;
+        else
+            sidx = "" + idx;
+     
+        String[] countries = {
+            "Australia",
+            "Macedonia",
+            "Philippines",
+            "Serbia",
+            "Switzerland",
+            "South Korea",
+            "Japan",
+            "UK",
+            "India",
+            "India",
+            "Germany",
+            "USA",
+            "India",
+            "Taiwan",
+            "Russia",
+            "Russia",
+            "UK",
+            "Singapore",
+            "USA",
+            "Argentina",
+            "France",
+            "India",
+            "USA",
+            "Germany",
+            "Canada"
+        };
+        
+        if (idx > countries.length) {
+            return sidx + " RAIDA";
+        }
+        
+        return sidx + " " + countries[idx];
+        
+    }
+    
 }

@@ -23,6 +23,7 @@ import global.cloudcoin.ccbank.core.CallbackInterface;
 import global.cloudcoin.ccbank.core.CloudCoin;
 import global.cloudcoin.ccbank.core.Config;
 import global.cloudcoin.ccbank.core.DNSSn;
+import global.cloudcoin.ccbank.core.RAIDA;
 import global.cloudcoin.ccbank.core.Wallet;
 import javax.swing.*;
 import java.awt.*;
@@ -1211,16 +1212,16 @@ public class AdvancedClient  {
         gridbag.setConstraints(x, c);
         ct.add(x);*/
         
-        String[] statuses = sm.getRAIDAStatuses();
+        int[] statuses = sm.getRAIDAStatuses();
         
         int y = 1;
         int fontSize = 16;
         for (int i = 0; i < statuses.length / 2 + 1; i ++) {
             String status;
             
-            x = new JLabel("RAIDA" + i);
+            x = new JLabel(AppCore.getRAIDAString(i));
             AppUI.setCommonTableFontSize(x, fontSize);
-            AppUI.setColor(x, AppUI.getColor5());
+            AppUI.setColor(x, AppUI.getColor13());
             c.gridwidth = 1;
             c.anchor = GridBagConstraints.WEST;
             c.insets = new Insets(0, 0, 2, 0); 
@@ -1228,16 +1229,21 @@ public class AdvancedClient  {
             c.gridy = y;
             gridbag.setConstraints(x, c);
             ct.add(x);
-                   
-            if (statuses[i] == null) {
+             
+            x = new JLabel("");
+            if (statuses[i] == -1) {
                 status = "FAILED";
+                AppUI.setColor(x, AppUI.getErrorColor());            
             } else {
-                status = "OK: " + statuses[i] + "ms";
+                //status = "OK: " + statuses[i] + "ms";
+                status = AppCore.getMS(statuses[i]);
+                AppUI.setColor(x, AppUI.getColor13());
             }
             
-            x = new JLabel(status);
+            x.setText(status);
+            
             AppUI.setCommonTableFontSize(x, fontSize);
-            AppUI.setColor(x, AppUI.getColor5());
+            
             c.anchor = GridBagConstraints.EAST;
             c.insets = new Insets(0, 40, 2, 0); 
             c.gridx = GridBagConstraints.RELATIVE;
@@ -1245,13 +1251,13 @@ public class AdvancedClient  {
             gridbag.setConstraints(x, c);
             ct.add(x);
        
-            int j = i + 13;
-            if (j == 25)
+            int j = i + RAIDA.TOTAL_RAIDA_COUNT / 2 + 1;
+            if (j == RAIDA.TOTAL_RAIDA_COUNT)
                 break;
             
-            x = new JLabel("RAIDA" + j);
+            x = new JLabel(AppCore.getRAIDAString(j));
             AppUI.setCommonTableFontSize(x, fontSize);
-            AppUI.setColor(x, AppUI.getColor5());
+            AppUI.setColor(x, AppUI.getColor13());
             c.gridwidth = 1;
             c.anchor = GridBagConstraints.WEST;
             c.insets = new Insets(0, 100, 2, 0); 
@@ -1259,16 +1265,19 @@ public class AdvancedClient  {
             c.gridy = y;
             gridbag.setConstraints(x, c);
             ct.add(x);
-                   
-            if (statuses[j] == null) {
+            
+            x = new JLabel("");
+            if (statuses[j] == -1) {
                 status = "FAILED";
+                AppUI.setColor(x, AppUI.getErrorColor());
             } else {
-                status = "OK: " + statuses[j] + "ms";
+                status = AppCore.getMS(statuses[j]);
+                AppUI.setColor(x, AppUI.getColor13());
             }
             
-            x = new JLabel(status);
+            x.setText(status);
+            
             AppUI.setCommonTableFontSize(x, fontSize);
-            AppUI.setColor(x, AppUI.getColor5());
             c.anchor = GridBagConstraints.EAST;
             c.insets = new Insets(0, 40, 2, 0); 
             c.gridx = GridBagConstraints.RELATIVE;
