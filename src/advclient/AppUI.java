@@ -98,8 +98,12 @@ public class AppUI {
             //GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(montLight);
             
             
-            osRegFont = Font.createFont(Font.TRUETYPE_FONT, cl.getResourceAsStream("resources/Montserrat-Medium.ttf"));
-            osSemiBoldFont = Font.createFont(Font.TRUETYPE_FONT, cl.getResourceAsStream("resources/Montserrat-Semibold.ttf"));        
+            //osRegFont = Font.createFont(Font.TRUETYPE_FONT, cl.getResourceAsStream("resources/Montserrat-Medium.ttf"));
+            //osSemiBoldFont = Font.createFont(Font.TRUETYPE_FONT, cl.getResourceAsStream("resources/Montserrat-Semibold.ttf")); 
+            
+            osRegFont = Font.createFont(Font.TRUETYPE_FONT, cl.getResourceAsStream("resources/OpenSans-Regular.ttf"));
+            osSemiBoldFont = Font.createFont(Font.TRUETYPE_FONT, cl.getResourceAsStream("resources/OpenSans-Semibold.ttf"));
+
         } catch(Exception e){
             System.out.println("Failed to load font: " + e.getMessage());
         }
@@ -184,6 +188,10 @@ public class AppUI {
        
     public static Color getColor13() {
         return new Color(0x919396);
+    }
+    
+    public static Color getColor14() {
+        return new Color(0x007f0e);
     }
     
     

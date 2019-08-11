@@ -23,6 +23,7 @@ import global.cloudcoin.ccbank.core.CallbackInterface;
 import global.cloudcoin.ccbank.core.CloudCoin;
 import global.cloudcoin.ccbank.core.Config;
 import global.cloudcoin.ccbank.core.DNSSn;
+import global.cloudcoin.ccbank.core.RAIDA;
 import global.cloudcoin.ccbank.core.Wallet;
 import javax.swing.*;
 import java.awt.*;
@@ -196,7 +197,7 @@ public class AdvancedClient  {
                 + "Cannot make change<br><br>This version of software does not support making change<br>"
                 + "You may only choose amounts that match your exact notes.<br>Please check to see if"
                 + " there is a newer version of the software.<br>In the meantime, you may transfer amounts "
-                + "that match the CloudCoin notes.<br>There are people who make change and you can find their addresses by contacting CloudCoinSupport@Protonmail.com";
+                + "that match the CloudCoin notes.<br>There are people who make change and you can find their addresses by contacting support@cloudcoinmail.com";
                 
         
         int[][] counters = w.getCounters();
@@ -1172,15 +1173,16 @@ public class AdvancedClient  {
         gridbag.setConstraints(x, c);
         ct.add(x);*/
         
-        String[] statuses = sm.getRAIDAStatuses();
+        int[] statuses = sm.getRAIDAStatuses();
         
         int y = 1;
         int fontSize = 16;
         for (int i = 0; i < statuses.length / 2 + 1; i ++) {
             String status;
             
-            x = new JLabel("RAIDA" + i);
+            x = new JLabel(AppCore.getRAIDAString(i));
             AppUI.setCommonTableFontSize(x, fontSize);
+            AppUI.setColor(x, AppUI.getColor14());
             c.gridwidth = 1;
             c.anchor = GridBagConstraints.WEST;
             c.insets = new Insets(0, 0, 2, 0); 
@@ -1188,14 +1190,19 @@ public class AdvancedClient  {
             c.gridy = y;
             gridbag.setConstraints(x, c);
             ct.add(x);
-                   
-            if (statuses[i] == null) {
+               
+            x = new JLabel("");
+            if (statuses[i] == -1) {
                 status = "FAILED";
+                AppUI.setColor(x, AppUI.getErrorColor());
             } else {
-                status = "OK: " + statuses[i] + "ms";
+                status = AppCore.getMS(statuses[i]);
+                AppUI.setColor(x, AppUI.getColor14());
+
             }
             
-            x = new JLabel(status);
+            x.setText(status);
+
             AppUI.setCommonTableFontSize(x, fontSize);
             c.anchor = GridBagConstraints.EAST;
             c.insets = new Insets(0, 40, 2, 0); 
@@ -1204,11 +1211,12 @@ public class AdvancedClient  {
             gridbag.setConstraints(x, c);
             ct.add(x);
        
-            int j = i + 13;
-            if (j == 25)
+            int j = i + RAIDA.TOTAL_RAIDA_COUNT / 2 + 1;
+            if (j == RAIDA.TOTAL_RAIDA_COUNT)
                 break;
             
-            x = new JLabel("RAIDA" + j);
+            x = new JLabel(AppCore.getRAIDAString(j));
+            AppUI.setColor(x, AppUI.getColor14());
             AppUI.setCommonTableFontSize(x, fontSize);
             c.gridwidth = 1;
             c.anchor = GridBagConstraints.WEST;
@@ -1217,14 +1225,18 @@ public class AdvancedClient  {
             c.gridy = y;
             gridbag.setConstraints(x, c);
             ct.add(x);
-                   
-            if (statuses[j] == null) {
+               
+            x = new JLabel("");
+            if (statuses[j] == -1) {
                 status = "FAILED";
+                AppUI.setColor(x, AppUI.getErrorColor());
             } else {
-                status = "OK: " + statuses[j] + "ms";
+                status = AppCore.getMS(statuses[j]);
+                AppUI.setColor(x, AppUI.getColor14());
             }
             
-            x = new JLabel(status);
+            
+            x.setText(status);
             AppUI.setCommonTableFontSize(x, fontSize);
             c.anchor = GridBagConstraints.EAST;
             c.insets = new Insets(0, 40, 2, 0); 

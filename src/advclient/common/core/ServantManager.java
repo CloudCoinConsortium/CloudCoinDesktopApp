@@ -1249,20 +1249,20 @@ public class ServantManager {
     }
 
     
-    public String[] getRAIDAStatuses() {
+    public int[] getRAIDAStatuses() {
         Servant e = sr.getServant("Echoer");
         
         e.updateRAIDAStatus();
         
         String[] urls = e.getRAIDA().getRAIDAURLs();
         int[] latencies = e.getRAIDA().getLatencies();
-        String[] rv = new String[RAIDA.TOTAL_RAIDA_COUNT];
+        int[] rv = new int[RAIDA.TOTAL_RAIDA_COUNT];
         
         for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
             if (urls[i] == null)
-                rv[i] = null;
+                rv[i] = -1;
             else
-                rv[i] = "" + latencies[i];
+                rv[i] = latencies[i];
         }
         
         return rv;
