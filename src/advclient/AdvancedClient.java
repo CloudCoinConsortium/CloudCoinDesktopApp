@@ -200,7 +200,7 @@ public class AdvancedClient  {
                 + "Cannot make change<br><br>This version of software does not support making change<br>"
                 + "You may only choose amounts that match your exact notes.<br>Please check to see if"
                 + " there is a newer version of the software.<br>In the meantime, you may transfer amounts "
-                + "that match the CloudCoin notes.<br>There are people who make change and you can find their addresses by contacting CloudCoinSupport@Protonmail.com";
+                + "that match the CloudCoin notes.<br>There are people who make change and you can find their addresses by contacting support@cloudcoinmail.com";
                 
         
         int[][] counters = w.getCounters();
@@ -3952,7 +3952,7 @@ public class AdvancedClient  {
         JPanel wr2 = new JPanel();
         AppUI.noOpaque(wr2);
         AppUI.setBoxLayout(wr2, true);
-        fname = new JLabel("Email: support@protonmail.com");
+        fname = new JLabel("Email: support@cloudcoinmail.com");
         AppUI.setCommonFont(fname);
         wr2.add(fname);
         fname = new JLabel("(Secure if you get a free encrypted email account at ProtonMail.com)");
