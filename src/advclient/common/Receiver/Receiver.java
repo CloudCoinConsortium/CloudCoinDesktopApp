@@ -73,6 +73,8 @@ public class Receiver extends Servant {
             logger.error(ltag, "Can't proceed. RAIDA is unavailable");
             rr.status = ReceiverResult.STATUS_ERROR;
             rr.errText = AppCore.raidaErrText;
+            rr = new ReceiverResult();
+            copyFromGlobalResult(rr);
             if (cb != null)
                 cb.callback(rr);
             return;
@@ -81,7 +83,9 @@ public class Receiver extends Servant {
         if (!pickCoinsAmountFromArray(sns, amount)) {
             logger.debug(ltag, "Not enough coins in the cloudfor amount " + amount);
             globalResult.status = ReceiverResult.STATUS_ERROR;
-            globalResult.errText = "Can't collect required amount";
+            globalResult.errText = Config.PICK_ERROR_MSG;
+            rr = new ReceiverResult();
+            copyFromGlobalResult(rr);
             if (cb != null)
                 cb.callback(rr);          
             return;
@@ -93,6 +97,8 @@ public class Receiver extends Servant {
             logger.error(ltag, "NO ID Coin found for SN: " + sn);
             rr.status = ReceiverResult.STATUS_ERROR;
             rr.errText = "Failed to find coin ID";
+            rr = new ReceiverResult();
+            copyFromGlobalResult(rr);
             if (cb != null)
                 cb.callback(rr);
             return;
