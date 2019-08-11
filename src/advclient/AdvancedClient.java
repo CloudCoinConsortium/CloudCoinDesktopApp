@@ -90,6 +90,9 @@ public class AdvancedClient  {
     final static int TYPE_ADD_BUTTON = 1;
     final static int TYPE_ADD_SKY = 2;
     
+    JLabel trTitle;
+    JPanel invPanel;
+    
     public AdvancedClient() {
         initSystem();
                 
@@ -184,6 +187,12 @@ public class AdvancedClient  {
             AppUI.setFont(cntLabel, fsize);
         }
         cntLabel.repaint();
+        
+        if (ps.currentScreen == ProgramState.SCREEN_SHOW_TRANSACTIONS) {
+            if (w == sm.getActiveWallet()) {
+                updateTransactionWalletData(w);
+            }
+        }     
     }
     
     public String getPickError(Wallet w) {
@@ -4769,61 +4778,83 @@ public class AdvancedClient  {
         resetState();
     }
     
-    public void showTransactionsScreen() {        
+     public void updateTransactionWalletData(Wallet w) {
+        if (trTitle != null) {
+            String rec = "";
+            if (!w.getEmail().isEmpty()) {
+                String colstr = "#" + Integer.toHexString(AppUI.getColor5().getRGB()).substring(2);
+                rec = "<br><span style='font-size:0.4em; color: " + colstr + "'>Recovery Email: " + w.getEmail() + "</span>";
+            }
+            
+            String titleText = "<html>" + w.getName() + " - " 
+                + AppCore.formatNumber(w.getTotal()) + "<span style='font-size:0.8em'><sup>cc</sup></span>" + rec + "</html>";
+            trTitle.setText(titleText);
+            trTitle.validate();
+            trTitle.repaint();
+        }
+
+        if (invPanel != null) {
+            int[][] counters = w.getCounters();
+            if (counters != null && counters.length != 0) {
+                int t1, t5, t25, t100, t250;
+
+                t1 = counters[Config.IDX_FOLDER_BANK][Config.IDX_1] +
+                counters[Config.IDX_FOLDER_FRACKED][Config.IDX_1] +
+                counters[Config.IDX_FOLDER_VAULT][Config.IDX_1];
+
+                t5 = counters[Config.IDX_FOLDER_BANK][Config.IDX_5] +
+                counters[Config.IDX_FOLDER_FRACKED][Config.IDX_5] +
+                counters[Config.IDX_FOLDER_VAULT][Config.IDX_5];
+
+                t25 = counters[Config.IDX_FOLDER_BANK][Config.IDX_25] +
+                counters[Config.IDX_FOLDER_FRACKED][Config.IDX_25] +
+                counters[Config.IDX_FOLDER_VAULT][Config.IDX_25];
+
+                t100 =  counters[Config.IDX_FOLDER_BANK][Config.IDX_100] +
+                counters[Config.IDX_FOLDER_FRACKED][Config.IDX_100] +
+                counters[Config.IDX_FOLDER_VAULT][Config.IDX_100];
+
+                t250 = counters[Config.IDX_FOLDER_BANK][Config.IDX_250] +
+                counters[Config.IDX_FOLDER_FRACKED][Config.IDX_250] +
+                counters[Config.IDX_FOLDER_VAULT][Config.IDX_250];
+
+                AppUI.addInvItem(invPanel, "1", t1);
+                AppUI.addInvItem(invPanel, "5", t5);
+                AppUI.addInvItem(invPanel, "25", t25);
+                AppUI.addInvItem(invPanel, "100", t100);
+                AppUI.addInvItem(invPanel, "250", t250);
+            }
+        }
+    }
+
+    
+    public void showTransactionsScreen() {      
+        invPanel = null;
+        trTitle = null;
+        
         boolean isSky = sm.getActiveWallet().isSkyWallet() ? true : false;
          
         showLeftScreen();
         JPanel rightPanel = getRightPanel(); 
         
         Wallet w = sm.getActiveWallet();      
-        String rec = "";
-        if (!w.getEmail().isEmpty()) {
-            String colstr = "#" + Integer.toHexString(AppUI.getColor5().getRGB()).substring(2);
-            rec = "<br><span style='font-size:0.4em; color: " + colstr + "'>Recovery Email: " + w.getEmail() + "</span>";
-        }
-        
-        String titleText = "<html>" + w.getName() + " - " 
-                + AppCore.formatNumber(w.getTotal()) + "<span style='font-size:0.8em'><sup>cc</sup></span>" + rec + "</html>";
-        
+  
         JPanel hwrapper = new JPanel();
         AppUI.setBoxLayout(hwrapper, false);
         AppUI.alignLeft(hwrapper);
         AppUI.noOpaque(hwrapper);
         
                                   
-        JLabel title = new JLabel(titleText);
-        AppUI.alignLeft(title);
-        AppUI.alignTop(title);
-        AppUI.setFont(title, 30);
-        AppUI.setColor(title, AppUI.getColor1());
-        hwrapper.add(title);
+        trTitle = new JLabel("");
+        AppUI.alignLeft(trTitle);
+        AppUI.alignTop(trTitle);
+        AppUI.setFont(trTitle, 30);
+        AppUI.setColor(trTitle, AppUI.getColor1());
+        hwrapper.add(trTitle);
         
         int[][] counters = w.getCounters(); 
         if (!isSky && counters != null && counters.length != 0) {
-            int t1, t5, t25, t100, t250;
-        
-            t1 = counters[Config.IDX_FOLDER_BANK][Config.IDX_1] + 
-                counters[Config.IDX_FOLDER_FRACKED][Config.IDX_1] + 
-                counters[Config.IDX_FOLDER_VAULT][Config.IDX_1];
-        
-            t5 = counters[Config.IDX_FOLDER_BANK][Config.IDX_5] + 
-                counters[Config.IDX_FOLDER_FRACKED][Config.IDX_5] + 
-                counters[Config.IDX_FOLDER_VAULT][Config.IDX_5];
-        
-            t25 = counters[Config.IDX_FOLDER_BANK][Config.IDX_25] + 
-                counters[Config.IDX_FOLDER_FRACKED][Config.IDX_25] + 
-                counters[Config.IDX_FOLDER_VAULT][Config.IDX_25];
-        
-            t100 =  counters[Config.IDX_FOLDER_BANK][Config.IDX_100] + 
-                counters[Config.IDX_FOLDER_FRACKED][Config.IDX_100] + 
-                counters[Config.IDX_FOLDER_VAULT][Config.IDX_100];
-            
-            t250 = counters[Config.IDX_FOLDER_BANK][Config.IDX_250] + 
-                counters[Config.IDX_FOLDER_FRACKED][Config.IDX_250] + 
-                counters[Config.IDX_FOLDER_VAULT][Config.IDX_250];
-            
-
-            JPanel invPanel = new JPanel();
+            invPanel = new JPanel();
             AppUI.setBackground(invPanel, AppUI.getColor7());
             AppUI.alignTop(invPanel);
             AppUI.setSize(invPanel, 520, 62);
@@ -4845,18 +4876,12 @@ public class AdvancedClient  {
             AppUI.setColor(invLabel, AppUI.getColor5());
             AppUI.setMargin(invLabel, 0, 10, 0, 20);
             invPanel.add(invLabel); 
-            
-            
-            // 5 times
-            AppUI.addInvItem(invPanel, "1", t1);
-            AppUI.addInvItem(invPanel, "5", t5);
-            AppUI.addInvItem(invPanel, "25", t25);
-            AppUI.addInvItem(invPanel, "100", t100);
-            AppUI.addInvItem(invPanel, "250", t250);
-                    
-            
+
+
         }
 
+        updateTransactionWalletData(w);
+        
         rightPanel.add(hwrapper);
         rightPanel.add(AppUI.hr(22));
 
