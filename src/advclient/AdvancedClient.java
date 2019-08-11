@@ -3279,7 +3279,6 @@ public class AdvancedClient  {
         
         final optRv rvFrom = setOptionsForWalletsCommon(false, false, true);
         if (rvFrom.idxs.length == 0) {
-            System.out.println("ttt");
             return;
         }
         
@@ -7281,7 +7280,7 @@ public class AdvancedClient  {
                         //ps.dstWallet.appendTransaction(data[0], total, ps.receiptId, data[2]); 
                         
                     }
-                    System.out.println("whole=" + wholeTotal + " not=" + ps.statToBankValue + " m="+ps.typedMemo);
+
                     if (ps.typedMemo.isEmpty()) {
                         ps.dstWallet.appendTransaction(nsb.toString(), wholeTotal, ps.receiptId); 
                     } else {
