@@ -7,8 +7,10 @@ package advclient;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemListener;
 import javax.swing.JButton;
@@ -25,9 +27,13 @@ public class MyButton {
     
     JPanel core;
     JButton button;
+    boolean lastActionAdded;
     
     public MyButton(String text) {
         core = makeUI(text);
+        this.lastActionAdded = false;
+        if (!text.toLowerCase().equals("continue"))
+            this.lastActionAdded = true;
     }
     
     public JPanel getButton() {
@@ -35,7 +41,15 @@ public class MyButton {
     }
     
     public void addListener(ActionListener a) {
-        button.addActionListener(a);
+        button.addActionListener(a);     
+        if (!this.lastActionAdded) {  
+            this.lastActionAdded = true;
+            addListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    disable();
+                } 
+            });
+        }    
     }
     
     public void disable() {
@@ -85,7 +99,7 @@ public class MyButton {
         AppUI.noOpaque(p);
 
         p.add(button);
-            
+
         return p;       
     }
 }

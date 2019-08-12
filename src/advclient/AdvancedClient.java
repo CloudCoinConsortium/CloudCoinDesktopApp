@@ -5239,16 +5239,15 @@ public class AdvancedClient  {
         rightPanel.add(gct); 
 
         JPanel bp = getTwoButtonPanel(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {              
+            public void actionPerformed(ActionEvent e) {  
                 int srcIdx = cboxfrom.getSelectedIndex() - 1;              
                 if (srcIdx < 0 || srcIdx >= rv.idxs.length) {
                     ps.errText = "Please select Wallet";
                     showScreen();
                     return;
                 }
-
+       
                 srcIdx = rv.idxs[srcIdx];
-   
                 Wallet srcWallet = wallets[srcIdx];
                 
                 ps.srcWallet = srcWallet;
