@@ -4955,7 +4955,7 @@ public class AdvancedClient  {
         GridBagLayout gridbag = new GridBagLayout();
         subInnerCore.setLayout(gridbag);
         
-        AppUI.getTwoButtonPanel(subInnerCore, "Print", "Export", new ActionListener() {
+        AppUI.getTwoButtonPanel(subInnerCore, "Print", "Export History", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                     try {
                         table.print();
