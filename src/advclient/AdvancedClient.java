@@ -1363,7 +1363,7 @@ public class AdvancedClient  {
         final int skySN = getSkyWalletSN();
         if (skySN == 0) {
             ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
-            ps.errText = "<html><div style='width:690; text-align:center'>Transaction cannot be completed. You must have the exact denominations of CloudCoin notes or use the Change Maker.  You must have at least one Sky Wallet created to access the Change Maker</div></html>";
+            ps.errText = "Transaction cannot be completed. You must have the exact denominations of CloudCoin notes or use the Change Maker.  You must have at least one Sky Wallet created to access the Change Maker";
             showScreen();
             return;
         }
@@ -1546,9 +1546,9 @@ public class AdvancedClient  {
                 }
                 
                 if (!sm.isRAIDAOK()) {
-                    ps.errText = "<html><div style='width:520px;text-align:center'>RAIDA cannot be contacted. "
+                    ps.errText = "RAIDA cannot be contacted. "
                             + "This is usually caused by company routers blocking outgoing traffic. "
-                            + "Please Echo RAIDA and try again.</div></html>";
+                            + "Please Echo RAIDA and try again.";
                     ps.isEchoFinished = false;
                     ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
                     showScreen();
@@ -1669,9 +1669,9 @@ public class AdvancedClient  {
                 }
                 
                 if (!sm.isRAIDAOK()) {
-                    ps.errText = "<html><div style='width:520px;text-align:center'>RAIDA cannot be contacted. "
+                    ps.errText = "RAIDA cannot be contacted. "
                             + "This is usually caused by company routers blocking outgoing traffic. "
-                            + "Please Echo RAIDA and try again.</div></html>";
+                            + "Please Echo RAIDA and try again.";
                     ps.isEchoFinished = false;
                     ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
                     showScreen();
@@ -3843,139 +3843,10 @@ public class AdvancedClient  {
                 scrollPane.getViewport().setViewPosition(new java.awt.Point(0, 100));
                 scrollPane.repaint();
             }
-        });
-        
+        }); 
         
         gridbag.setConstraints(l, c);
         subInnerCore.add(l);
-        
-    
-        
-        if (1==1)
-            return;
-        
-        /*
-
-        AppUI.GBPad(subInnerCore, y, gridbag);        
-        y++;
-        
-        AppUI.getTwoButtonPanel(subInnerCore, "", "Continue", null,  new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
-                showScreen();
-            }
-        }, y, gridbag);
-        
-        
-        
-        l = new JLabel("<html><div style='width:480px; text-align:center; font-size: 14px'>"
-                + "(Secure if you get a free encrypted email account at ProtonMail.com)</div></html>");
-      
-        AppUI.setMargin(l, 0);
-        AppUI.setFont(l, 12);
-        AppUI.alignCenter(l);
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = y;
-        AppUI.setCommonFont(l);
-        gridbag.setConstraints(l, c);
-        gct.add(l);
-
-        y++;
-        
-        // Get proton
-        l = AppUI.getHyperLink("Get Protonmail", "https://www.protonmail.com", 14);
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = y;
-        gridbag.setConstraints(l, c); 
-        gct.add(l);
-        
-        y++;
-        
-        // Get proton
-        l = AppUI.getHyperLink("Instructions, Terms and Conditions", "javascript:void(0); return false", 20);
-        l.addMouseListener(new MouseAdapter() {
-            public void mouseReleased(MouseEvent e) {
-                final JDialog f = new JDialog(mainFrame, "Instructions, Terms and Conditions", true);
-                f.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
-                AppUI.noOpaque((JComponent) f.getContentPane());
-                AppUI.setSize(f, (int) (tw / 1.2), (int) (th / 1.2)); 
-
-                JTextPane tp = new JTextPane();
-                
-                
-                AppUI.setFont(tp, 12);
-                String fontfamily = tp.getFont().getFamily();
-
-                tp.setContentType("text/html"); 
-                tp.setText("<html><div style=' font-family:"+fontfamily+"; font-size: 12px'>" + AppUI.getAgreementText() + "</div></html>"); 
-                tp.setEditable(false); 
-                tp.setBackground(null);
-                tp.setCaretPosition(0);
-
-                JScrollPane scrollPane = new JScrollPane(tp);
-
-                f.add(scrollPane);
-                f.pack();
-                f.setLocationRelativeTo(mainFrame);
-                f.setVisible(true);      
-                
-                scrollPane.getVerticalScrollBar().setValue(scrollPane.getVerticalScrollBar().getMinimum());
-                scrollPane.getViewport().setViewPosition(new java.awt.Point(0, 100));
-                scrollPane.repaint();
-            }
-        });
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = y;
-        c.insets = new Insets(40, 0, 4, 0); 
-        gridbag.setConstraints(l, c); 
-        gct.add(l);
-        
-        y++;
-        
-        // Support Portal
-        vl = new JLabel("Support Portal");
-        AppUI.setCommonFont(vl);
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = y;
-        c.insets = new Insets(40, 0, 4, 0); 
-        gridbag.setConstraints(vl, c); 
-        gct.add(vl);
-        y++;
-        
-        
-        urlName = "https://cloudcoinsupport.atlassian.net/servicedesk/customer/portals";
-        l = AppUI.getHyperLink(urlName, urlName, 14);
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = y;
-        c.insets = new Insets(4, 0, 4, 0); 
-        gridbag.setConstraints(l, c); 
-        gct.add(l);
-        
-        y++;
-        
-        
-        
-        https://cloudcoinsupport.atlassian.net/servicedesk/customer/portals
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        ct.add(gct);
-        
-        
-        
-        //rightPanel
-        
-        */
-        
     }
     
     public void showClearScreen() {
