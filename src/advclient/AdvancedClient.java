@@ -4421,9 +4421,16 @@ public class AdvancedClient  {
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                 super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
                 
+                Color c = AppUI.getColor6();
+                Color fgc = AppUI.getColor5();
+                if (table.isPaintingForPrint()) {
+                    c = AppUI.getColor5();
+                    fgc = Color.BLACK;
+                }
+                            
                 lbl = (JLabel) this;
-                AppUI.setBackground(lbl, AppUI.getColor6());
-                AppUI.setColor(lbl, AppUI.getColor5());
+                AppUI.setBackground(lbl, c);
+                AppUI.setColor(lbl, fgc);
                 lbl.setHorizontalAlignment(JLabel.LEFT);
                 AppUI.setMargin(lbl, 8);
   
@@ -4673,10 +4680,17 @@ public class AdvancedClient  {
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                 super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 
+                Color c = AppUI.getColor6();
+                Color fgc = AppUI.getColor5();
+                if (table.isPaintingForPrint()) {
+                    c = AppUI.getColor5();
+                    fgc = Color.BLACK;
+                }
+                
                 JPanel cell = new JPanel();
                 AppUI.setBoxLayout(cell, false);
                 //AppUI.noOpaque(cell);
-                AppUI.setBackground(cell, AppUI.getColor6());
+                AppUI.setBackground(cell, c);
                 AppUI.setMargin(cell, 0, 20, 0, 0);
   
                 lbl = (JLabel) this;
@@ -4685,7 +4699,7 @@ public class AdvancedClient  {
 
                     String html = AppCore.getReceiptHtml(hash, sm.getActiveWallet().getName());
                     if (html != null) {
-                        AppUI.setColor(lbl, AppUI.getColor5());
+                        AppUI.setColor(lbl, fgc);
                         AppUI.underLine(lbl);
                     }
                 } if (column == 2) {                  
@@ -4693,14 +4707,13 @@ public class AdvancedClient  {
                 } else if (column == 3) {                   
                     AppUI.setColor(lbl, AppUI.getColor12());
                 } else {
-                    //AppUI.setColor(lbl, Color.BLACK);
-                    AppUI.setColor(lbl, AppUI.getColor5());
+                    AppUI.setColor(lbl, fgc);
                 }
                 
                 if (row % 2 == 0) {
-                    AppUI.setBackground(lbl, AppUI.getColor6());
+                    AppUI.setBackground(lbl, c);
                 } else {
-                    AppUI.setBackground(lbl, AppUI.getColor6());
+                    AppUI.setBackground(lbl, c);
                 }
                 
                 if (column == 0) {             
