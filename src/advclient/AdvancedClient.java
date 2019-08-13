@@ -3531,6 +3531,12 @@ public class AdvancedClient  {
                 if (dstWallet == null)
                     return;
                 
+                if (dstWallet.isSkyWallet()) {
+                    memo.setPlaceholder("From John Doe for May rent");
+                } else {
+                    memo.setPlaceholder("Optional");
+                }
+                
                 if (dstWallet.isEncrypted()) {  
                     passwordDst.getTextField().setVisible(true);
                     dpText.setVisible(true);
@@ -3601,13 +3607,14 @@ public class AdvancedClient  {
                     return;
                 }
                 
-                if (!Validator.memo(ps.typedMemo)) {
-                    ps.errText = "Memo: Non alpha number characters are not allowed";
-                    showScreen();
-                    return;
-                }
-                
                 ps.typedMemo = ps.typedMemo.trim();
+                if (!ps.typedMemo.isEmpty()) {
+                    if (!Validator.memo(ps.typedMemo)) {
+                        ps.errText = "Memo: Non alpha number characters are not allowed";
+                        showScreen();
+                        return;
+                    }
+                }
 
                 if (srcWallet.isEncrypted()) {
                     if (passwordSrc.getText().isEmpty()) {
