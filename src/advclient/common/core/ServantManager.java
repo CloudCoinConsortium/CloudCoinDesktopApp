@@ -89,7 +89,7 @@ public class ServantManager {
         logger.debug(ltag, "Set active wallet obj " + wallet.getName() + " isky "  + wallet.isSkyWallet());
         this.user =  wallet.getName();
         if (wallet.isSkyWallet()) {
-            sr.changeUser(wallet.getParent().getName());
+            sr.changeUser(Config.DIR_DEFAULT_USER);
         } else {
             sr.changeUser(this.user);
         }  
@@ -163,18 +163,20 @@ public class ServantManager {
             setActiveWallet(wallets[i]);
             initWallet(wallets[i], "");
             
-            checkIDCoins(wallets[i]);
+            
         }
+        
+        checkIDCoins();
     }
     
     
-    public void checkIDCoins(String root) {
-        String[] idCoins = AppCore.getFilesInDir(Config.DIR_ID, root);
+    public void checkIDCoins() {
+        String[] idCoins = AppCore.getFilesInDir(AppCore.getIDDir(), null);
         
         for (int i = 0; i < idCoins.length; i++) {
             CloudCoin cc;
             try {
-                cc = new CloudCoin(AppCore.getUserDir(Config.DIR_ID, root) + File.separator + idCoins[i]);
+                cc = new CloudCoin(AppCore.getIDDir() + File.separator + idCoins[i]);
             } catch (JSONException e) {
                 logger.error(ltag, "Failed to parse ID coin: " + idCoins[i] + " error: " + e.getMessage());
                 continue;
@@ -183,18 +185,13 @@ public class ServantManager {
             String wname = idCoins[i].substring(0, idCoins[i].lastIndexOf('.'));
             wname += "." + Config.DDNS_DOMAIN;
 
-            initCloudWallet(root, cc, wname);
+            initCloudWallet(cc, wname);
         }     
     }
     
-    public void initCloudWallet(String wallet, CloudCoin cc, String name) {
-        Wallet parent = wallets.get(wallet);
-        
-        //String name = wallet + ":" + cc.sn;
-        
-        //Wallet wobj = new Wallet(name, parent.getEmail(), parent.isEncrypted(), parent.getPassword(), logger);
+    public void initCloudWallet(CloudCoin cc, String name) {
         Wallet wobj = new Wallet(name, "", false, "", logger);
-        wobj.setIDCoin(cc, parent);
+        wobj.setIDCoin(cc);
         
         wallets.put(name, wobj);   
     }
@@ -1196,28 +1193,10 @@ public class ServantManager {
         Collection c = wallets.values();
         Wallet[] ws = new Wallet[size];
         
-        String defaultWalletName = AppCore.getDefaultWalletName();
-        if (defaultWalletName == null) {
-            logger.info(ltag, "Can't find default wallet");
-            defaultWalletName = Config.DIR_DEFAULT_USER;
-        }
-        
         int i = 0;
         Iterator itr = c.iterator();
         while (itr.hasNext()) {
             Wallet tw = (Wallet) itr.next();
-            if (tw.getName().equals(defaultWalletName)) {
-                ws[i++] = tw;
-                break;
-            }
-        }
-        
-        itr = c.iterator();
-        while (itr.hasNext()) {
-            Wallet tw = (Wallet) itr.next();
-            if (tw.getName().equals(defaultWalletName))
-                continue;
-            
             ws[i++] = tw;
         }
                 
@@ -1297,4 +1276,22 @@ public class ServantManager {
         public int progress;
     }
 
+    
+    public Wallet getFirstNonSkyWallet() {
+        Collection c = wallets.values();
+
+        Iterator itr = c.iterator();
+        while (itr.hasNext()) {
+            Wallet tw = (Wallet) itr.next();
+            
+            if (tw.isSkyWallet()) {
+               continue;
+            }           
+            
+            return tw;
+        }
+        
+        return null;
+    }
+    
 }

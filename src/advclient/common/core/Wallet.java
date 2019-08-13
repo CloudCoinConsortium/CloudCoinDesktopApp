@@ -24,7 +24,6 @@ public class Wallet {
     CloudCoin cc;
     Object uiRef;
     int total;
-    Wallet parent;
     String passwordHash;
     int[] sns;
     int[][] counters;
@@ -37,7 +36,6 @@ public class Wallet {
         this.password = password;
         this.ltag += " " + name;
         this.logger = logger;
-        this.parent = null;
         this.sns = new int[0];
                
         logger.debug(ltag, "wallet " + name + " e=" + email + " is="+isEncrypted+ " p="+password);
@@ -50,11 +48,6 @@ public class Wallet {
     
     public Hashtable<String, String[]> getEnvelopes() {
         return this.envelopes;
-    }
-    
-    
-    public boolean isDefaultWallet() {
-        return name.equals(AppCore.getDefaultWalletName());
     }
     
     public int[] getSNs() {
@@ -94,19 +87,14 @@ public class Wallet {
         return this.cc != null;
     }
     
-    public void setIDCoin(CloudCoin cc, Wallet parent) {
+    public void setIDCoin(CloudCoin cc) {
         this.cc = cc;
-        this.parent = parent;
     }
     
     public CloudCoin getIDCoin() {
         return this.cc;
     }
-    
-    public Wallet getParent() {
-        return this.parent;
-    }
-    
+
     public boolean isEncrypted() {
         return this.isEncrypted;
     }
@@ -139,14 +127,10 @@ public class Wallet {
         String tfFileName = Config.TRANSACTION_FILENAME;
         String rname;
         
-        if (isSkyWallet()) {
-            tfFileName += "-" + cc.sn;
-            rname = parent.getName();
-        } else {
-            rname = name;
-        }
-        
-        String fileName = AppCore.getUserDir(tfFileName, rname);
+        if (isSkyWallet())
+            return "";
+
+        String fileName = AppCore.getUserDir(tfFileName, name);
         
         return fileName;
     }
@@ -186,6 +170,9 @@ public class Wallet {
     
     public void appendTransaction(String memo, int amount, String receiptId, String date) { 
         logger.debug(ltag, "Append transaction " + receiptId + " amount " + amount + " wallet " + getName());
+        
+        if (isSkyWallet())
+            return;
         
         String fileName = getTransactionsFileName();
         String rMemo = memo.replaceAll("\r\n", " ").replaceAll("\n", " ").replaceAll(",", " ");

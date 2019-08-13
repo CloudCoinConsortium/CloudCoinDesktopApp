@@ -82,7 +82,6 @@ public class ProgramState {
     int[][] counters;
     int cbState;
     
-    boolean isDefaultWalletBeingCreated;
     boolean isAddingWallet;
 
     ArrayList<String> files;
@@ -124,11 +123,7 @@ public class ProgramState {
     String trustedServer;
     
     boolean isSkyDeposit;
-    
-    boolean defaultWalletCreated;
-    
-    String defaultWalletName;
-    
+
     boolean isCreatingNewSkyWallet;
     
     String skyVaultDomain;
@@ -165,7 +160,6 @@ public class ProgramState {
         statToBankValue = statToBank = statFailed = 0;
         statFailedValue = statLostValue = 0;
         
-        isDefaultWalletBeingCreated = false;
         isAddingWallet = false;
         
         receiptId = "";
@@ -192,10 +186,6 @@ public class ProgramState {
         trustedServer = "";
         
         isSkyDeposit = false;
-                
-        defaultWalletCreated = false;
-        
-        defaultWalletName = null;
         
         isCreatingNewSkyWallet = false;
         

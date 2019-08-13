@@ -254,9 +254,6 @@ public class Transfer extends Servant {
             return false;
         }
 
-        for (i = 0; i < results.length;i++)
-            System.out.println("i="+i+" r="+results[i]);
-        
         sccs = new CloudCoin[ccs.size()];
         trs = new TransferResponse[RAIDA.TOTAL_RAIDA_COUNT][];
         for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
