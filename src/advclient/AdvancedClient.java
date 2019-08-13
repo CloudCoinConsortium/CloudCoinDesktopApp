@@ -2934,13 +2934,19 @@ public class AdvancedClient  {
    
                 if (dstIdx < 0 || dstIdx >= rvTo.idxs.length) 
                     return;
-                           
-                
-                dstIdx = rvTo.idxs[dstIdx];
-                
+                                          
+                dstIdx = rvTo.idxs[dstIdx];             
                 Wallet dstWallet = wallets[dstIdx];             
                 if (dstWallet == null)
                     return;
+                
+                if (dstWallet.isSkyWallet()) {
+                    memo.setPlaceholder("From John Doe for May rent");
+                } else {
+                    memo.setPlaceholder("Optional");
+                }
+
+                
                 
                 if (dstWallet.isEncrypted()) {  
                     passwordDst.getTextField().setVisible(true);
@@ -3015,21 +3021,14 @@ public class AdvancedClient  {
                     return;
                 }
                 
-                if (dstIdx == rvTo.idxs.length) {                                    
-                    if (ps.typedMemo.isEmpty()) {
-                        ps.errText = "Memo cannot be empty";
+                ps.typedMemo = ps.typedMemo.trim();
+                if (!ps.typedMemo.isEmpty()) {
+                    if (!Validator.memo(ps.typedMemo)) {
+                        ps.errText = "Memo: Non alpha number characters are not allowed";
                         showScreen();
-                        return; 
+                        return;
                     }
                 }
-                
-                if (!Validator.memo(ps.typedMemo)) {
-                    ps.errText = "Memo: Non alpha number characters are not allowed";
-                    showScreen();
-                    return;
-                }
-                
-                ps.typedMemo = ps.typedMemo.trim();
 
                 if (srcWallet.isEncrypted()) {
                     if (passwordSrc.getText().isEmpty()) {
@@ -3069,14 +3068,6 @@ public class AdvancedClient  {
                         showScreen();
                         return;
                     }
-                    
-                    /*
-                    if (ps.srcWallet.isSkyWallet()) {
-                        ps.errText = "Transfer from Sky Wallet to Remote Wallet is not supported";
-                        showScreen();
-                        return;
-                    }
-                    */
 
                     String dstName = remoteWalledId.getText().trim();
                     if (ps.srcWallet.isSkyWallet() && ps.srcWallet.getName().equals(dstName)) {
@@ -3084,7 +3075,14 @@ public class AdvancedClient  {
                         showScreen();
                         return;
                     }
-                                        
+                    
+                    if (ps.typedMemo.isEmpty()) {
+                        ps.errText = "Memo cannot be empty";
+                        showScreen();
+                        return; 
+                    }     
+                    
+                    
                     ps.dstWallet = null;
                     ps.typedRemoteWallet = dstName;
                     ps.sendType = ProgramState.SEND_TYPE_REMOTE;
@@ -3160,14 +3158,7 @@ public class AdvancedClient  {
                         
                         ps.typedDstPassword = passwordDst.getText();
                     }
-                    /*
-                    if (srcWallet.isSkyWallet() && dstWallet.isSkyWallet()) {
-                        ps.errText = "Transfer from Sky Wallet to Sky Wallet is not supported";
-                        showScreen();
-                        return;
-                    }
-                    */
-                    
+   
                     if (dstWallet.isSkyWallet()) {
                         if (ps.typedMemo.isEmpty()) {
                             ps.errText = "Memo must not be empty";
