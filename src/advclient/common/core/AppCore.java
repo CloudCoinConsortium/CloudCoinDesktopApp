@@ -91,6 +91,9 @@ public class AppCore {
         if (!createDirectory(Config.DIR_ACCOUNTS))
             return false;
         
+        if (!createDirectory(Config.DIR_ID))
+            return false;
+        
         if (!createDirectory(Config.DIR_MAIN_LOGS))
             return false;
         
@@ -114,7 +117,6 @@ public class AppCore {
             Config.DIR_EMAILOUT,
             Config.DIR_FRACKED,
             Config.DIR_GALLERY,
-            Config.DIR_ID,
             Config.DIR_IMPORT,
             Config.DIR_IMPORTED,
             Config.DIR_LOGS,
@@ -157,6 +159,12 @@ public class AppCore {
 
    static public String getBackupDir() {
        File f = new File(rootPath, Config.DIR_BACKUPS);
+       
+       return f.toString();
+   }
+   
+   static public String getIDDir() {
+       File f = new File(rootPath, Config.DIR_ID);
        
        return f.toString();
    }
@@ -241,7 +249,12 @@ public class AppCore {
         
         try {
             File fsource = new File(fileName);
-            String target = AppCore.getUserDir(folder, user) + File.separator + newFileName;
+            String target;
+            if (user != null)
+                target = AppCore.getUserDir(folder, user) + File.separator + newFileName;
+            else 
+                target = folder + File.separator + newFileName;
+            
             File ftarget = new File(target);
             if (!fsource.renameTo(ftarget)) {
                 logger.error(ltag, "Failed to rename file " + fileName + " to " + ftarget.getAbsolutePath());
@@ -581,7 +594,11 @@ public class AppCore {
     }
     
     public static String[] getFilesInDir(String dir, String user) {
-        String path = AppCore.getUserDir(dir, user);
+        String path;
+        if (user != null)
+            path = AppCore.getUserDir(dir, user);
+        else
+            path = dir;
         
         String[] rv;
         int c = 0;
@@ -870,59 +887,6 @@ public class AppCore {
         }
         return true;
     }
-    
-    public static String getDefaultWalletName() {
-        String wname, dname;
-        
-        wname = null;
-        
-        File dirObj = new File(rootPath + File.separator + Config.DIR_ACCOUNTS);
-        for (File file: dirObj.listFiles()) {
-            if (!file.isDirectory())
-                continue;
-            
-            dname = file.getAbsolutePath() + File.separator + Config.DEFAULT_DIR_MARKER;
-            File f = new File(dname);
-            if (f.exists()) {
-                if (wname != null) {
-                    logger.error(ltag, "Duplicated default wallets " + wname + " and " + f.getName());
-                    return null;
-                }
-                
-                wname = file.getName();
-            }
-        }
-        
-        if (wname == null) {
-            logger.debug(ltag, "Falling back to the default dir");
-            wname = Config.DIR_DEFAULT_USER;
-        }
-        
-        return wname;
-    }
-    
-    public static boolean setDefaultWallet(String walletName) {
-        File dirObj = new File(rootPath + File.separator + 
-                Config.DIR_ACCOUNTS + File.separator + walletName);
-        
-        String fileMarker = dirObj.getAbsolutePath() + File.separator + Config.DEFAULT_DIR_MARKER;
-        
-        File f = new File(fileMarker);
-        
-        try {
-            if (!f.createNewFile()) {
-                logger.error(ltag, "Failed to create tag file: " + fileMarker);
-                return false;
-            }
-        } catch (IOException e) {
-            logger.error(ltag, "Failed to create tag file: " + fileMarker + " ex " + e.getMessage());
-            return false;
-        }
-        
-        return true;
-        
-    }
-    
     
     public static int maxCoinsWorkAround(int maxCoins) {
         String javaVersion = System.getProperty("java.version");

@@ -297,7 +297,7 @@ public class AdvancedClient  {
                 sm.changeServantUser("ShowCoins", wallets[ps.currentWalletIdx].getName());
                 sm.startShowCoinsService(new ShowCoinsCb());
             } else {
-                sm.changeServantUser("ShowEnvelopeCoins", wallets[ps.currentWalletIdx].getParent().getName());
+                sm.changeServantUser("ShowEnvelopeCoins", Config.DIR_DEFAULT_USER);
                 sm.startShowSkyCoinsService(new ShowEnvelopeCoinsCb(), wallets[ps.currentWalletIdx].getIDCoin().sn);
             }      
             ps.currentWalletIdx++;
@@ -321,11 +321,7 @@ public class AdvancedClient  {
             ps.errText = "Failed to init Wallet"; 
             return;
         }
-        
-        if (ps.isDefaultWalletBeingCreated) {
-            AppCore.setDefaultWallet(ps.typedWalletName);
-        }
-            
+                
         //AppCore.copyTemplatesFromJar(ps.typedWalletName);
     }
     
@@ -620,17 +616,11 @@ public class AdvancedClient  {
             
             MouseAdapter ma0 = new MouseAdapter() {
                 public void mouseReleased(MouseEvent e) {
-                    if (!ps.defaultWalletCreated)
-                        return;
-                    
                     resetState();
                     ps.currentScreen = ProgramState.SCREEN_PREDEPOSIT;
                     showScreen();
                 }
                 public void mouseEntered(MouseEvent e) {
-                    if (!ps.defaultWalletCreated)
-                        return;
-                    
                     JPanel p = (JPanel) e.getSource();
                     AppUI.opaque(p);
                     depositIcon.setIcon(depositIiLight);
@@ -638,10 +628,7 @@ public class AdvancedClient  {
                     p.repaint();
                 }
                 
-                public void mouseExited(MouseEvent e) {
-                    if (!ps.defaultWalletCreated)
-                        return;
-                                        
+                public void mouseExited(MouseEvent e) {                  
                     JPanel p = (JPanel) e.getSource();            
                     if (!isDepositing()) {
                         AppUI.noOpaque(p);
@@ -654,28 +641,19 @@ public class AdvancedClient  {
             
             MouseAdapter ma1 = new MouseAdapter() {
                 public void mouseReleased(MouseEvent e) {
-                    if (!ps.defaultWalletCreated)
-                        return;
-                    
                     resetState();
                     ps.currentScreen = ProgramState.SCREEN_WITHDRAW;
                     showScreen();
                 }
                 
-                public void mouseEntered(MouseEvent e) {
-                    if (!ps.defaultWalletCreated)
-                        return;
-                                        
+                public void mouseEntered(MouseEvent e) {             
                     JPanel p = (JPanel) e.getSource();
                     AppUI.opaque(p);
                     transferIcon.setIcon(transferIiLight);
                     p.revalidate();
                     p.repaint();
                 }
-                public void mouseExited(MouseEvent e) {
-                    if (!ps.defaultWalletCreated)
-                        return;
-                                        
+                public void mouseExited(MouseEvent e) {                   
                     JPanel p = (JPanel) e.getSource();
                     if (!isWithdrawing()) {
                         AppUI.noOpaque(p);
@@ -696,8 +674,7 @@ public class AdvancedClient  {
         c.fill = GridBagConstraints.NORTH;
         
         // Icon Gear
-        if (ps.defaultWalletCreated)
-            AppUI.setHandCursor(icon0); 
+        AppUI.setHandCursor(icon0); 
         
         gridbag.setConstraints(icon0, c);
         AppUI.setSize(icon0, 52, 72);
@@ -791,8 +768,7 @@ public class AdvancedClient  {
         
         AppUI.setMargin(popupMenu, 0);
         AppUI.noOpaque(popupMenu);
-        if (!ps.defaultWalletCreated)
-            AppUI.setHandCursor(popupMenu);
+        AppUI.setHandCursor(popupMenu);
 
         popupMenu.addPopupMenuListener(new PopupMenuListener() {
             @Override
@@ -816,8 +792,6 @@ public class AdvancedClient  {
 
         icon0.addMouseListener(new MouseAdapter() {
             public void mouseReleased(MouseEvent e) {
-                if (!ps.defaultWalletCreated)
-                    return;
                 ficon.setOpaque(true);
                 AppUI.setBackground(ficon, AppUI.getColor1());
 
@@ -862,17 +836,8 @@ public class AdvancedClient  {
             return;
         
         if (sm.getWallets().length != 0) {
-            ps.defaultWalletCreated = true;
-            ps.defaultWalletName = AppCore.getDefaultWalletName();
             ps.currentScreen = ProgramState.SCREEN_DEFAULT;
-            if (ps.defaultWalletName == null) {
-                wl.error(ltag, "Failed to determine default wallet");
-                System.err.println("Failed to determine default wallet. The folders are corrupted");
-                System.exit(1);
-            }
-        } else {
-            ps.defaultWalletCreated = false;
-        }          
+        }         
     }
     
     public void showScreen() {
@@ -1683,11 +1648,7 @@ public class AdvancedClient  {
                 
                 pbarText.setText("Moving coins ...");
                 for (String filename : ps.files) {
-                    String name;
-                    if (sm.getActiveWallet().isSkyWallet())
-                        name = sm.getActiveWallet().getParent().getName();
-                    else
-                        name = sm.getActiveWallet().getName();
+                    String name = sm.getActiveWallet().getName();
                     
                     AppCore.moveToFolder(filename, Config.DIR_IMPORT, name);
                 }
@@ -2111,6 +2072,7 @@ public class AdvancedClient  {
         String txt;
         txt = "Are you sure you want to delete Wallet <b>" + ps.srcWallet.getName() + "</b> ?";
  
+        final Wallet dstWallet = sm.getFirstNonSkyWallet();
         if (ps.srcWallet.isSkyWallet()) {
             txt += "<br><br>Your ID coin will be put back into your Bank. You will not be able to receive Coins at this address again";    
         }
@@ -2119,7 +2081,6 @@ public class AdvancedClient  {
         AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
         y++;
                  
-        final Wallet dstWallet = sm.getWalletByName(AppCore.getDefaultWalletName());
         MyTextField tf0 = null;
         if (dstWallet.isEncrypted() && ps.srcWallet.isSkyWallet()) {
             fname = new JLabel("Password");
@@ -2415,7 +2376,6 @@ public class AdvancedClient  {
     
                 ps.typedEmail = p0;
                 ps.currentScreen = ProgramState.SCREEN_WALLET_CREATED;
-                ps.defaultWalletCreated = true;
                 
                 initSystemUser();
                 
@@ -2785,6 +2745,7 @@ public class AdvancedClient  {
         
         final optRv rvFrom = setOptionsForWalletsCommon(false, false, true);
         if (rvFrom.idxs.length == 0) {
+            ps.errText = "No Wallets to Transfer From";
             return;
         }
 
@@ -3191,6 +3152,12 @@ public class AdvancedClient  {
         GridBagLayout gridbag = new GridBagLayout();
         subInnerCore.setLayout(gridbag);
 
+        if (sm.getFirstNonSkyWallet() == null) {
+            ps.errText = "You have no Local Wallets";
+            return;
+        }
+
+        
         fname = new JLabel("Deposit From");
         int cnt = 0, scnt = 0;
         for (int i = 0; i < wallets.length; i++) {
@@ -3570,6 +3537,12 @@ public class AdvancedClient  {
                 ps.dstWallet = w;                        
                 if (ps.files.size() == 0) {
                     ps.errText = "No files selected";
+                    showScreen();
+                    return;
+                }
+                
+                if (w.isSkyWallet()) {
+                    ps.errText = "The program cannot deposit to Sky Wallets. Use Transfer Screen";
                     showScreen();
                     return;
                 }
@@ -4113,7 +4086,7 @@ public class AdvancedClient  {
                 continue;
             
             if (wallets[i].getTotal() == 0) {
-                if (needEmpty && !wallets[i].isDefaultWallet()) 
+                if (needEmpty) 
                     cnt++;  
                 
                 continue;
@@ -4148,8 +4121,6 @@ public class AdvancedClient  {
             
             if (wallets[i].getTotal() == 0) {
                 if (!needEmpty)
-                    continue;
-                else if (wallets[i].isDefaultWallet())
                     continue;
             } else {
                 if (needEmpty)
@@ -4229,6 +4200,15 @@ public class AdvancedClient  {
                 srcIdx = rv.idxs[srcIdx];
    
                 Wallet srcWallet = wallets[srcIdx];
+                if (srcWallet.isSkyWallet()) {
+                    Wallet dstWallet = sm.getFirstNonSkyWallet();
+                    if (dstWallet == null) {
+                        ps.errText = "You cannot delete a Sky Wallet because you do not have a Local Wallet";
+                        showScreen();
+                        return;
+                    }
+                }
+
                 
                 ps.srcWallet = srcWallet;
                 ps.currentScreen = ProgramState.SCREEN_CONFIRM_DELETE_WALLET;
@@ -4937,7 +4917,6 @@ public class AdvancedClient  {
         MouseAdapter ma = new MouseAdapter() {
             @Override
             public void mouseReleased(MouseEvent e) {
-                ps.isDefaultWalletBeingCreated = false;
                 ps.currentScreen = ProgramState.SCREEN_CREATE_WALLET;
                 showScreen();
             }   
@@ -4987,7 +4966,6 @@ public class AdvancedClient  {
         ma = new MouseAdapter() {
             @Override
             public void mouseReleased(MouseEvent e) {
-                ps.isDefaultWalletBeingCreated = false;
                 ps.currentScreen = ProgramState.SCREEN_CREATE_SKY_WALLET;
                 showScreen();
             }   
@@ -5163,7 +5141,7 @@ public class AdvancedClient  {
                                 return;
                             } 
 
-                            if (!AppCore.moveToFolderNewName(ps.chosenFile, Config.DIR_ID, ps.defaultWalletName, newFileName)) {
+                            if (!AppCore.moveToFolderNewName(ps.chosenFile,  AppCore.getIDDir(), null, newFileName)) {
                                 ps.errText = "Failed to move ID Coin to the Default Wallet";
                                 showScreen();
                                 return;
@@ -5194,7 +5172,7 @@ public class AdvancedClient  {
                     }
                 }
                 
-                if (!AppCore.moveToFolderNewName(ps.chosenFile, Config.DIR_ID, ps.defaultWalletName, newFileName)) {
+                if (!AppCore.moveToFolderNewName(ps.chosenFile, AppCore.getIDDir(), null, newFileName)) {
                     ps.errText = "Failed to move coin";
                     showScreen();
                     return;
@@ -5271,7 +5249,6 @@ public class AdvancedClient  {
                 
                 initSystemUser();  
                 ps.currentScreen = ProgramState.SCREEN_WALLET_CREATED;
-                ps.defaultWalletCreated = true;
                 showScreen();
             }
         }, y, gridbag);
@@ -5433,8 +5410,7 @@ public class AdvancedClient  {
         wpanel.add(AppUI.hr(10));
         
         // "Add Sky Wallet" Button
-        if (ps.defaultWalletCreated)
-            wpanel.add(getWallet(null, TYPE_ADD_SKY));
+        wpanel.add(getWallet(null, TYPE_ADD_SKY));
  
         
         // Padding from the bottom
@@ -5752,7 +5728,6 @@ public class AdvancedClient  {
         button.addListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 ps.currentScreen = ProgramState.SCREEN_CREATE_WALLET;
-                ps.isDefaultWalletBeingCreated = true;
                 showScreen();
             }
         });
