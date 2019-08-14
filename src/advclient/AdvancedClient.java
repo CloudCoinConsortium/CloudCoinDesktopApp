@@ -3234,38 +3234,14 @@ public class AdvancedClient  {
         c.gridy = y;     
  
         
-        final optRv rvFrom = setOptionsForWalletsCommon(false, false, true);
+        final optRv rvFrom = setOptionsForWalletsCommon(false, false, true, null);
         if (rvFrom.idxs.length == 0) {
             ps.errText = "No Wallets to Transfer From";
             maybeShowError(ct);
             return;
         }
         
-        final optRv rvTo = setOptionsForWalletsAll();
-
-          
-        /*
-        int nonSkyCnt = 0;
-        for (int i = 0; i < wallets.length; i++)
-            if (!wallets[i].isSkyWallet())
-                nonSkyCnt++;
-
-        final int[] idxs = new int[nonSkyCnt];
-        final String[] options = new String[nonSkyCnt];
-        
-        int j = 0;
-        for (int i = 0; i < wallets.length; i++) {
-            if (wallets[i].isSkyWallet())
-                continue;
-            
-            String name = wallets[i].getName();
-
-            options[j] = name + " - " + AppCore.formatNumber(wallets[i].getTotal()) + " CC";
-            idxs[j] = i;
-            j++;
-        }
-        */
-      
+        final optRv rvTo = setOptionsForWalletsAll(null);
         final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(AppUI.getColor2(), "Make Selection", rvFrom.options);
         gridbag.setConstraints(cboxfrom.getComboBox(), c);
         oct.add(cboxfrom.getComboBox());
@@ -3439,6 +3415,16 @@ public class AdvancedClient  {
                     passwordSrc.getTextField().setVisible(false);
                     spText.setVisible(false);
                 }
+
+                        
+                String value = cboxto.getSelectedValue();
+                optRv lrvTo = setOptionsForWalletsAll(srcWallet.getName());
+                rvTo.idxs = lrvTo.idxs;
+                rvTo.options = lrvTo.options;
+                cboxto.setOptions(rvTo.options);
+                cboxto.addOption(AppUI.getRemoteUserOption());
+                cboxto.addOption(AppUI.getLocalFolderOption());
+                cboxto.setDefault(value);              
             }
         });
         
@@ -3503,6 +3489,17 @@ public class AdvancedClient  {
                     passwordDst.getTextField().setVisible(false);
                     dpText.setVisible(false);
                 }
+                
+                /*
+                String value = cboxfrom.getSelectedValue();
+                //optRv lrvFrom = setOptionsForWalletsCommon(false, true, true, dstWallet.getName());
+                optRv lrvFrom = setOptionsForWalletsCommon(false, false, true, dstWallet.getName());
+                rvFrom.idxs = lrvFrom.idxs;
+                rvFrom.options = lrvFrom.options;
+                cboxfrom.setOptions(rvFrom.options); 
+                System.out.println("v="+value);
+                cboxfrom.setDefault(value);
+                */
             }
         });
 
@@ -5057,25 +5054,39 @@ public class AdvancedClient  {
     
 
     public optRv setOptionsForWallets(boolean checkFracked, boolean needEmpty) {
-        return setOptionsForWalletsCommon(checkFracked, needEmpty, false);
+        return setOptionsForWalletsCommon(checkFracked, needEmpty, false, null);
     }
     
     
-    public optRv setOptionsForWalletsAll() {
+    public optRv setOptionsForWalletsAll(String name) {
         optRv rv = new optRv();
  
-        rv.options = new String[wallets.length];
-        rv.idxs = new int[wallets.length];
+        int len = wallets.length;
+        if (name != null)
+            len -= 1;
+        
+        if (len < 0)
+            len = 0;
+        
+        rv.options = new String[len];
+        rv.idxs = new int[len];
 
-        for (int i = 0; i < wallets.length; i++) {    
-            rv.options[i] = wallets[i].getName() + " - " + AppCore.formatNumber(wallets[i].getTotal()) + " CC";
-            rv.idxs[i] = i;
+        if (len == 0)
+            return rv;
+        
+        for (int i = 0, j = 0; i < wallets.length; i++) {  
+            if (name != null && wallets[i].getName().equals(name))
+                continue;
+            
+            rv.options[j] = wallets[i].getName() + " - " + AppCore.formatNumber(wallets[i].getTotal()) + " CC";
+            rv.idxs[j] = i;
+            j++;
         }
      
         return rv;     
     }
     
-    public optRv setOptionsForWalletsCommon(boolean checkFracked, boolean needEmpty, boolean includeSky) {
+    public optRv setOptionsForWalletsCommon(boolean checkFracked, boolean needEmpty, boolean includeSky, String name) {
         optRv rv = new optRv();
         
         int cnt = 0;
@@ -5102,6 +5113,9 @@ public class AdvancedClient  {
                 if (fc == 0) 
                     continue;  
             }
+            
+            if (name != null && wallets[i].getName().equals(name))
+                continue;
             
             cnt++;
         }
@@ -5136,6 +5150,9 @@ public class AdvancedClient  {
                 //wTotal = fc;
             }
             
+            if (name != null && wallets[i].getName().equals(name))
+                continue;
+            
             
             rv.options[j] = wallets[i].getName() + " - " + AppCore.formatNumber(wTotal) + " CC";
             rv.idxs[j] = i;
@@ -5160,7 +5177,7 @@ public class AdvancedClient  {
         
         maybeShowError(ct);
            
-        final optRv rv = setOptionsForWalletsCommon(false, true, true);
+        final optRv rv = setOptionsForWalletsCommon(false, true, true, null);
         if (rv.idxs.length == 0) {
             JLabel nx = new JLabel("You have no empty wallets to delete");
             AppUI.setSemiBoldFont(nx, 20);

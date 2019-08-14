@@ -29,7 +29,7 @@ public class RoundedCornerComboBox {
     JPanel core;
     JComboBox<String> combo1;
     MyComboBoxModel cbm;
-    
+    ComboBoxRenderer renderer;
     
     public RoundedCornerComboBox(Color outerBgColor, String placeholder, String[] options) {
         this.outerBgColor = outerBgColor;
@@ -50,7 +50,7 @@ public class RoundedCornerComboBox {
             combo1.setSelectedItem(value);
         
     }
-    
+
     public void setDefaultIdx(int idx) {
         combo1.setSelectedIndex(idx);
         return;
@@ -83,6 +83,8 @@ public class RoundedCornerComboBox {
             combo1.addItem(options[i]);
         
         cbm.drop();
+        combo1.revalidate();
+        combo1.repaint();
     }
     
     public void addOption(String option) {
@@ -136,7 +138,7 @@ public class RoundedCornerComboBox {
         cbm = new MyComboBoxModel(this.placeholder, combo1);
         
         combo1.addPopupMenuListener(new HeavyWeightContainerListener(this.outerBgColor, cbm));   
-        ComboBoxRenderer renderer = new ComboBoxRenderer(combo1, background);
+        renderer = new ComboBoxRenderer(combo1, background);
         combo1.setRenderer(renderer);
         combo1.setModel(cbm);
         setOptions(this.options);
@@ -177,8 +179,8 @@ class MyComboBoxModel extends DefaultComboBoxModel {
             super.setSelectedItem(anObject);
         }
     }
-    
-    
+
+
 }
 
 class HeavyWeightContainerListener implements PopupMenuListener {
@@ -404,14 +406,12 @@ class ComboBoxRenderer extends JPanel implements ListCellRenderer {
         this.color = color;
         textPanel = new JPanel();      
         textPanel.add(this);
-        
-        
+
         text = new JLabel();
         text.setOpaque(true);
         textPanel.add(text);
         AppUI.setMargin(text, 10, 10, 10, 10);
     }
-
 
     @Override
     public Component getListCellRendererComponent(JList list, Object value,
@@ -437,7 +437,7 @@ class ComboBoxRenderer extends JPanel implements ListCellRenderer {
         } else {
             AppUI.setSize(text, (int) AppUI.getBoxWidth(), (int) AppUI.getBoxHeight());
         }
-        
+
         
         return text;
     }
