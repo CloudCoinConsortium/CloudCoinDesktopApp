@@ -3678,7 +3678,7 @@ public class AdvancedClient  {
         subInnerCore.setLayout(gridbag);
       
         Image img;
-        JLabel i0, i1, i2, i3;
+        JLabel i0, i1, i2, i3, i4;
         try {     
             img = ImageIO.read(getClass().getClassLoader().getResource("resources/support0.png"));
             i0 = new JLabel(new ImageIcon(img));
@@ -3691,6 +3691,9 @@ public class AdvancedClient  {
             
             img = ImageIO.read(getClass().getClassLoader().getResource("resources/support3.png"));
             i3 = new JLabel(new ImageIcon(img)); 
+            
+            img = ImageIO.read(getClass().getClassLoader().getResource("resources/support0.png"));
+            i4 = new JLabel(new ImageIcon(img)); 
             
         } catch (Exception ex) {              
             return;
@@ -3772,6 +3775,27 @@ public class AdvancedClient  {
         y++;
         
         
+        
+        
+        // Support Portal
+        JLabel sp = new JLabel("Support Portal");
+        urlName = "https://cloudcoinsupport.atlassian.net/servicedesk/customer/portals";
+        link = AppUI.getHyperLink(urlName, urlName, 14);
+        AppUI.setCommonFont(sp);
+        wr = new JPanel();
+        AppUI.noOpaque(wr);
+        wr.add(i4);
+        wr.add(AppUI.vr(10));
+        wr.add(sp);
+        wr.add(link);     
+        
+        
+
+        AppUI.getGBRow(subInnerCore, null, wr, y, gridbag);
+  //      AppUI.setColor(vlink, AppUI.getColor2());
+    //    AppUI.underLine(vlink);
+        y++;
+ 
         
         
         AppUI.GBPad(subInnerCore, y, gridbag);        
