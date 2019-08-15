@@ -32,9 +32,10 @@ public class MyButton {
     public MyButton(String text) {
         core = makeUI(text);
         this.lastActionAdded = false;
-        if (!text.toLowerCase().equals("continue"))
+        if (!text.toLowerCase().equals("continue")  && !text.toLowerCase().equals("confirm"))
             this.lastActionAdded = true;
     }
+  
     
     public JPanel getButton() {
         return core;

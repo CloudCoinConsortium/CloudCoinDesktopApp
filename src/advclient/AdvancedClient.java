@@ -376,6 +376,15 @@ public class AdvancedClient  {
         fillHeaderPanel();
     }
     
+    public boolean isConfirmingScreen() {
+        if (ps.currentScreen == ProgramState.SCREEN_CONFIRM_CLEAR ||
+                ps.currentScreen == ProgramState.SCREEN_CONFIRM_DELETE_WALLET ||
+                ps.currentScreen == ProgramState.SCREEN_CONFIRM_TRANSFER)
+            return true;
+        
+        return false;
+    }
+    
     public boolean isDepositing() {
         if (ps.currentScreen == ProgramState.SCREEN_PREDEPOSIT || 
                 ps.currentScreen == ProgramState.SCREEN_DEPOSIT ||
@@ -2258,8 +2267,7 @@ public class AdvancedClient  {
                 launchErasers();
             }
         });
-  
-        
+         
         subInnerCore.add(bp);    
         
     }
@@ -5567,7 +5575,7 @@ public class AdvancedClient  {
         rightPanel.add(bp);     
     }
     
-    public void updateTransactionWalletData(Wallet w) {
+    public synchronized void updateTransactionWalletData(Wallet w) {
         if (trTitle != null) {
             trTitle.setText(w.getName() + " - " + w.getTotal() + " CC");
             trTitle.validate();
@@ -6528,7 +6536,11 @@ public class AdvancedClient  {
         bp.add(cb.getButton(), gbc);           
         AppUI.vr(bp, 26);
 
-        cb = new MyButton("Continue");
+        String text = "Continue";
+        if (isConfirmingScreen())
+            text = "Confirm";
+        
+        cb = new MyButton(text);
         cb.addListener(al);
         bp.add(cb.getButton(), gbc);
         
