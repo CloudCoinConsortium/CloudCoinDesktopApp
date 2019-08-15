@@ -2043,7 +2043,7 @@ public class AdvancedClient  {
         AppUI.GBPad(subInnerCore, y, gridbag);        
         y++;
         
-        AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Continue", new ActionListener() {
+        AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Confirm", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 ps.currentScreen = ProgramState.SCREEN_DEFAULT;
                 showScreen();
@@ -2093,7 +2093,7 @@ public class AdvancedClient  {
         y++;
         
         final MyTextField mtf0 = tf0;
-        AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Continue", new ActionListener() {
+        AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Confrim", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 ps.currentScreen = ProgramState.SCREEN_DEFAULT;
                 showScreen();
@@ -2259,7 +2259,7 @@ public class AdvancedClient  {
         AppUI.GBPad(subInnerCore, y, gridbag);        
         y++;
         
-        AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Continue", new ActionListener() {
+        AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Confirm", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 ps.currentScreen = ProgramState.SCREEN_DEFAULT;
                 showScreen();
@@ -4509,7 +4509,7 @@ public class AdvancedClient  {
         resetState();
     }
     
-     public void updateTransactionWalletData(Wallet w) {
+     public synchronized void updateTransactionWalletData(Wallet w) {
         if (trTitle != null) {
             String rec = "";
             if (!w.getEmail().isEmpty()) {
@@ -4526,6 +4526,22 @@ public class AdvancedClient  {
 
         if (invPanel != null) {
             int[][] counters = w.getCounters();
+            invPanel.removeAll();
+            
+            try {     
+                Image img = ImageIO.read(getClass().getClassLoader().getResource("resources/coinsinventory.png"));
+                JLabel icon = new JLabel(new ImageIcon(img));
+                AppUI.setMargin(icon, 0, 0, 0, 0);               
+                invPanel.add(icon);               
+            } catch (Exception ex) {              
+            }
+            
+            JLabel invLabel = new JLabel("Inventory:");
+            AppUI.setSemiBoldFont(invLabel, 18);
+            AppUI.setColor(invLabel, AppUI.getColor5());
+            AppUI.setMargin(invLabel, 0, 10, 0, 20);
+            invPanel.add(invLabel); 
+            
             if (counters != null && counters.length != 0) {
                 int t1, t5, t25, t100, t250;
 
@@ -4594,19 +4610,7 @@ public class AdvancedClient  {
             
             hwrapper.add(invPanel);
             
-            try {     
-                Image img = ImageIO.read(getClass().getClassLoader().getResource("resources/coinsinventory.png"));
-                JLabel icon = new JLabel(new ImageIcon(img));
-                AppUI.setMargin(icon, 0, 0, 0, 0);               
-                invPanel.add(icon);               
-            } catch (Exception ex) {              
-            }
             
-            JLabel invLabel = new JLabel("Inventory:");
-            AppUI.setSemiBoldFont(invLabel, 18);
-            AppUI.setColor(invLabel, AppUI.getColor5());
-            AppUI.setMargin(invLabel, 0, 10, 0, 20);
-            invPanel.add(invLabel); 
 
 
         }
@@ -4615,7 +4619,6 @@ public class AdvancedClient  {
         
         rightPanel.add(hwrapper);
         rightPanel.add(AppUI.hr(22));
-
         
         JLabel thlabel = new JLabel("Transaction History");
         AppUI.alignLeft(thlabel);
@@ -4685,8 +4688,7 @@ public class AdvancedClient  {
                 "Total"
             };
         }
-       
-       
+      
         final JLabel iconLeft, iconRight;
         try {     
                 Image img = ImageIO.read(getClass().getClassLoader().getResource("resources/arrowleft.png"));
