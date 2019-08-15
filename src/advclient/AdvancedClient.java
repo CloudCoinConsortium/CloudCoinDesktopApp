@@ -2296,7 +2296,7 @@ public class AdvancedClient  {
  
         final Wallet dstWallet = sm.getFirstNonSkyWallet();
         if (ps.srcWallet.isSkyWallet()) {
-            txt += "<br><br>Your ID coin will be put back into your Bank. You will not be able to receive Coins at this address again";    
+            txt += "<br><br>Your ID coin will be put back into your Bank (Wallet <b>" + dstWallet.getName() + "</b>). You will not be able to receive Coins at this address again";    
         }
            
         // Q
@@ -2393,6 +2393,7 @@ public class AdvancedClient  {
                         return;
                     }
 
+                    dstWallet.appendTransaction("Coin from Deleted Sky Wallet", ps.srcWallet.getIDCoin().getDenomination(), "skymove");
                     
                     if (dstWallet.isEncrypted()) {
                         wl.debug(ltag, "Start Vaulter");
