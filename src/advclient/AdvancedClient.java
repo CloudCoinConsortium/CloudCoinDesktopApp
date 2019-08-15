@@ -4646,8 +4646,7 @@ public class AdvancedClient  {
         y++;
         
         
-        
-        https://cloudcoinsupport.atlassian.net/servicedesk/customer/portals
+    
         
         
         
