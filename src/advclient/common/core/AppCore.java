@@ -888,6 +888,20 @@ public class AppCore {
         return true;
     }
     
+    static public void moveFolderContentsToTrash(String folder, String user) {
+        String path = AppCore.getUserDir(folder, user);
+        
+        File dirObj = new File(path);
+        if (!dirObj.exists()) {
+            logger.error(ltag, "Path " + path + " doesn't exist");
+            return;
+        }
+        
+        for (File file: dirObj.listFiles()) {
+            AppCore.moveToTrash(file.getAbsolutePath(), user);
+        }       
+    }
+ 
     public static int maxCoinsWorkAround(int maxCoins) {
         String javaVersion = System.getProperty("java.version");
         
