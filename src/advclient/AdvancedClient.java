@@ -686,7 +686,7 @@ public class AdvancedClient  {
    
         // Do stuff popup menu
         final int mWidth = 212;
-        final int mHeight = 60;
+        final int mHeight = 48;
         final JPopupMenu popupMenu = new JPopupMenu() {
             @Override
             public void paintComponent(final Graphics g) {
@@ -742,7 +742,7 @@ public class AdvancedClient  {
             menuItem.addMouseListener(ma);
             
             AppUI.setSize(menuItem, mWidth, mHeight);
-            AppUI.setFont(menuItem, 28);
+            AppUI.setFont(menuItem, 20);
             menuItem.setOpaque(true);
 
             menuItem.setBackground(AppUI.getColor1());
