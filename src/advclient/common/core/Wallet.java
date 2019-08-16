@@ -13,7 +13,7 @@ import java.util.Hashtable;
  *
  * @author Alexander
  */
-public class Wallet {
+public class Wallet implements Comparable<Wallet> {
     String ltag = "Wallet";
     GLogger logger;
     String name;
@@ -224,4 +224,9 @@ public class Wallet {
 
         AppCore.saveFile(fileName, sb.toString());
     }   
+    
+    @Override
+    public int compareTo(Wallet w) {
+        return getName().compareTo(w.getName());
+    }
 }

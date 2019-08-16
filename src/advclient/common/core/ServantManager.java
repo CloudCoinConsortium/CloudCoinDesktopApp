@@ -48,6 +48,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.TreeMap;
 import org.json.JSONException;
 
 /**
@@ -1189,8 +1190,10 @@ public class ServantManager {
     }
     
     public Wallet[] getWallets() {
-        int size = wallets.size();
-        Collection c = wallets.values();
+        TreeMap<String, Wallet> sorted = new TreeMap<>(wallets);
+        
+        int size = sorted.size();
+        Collection c = sorted.values();
         Wallet[] ws = new Wallet[size];
         
         int i = 0;
@@ -1199,7 +1202,8 @@ public class ServantManager {
             Wallet tw = (Wallet) itr.next();
             ws[i++] = tw;
         }
-                
+
+        
         return ws;
     }
     
