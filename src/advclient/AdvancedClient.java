@@ -4011,9 +4011,12 @@ public class AdvancedClient  {
                 int total;
                 total = ps.srcWallet.getTotal();
                 if (total == 0) {
-                    ps.errText = ps.srcWallet.getName() + " is empty";
-                    showScreen();
-                    return;
+                    wl.debug(ltag, "Import folder is not empty. Cleaning");
+                    AppCore.moveFolderContentsToTrash(Config.DIR_IMPORT, w.getName());
+
+                    //ps.errText = ps.srcWallet.getName() + " is empty";
+                    //showScreen();
+                    //return;
                 }
                 
                 if (ps.dstWallet.isEncrypted()) {               
