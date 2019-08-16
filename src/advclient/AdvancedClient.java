@@ -3344,9 +3344,11 @@ public class AdvancedClient  {
                 
                 cnt = AppCore.getFilesCount(Config.DIR_IMPORT, w.getName());
                 if (cnt != 0) {
-                    ps.errText = getNonEmptyFolderError("Import");
-                    showScreen();
-                    return;
+                    wl.debug(ltag, "Import folder is not empty: " + cnt + " files. Cleaning");
+                    AppCore.moveFolderContentsToTrash(Config.DIR_IMPORT, w.getName());
+//                    ps.errText = getNonEmptyFolderError("Import");
+  //                  showScreen();
+                    //return;
                 }
 
                 int total;
@@ -3600,9 +3602,12 @@ public class AdvancedClient  {
                     
                     cnt = AppCore.getFilesCount(Config.DIR_IMPORT, w.getName());
                     if (cnt != 0) {
-                        ps.errText = getNonEmptyFolderError("Import");
-                        showScreen();
-                        return;
+                        wl.debug(ltag, "Import folder is not empty: " + cnt + " files. Cleaning");
+                        AppCore.moveFolderContentsToTrash(Config.DIR_IMPORT, w.getName());
+
+                        //ps.errText = getNonEmptyFolderError("Import");
+                        //showScreen();
+                        //return;
                     }
                     
                     cnt = AppCore.getFilesCount(Config.DIR_DETECTED, w.getName());
