@@ -4003,20 +4003,19 @@ public class AdvancedClient  {
                 
                 cnt = AppCore.getFilesCount(Config.DIR_IMPORT, w.getName());
                 if (cnt != 0) {
-                    ps.errText = getNonEmptyFolderError("Import");
-                    showScreen();
-                    return;
+                    wl.debug(ltag, "Import folder is not empty. Cleaning");
+                    AppCore.moveFolderContentsToTrash(Config.DIR_IMPORT, w.getName());
+                    //ps.errText = getNonEmptyFolderError("Import");
+                    //showScreen();
+                    //return;
                 }
 
                 int total;
                 total = ps.srcWallet.getTotal();
                 if (total == 0) {
-                    wl.debug(ltag, "Import folder is not empty. Cleaning");
-                    AppCore.moveFolderContentsToTrash(Config.DIR_IMPORT, w.getName());
-
-                    //ps.errText = ps.srcWallet.getName() + " is empty";
-                    //showScreen();
-                    //return;
+                    ps.errText = ps.srcWallet.getName() + " is empty";
+                    showScreen();
+                    return;
                 }
                 
                 if (ps.dstWallet.isEncrypted()) {               
