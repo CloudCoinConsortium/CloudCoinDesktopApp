@@ -46,7 +46,7 @@ public class Authenticator extends Servant {
 
     public void setConfig() {
         logger.debug(ltag, "Setting config");
-        putConfigValue("max-coins-to-multi-detect", "" + Config.DEFAULT_MAX_COINS_MULTIDETECT);
+        //putConfigValue("max-coins-to-multi-detect", "" + Config.DEFAULT_MAX_COINS_MULTIDETECT);
     }
     
     private void copyFromGlobalResult(AuthenticatorResult aResult) {
