@@ -56,7 +56,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.11";
+    String version = "2.1.12";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -4575,6 +4575,9 @@ public class AdvancedClient  {
                 AppUI.addInvItem(invPanel, "25", t25);
                 AppUI.addInvItem(invPanel, "100", t100);
                 AppUI.addInvItem(invPanel, "250", t250);
+                
+                invPanel.revalidate();
+                invPanel.repaint();
             }
         }
     }
