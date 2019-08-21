@@ -93,7 +93,7 @@ public class ProgramState {
     Wallet srcWallet;
     
     boolean isEchoFinished;
-    boolean isShowCoinsFinished;
+
     
     int statToBankValue, statToBank, statFailed, statLost;
     int statFailedValue, statLostValue;
@@ -156,7 +156,7 @@ public class ProgramState {
         files = new ArrayList<String>();
         dstWallet = srcWallet = null;
         isEchoFinished = false;
-        isShowCoinsFinished = true;
+
         statToBankValue = statToBank = statFailed = 0;
         statFailedValue = statLostValue = 0;
         

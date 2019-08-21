@@ -245,38 +245,6 @@ public class AdvancedClient  {
         return errText;
     }
     
-    
-    public void showCoinsDone(int[][] counters) {
-        if (ps.currentWalletIdx <= 0) {
-            wl.error(ltag, "curIdx " + ps.currentWalletIdx);
-            return;
-        }
-        
-        Wallet w = wallets[ps.currentWalletIdx - 1];     
-        int totalCnt = AppCore.getTotal(counters[Config.IDX_FOLDER_BANK]) +
-			AppCore.getTotal(counters[Config.IDX_FOLDER_FRACKED]) +
-                        AppCore.getTotal(counters[Config.IDX_FOLDER_VAULT]);
-        
-        wl.debug(ltag, "ShowCoins done");
-        
-        ps.counters = counters;
-        walletSetTotal(w, totalCnt);
-        w.setCounters(counters);
-   
-        Thread t = new Thread(new Runnable() {
-            public void run(){
-                try {
-                    showCoinsGoNext();
-                } catch (Exception e) {
-                    wl.error(ltag, "ShowCoins failed: " + e.getMessage());
-                }
-            }
-        });
-        
-        t.start();
-    }
-    
-    
     public void setTotalCoins() {
         int total = 0;
         for (int i = 0; i < wallets.length; i++) {
@@ -286,24 +254,7 @@ public class AdvancedClient  {
         
         totalText.repaint();
     }
-    
-    public synchronized void showCoinsGoNext() {
-        if (wallets.length > ps.currentWalletIdx) {  
-            if (!wallets[ps.currentWalletIdx].isSkyWallet()) {
-                sm.changeServantUser("ShowCoins", wallets[ps.currentWalletIdx].getName());
-                sm.startShowCoinsService(new ShowCoinsCb());
-            } else {
-                sm.changeServantUser("ShowEnvelopeCoins", Config.DIR_DEFAULT_USER);
-                sm.startShowSkyCoinsService(new ShowEnvelopeCoinsCb(), wallets[ps.currentWalletIdx].getIDCoin().sn);
-            }      
-            ps.currentWalletIdx++;
-        } else {
-            ps.isShowCoinsFinished = true;
-        }
-        
-        setTotalCoins();
-    }
-    
+      
     public void setCounters(int[][] counters) {
         ps.counters = counters;
     }
@@ -1303,7 +1254,7 @@ public class AdvancedClient  {
 
         Thread t = new Thread(new Runnable() {
             public void run() {
-                if (!ps.isEchoFinished || !ps.isShowCoinsFinished) {
+                if (!ps.isEchoFinished) {
                     pbarText.setText("Checking RAIDA ...");
                     pbarText.repaint();
                 }
@@ -1312,7 +1263,7 @@ public class AdvancedClient  {
                     Thread.sleep(200);
                 } catch (InterruptedException e) {}
                 
-                while (!ps.isEchoFinished || !ps.isShowCoinsFinished) {
+                while (!ps.isEchoFinished) {
                     try {
                         Thread.sleep(300);
                     } catch (InterruptedException e) {}
@@ -1634,7 +1585,7 @@ public class AdvancedClient  {
                 }
                 
                 wl.debug(ltag, "Going here");
-                while (!ps.isEchoFinished || !ps.isShowCoinsFinished) {
+                while (!ps.isEchoFinished) {
                     try {
                         Thread.sleep(500);
                     } catch (InterruptedException e) {}
@@ -3108,39 +3059,6 @@ public class AdvancedClient  {
         }     
     }
     
-    public void updateWalletAmount2() {
-        if (wallets == null)
-            wallets = sm.getWallets();
-       
-        if (ps.isUpdatedWallets) {
-            for (int i = 0; i < wallets.length; i++) {
-                walletSetTotal(wallets[i], wallets[i].getTotal());
-            }
-            
-            setTotalCoins();
-            return;
-        } else {
-            for (int i = 0; i < wallets.length; i++) {
-                JLabel cntLabel = (JLabel) wallets[i].getuiRef();
-                if (cntLabel == null)
-                    continue;
-                
-                cntLabel.setText("Counting");
-            }
-        }
-
-        if (!ps.isShowCoinsFinished)
-            return;
-        
-        ps.isShowCoinsFinished = false;       
-        ps.isUpdatedWallets = true;
-        ps.currentWalletIdx = 0;
-    
-        showCoinsGoNext();
-        setTotalCoins();
-      
-    }
-    
     public void eraserGoNext() {
         if (wallets.length > ps.currentWalletIdx) {
             if (!wallets[ps.currentWalletIdx].isSkyWallet()) {
@@ -3172,13 +3090,7 @@ public class AdvancedClient  {
     public void launchErasers() {
         if (wallets.length  == 0) 
             return;
-        
-        while (!ps.isShowCoinsFinished) {
-            try {
-                Thread.sleep(200);
-            } catch (InterruptedException e) {}
-        }
-        
+     
         ps.currentWalletIdx = 0;
         eraserGoNext();   
     }
@@ -7132,17 +7044,7 @@ public class AdvancedClient  {
             }
 	}  
     }
-    
-    class ShowCoinsCb implements CallbackInterface {
-	public void callback(final Object result) {
-            final Object fresult = result;
-            ShowCoinsResult scresult = (ShowCoinsResult) fresult;
-            
-            setSNs(scresult.coins);
-            showCoinsDone(scresult.counters);
-        }
-    }
-    
+
     class UnpackerSenderCb implements CallbackInterface {
 	public void callback(Object result) {
             wl.debug(ltag, "Unpacker (Sender) finished");
@@ -7756,16 +7658,6 @@ public class AdvancedClient  {
             ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
             showScreen();              
 	}
-    }
-    
-    class ShowEnvelopeCoinsCb implements CallbackInterface {
-	public void callback(Object result) {
-            ShowEnvelopeCoinsResult er = (ShowEnvelopeCoinsResult) result;
- 
-            setEnvelopes(er.envelopes);
-            setSNs(er.coins);
-            showCoinsDone(er.counters);
-        }
     }
     
     class ShowEnvelopeCoinsForReceiverCb implements CallbackInterface {
