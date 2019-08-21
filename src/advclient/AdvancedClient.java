@@ -2587,7 +2587,7 @@ public class AdvancedClient  {
                 sc.launch(snID, "", new CallbackInterface() {
                     public void callback(Object o) {
                         ShowEnvelopeCoinsResult scresult = (ShowEnvelopeCoinsResult) o;
-            
+
                         wl.debug(ltag, "ShowEnvelopeCoins done");
                         w.setSNs(scresult.coins);
                         w.setEnvelopes(scresult.envelopes);
@@ -2604,8 +2604,7 @@ public class AdvancedClient  {
                         wl.debug(ltag, "ShowEnvelopeCoins return");
                     }
                 });
-            } else {
-                
+            } else {              
                 ShowCoins sc = new ShowCoins(rpath, wl);
                 sc.launch(new CallbackInterface() {
                     public void callback(Object o) {
