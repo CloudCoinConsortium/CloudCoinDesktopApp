@@ -296,7 +296,7 @@ public class Exporter extends Servant {
         if (f.exists()) {
             logger.error(ltag, "File exists: " + fileName);
             er.status = ExporterResult.STATUS_ERROR;
-            er.errText = "Exported file with the same tag already exist";
+            er.errText = "Exported file with the same tag already exists";
             return false;
         }
         
