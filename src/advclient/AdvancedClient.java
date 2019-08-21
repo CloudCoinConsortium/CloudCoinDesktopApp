@@ -3561,7 +3561,7 @@ public class AdvancedClient  {
                 };
                 
                 if (ps.typedAmount <= 0) {
-                    ps.errText = "Invalid amount";
+                    ps.errText = "Transfer must be higher than zero";
                     showScreen();
                     return;  
                 }
@@ -3575,7 +3575,7 @@ public class AdvancedClient  {
                 ps.typedMemo = ps.typedMemo.trim();
                 if (!ps.typedMemo.isEmpty()) {
                     if (!Validator.memo(ps.typedMemo)) {
-                        ps.errText = "Memo: Non alpha number characters are not allowed";
+                        ps.errText = "Memo: special characters not allowed! Use numbers and letters only";
                         showScreen();
                         return;
                     }
@@ -3651,7 +3651,7 @@ public class AdvancedClient  {
                     }         
                 } else if (dstIdx == rvTo.idxs.length + 1) {
                     if (!Validator.memo(ps.typedMemo)) {
-                        ps.errText = "Memo cannot contain dots or slashes";
+                        ps.errText = "Memo: special characters not allowed! Use numbers and letters only";
                         showScreen();
                         return;
                     }
@@ -3673,6 +3673,15 @@ public class AdvancedClient  {
                     
                     if (ps.typedMemo.isEmpty())
                         ps.typedMemo = "Export";
+                    
+                    String filename = ps.chosenFile + File.separator + ps.typedAmount + ".CloudCoin." + ps.typedMemo + ".stack";
+                    File f = new File(filename);
+                    if (f.exists()) {
+                        ps.errText = "<html><div style='width:660px;text-align:center'>File with the same Memo already exists in " 
+                                + ps.chosenFile + " folder. Use different Memo or change folder for your transfer</div></html>";
+                        showScreen();
+                        return;
+                    }
                     
                     ps.sendType = ProgramState.SEND_TYPE_FOLDER;    
                     
