@@ -926,6 +926,17 @@ public class AdvancedClient  {
                 
         }
         
+        Component[] cs = lwrapperPanel.getComponents();
+        if (cs != null && cs.length != 0) {
+            Container c = (Container) cs[0];
+            if (c instanceof JScrollPane) {
+                JScrollPane sp = (JScrollPane) c;
+                Component[] spcs = sp.getComponents();           
+                spcs[0].requestFocus();
+            }
+        }
+        
+        
         headerPanel.repaint();
         headerPanel.revalidate();
 
@@ -5434,6 +5445,8 @@ public class AdvancedClient  {
         // Padding from the bottom
         AppUI.hr(wpanel, 120);
 
+        
+        
         JScrollPane scrollPane = new JScrollPane(wpanel);
         JScrollBar scrollBar = new JScrollBar(JScrollBar.VERTICAL) {
             @Override
@@ -5450,7 +5463,21 @@ public class AdvancedClient  {
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
         lwrapperPanel.add(scrollPane);  
-
+        
+        wpanel.addMouseListener(new MouseAdapter() {
+            public void mouseReleased(MouseEvent e) {
+                wpanel.requestFocus();
+            }
+        });
+        
+        corePanel.addMouseListener(new MouseAdapter() {
+            public void mouseReleased(MouseEvent e) {
+                wpanel.requestFocus();
+            }
+        });
+        
+        
+        
         corePanel.add(lwrapperPanel);
     }
 
@@ -5561,7 +5588,7 @@ public class AdvancedClient  {
             final Wallet fwallet = wallet;
             MouseAdapter ma = new MouseAdapter() {
                 @Override
-                public void mouseReleased(MouseEvent e) {
+                public void mouseReleased(MouseEvent e) {                 
                     setActiveWallet(fwallet);
                     ps.sendType = 0;
                     ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
@@ -5647,8 +5674,6 @@ public class AdvancedClient  {
             wpanel.addMouseListener(ma);
         }
         
-    
-
         AppUI.setHandCursor(wpanel);
         
         return wpanel;
