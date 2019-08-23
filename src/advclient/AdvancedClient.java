@@ -5100,6 +5100,18 @@ public class AdvancedClient  {
         tf1.setFilepickerListener(new MouseAdapter() {
             @Override
             public void mouseReleased(MouseEvent e) {
+                 if (!cb1.isChecked()) {
+                    Wallet w = sm.getFirstFullNonSkyWallet();
+                    if (w != null) {
+                        String dir = AppCore.getUserDir(Config.DIR_BANK, w.getName());
+                        chooser.setCurrentDirectory(new File(dir));
+                    } else {
+                        chooser.setCurrentDirectory(null);
+                    }
+                } else {
+                    chooser.setCurrentDirectory(null);
+                }
+
                 int returnVal = chooser.showOpenDialog(null);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {       
                     ps.chosenFile = chooser.getSelectedFile().getAbsolutePath();

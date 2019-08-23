@@ -107,6 +107,10 @@ public class ServantManager {
         sr.changeServantUser(servant, wallet);
     }
     
+    public String getHomeDir() {
+        return this.home;
+    }
+    
     public boolean init() {
         boolean rv; 
         
@@ -1293,6 +1297,29 @@ public class ServantManager {
             if (tw.isSkyWallet()) {
                continue;
             }           
+            
+            return tw;
+        }
+        
+        return null;
+    }
+    
+    public Wallet getFirstFullNonSkyWallet() {
+        Collection c = wallets.values();
+
+        Iterator itr = c.iterator();
+        while (itr.hasNext()) {
+            Wallet tw = (Wallet) itr.next();
+            
+            if (tw.isSkyWallet()) {
+               continue;
+            }           
+            
+            if (tw.getTotal() == 0)
+                continue;
+            
+            if (tw.isEncrypted())
+                continue;
             
             return tw;
         }
