@@ -3022,15 +3022,12 @@ public class AdvancedClient  {
         }
         
         setTotalCoins();
-        
-        System.out.println("***");
+
         for (int i = 0; i < wallets.length; i++) {
             final Wallet w = wallets[i];
             
             if (w.isUpdated())
                 continue;
-            
-            System.out.println("updating wallet " + w.getName());
             
             String rpath = AppCore.getRootPath() + File.separator + w.getName();
             wl.debug(ltag, "Counting for " + w.getName());
@@ -6157,6 +6154,19 @@ public class AdvancedClient  {
         tf1.setFilepickerListener(new MouseAdapter() {
             @Override
             public void mouseReleased(MouseEvent e) {
+                if (rb1.isSelected()) {
+                    Wallet w = sm.getFirstFullNonSkyWallet();
+                    System.out.println("w=" + w.getName());
+                    if (w != null) {
+                        String dir = AppCore.getUserDir(Config.DIR_BANK, w.getName());
+                        chooser.setCurrentDirectory(new File(dir));
+                    } else {
+                        chooser.setCurrentDirectory(null);
+                    }   
+                } else {
+                    chooser.setCurrentDirectory(null);
+                }
+                
                 int returnVal = chooser.showOpenDialog(null);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {       
                     ps.chosenFile = chooser.getSelectedFile().getAbsolutePath();
