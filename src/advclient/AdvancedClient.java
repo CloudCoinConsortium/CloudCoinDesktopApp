@@ -164,6 +164,7 @@ public class AdvancedClient  {
         wl.debug(ltag, "Set Total: " + w.getName() + " total = " + total);
         
         w.setTotal(total);
+        w.setUpdated();
         String strCnt = AppCore.formatNumber(total);
         if (cntLabel == null)
             return;
@@ -904,7 +905,13 @@ public class AdvancedClient  {
             p.add(err);
             
             ps.errText = "";
+            if (ps.srcWallet != null)
+                ps.srcWallet.setNotUpdated();
+            
+            if (ps.dstWallet != null)
+                ps.dstWallet.setNotUpdated();
         }
+        
     }
     
     private void setRAIDAProgressCoins(int raidaProcessed, int totalCoinsProcessed, int totalCoins) {
@@ -1852,7 +1859,9 @@ public class AdvancedClient  {
             return;
         }
  
-        
+        ps.srcWallet.setNotUpdated();
+        if (ps.dstWallet != null)
+            ps.dstWallet.setNotUpdated();
         
         subInnerCore = getModalJPanel("Transfer Complete");
         maybeShowError(subInnerCore);
@@ -1928,6 +1937,8 @@ public class AdvancedClient  {
             resetState();
             return;
         }
+        
+        ps.dstWallet.setNotUpdated();
              
         subInnerCore = getModalJPanel("Deposit Complete");
         maybeShowError(subInnerCore);
@@ -2999,7 +3010,12 @@ public class AdvancedClient  {
             JLabel cntLabel = (JLabel) wallets[i].getuiRef();
             if (cntLabel == null)
                 continue;
-                
+            
+            if (wallets[i].isUpdated()) {
+                walletSetTotal(wallets[i], wallets[i].getTotal());
+                continue;
+            }
+            
             cntLabel.setText("Counting");
             cntLabel.invalidate();
             cntLabel.repaint();
@@ -3007,8 +3023,14 @@ public class AdvancedClient  {
         
         setTotalCoins();
         
+        System.out.println("***");
         for (int i = 0; i < wallets.length; i++) {
             final Wallet w = wallets[i];
+            
+            if (w.isUpdated())
+                continue;
+            
+            System.out.println("updating wallet " + w.getName());
             
             String rpath = AppCore.getRootPath() + File.separator + w.getName();
             wl.debug(ltag, "Counting for " + w.getName());
