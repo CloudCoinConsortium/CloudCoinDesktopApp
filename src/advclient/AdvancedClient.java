@@ -170,6 +170,7 @@ public class AdvancedClient  {
         wl.debug(ltag, "Set Total: " + w.getName() + " total = " + total);
         
         w.setTotal(total);
+        w.setUpdated();
         String strCnt = AppCore.formatNumber(total);
         if (cntLabel == null)
             return;
@@ -956,6 +957,11 @@ public class AdvancedClient  {
             p.add(err);
             
             ps.errText = "";
+            if (ps.srcWallet != null)
+                ps.srcWallet.setNotUpdated();
+
+            if (ps.dstWallet != null)
+                ps.dstWallet.setNotUpdated();
         }
     }
     
@@ -1773,6 +1779,10 @@ public class AdvancedClient  {
             resetState();
             return;
         }
+        
+        ps.srcWallet.setNotUpdated();
+        if (ps.dstWallet != null)
+            ps.dstWallet.setNotUpdated();
              
         int y = 0;
         JLabel fname, value;
@@ -1836,6 +1846,8 @@ public class AdvancedClient  {
         int y = 0;
         JLabel fname, value;
         MyTextField walletName = null;
+
+        ps.dstWallet.setNotUpdated();
 
         subInnerCore = getPanel("Deposit Complete");                
         GridBagLayout gridbag = new GridBagLayout();
@@ -2580,6 +2592,12 @@ public class AdvancedClient  {
             if (cntLabel == null)
                 continue;
                 
+            if (wallets[i].isUpdated()) {
+                walletSetTotal(wallets[i], wallets[i].getTotal());
+                continue;
+            }
+
+            
             cntLabel.setText("Counting");
             cntLabel.invalidate();
             cntLabel.repaint();
@@ -2589,6 +2607,12 @@ public class AdvancedClient  {
         
         for (int i = 0; i < wallets.length; i++) {
             final Wallet w = wallets[i];
+            
+            if (w.isUpdated())
+                continue;
+
+            System.out.println("updating wallet " + w.getName());
+
             
             String rpath = AppCore.getRootPath() + File.separator + w.getName();
             wl.debug(ltag, "Counting for " + w.getName());

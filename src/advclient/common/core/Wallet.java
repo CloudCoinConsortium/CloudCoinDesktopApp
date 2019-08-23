@@ -28,6 +28,7 @@ public class Wallet implements Comparable<Wallet> {
     int[] sns;
     int[][] counters;
     public Hashtable<String, String[]> envelopes;
+    boolean isUpdated;
     
     public Wallet(String name, String email, boolean isEncrypted, String password, GLogger logger) {
         this.name = name;
@@ -37,6 +38,7 @@ public class Wallet implements Comparable<Wallet> {
         this.ltag += " " + name;
         this.logger = logger;
         this.sns = new int[0];
+        this.isUpdated = false;
                
         logger.debug(ltag, "wallet " + name + " e=" + email + " is="+isEncrypted+ " p="+password);
         lsep = System.getProperty("line.separator");
@@ -121,6 +123,18 @@ public class Wallet implements Comparable<Wallet> {
     
     public String getEmail() {
         return this.email;
+    }
+    
+    public boolean isUpdated() {
+        return this.isUpdated;
+    }
+    
+    public void setUpdated() {
+        this.isUpdated = true;
+    }
+    
+    public void setNotUpdated() {
+        this.isUpdated = false;
     }
     
     public String getTransactionsFileName() {
