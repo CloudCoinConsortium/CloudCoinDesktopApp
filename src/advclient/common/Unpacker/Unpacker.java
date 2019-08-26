@@ -63,8 +63,7 @@ public class Unpacker extends Servant {
             logger.error(ltag, "No such dir " + fullPath);
             return -1;
         }
-        
-        
+               
         for (File file: dirObj.listFiles()) {
             if (file.isDirectory())
                 continue;
@@ -107,6 +106,7 @@ public class Unpacker extends Servant {
             logger.error(ltag, "Import Dir doesn't exist");
             return;
         }
+        
         for (File file: dirObj.listFiles()) {
             if (file.isDirectory())
                 continue;
@@ -115,9 +115,10 @@ public class Unpacker extends Servant {
             index = fileName.lastIndexOf('.');
             if (index <= 0) {
                 logger.error(ltag, "Skipping filename " + fileName + ". No extension found");
-                AppCore.moveToTrash(file.toString(), user);
-                globalResult.status = UnpackerResult.STATUS_ERROR;
-                return;
+                //AppCore.moveToTrash(file.toString(), user);
+                //globalResult.status = UnpackerResult.STATUS_ERROR;
+                //return;
+                continue;
             }
 
             extension = fileName.substring(index + 1).toLowerCase();
@@ -135,17 +136,15 @@ public class Unpacker extends Servant {
                 rv = doUnpackBinary(file.toString());
             } else {
                 rv = doUnpackStack(file.toString());
-                //    logger.error(ltag, "Unknown file: " + fileName);
-                //    AppCore.moveToTrash(file.toString());
-                //    continue;
             }
 
             if (!rv) {
                 logger.error(ltag, "Error processing file: " + fileName);
                 AppCore.moveToTrash(file.toString(), user);
-                globalResult.status = UnpackerResult.STATUS_ERROR;
-                globalResult.errText = "Failed to parse: " + fileName;
-                return;
+                //globalResult.status = UnpackerResult.STATUS_ERROR;
+                //globalResult.errText = "Failed to parse: " + fileName;
+                //return;
+                continue;
             }
         }
         

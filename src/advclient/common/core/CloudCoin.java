@@ -166,7 +166,8 @@ public class CloudCoin {
             for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
                 if (ans[i] == null) {
                     ans[i] = generatePan();
-                    detectStatus[i] = CloudCoin.STATUS_FAIL;
+                    if (detectStatus[i] == CloudCoin.STATUS_PASS || detectStatus[i] == CloudCoin.STATUS_UNTRIED)
+                        detectStatus[i] = CloudCoin.STATUS_ERROR;
                 }
             }
             
