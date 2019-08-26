@@ -1522,9 +1522,7 @@ public class AdvancedClient  {
         GridBagLayout gridbag = new GridBagLayout();
         GridBagConstraints c = new GridBagConstraints();      
         ct.setLayout(gridbag);
-        
-        // Password Label
-        //JLabel x = new JLabel("Do not close the application until all CloudCoins are deposited!");
+
         JLabel x = new JLabel("<html><div style='width:480px;text-align:center'>Do not close the application until all CloudCoins are deposited!</div></html>");
         AppUI.setCommonFont(x);
         //AppUI.setBoldFont(x, 16);
@@ -1561,26 +1559,6 @@ public class AdvancedClient  {
         gridbag.setConstraints(pbar, c);
         ct.add(pbar);
         
-        // Cancel button
-        /*
-        JPanel bp = getOneButtonPanelCustom("Cancel", new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                sm.cancel("Unpacker");
-
-                if (ps.isSkyDeposit)
-                    sm.cancel("Sender");
-                else {
-                    sm.cancel("Authenticator");
-                    sm.cancel("FrackFixer");
-                    sm.cancel("LossFixer");
-                }
-                
-                resetState();
-            }
-        });
-        
-        subInnerCore.add(bp);  
-        */
         subInnerCore.add(AppUI.hr(120));
         
         Thread t = new Thread(new Runnable() {

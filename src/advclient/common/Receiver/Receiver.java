@@ -312,7 +312,7 @@ public class Receiver extends Servant {
                 }
                 
                 rsn = rrs[i][j].sn;
-                ran = rrs[i][j].message;
+                ran = (cstatus == CloudCoin.STATUS_PASS) ? rrs[i][j].message : null;
                 rnn = rrs[i][j].nn;
                 for (int k = 0; k < sccs.length; k++) {
                     if (sccs[k] == null)
