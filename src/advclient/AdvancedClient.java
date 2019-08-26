@@ -2122,6 +2122,19 @@ public class AdvancedClient  {
                   
                     dstWallet.appendTransaction("Coin from Deleted Sky Wallet", ps.srcWallet.getIDCoin().getDenomination(), "skymove");
                     
+                    String wname = ps.srcWallet.getSkyName();
+                    String wdomain = ps.srcWallet.getDomain();
+                    final DNSSn d = new DNSSn(wname, wdomain, wl);
+                    Thread t = new Thread(new Runnable() {
+                        public void run(){
+                            if (!d.deleteRecord(wname, ps.srcWallet.getIDCoin(), sm.getSR())) {
+                                wl.error(ltag, "Failed to delete coin. DNS error");
+                                return;
+                            }
+                        }
+                    });
+                    t.start();
+                    
                     if (dstWallet.isEncrypted()) {
                         wl.debug(ltag, "Start Vaulter");
                         
