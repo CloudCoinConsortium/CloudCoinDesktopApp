@@ -1048,7 +1048,10 @@ public class AdvancedClient  {
 
                 wl.debug(ltag, "Fixing coins in " + ps.srcWallet.getName());
                 
-                sm.setActiveWalletObj(ps.srcWallet);                
+                if (ps.dstWallet != null)
+                    sm.setActiveWalletObj(ps.dstWallet);                
+                else
+                    sm.setActiveWalletObj(ps.srcWallet);
                 //sm.startFrackFixerService(new FrackFixerOnPurposeCb());
                 
                 sm.startLossFixerService(new LossFixerCb());
