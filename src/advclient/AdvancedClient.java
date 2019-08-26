@@ -2624,9 +2624,6 @@ public class AdvancedClient  {
             if (w.isUpdated())
                 continue;
 
-            System.out.println("updating wallet " + w.getName());
-
-            
             String rpath = AppCore.getRootPath() + File.separator + w.getName();
             wl.debug(ltag, "Counting for " + w.getName());
             if (w.isSkyWallet()) {
