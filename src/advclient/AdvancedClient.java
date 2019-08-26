@@ -2320,8 +2320,7 @@ public class AdvancedClient  {
                 }
                 
                 wl.debug(ltag, "Deleting Wallet " + ps.srcWallet.getName());
-                
-                
+                              
                 if (ps.srcWallet.isSkyWallet()) {
                     String defWalletName = dstWallet.getName();
                     String origName = ps.srcWallet.getIDCoin().originalFile;
@@ -2356,7 +2355,7 @@ public class AdvancedClient  {
                         dstWallet.setPassword(mtf0.getText());
                          
                     }
-                    
+
                     if (!AppCore.moveToFolderNewName(origName, Config.DIR_BANK, defWalletName, name)) {
                         ps.errText = "Failed to delete Wallet";
                         showScreen();
@@ -2364,7 +2363,21 @@ public class AdvancedClient  {
                     }
 
                     dstWallet.appendTransaction("Coin from Deleted Sky Wallet", ps.srcWallet.getIDCoin().getDenomination(), "skymove");
+                                        
+                    String wname = ps.srcWallet.getSkyName();
+                    String wdomain = ps.srcWallet.getDomain();
+                    final DNSSn d = new DNSSn(wname, wdomain, wl);                  
+                    Thread t = new Thread(new Runnable() {
+                        public void run(){
+                            if (!d.deleteRecord(wname, ps.srcWallet.getIDCoin(), sm.getSR())) {
+                                wl.error(ltag, "Failed to delete coin. DNS error");
+                                return;
+                            } 
+                        }
+                    });     
                     
+                    t.start();
+               
                     if (dstWallet.isEncrypted()) {
                         wl.debug(ltag, "Start Vaulter");
                         
@@ -3895,15 +3908,7 @@ public class AdvancedClient  {
                     showScreen();
                     return;
                 }
-                /*
-                if (cidx == options.length) {
-                    resetState();
-                    ps.currentScreen = ProgramState.SCREEN_CREATE_SKY_WALLET;
-                    showScreen();
-                    return;
-                }*/
-                
-                
+
                 if (cidx == 0) {
                     ps.errText = "Wallet is not selected";
                     showScreen();
@@ -6156,7 +6161,6 @@ public class AdvancedClient  {
             public void mouseReleased(MouseEvent e) {
                 if (rb1.isSelected()) {
                     Wallet w = sm.getFirstFullNonSkyWallet();
-                    System.out.println("w=" + w.getName());
                     if (w != null) {
                         String dir = AppCore.getUserDir(Config.DIR_BANK, w.getName());
                         chooser.setCurrentDirectory(new File(dir));

@@ -243,4 +243,34 @@ public class Wallet implements Comparable<Wallet> {
     public int compareTo(Wallet w) {
         return getName().compareTo(w.getName());
     }
+    
+    
+    public String getDomain() {
+        if (!isSkyWallet())
+            return "";
+        
+        String wname = getName();
+        String[] parts = wname.split("\\.");
+        String domain = "";
+        for (int j = 1; j < parts.length; j++) {
+            if (j != 1)
+                domain += ".";
+            
+            domain += parts[j];
+        }
+        
+        return domain;
+    }
+    
+    public String getSkyName() {
+        if (!isSkyWallet())
+            return "";
+        
+        String wname = getName();
+        String[] parts = wname.split("\\.");
+        
+        return parts[0];
+    }
+    
+    
 }

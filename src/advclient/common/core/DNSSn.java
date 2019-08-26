@@ -107,6 +107,64 @@ public class DNSSn {
         }
 
         int raidaNum = Config.RAIDANUM_TO_QUERY_BY_DEFAULT;
+        String message = getTicket(cc, sr);
+        if (message == null) {
+            logger.error(ltag, "Failed to get ticket");
+            return false;
+        }
+               
+        String rq = "/ddns.php?sn=" + cc.sn + "&username=" + name + "&ticket=" + message + "&raidanumber=" + raidaNum;
+
+        DetectionAgent daFake = new DetectionAgent(RAIDA.TOTAL_RAIDA_CNT * 10000, logger);
+        daFake.setExactFullUrl(Config.DDNSSN_SERVER + "/service/ddns");
+        String result = daFake.doRequest(rq, null);
+        if (result == null) {
+            logger.error(ltag, "Failed to receive response from DDNSSN Server");
+            return false;
+        }
+        
+        CommonResponse cr = (CommonResponse) sr.getServant("FrackFixer").parseResponse(result, CommonResponse.class);
+        if (!cr.status.equals("success")) {
+            logger.error(ltag, "Invalid response from DDNSSN Server");
+            return false;
+        }
+        
+        return true;
+    }
+    
+    public boolean deleteRecord(String name, CloudCoin cc, ServantRegistry sr) {
+        logger.debug(ltag, "Delete record " + name + " SN: " + cc.sn);
+        String message = getTicket(cc, sr);
+        if (message == null) {
+            logger.error(ltag, "Failed to get ticket");
+            return false;
+        }
+
+        int raidaNum = Config.RAIDANUM_TO_QUERY_BY_DEFAULT;
+        String rq = "/ddns_delete.php?sn=" + cc.sn + "&username=" + name + "&ticket=" + message + "&raidanumber=" + raidaNum;
+
+        DetectionAgent daFake = new DetectionAgent(RAIDA.TOTAL_RAIDA_CNT * 10000, logger);
+        daFake.setExactFullUrl(Config.DDNSSN_SERVER + "/service/ddns");
+        String result = daFake.doRequest(rq, null);
+        if (result == null) {
+            logger.error(ltag, "Failed to receive response from DDNSSN Server");
+            return false;
+        }
+        
+        logger.debug(ltag, result);     
+        CommonResponse cr = (CommonResponse) sr.getServant("FrackFixer").parseResponse(result, CommonResponse.class);
+        if (!cr.status.equals("success")) {
+            logger.error(ltag, "Invalid response from DDNSSN Server");
+            return false;
+        }
+        
+        return true;
+    }
+    
+    public String getTicket(CloudCoin cc, ServantRegistry sr) {
+        logger.debug(ltag, "Getting ticket for " + cc.sn);
+        
+        int raidaNum = Config.RAIDANUM_TO_QUERY_BY_DEFAULT;
         
         StringBuilder sb = new StringBuilder();
         sb.append("nns[]=");
@@ -125,18 +183,18 @@ public class DNSSn {
         String result = da.doRequest("/service/multi_get_ticket", sb.toString());
         if (result == null) {
             logger.error(ltag, "Failed to get tickets. Setting triad to failed");
-            return false;
+            return null;
         }
         
         Object[] o = sr.getServant("FrackFixer").parseArrayResponse(result, GetTicketResponse.class);
         if (o == null) {
             logger.error(ltag, "Failed to parse result " + result);
-            return false;
+            return null;
         }
         
         if (o.length != 1) {
             logger.error(ltag, "Failed to parse result (length is wrong) " + result);
-            return false;
+            return null;
         }
         
         GetTicketResponse g = (GetTicketResponse) o[0];
@@ -145,32 +203,14 @@ public class DNSSn {
         logger.debug(ltag, " message " + g.message);
         if (!g.status.equals("ticket")) {
             logger.error(ltag, "Failed to get ticket for coin id " + cc.sn);
-            return false;
+            return null;
         }
         
         if (message == null || message.length() != 44) {
             logger.error(ltag, "Invalid ticket from RAIDA");
-            return false;
+            return null;
         }
         
-        String rq = "/ddns.php?sn=" + cc.sn + "&username=" + name + "&ticket=" + message + "&raidanumber=" + raidaNum;
-
-        DetectionAgent daFake = new DetectionAgent(RAIDA.TOTAL_RAIDA_CNT * 10000, logger);
-        daFake.setExactFullUrl(Config.DDNSSN_SERVER);
-        result = daFake.doRequest(rq, null);
-        if (result == null) {
-            logger.error(ltag, "Failed to receive response from DDNSSN Server");
-            return false;
-        }
-        
-        CommonResponse cr = (CommonResponse) sr.getServant("FrackFixer").parseResponse(result, CommonResponse.class);
-        if (!cr.status.equals("success")) {
-            logger.error(ltag, "Invalid response from DDNSSN Server");
-            return false;
-        }
-        
-        return true;
+        return message;
     }
-    
-    
 }
