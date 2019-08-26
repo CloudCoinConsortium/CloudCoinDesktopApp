@@ -242,7 +242,6 @@ public class Authenticator extends Servant {
 
         CloudCoin cc;
         ArrayList<CloudCoin> ccs;
-
         ccs = new ArrayList<CloudCoin>();
 
         int maxCoins = getIntConfigValue("max-coins-to-multi-detect");
@@ -257,7 +256,7 @@ public class Authenticator extends Servant {
 
         globalResult.totalFiles = AppCore.getFilesCount(Config.DIR_SUSPECT, user);
         if (globalResult.totalFiles == 0) {
-            logger.error(ltag, "The Suspect folder is empty");
+            logger.info(ltag, "The Suspect folder is empty");
             globalResult.status = AuthenticatorResult.STATUS_FINISHED;
             cb.callback(globalResult);
             return;

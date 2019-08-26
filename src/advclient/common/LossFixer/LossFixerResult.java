@@ -10,6 +10,9 @@ public class LossFixerResult {
     public int totalFilesProcessed;
     public int totalFiles;
     public int totalRAIDAProcessed;
+    
+    public int totalCoins;
+    public int totalCoinsProcessed;
 
     
     public int recovered;
