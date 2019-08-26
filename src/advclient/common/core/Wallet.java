@@ -188,6 +188,9 @@ public class Wallet implements Comparable<Wallet> {
         if (isSkyWallet())
             return;
         
+        if (amount == 0)
+            return;
+        
         String fileName = getTransactionsFileName();
         String rMemo = memo.replaceAll("\r\n", " ").replaceAll("\n", " ").replaceAll(",", " ");
         //String sAmount = Integer.toString(amount);

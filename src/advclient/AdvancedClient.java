@@ -1687,7 +1687,10 @@ public class AdvancedClient  {
 
         AppUI.getTwoButtonPanel(subInnerCore, "", "Continue", null,  new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                setActiveWallet(ps.dstWallet);
+                if (ps.dstWallet != null)
+                    setActiveWallet(ps.dstWallet);
+                else 
+                    setActiveWallet(ps.srcWallet);
                 ps.sendType = 0;
                 ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
                 showScreen();
@@ -6227,7 +6230,7 @@ public class AdvancedClient  {
             if (fr.status == FrackFixerResult.STATUS_ERROR) {
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {
-                        ps.errText = "<html><div style='text-align:center; width: 520px'>Failed to Fix Coins. Please see logs at<br> " + AppCore.getLogPath() + "</div></html>";
+                        ps.errText = "Failed to Fix Coins. Please see logs at<br> " + AppCore.getLogPath() + "";
                         ps.currentScreen = ProgramState.SCREEN_FIX_DONE;
                         showScreen();
                     }
