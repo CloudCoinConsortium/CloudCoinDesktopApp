@@ -2112,7 +2112,7 @@ public class AdvancedClient  {
         MyTextField tf0 = null;
         if (dstWallet.isEncrypted() && ps.srcWallet.isSkyWallet()) {
             fname = new JLabel("Password");
-            tf0 = new MyTextField("Dst Wallet Password");
+            tf0 = new MyTextField("Wallet Password");
             AppUI.getGBRow(subInnerCore, fname, tf0.getTextField(), y, gridbag);
             y++;
         }
@@ -2154,7 +2154,7 @@ public class AdvancedClient  {
                         String wHash = dstWallet.getPasswordHash();
                         String providedHash = AppCore.getMD5(mtf0.getText());
                         if (wHash == null) {
-                            ps.errText = "Dst Wallet is corrupted";
+                            ps.errText = "To Wallet is corrupted";
                             showScreen();
                             return;
                         }
@@ -3088,7 +3088,7 @@ public class AdvancedClient  {
 
                     String dstName = remoteWalledId.getText().trim();
                     if (ps.srcWallet.isSkyWallet() && ps.srcWallet.getName().equals(dstName)) {
-                        ps.errText = "Src and Dst wallets cannot be the same";
+                        ps.errText = "Wallets cannot be the same";
                         showScreen();
                         return;
                     }
