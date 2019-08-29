@@ -56,7 +56,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.12";
+    String version = "2.1.13";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -637,7 +637,7 @@ public class AdvancedClient  {
         final JLabel ficon = icon0;
    
         // Do stuff popup menu
-        final int mWidth = 212;
+        final int mWidth = 172;
         final int mHeight = 48;
         final JPopupMenu popupMenu = new JPopupMenu() {
             @Override
@@ -656,6 +656,7 @@ public class AdvancedClient  {
     
             MouseAdapter ma = new MouseAdapter() {
                 public void mouseEntered(MouseEvent evt) {
+                    ps.popupVisible = true;
                     JMenuItem jMenuItem = (JMenuItem) evt.getSource();
                     jMenuItem.setBackground(AppUI.getColor2());
                 }
@@ -663,6 +664,23 @@ public class AdvancedClient  {
                 public void mouseExited(MouseEvent evt) {
                     JMenuItem jMenuItem = (JMenuItem) evt.getSource();
                     jMenuItem.setBackground(AppUI.getColor1());
+                    
+                    ps.popupVisible = false;             
+                    EventQueue.invokeLater(new Runnable() {
+                        public void run(){
+                            try {
+                                Thread.sleep(40);
+                            } catch(InterruptedException ex) {           
+                            }
+                        
+                            if (ps.popupVisible)
+                                return;
+
+                            ficon.setOpaque(false);
+                            ficon.repaint();              
+                            popupMenu.setVisible(false);
+                        }
+                    });                   
                 }
                 
                 public void mouseReleased(MouseEvent evt) {
@@ -725,13 +743,14 @@ public class AdvancedClient  {
         popupMenu.addPopupMenuListener(new PopupMenuListener() {
             @Override
             public void popupMenuWillBecomeVisible(final PopupMenuEvent e) {
-                
+                ps.popupVisible = true;
             }
             @Override
             public void popupMenuWillBecomeInvisible(final PopupMenuEvent e) {
                 AppUI.setBackground(ficon, savedColor);
                 ficon.setOpaque(false);
                 ficon.repaint();
+                ps.popupVisible = false;
             }
             
             @Override
@@ -739,10 +758,12 @@ public class AdvancedClient  {
                 AppUI.setBackground(ficon, savedColor);
                 ficon.setOpaque(false);
                 ficon.repaint();
+                ps.popupVisible = false;
             }
         });
 
         icon0.addMouseListener(new MouseAdapter() {
+            /*
             public void mouseReleased(MouseEvent e) {
                 ficon.setOpaque(true);
                 AppUI.setBackground(ficon, AppUI.getColor1());
@@ -750,6 +771,34 @@ public class AdvancedClient  {
                 ficon.repaint();              
                 popupMenu.show(ficon, 0 - mWidth  + ficon.getWidth(), ficon.getHeight());
             }
+            */
+            public void mouseEntered(MouseEvent e) {
+                ficon.setOpaque(true);
+                AppUI.setBackground(ficon, AppUI.getColor1());
+
+                ficon.repaint();              
+                popupMenu.show(ficon, 0 - mWidth  + ficon.getWidth(), ficon.getHeight());
+                
+            }
+            
+            public void mouseExited(MouseEvent e) {
+                ps.popupVisible = false;             
+                EventQueue.invokeLater(new Runnable() {
+                    public void run(){
+                        try {
+                            Thread.sleep(40);
+                        } catch(InterruptedException ex) {           
+                        }
+                        
+                        if (ps.popupVisible)
+                            return;
+
+                        ficon.setOpaque(false);
+                        ficon.repaint();              
+                        popupMenu.setVisible(false);
+                    }
+                });
+            }          
         });
         
         
@@ -924,7 +973,9 @@ public class AdvancedClient  {
             case ProgramState.SCREEN_MAKING_CHANGE:
                 showMakingChangeScreen();
                 break;
-                
+            case ProgramState.SCREEN_EXPORTING:
+                showExportingScreen();
+                break;                
         }
         
         Component[] cs = lwrapperPanel.getComponents();
@@ -2261,11 +2312,13 @@ public class AdvancedClient  {
                 sm.setActiveWalletObj(ps.srcWallet);
                 if (ps.sendType == ProgramState.SEND_TYPE_FOLDER) {
                     ps.isSkyDeposit = false;
+                    ps.currentScreen = ProgramState.SCREEN_EXPORTING;
                     if (ps.srcWallet.isEncrypted()) {
                         sm.startSecureExporterService(Config.TYPE_STACK, ps.typedAmount, ps.typedMemo, ps.chosenFile, false, new ExporterCb());
                     } else {
                         sm.startExporterService(Config.TYPE_STACK, ps.typedAmount, ps.typedMemo, ps.chosenFile, false, new ExporterCb());
                     }                 
+                    showScreen();
                 } else if (ps.sendType == ProgramState.SEND_TYPE_WALLET) {
                     ps.dstWallet.setPassword(ps.typedDstPassword);              
                     ps.currentScreen = ProgramState.SCREEN_SENDING;
@@ -5054,6 +5107,13 @@ public class AdvancedClient  {
         rightPanel.add(gct);
     }
     
+    public void showExportingScreen() {
+        JPanel subInnerCore = getPanel("Exporting Coins. Please wait...");
+      
+        AppUI.hr(subInnerCore, 4);
+    }
+
+    
     public void showDoingBackupScreen() {
         JPanel subInnerCore = getPanel("Doing Backup. Please wait...");
       
@@ -6311,6 +6371,7 @@ public class AdvancedClient  {
                 }
                 
                 sm.getActiveWallet().appendTransaction(ps.typedMemo, er.totalExported * -1, er.receiptId);
+                sm.getActiveWallet().setNotUpdated();
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {
                         ps.isUpdatedWallets = false;
