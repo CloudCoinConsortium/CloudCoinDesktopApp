@@ -2329,7 +2329,7 @@ public class AdvancedClient  {
             gridbag.setConstraints(n, c);
             ct.add(n);
 
-            tf0 = new MyTextField("Dst Wallet Password");
+            tf0 = new MyTextField("Wallet Password");
             c.insets = new Insets(24, 10, 4, 0);
             c.gridx = GridBagConstraints.RELATIVE;
             c.anchor = GridBagConstraints.WEST;
@@ -2375,7 +2375,7 @@ public class AdvancedClient  {
                         String wHash = dstWallet.getPasswordHash();
                         String providedHash = AppCore.getMD5(mtf0.getText());
                         if (wHash == null) {
-                            ps.errText = "Dst Wallet is corrupted";
+                            ps.errText = "To Wallet is corrupted";
                             showScreen();
                             return;
                         }
@@ -2386,8 +2386,7 @@ public class AdvancedClient  {
                             return;
                         } 
                     
-                        dstWallet.setPassword(mtf0.getText());
-                         
+                        dstWallet.setPassword(mtf0.getText());                        
                     }
 
                     if (!AppCore.moveToFolderNewName(origName, Config.DIR_BANK, defWalletName, name)) {
@@ -3597,7 +3596,7 @@ public class AdvancedClient  {
                     
                     String dstName = remoteWalledId.getText().trim();
                     if (ps.srcWallet.isSkyWallet() && ps.srcWallet.getName().equals(dstName)) {
-                        ps.errText = "Src and Dst wallets cannot be the same";
+                        ps.errText = "Wallets cannot be the same";
                         showScreen();
                         return;
                     }
