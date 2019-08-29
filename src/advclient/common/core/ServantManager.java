@@ -166,9 +166,7 @@ public class ServantManager {
         String[] wallets = AppCore.getDirs();
         for (int i = 0; i < wallets.length; i++) {
             setActiveWallet(wallets[i]);
-            initWallet(wallets[i], "");
-            
-            
+            initWallet(wallets[i], "");        
         }
         
         checkIDCoins();

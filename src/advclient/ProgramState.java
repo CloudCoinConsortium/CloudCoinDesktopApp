@@ -57,6 +57,7 @@ public class ProgramState {
     final public static int SCREEN_MAKING_CHANGE = 39;
     final public static int SCREEN_SETTING_DNS_RECORD = 40;
     final public static int SCREEN_DOING_BACKUP = 41;
+    final public static int SCREEN_EXPORTING = 42;
     
     
     final static int CB_STATE_INIT = 1;
