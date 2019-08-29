@@ -200,6 +200,10 @@ public class AppUI {
         return new Color(0x7E8084);
     }
     
+    public static Color getColor15() {
+        return new Color(0x224068);
+    }
+    
     public static Color getDisabledColor() {
         return new Color(0xCCCCCC);
     }

@@ -658,7 +658,7 @@ public class AdvancedClient  {
                 public void mouseEntered(MouseEvent evt) {
                     ps.popupVisible = true;
                     JMenuItem jMenuItem = (JMenuItem) evt.getSource();
-                    jMenuItem.setBackground(AppUI.getColor2());
+                    jMenuItem.setBackground(AppUI.getColor15());
                 }
                 
                 public void mouseExited(MouseEvent evt) {
