@@ -2792,7 +2792,10 @@ public class AdvancedClient  {
         
         final optRv rvFrom = setOptionsForWalletsCommon(false, false, true, null);
         if (rvFrom.idxs.length == 0) {
-            ps.errText = "No Wallets to Transfer From";
+            fname = AppUI.wrapDiv("No Wallets to Transfer From");
+            AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
+            y++;
+            AppUI.GBPad(subInnerCore, y, gridbag);  
             return;
         }
 
@@ -3220,7 +3223,10 @@ public class AdvancedClient  {
         subInnerCore.setLayout(gridbag);
 
         if (sm.getFirstNonSkyWallet() == null) {
-            ps.errText = "You have no Local Wallets";
+            fname = AppUI.wrapDiv("You have no Local Wallets");
+            AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
+            y++;
+            AppUI.GBPad(subInnerCore, y, gridbag);  
             return;
         }
 
@@ -4670,13 +4676,8 @@ public class AdvancedClient  {
             AppUI.alignTop(invPanel);
             AppUI.setSize(invPanel, 520, 62);
             AppUI.setMargin(invPanel, 8, 8, 8, 20);
-            //AppUI.noOpaque(invPanel);
             
             hwrapper.add(invPanel);
-            
-            
-
-
         }
 
         updateTransactionWalletData(w);
