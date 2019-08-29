@@ -53,7 +53,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.12";
+    String version = "2.1.13";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -880,6 +880,9 @@ public class AdvancedClient  {
                 break;
             case ProgramState.SCREEN_MAKING_CHANGE:
                 showMakingChangeScreen();
+                break;
+            case ProgramState.SCREEN_EXPORTING:
+                showExportingScreen();
                 break;
                 
         }
@@ -2506,7 +2509,7 @@ public class AdvancedClient  {
         x = new JLabel(ps.typedAmount + " CC");
         AppUI.setCommonBoldFont(x);
         c.anchor = GridBagConstraints.WEST;
-        c.gridx = GridBagConstraints.RELATIVE;;
+        c.gridx = GridBagConstraints.RELATIVE;
         c.gridy = y;
         gridbag.setConstraints(x, c);
         ct.add(x);
@@ -2563,7 +2566,9 @@ public class AdvancedClient  {
                     } else {
                         sm.startExporterService(Config.TYPE_STACK, ps.typedAmount, ps.typedMemo, ps.chosenFile, false, new ExporterCb());
                     }
+                    ps.currentScreen = ProgramState.SCREEN_EXPORTING;
                     ps.isSkyDeposit = false;
+                    showScreen();
                 } else if (ps.sendType == ProgramState.SEND_TYPE_WALLET) {
                     ps.dstWallet.setPassword(ps.typedDstPassword);              
                     ps.currentScreen = ProgramState.SCREEN_SENDING;
@@ -3425,17 +3430,6 @@ public class AdvancedClient  {
                     passwordDst.getTextField().setVisible(false);
                     dpText.setVisible(false);
                 }
-                
-                /*
-                String value = cboxfrom.getSelectedValue();
-                //optRv lrvFrom = setOptionsForWalletsCommon(false, true, true, dstWallet.getName());
-                optRv lrvFrom = setOptionsForWalletsCommon(false, false, true, dstWallet.getName());
-                rvFrom.idxs = lrvFrom.idxs;
-                rvFrom.options = lrvFrom.options;
-                cboxfrom.setOptions(rvFrom.options); 
-                System.out.println("v="+value);
-                cboxfrom.setDefault(value);
-                */
             }
         });
 
@@ -3546,12 +3540,6 @@ public class AdvancedClient  {
                         showScreen();
                         return;
                     }
-                    /*
-                    if (ps.srcWallet.isSkyWallet()) {
-                        ps.errText = "Transfer from Sky Wallet to Remote Wallet is not supported";
-                        showScreen();
-                        return;
-                    }*/
                     
                     if (ps.typedMemo.isEmpty()) {
                         ps.errText = "Memo cannot be empty";
@@ -5979,6 +5967,15 @@ public class AdvancedClient  {
         rightPanel.add(gct);
     }
     
+    public void showExportingScreen() {
+        boolean isError = !ps.errText.equals("");
+        
+        JPanel subInnerCore = getModalJPanel("Exporting Coins. Please wait...");
+        maybeShowError(subInnerCore);
+      
+        AppUI.hr(subInnerCore, 4);
+    }
+    
     public void showDoingBackupScreen() {
         boolean isError = !ps.errText.equals("");
         
@@ -7376,6 +7373,7 @@ public class AdvancedClient  {
                 }
                 
                 sm.getActiveWallet().appendTransaction(ps.typedMemo, er.totalExported * -1, er.receiptId);
+                sm.getActiveWallet().setNotUpdated();
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {
                         ps.isUpdatedWallets = false;
