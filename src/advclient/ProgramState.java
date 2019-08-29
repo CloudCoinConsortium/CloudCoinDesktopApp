@@ -141,6 +141,8 @@ public class ProgramState {
     
     boolean changeFromExport;
     
+    boolean popupVisible;
+    
     public ProgramState() {
         currentScreen = SCREEN_AGREEMENT;
         cwalletRecoveryRequested = cwalletPasswordRequested = false;
@@ -203,6 +205,8 @@ public class ProgramState {
         triedToChange = false;
         
         changeFromExport = false;
+        
+        popupVisible = false;
         
     }
  

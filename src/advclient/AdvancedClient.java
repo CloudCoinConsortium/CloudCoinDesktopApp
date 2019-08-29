@@ -610,6 +610,7 @@ public class AdvancedClient  {
     
             MouseAdapter ma = new MouseAdapter() {
                 public void mouseEntered(MouseEvent evt) {
+                    ps.popupVisible = true;
                     JMenuItem jMenuItem = (JMenuItem) evt.getSource();
                     jMenuItem.setBackground(AppUI.getColor0());
                 }
@@ -617,6 +618,23 @@ public class AdvancedClient  {
                 public void mouseExited(MouseEvent evt) {
                     JMenuItem jMenuItem = (JMenuItem) evt.getSource();
                     jMenuItem.setBackground(AppUI.getColor6());
+                    
+                    ps.popupVisible = false;
+                    EventQueue.invokeLater(new Runnable() {
+                        public void run(){
+                            try {
+                                 Thread.sleep(40);
+                            } catch(InterruptedException ex) {
+                            }
+
+                            if (ps.popupVisible)
+                                return;
+
+                            ficon.setOpaque(false);
+                            ficon.repaint();
+                            popupMenu.setVisible(false);
+                        }
+                    });                  
                 }
                 
                 public void mouseReleased(MouseEvent evt) {
@@ -679,13 +697,14 @@ public class AdvancedClient  {
         popupMenu.addPopupMenuListener(new PopupMenuListener() {
             @Override
             public void popupMenuWillBecomeVisible(final PopupMenuEvent e) {
-                
+                ps.popupVisible = true;
             }
             @Override
             public void popupMenuWillBecomeInvisible(final PopupMenuEvent e) {
                 AppUI.setBackground(ficon, savedColor);
                 ficon.setOpaque(false);
                 ficon.repaint();
+                ps.popupVisible = false;
             }
             
             @Override
@@ -693,16 +712,45 @@ public class AdvancedClient  {
                 AppUI.setBackground(ficon, savedColor);
                 ficon.setOpaque(false);
                 ficon.repaint();
+                ps.popupVisible = false;
             }
         });
 
         icon0.addMouseListener(new MouseAdapter() {
+            /*
             public void mouseReleased(MouseEvent e) {
                 ficon.setOpaque(true);
                 AppUI.setBackground(ficon, AppUI.getColor6());
 
                 ficon.repaint();              
                 popupMenu.show(ficon, 0 - mWidth  + ficon.getWidth(), ficon.getHeight());
+            }*/
+            
+            public void mouseEntered(MouseEvent e) {
+                ficon.setOpaque(true);
+                AppUI.setBackground(ficon, AppUI.getColor6());
+
+                ficon.repaint();              
+                popupMenu.show(ficon, 0 - mWidth  + ficon.getWidth(), ficon.getHeight());
+            }
+            
+            public void mouseExited(MouseEvent e) {
+                ps.popupVisible = false;
+                EventQueue.invokeLater(new Runnable() {
+                    public void run(){
+                        try {
+                            Thread.sleep(40);
+                        } catch(InterruptedException ex) {
+                        }
+
+                        if (ps.popupVisible)
+                            return;
+
+                        ficon.setOpaque(false);
+                        ficon.repaint();
+                        popupMenu.setVisible(false);
+                    }
+                });
             }
         });
         
