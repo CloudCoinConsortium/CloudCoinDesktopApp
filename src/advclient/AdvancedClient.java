@@ -1510,7 +1510,6 @@ public class AdvancedClient  {
                 } catch (InterruptedException e) {}
 
                 while (!ps.isEchoFinished) {
-                    System.out.println("waittt");
                     try {
                         Thread.sleep(300);
                     } catch (InterruptedException e) {}
