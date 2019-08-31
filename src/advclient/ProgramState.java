@@ -142,6 +142,8 @@ public class ProgramState {
     
     boolean popupVisible;
     
+    boolean isCheckingSkyID;
+
     public ProgramState() {
         currentScreen = SCREEN_AGREEMENT;
         cwalletRecoveryRequested = cwalletPasswordRequested = false;
@@ -206,6 +208,8 @@ public class ProgramState {
         
         popupVisible = false;
         
+        isCheckingSkyID = false;
+
     }
  
     public String toString() {

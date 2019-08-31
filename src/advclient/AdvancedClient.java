@@ -198,6 +198,12 @@ public class AdvancedClient  {
         }     
     }
     
+    public String getSkyIDError(Wallet w) {
+        return "Your Sky Coin ID <b>" + w.getName() + "</b> is not authentic. It is not safe to use it.<br><br>"
+            + "The Pown String is <b>" + w.getIDCoin().getPownString() + "</b><br><br>Move the Coin to the Fracked folder of any Wallet and fix it";
+    }
+
+    
     public String getPickError(Wallet w) {
         String errText = ""
                 + "Cannot make change<br><br>This version of software does not support making change<br>"
@@ -1020,6 +1026,9 @@ public class AdvancedClient  {
         pbar.setVisible(true);
         pbar.setValue(raidaProcessed);
         
+        if (totalCoins == 0)
+            return;
+
         String stc = AppCore.formatNumber(totalCoinsProcessed);
         String tc = AppCore.formatNumber(totalCoins);
         
@@ -1538,6 +1547,50 @@ public class AdvancedClient  {
                     showScreen();
                     return;
                 }
+                
+                CloudCoin skyCC = null;
+                if (ps.srcWallet.isSkyWallet()) {
+                    ps.isCheckingSkyID = true;
+                    skyCC = ps.srcWallet.getIDCoin();
+
+                    pbarText.setText("Checking Your Source SkyWallet ID");
+                    pbarText.repaint();
+
+                    sm.startAuthenticatorService(skyCC, new AuthenticatorForSkyCoinCb());
+                    while (ps.isCheckingSkyID) {
+                        try {
+                            Thread.sleep(300);
+                        } catch (InterruptedException e) {}
+                    }
+
+                    if (AppCore.getPassedCount(skyCC) != RAIDA.TOTAL_RAIDA_COUNT) {
+                        ps.errText = getSkyIDError(ps.srcWallet);
+                        showScreen();
+                        return;
+                    }
+                }
+
+                if (ps.dstWallet != null && ps.dstWallet.isSkyWallet()) {
+                    ps.isCheckingSkyID = true;
+                    skyCC = ps.dstWallet.getIDCoin();
+
+                    pbarText.setText("Checking Your Destination SkyWallet ID");
+                    pbarText.repaint();
+
+                    sm.startAuthenticatorService(skyCC, new AuthenticatorForSkyCoinCb());
+                    while (ps.isCheckingSkyID) {
+                        try {
+                            Thread.sleep(300);
+                        } catch (InterruptedException e) {}
+                    }
+
+                    if (AppCore.getPassedCount(skyCC) != RAIDA.TOTAL_RAIDA_COUNT) {
+                        ps.errText = getSkyIDError(ps.dstWallet);
+                        showScreen();
+                        return;
+                    }
+                }
+
                 
                 
                 String dstName =  (ps.foundSN == 0) ? ps.dstWallet.getName() : "" + ps.foundSN;
@@ -2176,7 +2229,7 @@ public class AdvancedClient  {
                   
                     dstWallet.appendTransaction("Coin from Deleted Sky Wallet", ps.srcWallet.getIDCoin().getDenomination(), "skymove");
                     
-                    String wname = ps.srcWallet.getSkyName();
+                    final String wname = ps.srcWallet.getSkyName();
                     String wdomain = ps.srcWallet.getDomain();
                     final DNSSn d = new DNSSn(wname, wdomain, wl);
                     Thread t = new Thread(new Runnable() {
@@ -6124,6 +6177,39 @@ public class AdvancedClient  {
             sm.startAuthenticatorService(new AuthenticatorCb());
         }
     }
+    
+    class AuthenticatorForSkyCoinCb implements CallbackInterface {
+       public void callback(Object result) {
+            wl.debug(ltag, "AuthenticatorSkyCoin finished");
+
+            final Object fresult = result;
+            if (isWithdrawing())
+                ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+            else
+                ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
+
+            final AuthenticatorResult ar = (AuthenticatorResult) fresult;
+            if (ar.status == AuthenticatorResult.STATUS_ERROR) {
+                EventQueue.invokeLater(new Runnable() {
+                    public void run() {
+                        ps.errText = "Failed to Authencticate SkyID Coin";
+                        showScreen();
+                    }
+                });
+                ps.isCheckingSkyID = false;
+                return;
+            } else if (ar.status == AuthenticatorResult.STATUS_FINISHED) {
+                ps.isCheckingSkyID = false;
+                return;
+            } else if (ar.status == AuthenticatorResult.STATUS_CANCELLED) {
+                ps.isCheckingSkyID = false;
+                return;
+            }
+
+            setRAIDAProgressCoins(ar.totalRAIDAProcessed, 0, 0);
+       }
+    }
+
 
     class AuthenticatorCb implements CallbackInterface {
 	public void callback(Object result) {

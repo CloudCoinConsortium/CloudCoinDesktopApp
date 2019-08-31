@@ -44,9 +44,36 @@ public class Authenticator extends Servant {
         });
     }
 
+    public void launch(CloudCoin cc, CallbackInterface icb) {
+        this.cb = icb;
+        final CloudCoin fcc = cc;
+
+        globalResult = new AuthenticatorResult();
+        launchThread(new Runnable() {
+            @Override
+            public void run() {
+                logger.info(ltag, "RUN CloudCoin Authenticator for " + fcc.sn);
+
+                ArrayList<CloudCoin> ccs = new ArrayList<CloudCoin>();
+                ccs.add(fcc);
+
+                AuthenticatorResult ar = new AuthenticatorResult();
+                if (!processDetect(ccs, false)) {
+                    logger.error(ltag, "Failed to detect");
+                    globalResult.status = AuthenticatorResult.STATUS_ERROR;
+                } else {
+                    globalResult.status = AuthenticatorResult.STATUS_FINISHED;
+                }
+
+                copyFromGlobalResult(ar);
+                if (cb != null)
+                    cb.callback(ar);
+            }
+        });
+    }
+
     public void setConfig() {
         logger.debug(ltag, "Setting config");
-        //putConfigValue("max-coins-to-multi-detect", "" + Config.DEFAULT_MAX_COINS_MULTIDETECT);
     }
     
     private void copyFromGlobalResult(AuthenticatorResult aResult) {
@@ -65,7 +92,7 @@ public class Authenticator extends Servant {
         }
     }
 
-    public boolean processDetect(ArrayList<CloudCoin> ccs) {
+    public boolean processDetect(ArrayList<CloudCoin> ccs, boolean needGeneratePans) {
         String[] results;
         String[] requests;
         StringBuilder[] sbs;
@@ -83,7 +110,10 @@ public class Authenticator extends Servant {
         }
 
         for (CloudCoin cc : ccs) {
-            cc.generatePans(this.email);
+            if (needGeneratePans)
+                cc.generatePans(this.email);
+            else
+                cc.setPansToAns();
 
             for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
                 if (!first)
@@ -143,7 +173,7 @@ public class Authenticator extends Servant {
             if (results[i] != null) {
                 if (results[i].equals("")) {
                     logger.error(ltag, "Skipped raida" + i);
-                    setCoinStatus(ccs, i, CloudCoin.STATUS_UNTRIED);
+                    setCoinStatus(ccs, i, CloudCoin.STATUS_ERROR);
                     continue;
                 }
             }
@@ -183,8 +213,6 @@ public class Authenticator extends Servant {
                 logger.info(ltag, "raida" + i + " v=" + ar[i][j].status + " m="+ar[i][j].message + " j= " + j + " st=" + status);
             }
         }
-
-        moveCoins(ccs);
 
         return true;
     }
@@ -318,7 +346,7 @@ public class Authenticator extends Servant {
                 logger.info(ltag, "Processing");
 
                 AuthenticatorResult ar = new AuthenticatorResult();
-                if (!processDetect(ccs)) {
+                if (!processDetect(ccs, true)) {
                     moveCoinsToLost(ccs);
                     globalResult.status = AuthenticatorResult.STATUS_ERROR;
                     copyFromGlobalResult(ar);
@@ -328,6 +356,7 @@ public class Authenticator extends Servant {
                     return;
                 }
 
+                moveCoins(ccs);
                 ccs.clear();
 
                 globalResult.totalRAIDAProcessed = 0;
@@ -343,10 +372,11 @@ public class Authenticator extends Servant {
         AuthenticatorResult ar = new AuthenticatorResult();
         if (ccs.size() > 0) {
             logger.info(ltag, "adding + " + ccs.size());
-            if (!processDetect(ccs)) {
+            if (!processDetect(ccs, true)) {
                 moveCoinsToLost(ccs);
                 globalResult.status = AuthenticatorResult.STATUS_ERROR;
             } else {
+                moveCoins(ccs);
                 globalResult.status = AuthenticatorResult.STATUS_FINISHED;
                 globalResult.totalFilesProcessed += ccs.size();
                 globalResult.totalCoinsProcessed = curValProcessed;

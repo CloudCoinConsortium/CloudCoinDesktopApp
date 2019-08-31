@@ -1023,5 +1023,18 @@ public class AppCore {
         return sidx + " " + countries[idx];
         
     }
-    
+   
+    public static int getPassedCount(CloudCoin cc) {
+        int passed = 0;
+
+        for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+            if (cc.getDetectStatus(i) == CloudCoin.STATUS_PASS)
+                passed++;
+        }
+
+        cc.setPownStringFromDetectStatus();
+        logger.debug(ltag, "Passed count " + passed + " cc " + cc.sn + " pown=" + cc.getPownString());
+
+        return passed;
+    }
 }
