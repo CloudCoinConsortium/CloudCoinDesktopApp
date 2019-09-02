@@ -944,11 +944,11 @@ public class AdvancedClient  {
                 break;
         }
         
-        headerPanel.repaint();
-        headerPanel.revalidate();
+     //   headerPanel.repaint();
+     //   headerPanel.revalidate();
 
-        corePanel.repaint();
-        corePanel.revalidate();
+     //   corePanel.repaint();
+     //   corePanel.revalidate();
     }
   
     public void maybeShowError(JPanel p) {
