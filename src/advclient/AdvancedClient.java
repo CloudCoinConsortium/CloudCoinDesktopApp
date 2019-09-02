@@ -6445,7 +6445,6 @@ public class AdvancedClient  {
                             if (AppCore.getPassedCount(fcc) != RAIDA.TOTAL_RAIDA_COUNT) {
                                 ps.currentScreen = ProgramState.SCREEN_SKY_WALLET_CREATED;
                                 ps.errText = getSkyIDError(wname, fcc.getPownString());
-                                System.out.println("x1="+ps.errText);
                                 showScreen();
                                 return;
                             }
