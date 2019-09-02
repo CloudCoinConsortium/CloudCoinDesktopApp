@@ -57,7 +57,7 @@ public class RoundedBorder implements Border {
 
     public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
         Graphics2D g2 = (Graphics2D) g.create();
-        
+
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         //g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, color.getAlpha()));
         g2.setColor(this.color);
