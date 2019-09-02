@@ -843,7 +843,8 @@ public class AdvancedClient  {
             return;
         
         if (sm.getWallets().length != 0) {
-            ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+            setActiveWallet(sm.getWallets()[0]);
+            ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
         }         
     }
     
@@ -4762,7 +4763,7 @@ public class AdvancedClient  {
         
         if (isSky) {
             Hashtable<String, String[]> envelopes = sm.getActiveWallet().getEnvelopes();
-            thlabel.setText("Skywallet Contents. Click Deposit to Download");
+            thlabel.setText("Skywallet Contents. Click Transfer to Download");
             if (envelopes == null || envelopes.size() == 0) {
                 thlabel.setText("No Coins");
                 return;
