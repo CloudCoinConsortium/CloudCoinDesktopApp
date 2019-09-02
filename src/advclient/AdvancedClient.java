@@ -799,8 +799,10 @@ public class AdvancedClient  {
         if (sm == null) 
             return;
 
-        if (sm.getWallets().length != 0)
-            ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+        if (sm.getWallets().length != 0) {
+            setActiveWallet(sm.getWallets()[0]);
+            ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
+        }
     }
     
     public void showScreen() {
@@ -5726,7 +5728,7 @@ public class AdvancedClient  {
         
         if (isSky) {
             Hashtable<String, String[]> envelopes = sm.getActiveWallet().getEnvelopes();
-            trLabel = new JLabel("Skywallet Contents. Click Deposit to Download");
+            trLabel = new JLabel("Skywallet Contents. Click Transfer to Download");
             if (envelopes == null || envelopes.size() == 0) {
                 trLabel = new JLabel("No Coins");
                 AppUI.setSemiBoldFont(trLabel, 20);
