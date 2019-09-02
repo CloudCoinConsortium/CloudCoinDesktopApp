@@ -198,9 +198,9 @@ public class AdvancedClient  {
         }     
     }
     
-    public String getSkyIDError(Wallet w) {
-        return "Your Sky Coin ID <b>" + w.getName() + "</b> is not authentic. It is not safe to use it.<br><br>"
-            + "The Pown String is <b>" + w.getIDCoin().getPownString() + "</b><br><br>Move the Coin to the Fracked folder of any Wallet and fix it";
+    public String getSkyIDError(String name, String pownString) {
+        return "Your Sky Coin ID <b>" + name + "</b> is not authentic. It is not safe to use it.<br><br>"
+            + "The Pown String is <b>" + pownString + "</b><br><br>Move the Coin to the Fracked folder of any Wallet and fix it";
     }
 
     
@@ -982,7 +982,11 @@ public class AdvancedClient  {
                 break;
             case ProgramState.SCREEN_EXPORTING:
                 showExportingScreen();
-                break;                
+                break; 
+            case ProgramState.SCREEN_CHECKING_SKYID:
+                showCheckingSkyIDScreen();
+                break;
+
         }
         
         Component[] cs = lwrapperPanel.getComponents();
@@ -1020,6 +1024,9 @@ public class AdvancedClient  {
 
             if (ps.dstWallet != null)
                 ps.dstWallet.setNotUpdated();
+            
+            p.revalidate();
+            p.repaint();
         }
     }
     
@@ -1565,7 +1572,7 @@ public class AdvancedClient  {
                     }
 
                     if (AppCore.getPassedCount(skyCC) != RAIDA.TOTAL_RAIDA_COUNT) {
-                        ps.errText = getSkyIDError(ps.srcWallet);
+                        ps.errText = getSkyIDError(ps.srcWallet.getName(), ps.srcWallet.getIDCoin().getPownString());
                         showScreen();
                         return;
                     }
@@ -1586,7 +1593,7 @@ public class AdvancedClient  {
                     }
 
                     if (AppCore.getPassedCount(skyCC) != RAIDA.TOTAL_RAIDA_COUNT) {
-                        ps.errText = getSkyIDError(ps.dstWallet);
+                        ps.errText = getSkyIDError(ps.srcWallet.getName(), ps.srcWallet.getIDCoin().getPownString());
                         showScreen();
                         return;
                     }
@@ -5162,6 +5169,53 @@ public class AdvancedClient  {
         rightPanel.add(gct);
     }
     
+    public void showCheckingSkyIDScreen() {
+        JPanel subInnerCore = getPanel("Checking your Sky Wallet ID Coin...");
+
+        JPanel ct = new JPanel();
+        AppUI.noOpaque(ct);
+        subInnerCore.add(ct);
+
+        GridBagLayout gridbag = new GridBagLayout();
+        GridBagConstraints c = new GridBagConstraints();
+        ct.setLayout(gridbag);
+
+        c.anchor = GridBagConstraints.CENTER;
+        c.insets = new Insets(10, 0, 4, 0);
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = 0;
+
+        pbarText = new JLabel("");
+        AppUI.setCommonFont(pbarText);
+        c.insets = new Insets(40, 20, 4, 0);
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = 1;
+        gridbag.setConstraints(pbarText, c);
+        ct.add(pbarText);
+
+        // ProgressBar
+        pbar = new JProgressBar();
+        pbar.setStringPainted(true);
+        AppUI.setMargin(pbar, 0);
+        AppUI.setSize(pbar, (int) (tw / 2.6f) , 50);
+        pbar.setMinimum(0);
+        pbar.setMaximum(24);
+        pbar.setValue(0);
+        pbar.setUI(new FancyProgressBar());
+        AppUI.noOpaque(pbar);
+
+        c.insets = new Insets(20, 20, 4, 0);
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = 2;
+        gridbag.setConstraints(pbar, c);
+        ct.add(pbar);
+
+
+        AppUI.hr(subInnerCore, 4);
+    }
+
+    
+    
     public void showExportingScreen() {
         JPanel subInnerCore = getPanel("Exporting Coins. Please wait...");
       
@@ -5314,7 +5368,7 @@ public class AdvancedClient  {
                     return;
                 }
                 
-                final String newFileName = domain + ".stack";
+                final String newFileName = domain + "." + ps.trustedServer + ".stack";
                 final DNSSn d = new DNSSn(domain, ps.trustedServer, wl);
                 int sn = d.getSN();
                 
@@ -5363,17 +5417,54 @@ public class AdvancedClient  {
                         showScreen();
                         return;
                     }
-                }
-                
-                if (!AppCore.moveToFolderNewName(ps.chosenFile, AppCore.getIDDir(), null, newFileName)) {
-                    ps.errText = "Failed to move coin";
+                                       
+                    final CloudCoin fcc = cc;
+                    final String wname = domain + "." + ps.trustedServer;
+                    sm.startAuthenticatorService(fcc, new CallbackInterface() {
+                        public void callback(Object result) {
+                            wl.debug(ltag, "AuthenticatorSkyCoin finished");
+
+                            final Object fresult = result;
+                            final AuthenticatorResult ar = (AuthenticatorResult) fresult;
+                            if (ar.status == AuthenticatorResult.STATUS_ERROR || ar.status == AuthenticatorResult.STATUS_CANCELLED) {
+                                ps.errText = "Failed to check your Coin";
+                                showScreen();
+                                return;
+                            } else if (ar.status == AuthenticatorResult.STATUS_FINISHED) {
+                                ps.isCheckingSkyID = false;
+                            } else {
+                                setRAIDAProgressCoins(ar.totalRAIDAProcessed, 0, 0);
+                                return;
+                            }
+
+                            if (AppCore.getPassedCount(fcc) != RAIDA.TOTAL_RAIDA_COUNT) {
+                                ps.currentScreen = ProgramState.SCREEN_SKY_WALLET_CREATED;
+                                ps.errText = getSkyIDError(wname, fcc.getPownString());
+                                showScreen();
+                                return;
+                            }
+
+                            if (!AppCore.moveToFolderNewName(ps.chosenFile, AppCore.getIDDir(), null, newFileName)) {
+                                ps.errText = "Failed to move coin";
+                                showScreen();
+                                return;
+                            }
+
+                            SwingUtilities.invokeLater(new Runnable() {
+                                public void run() {
+                                    sm.initWallets();
+                                    ps.currentScreen = ProgramState.SCREEN_SKY_WALLET_CREATED;
+                                    showScreen();
+                                }
+                            });
+
+                        }
+                    });
+                    
+                    ps.currentScreen = ProgramState.SCREEN_CHECKING_SKYID;
                     showScreen();
-                    return;
+
                 }
-                
-                sm.initWallets();
-                ps.currentScreen = ProgramState.SCREEN_SKY_WALLET_CREATED;
-                showScreen();
             }
         }, y, gridbag);
 

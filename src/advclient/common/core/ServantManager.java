@@ -185,8 +185,16 @@ public class ServantManager {
                 continue;
             }
             
-            String wname = idCoins[i].substring(0, idCoins[i].lastIndexOf('.'));
-            wname += "." + Config.DDNS_DOMAIN;
+            int dots = 0;
+            
+            String wname = idCoins[i].substring(0, idCoins[i].indexOf('.'));
+            for (int y = 0; y < wname.length(); y++) {
+                if (wname.charAt(y) == '.')
+                    dots++;
+            }
+
+            if (dots <= 2)
+                wname += "." + Config.DDNS_DOMAIN;
 
             initCloudWallet(cc, wname);
         }     
