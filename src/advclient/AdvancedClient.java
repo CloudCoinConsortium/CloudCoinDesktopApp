@@ -2031,6 +2031,8 @@ public class AdvancedClient  {
         }
         
         ps.dstWallet.setNotUpdated();
+        if (ps.srcWallet != null)
+            ps.srcWallet.setNotUpdated();
              
         subInnerCore = getModalJPanel("Deposit Complete");
         maybeShowError(subInnerCore);
@@ -6263,7 +6265,7 @@ public class AdvancedClient  {
 
         y++;
         
-        final MyTextField tf0 = new MyTextField("JohnDoe.SkyWallet.cc", false);
+        final MyTextField tf0 = new MyTextField("JohnDoe", false);
         c.insets = new Insets(0, 0, 4, 0);
         c.gridx = 0;
         c.gridy = y;
