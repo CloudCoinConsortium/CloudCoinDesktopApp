@@ -1963,6 +1963,8 @@ public class AdvancedClient  {
         MyTextField walletName = null;
 
         ps.dstWallet.setNotUpdated();
+        if (ps.srcWallet != null)
+            ps.srcWallet.setNotUpdated();
 
         subInnerCore = getPanel("Deposit Complete");                
         GridBagLayout gridbag = new GridBagLayout();
@@ -5270,7 +5272,7 @@ public class AdvancedClient  {
         y++; 
 
         fname = new JLabel("Your Proposed Address");
-        final MyTextField tf0 = new MyTextField("JohnDoe.SkyWallet.cc", false);   
+        final MyTextField tf0 = new MyTextField("JohnDoe", false);   
         if (!ps.skyVaultDomain.isEmpty())
             tf0.setData(ps.skyVaultDomain);
         AppUI.getGBRow(subInnerCore, fname, tf0.getTextField(), y, gridbag);
