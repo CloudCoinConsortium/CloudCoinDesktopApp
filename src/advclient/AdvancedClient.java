@@ -53,7 +53,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.13";
+    String version = "2.1.14";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -132,6 +132,7 @@ public class AdvancedClient  {
             return;
         }
     
+        AppCore.readConfig();
         resetState();
     }
    
@@ -607,7 +608,7 @@ public class AdvancedClient  {
         };
  
         String[] items = {"Backup", "List serials", "Clear History", "Fix Fracked", 
-            "Delete Wallet", "Show Folders", "Echo RAIDA"};
+            "Delete Wallet", "Show Folders", "Echo RAIDA", "Settings"};
         for (int i = 0; i < items.length; i++) {
             JMenuItem menuItem = new JMenuItem(items[i]);
             menuItem.setActionCommand("" + i);
@@ -663,6 +664,8 @@ public class AdvancedClient  {
                         ps.currentScreen = ProgramState.SCREEN_SHOW_FOLDERS;
                     } else if (action.equals("6")) {
                         ps.currentScreen = ProgramState.SCREEN_ECHO_RAIDA;
+                    } else if (action.equals("7")) {
+                        ps.currentScreen = ProgramState.SCREEN_SETTINGS;
                     }
                     showScreen();
                 }
@@ -941,6 +944,12 @@ public class AdvancedClient  {
                 break;
             case ProgramState.SCREEN_CHECKING_SKYID:
                 showCheckingSkyIDScreen();
+                break;
+            case ProgramState.SCREEN_SETTINGS:
+                showSettingsScreen();
+                break;
+            case ProgramState.SCREEN_SETTINGS_SAVED:
+                showSettingsDoneScreen();
                 break;
         }
         
@@ -3395,6 +3404,9 @@ public class AdvancedClient  {
         localFolder.setFilepickerListener(new MouseAdapter() {
             @Override
             public void mouseReleased(MouseEvent e) {
+                if (!Config.DEFAULT_EXPORT_DIR.isEmpty())
+                    chooser.setCurrentDirectory(new File(Config.DEFAULT_EXPORT_DIR));
+                
                 int returnVal = chooser.showOpenDialog(null);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {       
                     ps.chosenFile = chooser.getSelectedFile().getAbsolutePath();
@@ -6147,6 +6159,288 @@ public class AdvancedClient  {
         AppUI.hr(subInnerCore, 4);
     }
     
+    public void showSettingsDoneScreen() {
+        JPanel subInnerCore;       
+        subInnerCore = getModalJPanel("Settings");
+        subInnerCore.add(AppUI.hr(32));
+        
+        // Container
+        JPanel ct = new JPanel();
+        AppUI.noOpaque(ct);
+        subInnerCore.add(ct);
+  
+        //ct.setLayout(gridbag);
+
+        String txt = "Configuration Saved";
+
+        // Q
+        JLabel x = new JLabel("<html><div style='width:460px;text-align:center'>" + txt + "</div></html>");
+        AppUI.setCommonBoldFont(x);
+        ct.add(x);
+
+             
+        resetState(); 
+    }
+    
+    public void showSettingsScreen() {
+        showLeftScreen();
+
+        JPanel rightPanel = getRightPanel();    
+    
+        JPanel ct = new JPanel();
+        AppUI.setBoxLayout(ct, true);
+        AppUI.noOpaque(ct);
+        rightPanel.add(ct);
+        
+        JLabel ltitle = AppUI.getTitle("Settings");   
+        ct.add(ltitle);
+        AppUI.alignTop(ct);
+        AppUI.alignTop(ltitle);
+        
+        AppUI.hr(ct, 10);
+        
+        maybeShowError(ct);
+        
+        // Outer Container
+        JPanel oct = new JPanel();
+        AppUI.noOpaque(oct);
+        
+        int y = 0;
+        
+        GridBagLayout gridbag = new GridBagLayout();
+        GridBagConstraints c = new GridBagConstraints(); 
+        c.gridwidth = 1;
+        c.anchor = GridBagConstraints.EAST;
+        c.insets = new Insets(10, 18, 0, 0); 
+        oct.setLayout(gridbag);
+        
+        
+        // Echo Timeout
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;   
+        c.anchor = GridBagConstraints.EAST; 
+        JLabel x = new JLabel("Echo Timeout, s");
+        gridbag.setConstraints(x, c);
+        AppUI.setCommonFont(x);
+        oct.add(x);
+        
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;     
+        c.anchor = GridBagConstraints.WEST; 
+
+        final MyTextField echoTimeout = new MyTextField("Echo Timeout", false);
+        echoTimeout.setData(Integer.toString(Config.ECHO_TIMEOUT / 1000));
+        gridbag.setConstraints(echoTimeout.getTextField(), c);
+        oct.add(echoTimeout.getTextField());
+ 
+        y++;
+        
+        rightPanel.add(oct);
+        
+        // Send/Receive
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;   
+        c.anchor = GridBagConstraints.EAST; 
+        JLabel dto = new JLabel("Send/Receive Timeout, s");
+        gridbag.setConstraints(dto, c);
+        AppUI.setCommonFont(dto);
+        oct.add(dto);
+
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;     
+        c.anchor = GridBagConstraints.WEST; 
+        final MyTextField readTimeout = new MyTextField("Send/Receive Timeout", false);
+        readTimeout.setData(Integer.toString(Config.READ_TIMEOUT / 1000));
+        gridbag.setConstraints(readTimeout.getTextField(), c);
+        oct.add(readTimeout.getTextField());        
+        y++;
+        
+       
+        // Detect timeout
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;   
+        c.anchor = GridBagConstraints.EAST; 
+        dto = new JLabel("Detect Timeout, s");
+        gridbag.setConstraints(dto, c);
+        AppUI.setCommonFont(dto);
+        oct.add(dto);
+
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;     
+        c.anchor = GridBagConstraints.WEST; 
+        final MyTextField detectTimeout = new MyTextField("Detect Timeout", false);
+        detectTimeout.setData(Integer.toString(Config.MULTI_DETECT_TIMEOUT / 1000));
+        gridbag.setConstraints(detectTimeout.getTextField(), c);
+        oct.add(detectTimeout.getTextField());        
+        y++;
+        
+        
+        
+        // Fix timeout
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;   
+        c.anchor = GridBagConstraints.EAST; 
+        dto = new JLabel("Fix Timeout, s");
+        gridbag.setConstraints(dto, c);
+        AppUI.setCommonFont(dto);
+        oct.add(dto);
+
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;     
+        c.anchor = GridBagConstraints.WEST; 
+        final MyTextField fixTimeout = new MyTextField("Fix Timeout", false);
+        fixTimeout.setData(Integer.toString(Config.FIX_FRACKED_TIMEOUT / 1000));
+        gridbag.setConstraints(fixTimeout.getTextField(), c);
+        oct.add(fixTimeout.getTextField());        
+        y++;
+        
+        
+        // Max Coins
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;   
+        c.anchor = GridBagConstraints.EAST; 
+        dto = new JLabel("Max Notes to Check");
+        gridbag.setConstraints(dto, c);
+        AppUI.setCommonFont(dto);
+        oct.add(dto);
+
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;     
+        c.anchor = GridBagConstraints.WEST; 
+        final MyTextField maxNotes = new MyTextField("Max Notes", false);
+        maxNotes.setData(Integer.toString(Config.DEFAULT_MAX_COINS_MULTIDETECT));
+        gridbag.setConstraints(maxNotes.getTextField(), c);
+        oct.add(maxNotes.getTextField());        
+        y++;
+        
+        
+        // DDNS Server
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;   
+        c.anchor = GridBagConstraints.EAST; 
+        dto = new JLabel("DDNS Server");
+        gridbag.setConstraints(dto, c);
+        AppUI.setCommonFont(dto);
+        oct.add(dto);
+
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;     
+        c.anchor = GridBagConstraints.WEST; 
+        final MyTextField ddnsServer = new MyTextField("DDNS Server", false);
+        ddnsServer.setData(Config.DDNSSN_SERVER);
+        gridbag.setConstraints(ddnsServer.getTextField(), c);
+        oct.add(ddnsServer.getTextField());        
+        y++;
+        
+        // Export Dir
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;   
+        c.anchor = GridBagConstraints.EAST; 
+        dto = new JLabel("Export Folder");
+        gridbag.setConstraints(dto, c);
+        AppUI.setCommonFont(dto);
+        oct.add(dto);
+
+        final JFileChooser chooser = new JFileChooser();
+        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        chooser.setAcceptAllFileFilterUsed(false);
+     
+        final MyTextField localFolder = new MyTextField("Export Folder", false, true);
+        localFolder.setFilepickerListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (!Config.DEFAULT_EXPORT_DIR.isEmpty())
+                    chooser.setCurrentDirectory(new File(Config.DEFAULT_EXPORT_DIR));
+                
+                int returnVal = chooser.showOpenDialog(null);
+                if (returnVal == JFileChooser.APPROVE_OPTION) {       
+                    ps.chosenFile = chooser.getSelectedFile().getAbsolutePath();
+                    localFolder.setData(chooser.getSelectedFile().getAbsolutePath());
+                }
+            }
+        });
+        localFolder.setData(new File(Config.DEFAULT_EXPORT_DIR).getAbsolutePath());
+        
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;     
+        c.anchor = GridBagConstraints.WEST; 
+        gridbag.setConstraints(localFolder.getTextField(), c);
+        oct.add(localFolder.getTextField());   
+   
+        y++;
+        
+        JPanel bp = getTwoButtonPanel(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                
+                int echot = Validator.getIntFromString(echoTimeout.getText(), Config.MIN_ECHO_TIMEOUT / 1000, Config.MAX_ECHO_TIMEOUT / 1000);
+                if (echot < 0) {
+                    ps.errText = "Echo timeout must be in the range (" + Config.MIN_ECHO_TIMEOUT/1000 + ", " + Config.MAX_ECHO_TIMEOUT + ")";
+                    showScreen();
+                    return;
+                }
+                
+                int detectt = Validator.getIntFromString(detectTimeout.getText(), Config.MIN_DETECT_TIMEOUT / 1000, Config.MAX_DETECT_TIMEOUT / 1000);
+                if (detectt < 0) {
+                    ps.errText = "Detect timeout must be in the range (" + Config.MIN_DETECT_TIMEOUT/1000 + ", " + Config.MAX_DETECT_TIMEOUT + ")";
+                    showScreen();
+                    return;
+                }
+                
+                int fixt = Validator.getIntFromString(fixTimeout.getText(), Config.MIN_FIX_TIMEOUT / 1000, Config.MAX_FIX_TIMEOUT / 1000);
+                if (fixt < 0) {
+                    ps.errText = "Fix timeout must be in the range (" + Config.MIN_FIX_TIMEOUT/1000 + ", " + Config.MAX_FIX_TIMEOUT + ")";
+                    showScreen();
+                    return;
+                }
+                
+                int readt = Validator.getIntFromString(readTimeout.getText(), Config.MIN_READ_TIMEOUT / 1000, Config.MAX_READ_TIMEOUT / 1000);
+                if (fixt < 0) {
+                    ps.errText = "Send/Receive timeout must be in the range (" + Config.MIN_READ_TIMEOUT/1000 + ", " + Config.MAX_READ_TIMEOUT/1000 + ")";
+                    showScreen();
+                    return;
+                }
+                
+                int notes = Validator.getIntFromString(maxNotes.getText(), Config.MIN_MULTI_NOTES, Config.MAX_MULTI_NOTES);
+                if (notes < 0) {
+                    ps.errText = "Send/Receive timeout must be in the range (" + Config.MIN_MULTI_NOTES + ", " + Config.MAX_MULTI_NOTES + ")";
+                    showScreen();
+                    return;
+                }
+                
+                String ddnssn = ddnsServer.getText();
+                if (!Validator.domain(ddnssn)) {
+                    ps.errText = "Invalid DDNS Server";
+                    showScreen();
+                    return;
+                }
+                
+                
+                Config.DDNSSN_SERVER = ddnssn;
+                Config.DEFAULT_EXPORT_DIR = ps.chosenFile.replace("\"", "\\\"").replace("\\", "\\\\");
+                Config.DEFAULT_MAX_COINS_MULTIDETECT = notes;
+                Config.FIX_FRACKED_TIMEOUT = fixt;
+                Config.MULTI_DETECT_TIMEOUT = detectt;
+                Config.READ_TIMEOUT = readt;
+                Config.ECHO_TIMEOUT = echot;
+                        
+                if (AppCore.writeConfig() == false) {
+                    ps.errText = "Failed to write config file";
+                    showScreen();
+                    return;
+                }
+                
+                ps.currentScreen = ProgramState.SCREEN_SETTINGS_SAVED;
+                showScreen();
+
+            }
+        }, "Save");
+
+        //rightPanel.add(oct);
+        
+        AppUI.hr(rightPanel, 20);
+        rightPanel.add(bp);    
+    }
+    
     public void showCreateSkyWalletScreen() {
         boolean isError = !ps.errText.equals("");
 
@@ -6644,6 +6938,10 @@ public class AdvancedClient  {
     }
     
     public JPanel getTwoButtonPanel(ActionListener al) {
+        return getTwoButtonPanel(al, null);
+    }
+    
+    public JPanel getTwoButtonPanel(ActionListener al, String name) {
         JPanel bp = new JPanel();
      //   AppUI.setBoxLayout(bp, false);
         AppUI.noOpaque(bp);
@@ -6669,6 +6967,9 @@ public class AdvancedClient  {
         String text = "Continue";
         if (isConfirmingScreen())
             text = "Confirm";
+        
+        if (name != null)
+            text = name;
         
         cb = new MyButton(text);
         cb.addListener(al);

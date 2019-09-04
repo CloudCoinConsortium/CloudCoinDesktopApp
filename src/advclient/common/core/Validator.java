@@ -51,5 +51,19 @@ public class Validator {
         
         return m.matches();
     }
-    
+ 
+    public static int getIntFromString(String val, int min, int max) {
+        int rv;
+        
+        try {
+            rv = Integer.parseInt(val);
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+        
+        if (rv < min || rv > max)
+            return -1;
+        
+        return rv;
+    }
 }

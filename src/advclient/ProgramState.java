@@ -59,6 +59,8 @@ public class ProgramState {
     final public static int SCREEN_DOING_BACKUP = 41;
     final public static int SCREEN_EXPORTING = 42;
     final public static int SCREEN_CHECKING_SKYID = 43;
+    final public static int SCREEN_SETTINGS = 44;
+    final public static int SCREEN_SETTINGS_SAVED = 45;
     
     
     final static int CB_STATE_INIT = 1;

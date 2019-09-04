@@ -116,7 +116,7 @@ public class DNSSn {
         String rq = "/ddns.php?sn=" + cc.sn + "&username=" + name + "&ticket=" + message + "&raidanumber=" + raidaNum;
 
         DetectionAgent daFake = new DetectionAgent(RAIDA.TOTAL_RAIDA_CNT * 10000, logger);
-        daFake.setExactFullUrl(Config.DDNSSN_SERVER + "/service/ddns");
+        daFake.setExactFullUrl("https://" + Config.DDNSSN_SERVER + "/service/ddns");
         String result = daFake.doRequest(rq, null);
         if (result == null) {
             logger.error(ltag, "Failed to receive response from DDNSSN Server");
@@ -144,7 +144,7 @@ public class DNSSn {
         String rq = "/ddns_delete.php?sn=" + cc.sn + "&username=" + name + "&ticket=" + message + "&raidanumber=" + raidaNum;
 
         DetectionAgent daFake = new DetectionAgent(RAIDA.TOTAL_RAIDA_CNT * 10000, logger);
-        daFake.setExactFullUrl(Config.DDNSSN_SERVER + "/service/ddns");
+        daFake.setExactFullUrl("https://" + Config.DDNSSN_SERVER + "/service/ddns");
         String result = daFake.doRequest(rq, null);
         if (result == null) {
             logger.error(ltag, "Failed to receive response from DDNSSN Server");

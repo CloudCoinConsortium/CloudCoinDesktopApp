@@ -1039,4 +1039,91 @@ public class AppCore {
         return passed;
     }
     
+    
+    public static void readConfig() {
+        String globalConfigFilename = rootPath + File.separator + Config.GLOBAL_CONFIG_FILENAME;
+        
+        logger.debug(ltag, "Reading config file " + globalConfigFilename);
+        
+        String data = AppCore.loadFile(globalConfigFilename);
+        if (data == null) {
+            logger.debug(ltag, "Failed to read config file. Maybe it doesn't exist yet");
+            return;
+        }
+        
+        String os;
+        int oi;
+        try {
+            JSONObject o = new JSONObject(data);
+                    
+            oi = o.optInt("echo_timeout", -1);
+            if (oi != -1) {
+                logger.debug(ltag, "Echo timeout: " + oi);
+                Config.ECHO_TIMEOUT = oi * 1000;
+            }
+            
+            oi = o.optInt("read_timeout", -1);
+            if (oi != -1) {
+                logger.debug(ltag, "Read timeout: " + oi);
+                Config.READ_TIMEOUT = oi * 1000;
+            }
+            
+            oi = o.optInt("detect_timeout", -1);
+            if (oi != -1) {
+                logger.debug(ltag, "Detect timeout: " + oi);
+                Config.MULTI_DETECT_TIMEOUT = oi * 1000;
+            }
+            
+            oi = o.optInt("fix_timeout", -1);
+            if (oi != -1) {
+                logger.debug(ltag, "Fix timeout: " + oi);
+                Config.FIX_FRACKED_TIMEOUT = oi * 1000;
+            }
+            
+            oi = o.optInt("max_coins", -1);
+            if (oi != -1) {
+                logger.debug(ltag, "Max coins: " + oi);
+                Config.DEFAULT_MAX_COINS_MULTIDETECT = oi;
+            }
+            
+            os = o.optString("export_dir");
+            if (os != null) {
+                logger.debug(ltag, "Export dir: " + os);
+                Config.DEFAULT_EXPORT_DIR = os;
+            }
+            
+            os = o.optString("ddnssn_server");
+            if (os != null) {
+                logger.debug(ltag, "DDNSSN Server: " + os);
+                Config.DDNSSN_SERVER = os;
+            }
+        } catch (JSONException e) {
+            logger.error(ltag, "Failed to parse config file: " + e.getMessage());
+            return;
+        }
+        
+    }
+    
+    public static boolean writeConfig() {
+        String globalConfigFilename = rootPath + File.separator + Config.GLOBAL_CONFIG_FILENAME;
+        
+        logger.debug(ltag, "Saving config " + globalConfigFilename);
+        
+        String edir = Config.DEFAULT_EXPORT_DIR.replace("\"", "\\\"");
+        String data = "{\"echo_timeout\":" + Config.ECHO_TIMEOUT + ", "
+                + "\"detect_timeout\": " + Config.MULTI_DETECT_TIMEOUT + ", "
+                + "\"read_timeout\": " + Config.READ_TIMEOUT + ", "
+                + "\"fix_timeout\": " + Config.FIX_FRACKED_TIMEOUT + ", "
+                + "\"max_coins\": " + Config.DEFAULT_MAX_COINS_MULTIDETECT + ", "
+                + "\"export_dir\": \"" + edir + "\", "
+                + "\"ddnssn_server\": \"" + Config.DDNSSN_SERVER + "\""
+                + "}";
+        
+        File f = new File(globalConfigFilename);
+        f.delete();
+        
+        return AppCore.saveFile(globalConfigFilename, data);
+    }
+    
+    
 }
