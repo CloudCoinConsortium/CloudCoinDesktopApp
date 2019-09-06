@@ -110,7 +110,7 @@ public class Servant {
     }
 
     public void changeUser(String user) {
-        logger.debug(ltag, "Servant " + name + " changing user to " + user);
+        //logger.debug(ltag, "Servant " + name + " changing user to " + user);
         
         this.user = user;
         this.privateLogDir = AppCore.getPrivateLogDir(this.user) + File.separator + name;
@@ -250,7 +250,7 @@ public class Servant {
         byte[] data;
         String xmlData;
 
-        logger.debug(ltag, "reading " + configFilename);
+        //logger.debug(ltag, "reading " + configFilename);
         File file = new File(configFilename);
         try {
             if (!file.exists()) {
@@ -309,7 +309,7 @@ public class Servant {
     }
     
     public void setConfig() {
-        logger.debug(ltag, "Set parent config");
+        
     }
 
     public String getConfigValue(String key) {
@@ -473,7 +473,7 @@ public class Servant {
 
         File[] files = dirObj.listFiles();
         if (files == null) {
-            logger.debug(ltag, "Skipping dir " + dir);
+            //logger.debug(ltag, "Skipping dir " + dir);
             return;
         }
         

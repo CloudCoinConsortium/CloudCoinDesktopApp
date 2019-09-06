@@ -36,12 +36,13 @@ public abstract class GLogger implements GLoggerInterface {
         BufferedWriter br;
         FileWriter fr;
         
-        /*
         if (f.exists()) {
             double bytes = f.length();
             if (bytes > Config.MAX_COMMON_LOG_LENGTH_MB * 1024 * 1024)
                 f.delete();
-        }*/
+            
+            f = new File(file);
+        }
 
         fileName = file;
         try {

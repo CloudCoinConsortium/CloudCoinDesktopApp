@@ -2991,8 +2991,6 @@ public class AdvancedClient  {
                 sc.launch(new CallbackInterface() {
                     public void callback(Object o) {
                         ShowCoinsResult scresult = (ShowCoinsResult) o;
-            
-                        wl.debug(ltag, "ShowCoins done");
                         w.setSNs(scresult.coins);
                                 
                         int[][] counters = scresult.counters;                        
