@@ -38,7 +38,7 @@ public abstract class GLogger implements GLoggerInterface {
         
         if (f.exists()) {
             double bytes = f.length();
-            if (bytes > Config.MAX_COMMON_LOG_LENGTH_MB )
+            if (bytes > Config.MAX_COMMON_LOG_LENGTH_MB * 1024 * 1024)
                 f.delete();
             
             f = new File(file);
