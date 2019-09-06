@@ -3192,14 +3192,11 @@ public class AdvancedClient  {
                         wl.debug(ltag, "ShowEnvelopeCoins return");
                     }
                 });
-            } else {
-                
+            } else {             
                 ShowCoins sc = new ShowCoins(rpath, wl);
                 sc.launch(new CallbackInterface() {
                     public void callback(Object o) {
                         ShowCoinsResult scresult = (ShowCoinsResult) o;
-            
-                        wl.debug(ltag, "ShowCoins done");
                         w.setSNs(scresult.coins);
                                 
                         int[][] counters = scresult.counters;                        

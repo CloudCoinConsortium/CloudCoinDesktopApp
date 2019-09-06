@@ -73,7 +73,7 @@ public class Authenticator extends Servant {
     }
     
     public void setConfig() {
-        logger.debug(ltag, "Setting config");
+
     }
     
     private void copyFromGlobalResult(AuthenticatorResult aResult) {

@@ -40,7 +40,7 @@ public class Wallet implements Comparable<Wallet> {
         this.sns = new int[0];
         this.isUpdated = false;
                
-        logger.debug(ltag, "wallet " + name + " e=" + email + " is="+isEncrypted+ " p="+password);
+        logger.debug(ltag, "wallet " + name + " EmailRecovery: " + email + " isEncrypted: " + isEncrypted);
         lsep = System.getProperty("line.separator");
     }
     

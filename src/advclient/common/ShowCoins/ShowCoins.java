@@ -45,8 +45,6 @@ public class ShowCoins extends Servant {
 
         cleanPrivateLogDir();
 
-        logger.info(ltag, "Show Coins");
-
         showCoinsInFolder(Config.IDX_FOLDER_BANK, Config.DIR_BANK);
         showCoinsInFolder(Config.IDX_FOLDER_FRACKED, Config.DIR_FRACKED);
         //showCoinsInFolder(Config.IDX_FOLDER_LOST, Config.DIR_LOST);
@@ -75,8 +73,6 @@ public class ShowCoins extends Servant {
         for (File file: dirObj.listFiles()) {
             if (file.isDirectory())
                 continue;
-
-            logger.debug(ltag, "Parsing " + file);
 
             try {
                 cc = new CloudCoin(file.toString());
