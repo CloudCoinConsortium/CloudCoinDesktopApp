@@ -198,6 +198,11 @@ public class AdvancedClient  {
             + "The Pown String is <b>" + pownString + "</b><br><br>Move the Coin to the Fracked folder of any Wallet and fix it</div></html>";
     }
     
+    public String getSkyIDErrorIfRAIDAFailed() {
+        return "<html><div style='width:520px;text-align:center'>Creating a Skywallet requires that all RAIDA are available. "
+                + "However, One or more could not be contaced.  Please try again later.</div></html>";
+    }
+    
     public String getPickError(Wallet w) {
         String errText = "<html><div style='width: 520px; text-align: center'>"
                 + "Cannot make change<br><br>This version of software does not support making change<br>"
@@ -1577,6 +1582,12 @@ public class AdvancedClient  {
                         } catch (InterruptedException e) {}
                     }
                     
+                    if (AppCore.getErrorCount(skyCC) > 0) {
+                        ps.errText = getSkyIDErrorIfRAIDAFailed();
+                        showScreen();
+                        return;
+                    }
+                    
                     if (AppCore.getPassedCount(skyCC) != RAIDA.TOTAL_RAIDA_COUNT) {
                         ps.errText = getSkyIDError(ps.srcWallet.getName(), ps.srcWallet.getIDCoin().getPownString());
                         showScreen();
@@ -1596,6 +1607,12 @@ public class AdvancedClient  {
                         try {
                             Thread.sleep(300);
                         } catch (InterruptedException e) {}
+                    }
+                    
+                    if (AppCore.getErrorCount(skyCC) > 0) {
+                        ps.errText = getSkyIDErrorIfRAIDAFailed();
+                        showScreen();
+                        return;
                     }
                     
                     if (AppCore.getPassedCount(skyCC) != RAIDA.TOTAL_RAIDA_COUNT) {
@@ -6774,7 +6791,14 @@ public class AdvancedClient  {
                                 setRAIDAProgressCoins(ar.totalRAIDAProcessed, 0, 0);
                                 return;
                             }
-
+                            
+                            if (AppCore.getErrorCount(fcc) > 0) {
+                                ps.currentScreen = ProgramState.SCREEN_SKY_WALLET_CREATED;
+                                ps.errText = getSkyIDErrorIfRAIDAFailed();
+                                showScreen();
+                                return;
+                            }
+                            
                             if (AppCore.getPassedCount(fcc) != RAIDA.TOTAL_RAIDA_COUNT) {
                                 ps.currentScreen = ProgramState.SCREEN_SKY_WALLET_CREATED;
                                 ps.errText = getSkyIDError(wname, fcc.getPownString());
