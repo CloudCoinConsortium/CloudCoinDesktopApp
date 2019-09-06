@@ -56,7 +56,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.13";
+    String version = "2.1.14";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -135,9 +135,8 @@ public class AdvancedClient  {
             ps.errText = "Failed to init program. Make sure you have correct folder permissions (" + home + ")";
             return;
         }
-        
-        
-        
+               
+        AppCore.readConfig();
         resetState();
     }
    
@@ -654,7 +653,7 @@ public class AdvancedClient  {
         };
  
         String[] items = {"Backup", "List serials", "Clear History", "Fix Fracked", 
-            "Delete Wallet", "Show Folders", "Echo RAIDA"};
+            "Delete Wallet", "Show Folders", "Echo RAIDA", "Settings"};
         for (int i = 0; i < items.length; i++) {
             JMenuItem menuItem = new JMenuItem(items[i]);
             menuItem.setActionCommand("" + i);
@@ -710,6 +709,8 @@ public class AdvancedClient  {
                         ps.currentScreen = ProgramState.SCREEN_SHOW_FOLDERS;
                     } else if (action.equals("6")) {
                         ps.currentScreen = ProgramState.SCREEN_ECHO_RAIDA;
+                    } else if (action.equals("7")) {
+                        ps.currentScreen = ProgramState.SCREEN_SETTINGS;
                     }
                     showScreen();
                 }
@@ -986,7 +987,12 @@ public class AdvancedClient  {
             case ProgramState.SCREEN_CHECKING_SKYID:
                 showCheckingSkyIDScreen();
                 break;
-
+            case ProgramState.SCREEN_SETTINGS:
+                showSettingsScreen();
+                break;
+            case ProgramState.SCREEN_SETTINGS_SAVED:
+                showSettingsDoneScreen();
+                break;
         }
         
         Component[] cs = lwrapperPanel.getComponents();
@@ -2023,6 +2029,191 @@ public class AdvancedClient  {
         
     }
     
+    
+    
+    public void showSettingsScreen() {
+        int y = 0;
+        JLabel fname;
+        MyTextField walletName = null;
+
+        JPanel subInnerCore = getPanel("Settings");                
+        GridBagLayout gridbag = new GridBagLayout();
+        subInnerCore.setLayout(gridbag);
+        
+        fname = new JLabel("Echo Timeout, s");
+        final MyTextField echoTimeout = new MyTextField("Echo Timeout", false);         
+        AppUI.getGBRow(subInnerCore, fname, echoTimeout.getTextField(), y, gridbag);
+        echoTimeout.setData(Integer.toString(Config.ECHO_TIMEOUT / 1000));
+        y++;     
+        
+        fname = new JLabel("Send/Receive Timeout, s ");
+        final MyTextField readTimeout = new MyTextField("Send/Receive Timeout", false);         
+        AppUI.getGBRow(subInnerCore, fname, readTimeout.getTextField(), y, gridbag);
+        readTimeout.setData(Integer.toString(Config.READ_TIMEOUT / 1000));
+        y++;      
+        
+        fname = new JLabel("Detect Timeout, s");
+        final MyTextField detectTimeout = new MyTextField("Detect Timeout", false);         
+        AppUI.getGBRow(subInnerCore, fname, detectTimeout.getTextField(), y, gridbag);
+        detectTimeout.setData(Integer.toString(Config.MULTI_DETECT_TIMEOUT / 1000));
+        y++; 
+        
+        fname = new JLabel("Fix Timeout, s");
+        final MyTextField fixTimeout = new MyTextField("Fix Timeout", false);         
+        AppUI.getGBRow(subInnerCore, fname, fixTimeout.getTextField(), y, gridbag);
+        fixTimeout.setData(Integer.toString(Config.FIX_FRACKED_TIMEOUT / 1000));
+        y++; 
+        
+        fname = new JLabel("Max Notes");
+        final MyTextField maxNotes = new MyTextField("Max Notes", false);         
+        AppUI.getGBRow(subInnerCore, fname, maxNotes.getTextField(), y, gridbag);
+        maxNotes.setData(Integer.toString(Config.DEFAULT_MAX_COINS_MULTIDETECT));
+        y++; 
+        
+        fname = new JLabel("DDNS Server");
+        final MyTextField ddnsServer = new MyTextField("DDNS Server", false);         
+        AppUI.getGBRow(subInnerCore, fname, ddnsServer.getTextField(), y, gridbag);
+        ddnsServer.setData(Config.DDNSSN_SERVER);
+        y++; 
+        
+        fname = new JLabel("Export Folder");
+        final JFileChooser chooser = new JFileChooser();
+        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        chooser.setAcceptAllFileFilterUsed(false);
+
+        final MyTextField localFolder = new MyTextField("Export Folder", false, true);
+        localFolder.setFilepickerListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (!Config.DEFAULT_EXPORT_DIR.isEmpty())
+                    chooser.setCurrentDirectory(new File(Config.DEFAULT_EXPORT_DIR));
+
+                int returnVal = chooser.showOpenDialog(null);
+                if (returnVal == JFileChooser.APPROVE_OPTION) {
+                    ps.chosenFile = chooser.getSelectedFile().getAbsolutePath();
+                    localFolder.setData(chooser.getSelectedFile().getAbsolutePath());
+                }
+            }
+        });
+
+        localFolder.setData(new File(Config.DEFAULT_EXPORT_DIR).getAbsolutePath());               
+        AppUI.getGBRow(subInnerCore, fname, localFolder.getTextField(), y, gridbag);
+        y++; 
+  
+        AppUI.GBPad(subInnerCore, y, gridbag);        
+        y++;
+            
+        AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Save", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                showScreen();
+            }
+        }, new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                int echot = Validator.getIntFromString(echoTimeout.getText(), Config.MIN_ECHO_TIMEOUT / 1000, Config.MAX_ECHO_TIMEOUT / 1000);
+                if (echot < 0) {
+                    ps.errText = "Echo timeout must be in the range (" + Config.MIN_ECHO_TIMEOUT/1000 + ", " + Config.MAX_ECHO_TIMEOUT + ")";
+                    showScreen();
+                    return;
+                }
+
+                int detectt = Validator.getIntFromString(detectTimeout.getText(), Config.MIN_DETECT_TIMEOUT / 1000, Config.MAX_DETECT_TIMEOUT / 1000);
+                if (detectt < 0) {
+                    ps.errText = "Detect timeout must be in the range (" + Config.MIN_DETECT_TIMEOUT/1000 + ", " + Config.MAX_DETECT_TIMEOUT + ")";
+                    showScreen();
+                    return;
+                }
+
+                int fixt = Validator.getIntFromString(fixTimeout.getText(), Config.MIN_FIX_TIMEOUT / 1000, Config.MAX_FIX_TIMEOUT / 1000);
+                if (fixt < 0) {
+                    ps.errText = "Fix timeout must be in the range (" + Config.MIN_FIX_TIMEOUT/1000 + ", " + Config.MAX_FIX_TIMEOUT + ")";
+                    showScreen();
+                    return;
+                }
+
+                int readt = Validator.getIntFromString(readTimeout.getText(), Config.MIN_READ_TIMEOUT / 1000, Config.MAX_READ_TIMEOUT / 1000);
+                if (fixt < 0) {
+                    ps.errText = "Send/Receive timeout must be in the range (" + Config.MIN_READ_TIMEOUT/1000 + ", " + Config.MAX_READ_TIMEOUT/1000 + ")";
+                    showScreen();
+                    return;
+                }
+                
+                int notes = Validator.getIntFromString(maxNotes.getText(), Config.MIN_MULTI_NOTES, Config.MAX_MULTI_NOTES);
+                if (notes < 0) {
+                    ps.errText = "Send/Receive timeout must be in the range (" + Config.MIN_MULTI_NOTES + ", " + Config.MAX_MULTI_NOTES + ")";
+                    showScreen();
+                    return;
+                }
+
+                String ddnssn = ddnsServer.getText();
+                if (!Validator.domain(ddnssn)) {
+                    ps.errText = "Invalid DDNS Server";
+                    showScreen();
+                    return;
+                }
+
+                Config.DDNSSN_SERVER = ddnssn;
+                Config.DEFAULT_EXPORT_DIR = ps.chosenFile.replace("\"", "\\\"").replace("\\", "\\\\");
+                Config.DEFAULT_MAX_COINS_MULTIDETECT = notes;
+                Config.FIX_FRACKED_TIMEOUT = fixt * 1000;
+                Config.MULTI_DETECT_TIMEOUT = detectt * 1000;
+                Config.READ_TIMEOUT = readt * 1000;
+                Config.ECHO_TIMEOUT = echot * 1000;
+
+                if (AppCore.writeConfig() == false) {
+                    ps.errText = "Failed to write config file";
+                    showScreen();
+                    return;
+                }
+
+                ps.currentScreen = ProgramState.SCREEN_SETTINGS_SAVED;
+                showScreen();
+                
+            }
+        }, y, gridbag);
+       
+    }
+    
+    
+    public void showSettingsDoneScreen() {
+        boolean isError = !ps.errText.equals("");
+        JPanel subInnerCore;
+        
+        if (isError) {
+            subInnerCore = getPanel("Error");
+            resetState();
+            return;
+        }
+             
+        int y = 0;
+        JLabel fname, value;
+
+        subInnerCore = getPanel("Settings");                
+        GridBagLayout gridbag = new GridBagLayout();
+        subInnerCore.setLayout(gridbag);
+        
+        String txt = "Configuration Saved";
+        
+        fname = AppUI.wrapDiv(txt);
+        AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
+        y++;
+                          
+        AppUI.GBPad(subInnerCore, y, gridbag);        
+        y++;
+        
+        AppUI.getTwoButtonPanel(subInnerCore, "", "Continue", null,  new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                showScreen();
+            }
+        }, y, gridbag);   
+        
+        
+        resetState();
+    }
+    
+    
+    
     public void showDeleteWalletDoneScreen() {
         boolean isError = !ps.errText.equals("");
         JPanel subInnerCore;
@@ -2913,6 +3104,9 @@ public class AdvancedClient  {
         localFolder.setFilepickerListener(new MouseAdapter() {
             @Override
             public void mouseReleased(MouseEvent e) {
+                if (!Config.DEFAULT_EXPORT_DIR.isEmpty())
+                    chooser.setCurrentDirectory(new File(Config.DEFAULT_EXPORT_DIR));
+
                 int returnVal = chooser.showOpenDialog(null);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {       
                     ps.chosenFile = chooser.getSelectedFile().getAbsolutePath();
@@ -5469,8 +5663,7 @@ public class AdvancedClient  {
                 }
             }
         }, y, gridbag);
-
-        
+       
     }
     
     public void showCreateWalletScreen() {

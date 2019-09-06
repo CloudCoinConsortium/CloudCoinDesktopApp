@@ -40,6 +40,7 @@ public class Config {
     public static String DIR_MAIN_TRASH = "Trash";
     public static String DIR_BACKUPS = "Backups";
 
+    public static String GLOBAL_CONFIG_FILENAME = "global.config";
     public static int THREAD_POOL_SIZE = 60;
 
     public static int READ_TIMEOUT = 40000; // ms
@@ -48,7 +49,7 @@ public class Config {
     public static int REQUEST_CHANGE_READ_TIMEOUT = 50000; // ms
     
     public static int FIX_FRACKED_TIMEOUT = 40000; // ms
-    public static int MULTI_FIX_TIMEOUT = 40000; // ms
+    //public static int MULTI_FIX_TIMEOUT = 40000; // ms
     public static int MULTI_DETECT_TIMEOUT = 40000; // ms
     public static int ECHO_TIMEOUT = 5000;
 
@@ -71,6 +72,7 @@ public class Config {
     public static String REQUEST_STATUS_FAIL = "fail";
 
 
+    public static String DEFAULT_EXPORT_DIR = "";
 
     public static int MAX_ALLOWED_LATENCY = 20000;
 
@@ -142,7 +144,7 @@ public class Config {
     
     final public static String DDNS_DOMAIN = "skywallet.cc";
     
-    final public static String DDNSSN_SERVER = "https://ddns.cloudcoin.global";
+    public static String DDNSSN_SERVER = "ddns.cloudcoin.global";
     
     final public static String MAIN_LOG_FILENAME = "main.log";
     
@@ -155,4 +157,22 @@ public class Config {
     final public static String AGREEMENT_FILE = "agreement.html";
     
     final public static int LOG_BUFFER_SIZE = 1024000;
+    
+    
+    final public static int MIN_MULTI_NOTES = 10;
+    final public static int MAX_MULTI_NOTES = 4000;
+    
+    final public static int MIN_ECHO_TIMEOUT = 2000;
+    final public static int MAX_ECHO_TIMEOUT = 120000;
+    
+    final public static int MIN_DETECT_TIMEOUT = 2000;
+    final public static int MAX_DETECT_TIMEOUT = 120000;
+    
+    final public static int MIN_FIX_TIMEOUT = 2000;
+    final public static int MAX_FIX_TIMEOUT = 120000;
+    
+    final public static int MIN_READ_TIMEOUT = 4000;
+    final public static int MAX_READ_TIMEOUT = 120000;
+    
+    
 }
