@@ -1204,21 +1204,12 @@ public class AdvancedClient  {
         GridBagLayout gridbag = new GridBagLayout();
         GridBagConstraints c = new GridBagConstraints();      
         ct.setLayout(gridbag);
-        /*
-        x = new JLabel("");
-        AppUI.setFont(x, 15);
-        c.anchor = GridBagConstraints.CENTER;
-        c.insets = new Insets(0, 0, 4, 0); 
-        c.gridx = 0;
-        c.gridy = 0;
-        c.gridwidth = 2;
-        gridbag.setConstraints(x, c);
-        ct.add(x);*/
-        
+      
         int[] statuses = sm.getRAIDAStatuses();
         
         int y = 1;
         int fontSize = 16;
+        boolean isfailed = false;
         for (int i = 0; i < statuses.length / 2 + 1; i ++) {
             String status;
             
@@ -1235,7 +1226,8 @@ public class AdvancedClient  {
              
             x = new JLabel("");
             if (statuses[i] == -1) {
-                status = "FAILED";
+                status = "TIMED OUT";
+                isfailed = true;
                 AppUI.setColor(x, AppUI.getErrorColor());            
             } else {
                 //status = "OK: " + statuses[i] + "ms";
@@ -1271,7 +1263,8 @@ public class AdvancedClient  {
             
             x = new JLabel("");
             if (statuses[j] == -1) {
-                status = "FAILED";
+                status = "TIMED OUT";
+                isfailed = true;
                 AppUI.setColor(x, AppUI.getErrorColor());
             } else {
                 status = AppCore.getMS(statuses[j]);
@@ -1291,6 +1284,23 @@ public class AdvancedClient  {
             y++;
         }
 
+        isfailed = true;
+        if (isfailed) {
+            y++;
+            String txt = "TIMED OUT means the response exceeded the " + Config.ECHO_TIMEOUT / 1000 + " seconds allowed. "
+                + "This could be caused by a slow network or because the RAIDA was blocked (usually by office routers). "
+                + "Try changing your settings to increase the Timeout.";
+
+            x = AppUI.wrapDiv(txt);
+            AppUI.setCommonFont(x);
+            c.anchor = GridBagConstraints.WEST;
+            c.insets = new Insets(8, 0, 2, 0);
+            c.gridx = GridBagConstraints.RELATIVE;
+            c.gridy = y;
+            c.gridwidth = 4;
+            gridbag.setConstraints(x, c);
+            ct.add(x);
+        }
     }
     
     public int getSkyWalletSN() {
