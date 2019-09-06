@@ -4324,6 +4324,9 @@ public class AdvancedClient  {
         ddPanel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseReleased(MouseEvent e) {
+                if (!Config.DEFAULT_DEPOSIT_DIR.isEmpty())
+                    chooser.setCurrentDirectory(new File(Config.DEFAULT_DEPOSIT_DIR));
+
                 int returnVal = chooser.showOpenDialog(null);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     File[] files = chooser.getSelectedFiles();
@@ -4334,7 +4337,11 @@ public class AdvancedClient  {
                     String totalCloudCoins = AppCore.calcCoinsFromFilenames(ps.files);
                     String text = "Selected " + ps.files.size() + " files - " + totalCloudCoins + " CloudCoins";
                               
-                    tl.setText(text);          
+                    tl.setText(text);      
+                    
+                    Config.DEFAULT_DEPOSIT_DIR = chooser.getCurrentDirectory().getAbsolutePath();
+                    AppCore.writeConfig();
+
                 }
             }   
         });
@@ -6470,7 +6477,7 @@ public class AdvancedClient  {
                 
                 
                 Config.DDNSSN_SERVER = ddnssn;
-                Config.DEFAULT_EXPORT_DIR = ps.chosenFile.replace("\"", "\\\"").replace("\\", "\\\\");
+                Config.DEFAULT_EXPORT_DIR = ps.chosenFile;
                 Config.DEFAULT_MAX_COINS_MULTIDETECT = notes;
                 Config.FIX_FRACKED_TIMEOUT = fixt * 1000;
                 Config.MULTI_DETECT_TIMEOUT = detectt * 1000;
