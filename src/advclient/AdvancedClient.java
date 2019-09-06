@@ -6402,7 +6402,7 @@ public class AdvancedClient  {
                 
                 int notes = Validator.getIntFromString(maxNotes.getText(), Config.MIN_MULTI_NOTES, Config.MAX_MULTI_NOTES);
                 if (notes < 0) {
-                    ps.errText = "Send/Receive timeout must be in the range (" + Config.MIN_MULTI_NOTES + ", " + Config.MAX_MULTI_NOTES + ")";
+                    ps.errText = "Max Notes must be in the range (" + Config.MIN_MULTI_NOTES + ", " + Config.MAX_MULTI_NOTES + ")";
                     showScreen();
                     return;
                 }
@@ -6418,10 +6418,10 @@ public class AdvancedClient  {
                 Config.DDNSSN_SERVER = ddnssn;
                 Config.DEFAULT_EXPORT_DIR = ps.chosenFile.replace("\"", "\\\"").replace("\\", "\\\\");
                 Config.DEFAULT_MAX_COINS_MULTIDETECT = notes;
-                Config.FIX_FRACKED_TIMEOUT = fixt;
-                Config.MULTI_DETECT_TIMEOUT = detectt;
-                Config.READ_TIMEOUT = readt;
-                Config.ECHO_TIMEOUT = echot;
+                Config.FIX_FRACKED_TIMEOUT = fixt * 1000;
+                Config.MULTI_DETECT_TIMEOUT = detectt * 1000;
+                Config.READ_TIMEOUT = readt * 1000;
+                Config.ECHO_TIMEOUT = echot * 1000;
                         
                 if (AppCore.writeConfig() == false) {
                     ps.errText = "Failed to write config file";

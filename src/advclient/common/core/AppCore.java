@@ -1059,25 +1059,25 @@ public class AppCore {
             oi = o.optInt("echo_timeout", -1);
             if (oi != -1) {
                 logger.debug(ltag, "Echo timeout: " + oi);
-                Config.ECHO_TIMEOUT = oi * 1000;
+                Config.ECHO_TIMEOUT = oi;
             }
             
             oi = o.optInt("read_timeout", -1);
             if (oi != -1) {
                 logger.debug(ltag, "Read timeout: " + oi);
-                Config.READ_TIMEOUT = oi * 1000;
+                Config.READ_TIMEOUT = oi;
             }
             
             oi = o.optInt("detect_timeout", -1);
             if (oi != -1) {
                 logger.debug(ltag, "Detect timeout: " + oi);
-                Config.MULTI_DETECT_TIMEOUT = oi * 1000;
+                Config.MULTI_DETECT_TIMEOUT = oi;
             }
             
             oi = o.optInt("fix_timeout", -1);
             if (oi != -1) {
                 logger.debug(ltag, "Fix timeout: " + oi);
-                Config.FIX_FRACKED_TIMEOUT = oi * 1000;
+                Config.FIX_FRACKED_TIMEOUT = oi;
             }
             
             oi = o.optInt("max_coins", -1);
