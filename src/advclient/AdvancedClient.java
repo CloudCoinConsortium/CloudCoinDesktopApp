@@ -1284,7 +1284,6 @@ public class AdvancedClient  {
             y++;
         }
 
-        isfailed = true;
         if (isfailed) {
             y++;
             String txt = "TIMED OUT means the response exceeded the " + Config.ECHO_TIMEOUT / 1000 + " seconds allowed. "
