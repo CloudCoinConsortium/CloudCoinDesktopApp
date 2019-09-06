@@ -1019,11 +1019,25 @@ public class AppCore {
         if (idx > countries.length) {
             return sidx + " RAIDA";
         }
-        
+
         return sidx + " " + countries[idx];
-        
+
     }
-   
+
+    public static int getErrorCount(CloudCoin cc) {
+        int error = 0;
+
+        for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+            if (cc.getDetectStatus(i) == CloudCoin.STATUS_ERROR || cc.getDetectStatus(i) == CloudCoin.STATUS_UNTRIED)
+                error++;
+        }
+        
+        cc.setPownStringFromDetectStatus();
+        logger.debug(ltag, "Error count " + error + " cc " + cc.sn + " pown=" + cc.getPownString());
+        
+        return error;
+    }
+    
     public static int getPassedCount(CloudCoin cc) {
         int passed = 0;
 
@@ -1031,7 +1045,7 @@ public class AppCore {
             if (cc.getDetectStatus(i) == CloudCoin.STATUS_PASS)
                 passed++;
         }
-
+    
         cc.setPownStringFromDetectStatus();
         logger.debug(ltag, "Passed count " + passed + " cc " + cc.sn + " pown=" + cc.getPownString());
         
