@@ -1184,6 +1184,7 @@ public class AdvancedClient  {
         
         int y = 1;
         int fontSize = 16;
+        boolean isfailed = false;
         for (int i = 0; i < statuses.length / 2 + 1; i ++) {
             String status;
             
@@ -1200,7 +1201,8 @@ public class AdvancedClient  {
                
             x = new JLabel("");
             if (statuses[i] == -1) {
-                status = "FAILED";
+                status = "TIMED OUT";
+                isfailed = true;
                 AppUI.setColor(x, AppUI.getErrorColor());
             } else {
                 status = AppCore.getMS(statuses[i]);
@@ -1235,7 +1237,8 @@ public class AdvancedClient  {
                
             x = new JLabel("");
             if (statuses[j] == -1) {
-                status = "FAILED";
+                status = "TIMED OUT";
+                isfailed = true;
                 AppUI.setColor(x, AppUI.getErrorColor());
             } else {
                 status = AppCore.getMS(statuses[j]);
@@ -1255,6 +1258,24 @@ public class AdvancedClient  {
             y++;
         }
 
+        if (isfailed) {
+            y++;
+            String txt = "<html><div style='width:460px'>TIMED OUT means the response exceeded the " + Config.ECHO_TIMEOUT / 1000 + " seconds allowed. "
+                + "This could be caused by a slow network or because the RAIDA was blocked (usually by office routers). "
+                + "Try changing your settings to increase the Timeout.</div></html>";  
+
+            x = new JLabel(txt);
+            AppUI.setCommonTableFontSize(x, fontSize);      
+            c.anchor = GridBagConstraints.WEST;
+            c.insets = new Insets(8, 0, 2, 0); 
+            c.gridx = GridBagConstraints.RELATIVE;
+            c.gridy = y;
+            c.gridwidth = 4;
+            gridbag.setConstraints(x, c);
+            ct.add(x);
+        }
+
+        
     }
     
     public int getSkyWalletSN() {
