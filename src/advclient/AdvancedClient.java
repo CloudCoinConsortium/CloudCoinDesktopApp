@@ -2145,6 +2145,24 @@ public class AdvancedClient  {
                     return;
                 }
 
+                if (fixt < echot) {
+                    ps.errText = "Fix timeout can not be less than Echo timeout";
+                    showScreen();
+                    return;
+                }
+                
+                if (detectt < echot) {
+                    ps.errText = "Detect timeout can not be less than Echo timeout";
+                    showScreen();
+                    return;
+                }
+                
+                if (readt < echot) {
+                    ps.errText = "Send/Receive timeout can not be less than Echo timeout";
+                    showScreen();
+                    return;
+                }
+                
                 String ddnssn = ddnsServer.getText();
                 if (!Validator.domain(ddnssn)) {
                     ps.errText = "Invalid DDNS Server";
