@@ -1104,6 +1104,13 @@ public class AppCore {
                 logger.debug(ltag, "Export dir: " + os);
                 Config.DEFAULT_EXPORT_DIR = os;
             }
+
+            os = o.optString("deposit_dir");
+            if (os != null) {
+                logger.debug(ltag, "Deposit dir: " + os);
+                
+                Config.DEFAULT_DEPOSIT_DIR = os;
+            }
             
             os = o.optString("ddnssn_server");
             if (os != null) {
@@ -1122,13 +1129,15 @@ public class AppCore {
         
         logger.debug(ltag, "Saving config " + globalConfigFilename);
         
-        String edir = Config.DEFAULT_EXPORT_DIR.replace("\"", "\\\"");
+        String edir = Config.DEFAULT_EXPORT_DIR.replace("\"", "\\\"").replace("\\", "\\\\");
+        String ddir = Config.DEFAULT_DEPOSIT_DIR.replace("\"", "\\\"").replace("\\", "\\\\");
         String data = "{\"echo_timeout\":" + Config.ECHO_TIMEOUT + ", "
                 + "\"detect_timeout\": " + Config.MULTI_DETECT_TIMEOUT + ", "
                 + "\"read_timeout\": " + Config.READ_TIMEOUT + ", "
                 + "\"fix_timeout\": " + Config.FIX_FRACKED_TIMEOUT + ", "
                 + "\"max_coins\": " + Config.DEFAULT_MAX_COINS_MULTIDETECT + ", "
                 + "\"export_dir\": \"" + edir + "\", "
+                + "\"deposit_dir\": \"" + ddir + "\", "
                 + "\"ddnssn_server\": \"" + Config.DDNSSN_SERVER + "\""
                 + "}";
         

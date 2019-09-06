@@ -73,6 +73,7 @@ public class Config {
 
 
     public static String DEFAULT_EXPORT_DIR = "";
+    public static String DEFAULT_DEPOSIT_DIR = "";
 
     public static int MAX_ALLOWED_LATENCY = 20000;
 
