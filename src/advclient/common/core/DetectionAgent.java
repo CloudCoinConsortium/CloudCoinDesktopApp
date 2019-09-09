@@ -62,7 +62,6 @@ public class DetectionAgent {
 
     public void setDefaultFullUrl() {
         this.fullURL = "https://RAIDA" + this.RAIDANumber + ".cloudcoin.global";
-    //    this.fullURL = "https://RAIDA" + this.RAIDANumber + ".lab.shurafom.eu";
     }
 
     public void setFullUrl(String ip, int basePortArg) {
@@ -103,7 +102,6 @@ public class DetectionAgent {
             return "";
 	}
 
-	//String urlIn = fullURL + "/service/" + url;
         String urlIn = fullURL + url;
 	String method = (post == null) ? "GET" : "POST";
 
@@ -112,15 +110,15 @@ public class DetectionAgent {
 	tsBefore = System.currentTimeMillis();
 
 	disableSSLCheck();
-
+      
 	URL cloudCoinGlobal;
 	HttpURLConnection urlConnection = null;
 	try {
-            cloudCoinGlobal = new URL(urlIn);
+            cloudCoinGlobal = new URL(urlIn);           
             urlConnection = (HttpURLConnection) cloudCoinGlobal.openConnection();
             urlConnection.setConnectTimeout(connectionTimeout);
             urlConnection.setReadTimeout(readTimeout);
-            urlConnection.setRequestProperty("User-Agent", "Android CloudCoin App");
+            urlConnection.setRequestProperty("User-Agent", "CloudCoin Wallet Client");
 
             if (post != null) {
                 logger.debug(ltag, post);
@@ -183,7 +181,8 @@ public class DetectionAgent {
         
         SSLContext sc;
         try {
-            sc = SSLContext.getInstance("SSL");
+            sc = SSLContext.getInstance("TLSv1.2");
+            //logger.debug(ltag, "Will use protocol: " + sc.getProtocol());
             sc.init(null, trustAllCerts, new java.security.SecureRandom());
         } catch (NoSuchAlgorithmException e) {
             logger.error(ltag, "Failed to get SSL context: " + e.getMessage());
@@ -193,8 +192,7 @@ public class DetectionAgent {
             return;
         }
         
-        HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
-        
+        HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());    
     	HostnameVerifier allHostsValid = new HostnameVerifier() {
             public boolean verify(String hostname, SSLSession session) {
 		return true;
@@ -203,7 +201,6 @@ public class DetectionAgent {
 
 		// Install the all-trusting host verifier
 	HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
-
     }
 
 }
