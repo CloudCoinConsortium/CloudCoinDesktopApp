@@ -1332,20 +1332,7 @@ public class AdvancedClient  {
         c.gridy = 2;
         gridbag.setConstraints(pbar, c);
         ct.add(pbar);
-        
-        // Cancel button
-        /*
-        JPanel bp = getOneButtonPanelCustom("Cancel", new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                sm.cancel("Sender");
 
-                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
-                showScreen();
-            }
-        });
-       
-        subInnerCore.add(bp);  
-        */
         subInnerCore.add(AppUI.hr(120));
         
         pbar.setVisible(false);
@@ -1384,22 +1371,7 @@ public class AdvancedClient  {
                 
                 pbarText.setText("Querying coins ...");
                 pbarText.repaint();
-                
-                // <= 2097152 - 1
-                // <= 4194304 - 5
-                // <= 6291456 - 25
-                // <= 14680064 - 100
-                // <= 16777216 - 250
-   
-                //ps.srcWallet = new Wallet("ccc", "x", true, "z", wl);
-                //ps.srcWallet.setPassword("qwerty");
-                //int[] sss = {7391980,7391982};
-                //ps.srcWallet.setSNs(sss);
-                //ps.typedAmount = 21;
-                
-                System.out.println("sss=" + ps.srcWallet.getName());
 
-                
                 sm.setActiveWalletObj(ps.srcWallet);
                 boolean rv = sm.makeChange(ps.srcWallet, ps.typedAmount, skySN, new CallbackInterface() {
                     public void callback(Object o) {
@@ -8320,16 +8292,6 @@ public class AdvancedClient  {
                         ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
                         if (!rr.errText.isEmpty()) {
                             if (rr.errText.equals(Config.PICK_ERROR_MSG)) {
-                                /*
-                                if (ps.triedToChange) {
-                                    ps.errText = "Failed to change coins";
-                                } else { 
-                                    ps.changeFromExport = false;
-                                    ps.triedToChange = true;
-                                    ps.currentScreen = ProgramState.SCREEN_MAKING_CHANGE;
-                                    showScreen();
-                                    return;
-                                }*/
                                 ps.errText = getPickError(ps.srcWallet);
                             } else {
                                 ps.errText = "<html><div style='text-align:center; width: 520px'>" + rr.errText + "</div></html>";
@@ -8389,16 +8351,6 @@ public class AdvancedClient  {
                         ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
                         if (!tr.errText.isEmpty()) {
                             if (tr.errText.equals(Config.PICK_ERROR_MSG)) {
-                                /*
-                                if (ps.triedToChange) {
-                                    ps.errText = "Failed to change coins";
-                                } else { 
-                                    ps.changeFromExport = false;
-                                    ps.triedToChange = true;
-                                    ps.currentScreen = ProgramState.SCREEN_MAKING_CHANGE;
-                                    showScreen();
-                                    return;
-                                }*/
                                 ps.errText = getPickError(ps.srcWallet);
                             } else {
                                 ps.errText = tr.errText;
