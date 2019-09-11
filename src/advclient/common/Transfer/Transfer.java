@@ -77,17 +77,27 @@ public class Transfer extends Servant {
             return;
         }
         
+
+        CloudCoin extraCoin = null;
         if (!pickCoinsAmountFromArray(sns, amount)) {
             logger.debug(ltag, "Not enough coins in the cloudfor amount " + amount);
-            globalResult.status = TransferResult.STATUS_ERROR;
-            globalResult.errText = Config.PICK_ERROR_MSG;
-            copyFromGlobalResult(tr);
-            if (cb != null)
-                cb.callback(tr);          
-            return;
+            
+            coinsPicked = new ArrayList<CloudCoin>();
+            extraCoin = pickCoinsAmountFromArrayWithExtra(sns, amount);
+            if (extraCoin == null) {
+                globalResult.status = TransferResult.STATUS_ERROR;
+                globalResult.errText = "Failed to pick coins from the Sky Wallet";
+                copyFromGlobalResult(tr);
+                if (cb != null)
+                    cb.callback(tr);  
+                        
+                return;
+            }
+
+            logger.debug(ltag, "Got extra coin " + extraCoin.sn + " denomination: " + extraCoin.getDenomination());
         }
         
-        setSenderRAIDA();
+        //setSenderRAIDA();
         CloudCoin idcc = getIDcc(fromsn);
         if (idcc == null) {
             logger.error(ltag, "NO ID Coin found for SN: " + fromsn);
@@ -178,14 +188,28 @@ public class Transfer extends Servant {
                 copyFromGlobalResult(tr);
                 if (cb != null)
                     cb.callback(tr);
+                
+                return;
             } else {
-                globalResult.status = TransferResult.STATUS_FINISHED;
                 globalResult.totalFilesProcessed += ccs.size();
             }
-        } else {
-            globalResult.status = TransferResult.STATUS_FINISHED;
-        }
+        } 
     
+        if (extraCoin != null) {
+            int remained = amount - curValProcessed;
+            logger.debug(ltag, "Changing coin " + extraCoin.sn + " alreadyProcessed=" + curValProcessed + " needed=" + amount);
+            if (!processTransferWithChange(extraCoin, idcc, tag, tosn, remained)) {
+                tr = new TransferResult();
+                globalResult.status = TransferResult.STATUS_ERROR;
+                copyFromGlobalResult(tr);
+                if (cb != null)
+                    cb.callback(tr);
+                
+                return;
+            }
+        }
+        
+        globalResult.status = TransferResult.STATUS_FINISHED;
         copyFromGlobalResult(tr);
         if (cb != null)
             cb.callback(tr);
@@ -203,6 +227,8 @@ public class Transfer extends Servant {
         int i;
         CloudCoin[] sccs;
 
+        logger.debug(ltag, "Transferring to " + tosn);
+        
         sbs = new StringBuilder[RAIDA.TOTAL_RAIDA_COUNT];
         posts = new String[RAIDA.TOTAL_RAIDA_COUNT];
         requests = new String[RAIDA.TOTAL_RAIDA_COUNT];
@@ -310,10 +336,140 @@ public class Transfer extends Servant {
             }
         }
 
-       
-        
-
         logger.info(ltag, "Transferred");
+
+        return true;
+    }
+    
+    
+    public boolean processTransferWithChange(CloudCoin tcc, CloudCoin cc, String tag, int tosn, int amount)  {       
+        String[] results;
+        Object[] o;
+        CommonResponse errorResponse;
+        TransferResponse[][] trs;
+        String[] requests;
+        StringBuilder[] sbs;
+        String[] posts;
+        int i;
+        CloudCoin[] sccs;
+
+        logger.debug(ltag, "Transferring with change to " + tosn);
+        
+        System.out.println("sss");
+        System.exit(1);
+        
+        sbs = new StringBuilder[RAIDA.TOTAL_RAIDA_COUNT];
+        posts = new String[RAIDA.TOTAL_RAIDA_COUNT];
+        requests = new String[RAIDA.TOTAL_RAIDA_COUNT];
+
+        for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+            requests[i] = "transfer";
+
+            sbs[i] = new StringBuilder();
+            sbs[i].append("nn=");
+            sbs[i].append(cc.nn);
+            sbs[i].append("&sn=");
+            sbs[i].append(cc.sn);
+            sbs[i].append("&an=");
+            sbs[i].append(cc.ans[i]);
+            sbs[i].append("&pan=");
+            sbs[i].append(cc.ans[i]);
+            sbs[i].append("&denomination=");
+            sbs[i].append(cc.getDenomination());
+            sbs[i].append("&to_sn=");
+            sbs[i].append(tosn);
+            sbs[i].append("&payment_envelope=");
+            sbs[i].append(tag);
+
+            sbs[i].append("&payment_required=");
+            sbs[i].append(amount);
+
+            sbs[i].append("&sns[]=");
+            sbs[i].append(tcc.sn);
+            
+            sbs[i].append("&public_change_maker=");
+            sbs[i].append(Config.PUBLIC_CHANGE_MAKER_ID);
+
+            posts[i] = sbs[i].toString();
+        }
+
+        results = raida.query(requests, posts, new CallbackInterface() {
+            final GLogger gl = logger;
+            final CallbackInterface myCb = cb;
+
+            @Override
+            public void callback(Object result) {
+                globalResult.totalRAIDAProcessed++;
+                if (myCb != null) {
+                    TransferResult trlocal = new TransferResult();
+                    copyFromGlobalResult(trlocal);
+                    myCb.callback(trlocal);
+                }
+            }
+        });
+        
+        if (results == null) {
+            logger.error(ltag, "Failed to query Transfer");
+            return false;
+        }
+
+        sccs = new CloudCoin[1];
+        trs = new TransferResponse[RAIDA.TOTAL_RAIDA_COUNT][];
+        for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+            logger.info(ltag, "i="+i+ " r="+results[i]);
+            if (results[i] != null) {
+                if (results[i].equals("")) {
+                    logger.error(ltag, "Skipped raida" + i);
+                    continue;
+                }
+            }
+
+            o = parseArrayResponse(results[i], TransferResponse.class);
+            if (o == null) {
+                errorResponse = (CommonResponse) parseResponse(results[i], CommonResponse.class);
+                if (errorResponse == null) {
+                    logger.error(ltag, "Failed to get error");
+                    continue;
+                }
+
+                logger.error(ltag, "Failed to auth coin. Status: " + errorResponse.status);
+                continue;
+            }
+
+            if (o.length != sccs.length) {
+                logger.error(ltag, "RAIDA " + i + " wrong number of coins: " + o.length);
+                continue;
+            }
+
+            for (int j = 0; j < o.length; j++) {
+                String strStatus;
+                int rnn, rsn;
+                String ran;
+                boolean found;
+
+                trs[i] = new TransferResponse[o.length];
+                trs[i][j] = (TransferResponse) o[j];
+
+                strStatus = trs[i][j].status;
+
+                found = false;
+                int cstatus;
+                if (strStatus.equals(Config.REQUEST_STATUS_PASS)) {
+                    logger.info(ltag, "OK response from raida " + i);
+                    cstatus = CloudCoin.STATUS_PASS;
+                } else if (strStatus.equals(Config.REQUEST_STATUS_FAIL)) {
+                    logger.error(ltag, "Counterfeit response from raida " + i);
+                    cstatus = CloudCoin.STATUS_FAIL;
+                } else {
+                    logger.error(ltag, "Unknown coin status from RAIDA" + i + ": " + strStatus);
+                    cstatus = CloudCoin.STATUS_ERROR;
+                }
+                
+                
+            }
+        }
+
+        logger.info(ltag, "Change Transferred");
 
         return true;
     }

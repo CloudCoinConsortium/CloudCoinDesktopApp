@@ -8,7 +8,10 @@ package global.cloudcoin.ccbank.ServantManager;
 import advclient.ProgramState;
 import advclient.common.core.RequestChange;
 import global.cloudcoin.ccbank.Authenticator.Authenticator;
+import global.cloudcoin.ccbank.Authenticator.AuthenticatorResult;
 import global.cloudcoin.ccbank.Backupper.Backupper;
+import global.cloudcoin.ccbank.ChangeMaker.ChangeMaker;
+import global.cloudcoin.ccbank.ChangeMaker.ChangeMakerResult;
 import global.cloudcoin.ccbank.Echoer.Echoer;
 import global.cloudcoin.ccbank.Eraser.Eraser;
 import global.cloudcoin.ccbank.Exporter.Exporter;
@@ -392,9 +395,13 @@ public class ServantManager {
 	s.launch(sn, null, values, 0, memo, Config.CHANGE_SKY_DOMAIN, cb);
     }
     
+    public void startChangeMakerService(int method, CloudCoin cc, CallbackInterface cb) {
+        ChangeMaker cm = (ChangeMaker) sr.getServant("ChangeMaker");
+        cm.launch(method, cc, cb);
+    }
+    
     public void startTransferService(int fromsn, int tosn, int sns[], int amount, String tag, CallbackInterface cb) {
         logger.debug(ltag, "Transfer from " + fromsn + " to " + tosn + " amount " + amount);
-        System.out.println("Transfer from " + fromsn + " to " + tosn + " amount " + amount);
         Transfer tr = (Transfer) sr.getServant("Transfer");
         tr.launch(fromsn, tosn, sns, amount, tag, cb);
     }
@@ -661,174 +668,119 @@ public class ServantManager {
             
             return true;
         }
-        
+     
         return sendToChange(cc, w, skySN, cb);
     }
     
     public boolean sendToChange(CloudCoin cc, Wallet w, int skySN, CallbackInterface cb) {
         makeChangeResult mcr = new makeChangeResult();
         mcr.status = 1;
-        mcr.text = "Sending coin " + cc.sn + " to the SkyWallet";
+        mcr.text = "Making change for coin " + cc.sn;
         mcr.progress = 0;
         if (cb != null) {
             cb.callback(mcr);
         }
                
-        logger.debug(ltag, "Sending to the Change.skywallet.cc " + cc.sn);
+        logger.debug(ltag, "Sending to the ChangeMaker " + cc.sn + " denomination " + cc.getDenomination());
+        System.out.println("Sending to the ChangeMaker " + cc.sn);
         
-        DNSSn d = new DNSSn(Config.CHANGE_SKY_DOMAIN, null, logger);
-        int sn = d.getSN();
-        if (sn < 0) {
-            logger.error(ltag, "Failed to query change service");
-            mcr.errText = "Failed to query " + Config.CHANGE_SKY_DOMAIN;
-            if (cb != null) {
-                cb.callback(mcr);
-            }
-       
+        int method = 0;
+        switch (cc.getDenomination()) {
+            case 250:
+                method = Config.CHANGE_METHOD_250E;
+                break;
+            case 100:
+                method = Config.CHANGE_METHOD_100E;
+                break;
+            case 25:
+                method = Config.CHANGE_METHOD_25B;
+                break;
+            case 5:
+                method = Config.CHANGE_METHOD_5A;
+                break;
+        }
+        
+        if (method == 0) {
+            logger.error(ltag, "Can't find suitable method");
             return false;
         }
-        
-        String memoUUID = AppCore.generateHex();
-        
-        logger.debug(ltag, "Generated hex " + memoUUID);
-        
-        int[] denominations = AppCore.getDenominations();
-        int[] values = new int[denominations.length];
-        for (int i = 0; i < denominations.length; i++) {
-            if (cc.getDenomination() == denominations[i]) {
-                values[i] = 1;
-                break;
-            }
-        }
-        
-        logger.debug(ltag, "values " + Arrays.toString(values));
-        
-        //logger.debug(ltag, "send sn " + sn + " dstWallet " + dstFolder);
-        //startSenderService(sn, dstFolder, amount, memo, remoteWalletName, cb);
-        
-        startSenderServiceForChange(sn, values, memoUUID, new eSenderChangeCb(cb, w, memoUUID, cc.getDenomination(), skySN));
 
+        logger.debug(ltag, "Method chosen: " + method);
+        startChangeMakerService(method, cc, new CallbackInterface() {
+            public void callback(Object o) {
+                final ChangeMakerResult cmr = (ChangeMakerResult) o;
+
+                logger.debug(ltag, "ChangeMaker finished: " + cmr.status);
+                
+                makeChangeResult mcr = new makeChangeResult();
+                
+                if (cmr.status == ChangeMakerResult.STATUS_PROCESSING) {                
+                    mcr.text = "Making change for coin " + cc.sn;
+                    mcr.progress = cmr.totalRAIDAProcessed;
+                    mcr.status = 1;
+                    if (cb != null) {
+                        cb.callback(mcr);
+                    }
+                    
+                    return;
+                }
+                
+                if (cmr.status == ChangeMakerResult.STATUS_ERROR) {
+                    logger.debug(ltag, "Error in making Change");
+                    mcr.errText = "Failed to make Change. Please check the main.log file";
+                    mcr.status = 0;
+                    if (cb != null) {
+                        cb.callback(mcr);
+                    }
+                    return;
+                }
+
+                if (cmr.status == ChangeMakerResult.STATUS_FINISHED) {
+                
+                    w.appendTransaction("Sent to Public Change", cc.getDenomination() * -1, cmr.receiptId);
+                    mcr.text = "Authenticating Coins from Public Change";
+                    if (cb != null)
+                        cb.callback(mcr);
+            
+                    startAuthenticatorService(new CallbackInterface() {
+                        public void callback(Object result) {
+                            logger.debug(ltag, "Authenticator for Change finished");
+                        
+                            final Object fresult = result;
+                            final AuthenticatorResult ar = (AuthenticatorResult) fresult;
+                            if (ar.status == AuthenticatorResult.STATUS_ERROR) {
+                                logger.debug(ltag, "Error in making Change");
+                                mcr.errText = "Failed to authenticate coins from Public Change";
+                                mcr.status = 0;
+                                if (cb != null) {
+                                    cb.callback(mcr);
+                                }
+                            
+                                return;
+                            } else if (ar.status == AuthenticatorResult.STATUS_FINISHED) {
+                                mcr.text = "Grading Coins from Public Change";
+                                if (cb != null)
+                                    cb.callback(mcr);
+                            
+                                startGraderService(new eGraderCb(cb, w), null, w.getName());
+                                return;
+                            }
+                        
+                            mcr.text = "Authenticating Coins from Public Change";
+                            mcr.progress = ar.totalRAIDAProcessed;
+                            mcr.status = 1;
+                            if (cb != null) {
+                                cb.callback(mcr);
+                            }
+                        }
+                    });
+                }
+                
+            }
+        });
         
         return true;
         
-    }
-    
-    public void requestChange(CallbackInterface cb, Wallet w, String memoUUID, int denomination, int skySN) {
-        makeChangeResult mcr = new makeChangeResult();
-        mcr.status = 0;
-        mcr.text = "Requesting Change from the ChangeServer";
-        if (cb != null) {
-            cb.callback(mcr);
-        }
-        
-        logger.debug(ltag, "request change " + memoUUID + " d=" + denomination + " sky=" + skySN);
-
-        
-        RequestChange rc = new RequestChange(skySN, memoUUID, denomination, logger);
-        if (!rc.request(getSR())) {
-            mcr.errText = "Failed to query RequestChange service";
-            if (cb != null) {
-               cb.callback(mcr);
-            }
-            
-            return;
-        }
-        
-        mcr.text = "Downloading Change";
-        if (cb != null) {
-            cb.callback(mcr);
-        }
-    
-        startShowSkyCoinsService(new eShowSkyCoinsCb(memoUUID, w, denomination, skySN, cb), skySN);
-        
-        //startReceiverService(skySN, sns, 0, 0, "", rcb);
-        
-    }
-    
-    public void receiveFromSkyWallet(CallbackInterface cb, Wallet w, ArrayList<Integer> coins, int total, int skySN) {
-        makeChangeResult mcr = new makeChangeResult();
-        mcr.status = 0;
-        mcr.text = "Receiving change";
-        if (cb != null) {
-            cb.callback(mcr);
-        }
-        
-        if (coins.size() == 0) {
-            logger.error(ltag, "Size is zero");
-            mcr.errText = "No coins received from your wallet";
-            if (cb != null) {
-                cb.callback(mcr);
-            }
-            return;
-        }
-        
-        logger.debug(ltag, "Receive from Skywallet: " + skySN + " to " + w.getName());
-        
-        //sr.getServant("Receiver").changeUser(w.getName());
-        
-        int[] sns = new int[coins.size()];
-        int i = 0;
-        
-        for (int sn : coins) {
-            sns[i] = sn;
-            i++;
-        }
-        
-        startReceiverServiceForChange(skySN, sns, Config.CHANGE_SKY_DOMAIN, total, "Receive change", new eReceiverChangeCb(cb, w));
-        //public void startReceiverService(int sn, int sns[], 
-          //  String dstFolder, int amount, String memo, CallbackInterface cb) {
-    }
-    
-    class eReceiverChangeCb implements CallbackInterface {
-        CallbackInterface cb;
-        makeChangeResult mcr;
-        Wallet w;
-
-        
-        public eReceiverChangeCb(CallbackInterface cb, Wallet w) {
-            this.cb = cb;
-            this.w = w;
-            mcr = new makeChangeResult();
-            
-        }
-        public void callback(final Object result) {
-            ReceiverResult rr = (ReceiverResult) result;
-            
-            logger.debug(ltag, "Change Receiver finished: " + rr.status);
-            if (rr.status == ReceiverResult.STATUS_PROCESSING) {
-                mcr.status = 1;
-                mcr.progress = rr.totalRAIDAProcessed;
-                mcr.text = "Receiving change from the SkyWallet";
-                if (this.cb != null) {
-                    this.cb.callback(mcr);
-                }
-                return;
-            }
-            
-            if (rr.status == ReceiverResult.STATUS_CANCELLED) {
-                mcr.errText = "Receiver Cancelled";
-                if (this.cb != null) {
-                    this.cb.callback(mcr);
-                }
-                
-                return;
-            }
-            
-            if (rr.status == ReceiverResult.STATUS_ERROR) {
-                mcr.errText = "Receiver Error";
-                if (this.cb != null) {
-                    this.cb.callback(mcr);
-                }
-                
-                return;
-            }
-            
-            mcr.text = "Grading coins";
-            if (cb != null)
-                cb.callback(mcr);
-            
-            startGraderService(new eGraderCb(cb, w, rr.receiptId), null, w.getName());
-        }
     }
     
     class eGraderCb implements CallbackInterface {
@@ -838,10 +790,9 @@ public class ServantManager {
         String receiptId;
         
         
-        public eGraderCb(CallbackInterface cb, Wallet w, String receiptId) {
+        public eGraderCb(CallbackInterface cb, Wallet w) {
             this.w = w;
             this.cb = cb;
-            this.receiptId = receiptId;
             mcr = new makeChangeResult();
         }
         
@@ -852,8 +803,9 @@ public class ServantManager {
             
             //receiverReceiptId = rr.receiptId;
             int total = gr.totalAuthenticValue + gr.totalFrackedValue;
+            String receiptId = gr.receiptId;
             
-            w.appendTransaction("Received from ChangeMaker", total, receiptId);
+            w.appendTransaction("Received from Public Change", total, receiptId);
             
             mcr.text = "Fixing coins";
             if (cb != null)
@@ -983,120 +935,6 @@ public class ServantManager {
                 cb.callback(mcr);
             
         }
-    }
-    
-    
-    class eShowSkyCoinsCb implements CallbackInterface {
-        
-        String hash;
-        CallbackInterface cb;
-        int denomination;
-        makeChangeResult mcr;
-        int skySN;
-        Wallet w;
-        
-        public eShowSkyCoinsCb(String hash, Wallet w, int denomination, int skySN, CallbackInterface cb) {
-            this.hash = hash;
-            this.cb = cb;
-            this.denomination = denomination;
-            this.skySN = skySN;
-            this.w = w;
-            mcr = new makeChangeResult();
-        }
-        
-        public void callback(final Object result) {
-            ShowEnvelopeCoinsResult sc = (ShowEnvelopeCoinsResult) result;
-
-
-            ArrayList<Integer> coins = new ArrayList<Integer>();
-            
-            logger.debug(ltag, "ShowSky finished: " + sc.status + " coins: " + sc.coins.length);
-            for (int i = 0; i < sc.tags.length; i++) {
-                if (sc.tags[i].equals(hash)) {
-                    logger.debug(ltag, "Our coin: " + sc.coins[i]);
-                    coins.add(sc.coins[i]);
-                }
-            }
-            
-            int total = 0;
-            for (int sn : coins) {
-                CloudCoin cc = new CloudCoin(Config.DEFAULT_NN, sn);
-                
-                logger.debug(ltag, "sn: " + sn + " d: " + cc.getDenomination());
-                
-                total += cc.getDenomination();
-            }
-            
-            
-            if (total != denomination) {
-                logger.error(ltag, "Amount mismatch");
-                mcr.errText = "Failed to find coins in your SkyWallet. We found only " + total;
-                if (this.cb != null) {
-                    this.cb.callback(mcr);
-                }
-                
-                return;
-            }
-       
-            receiveFromSkyWallet(this.cb, w, coins, total, skySN);
-        }
-    }
-    
-    class eSenderChangeCb implements CallbackInterface {
-        CallbackInterface cb;
-        makeChangeResult mcr;
-        String memoUUID;
-        int denomination;
-        int skySN;
-        Wallet w;
-        
-        public eSenderChangeCb(CallbackInterface cb, Wallet w, String memoUUID, int denomination, int skySN) {
-            this.cb = cb;
-            this.memoUUID = memoUUID;
-            this.denomination = denomination;
-            this.skySN = skySN;
-            this.w = w;
-            mcr = new makeChangeResult();
-        }
-        
-        public void callback(final Object result) {
-            final SenderResult sr = (SenderResult) result;
-            
-            logger.debug(ltag, "Sender (Change) finished: " + sr.status);
-            if (sr.status == SenderResult.STATUS_PROCESSING) {
-                mcr.status = 1;
-                mcr.progress = sr.totalRAIDAProcessed;
-                mcr.text = "Sending coin to SkyChange";
-                if (this.cb != null) {
-                    this.cb.callback(mcr);
-                }
-                return;
-            }
-            
-            
-            if (sr.status == SenderResult.STATUS_CANCELLED) {
-                mcr.errText = "Sender Cancelled";
-                if (this.cb != null) {
-                    this.cb.callback(mcr);
-                }
-                
-                return;
-            }
-      
-            if (sr.status == SenderResult.STATUS_ERROR || sr.amount != denomination) {
-                mcr.errText = "Failed to send coins to the Change Wallet. Check if they were valid";
-                if (this.cb != null) {
-                    this.cb.callback(mcr);
-                }
-		return;
-            }   
-            
-            w.appendTransaction("Sent to ChangeMaker", sr.amount * -1, sr.receiptId);
-            
-            requestChange(this.cb, w, memoUUID, denomination, skySN);
-                 
-        }
-        
     }
     
     class eVaulterChangeCb implements CallbackInterface {
