@@ -1396,6 +1396,10 @@ public class AdvancedClient  {
                 //int[] sss = {7391980,7391982};
                 //ps.srcWallet.setSNs(sss);
                 //ps.typedAmount = 21;
+                
+                System.out.println("sss=" + ps.srcWallet.getName());
+
+                
                 sm.setActiveWalletObj(ps.srcWallet);
                 boolean rv = sm.makeChange(ps.srcWallet, ps.typedAmount, skySN, new CallbackInterface() {
                     public void callback(Object o) {
@@ -7721,7 +7725,6 @@ public class AdvancedClient  {
             wl.debug(ltag, "Authenticator finished");
             
             final Object fresult = result;
-	
             final AuthenticatorResult ar = (AuthenticatorResult) fresult;
             if (ar.status == AuthenticatorResult.STATUS_ERROR) {
                 EventQueue.invokeLater(new Runnable() {         

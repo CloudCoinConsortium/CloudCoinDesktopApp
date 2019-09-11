@@ -128,11 +128,13 @@ public class Config {
     final public static int CHANGE_METHOD_100B = 7;
     final public static int CHANGE_METHOD_100C = 8;
     final public static int CHANGE_METHOD_100D = 9;
+    final public static int CHANGE_METHOD_100E = 10;
 
-    final public static int CHANGE_METHOD_250A = 10;
-    final public static int CHANGE_METHOD_250B = 11;
-    final public static int CHANGE_METHOD_250C = 12;
-    final public static int CHANGE_METHOD_250D = 13;
+    final public static int CHANGE_METHOD_250A = 11;
+    final public static int CHANGE_METHOD_250B = 12;
+    final public static int CHANGE_METHOD_250C = 13;
+    final public static int CHANGE_METHOD_250D = 14;
+    final public static int CHANGE_METHOD_250E = 15;
 
     final public static int VAULTER_OP_VAULT = 1;
     final public static int VAULTER_OP_UNVAULT = 2;
@@ -175,5 +177,7 @@ public class Config {
     final public static int MIN_READ_TIMEOUT = 4000;
     final public static int MAX_READ_TIMEOUT = 120000;
     
+    
+    public static int PUBLIC_CHANGE_MAKER_ID = 2;
     
 }

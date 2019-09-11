@@ -663,6 +663,10 @@ public class Servant {
     }
 
     public int[] getExpCoins(int amount, int[] totals) {
+        return getExpCoins(amount, totals, false);
+    }
+    
+    public int[] getExpCoins(int amount, int[] totals, boolean loose) {
         int savedAmount = amount;
    
         if (amount > totals[Config.IDX_TOTAL]) {
@@ -672,6 +676,9 @@ public class Servant {
 
         if (amount < 0)
             return null;
+        
+        if (loose)
+            logger.debug(ltag, "isLoose " + loose);
         
         for (int i = 0; i < totals.length; i++)
             logger.debug(ltag, "v=" + totals[i]);
@@ -712,6 +719,9 @@ public class Servant {
                 break;
             
             if (i == 1 || exp_250 % 2 == 0) {
+                if (loose)
+                    break;
+                
                 logger.error(ltag, "Can't collect needed amount of coins. rest: " + amount);
                 return null;
             }
@@ -777,6 +787,83 @@ public class Servant {
                 } 
             }
         }
+    }
+    
+    public CloudCoin pickCoinsAmountFromArrayWithExtra(int[] coins, int amount) {
+        int[] totals, exps;
+        int denomination;
+        CloudCoin cc = null;
+        
+        totals = countCoinsFromArray(coins);
+        exps = getExpCoins(amount, totals, true);
+        
+        int collected, rest;
+        
+        collected = rest = 0;
+        for (int i = 0; i < coins.length; i++) {
+            cc = new CloudCoin(Config.DEFAULT_NN, coins[i]);
+            denomination = cc.getDenomination();
+            if (denomination == 1) {
+                if (exps[Config.IDX_1]-- > 0) {
+                    logger.info(ltag, "Adding 1: " + cc.sn);
+                    coinsPicked.add(cc);
+                    collected += cc.getDenomination();
+                } 
+            } else if (denomination == 5) {
+                if (exps[Config.IDX_5]-- > 0) {
+                    logger.info(ltag, "Adding 5: " + cc.sn);
+                    coinsPicked.add(cc);
+                    collected += cc.getDenomination();
+                }
+            } else if (denomination == 25) {
+                if (exps[Config.IDX_25]-- > 0) {
+                    logger.info(ltag, "Adding 25: " + cc.sn);
+                    coinsPicked.add(cc);
+                    collected += cc.getDenomination();
+                } 
+            } else if (denomination == 100) {
+                if (exps[Config.IDX_100]-- > 0) {
+                    logger.info(ltag, "Adding 100: " + cc.sn);
+                    coinsPicked.add(cc);
+                    collected += cc.getDenomination();
+                } 
+            } else if (denomination == 250) {
+                if (exps[Config.IDX_250]-- > 0) {
+                    logger.info(ltag, "Adding 250: " + cc.sn);
+                    coinsPicked.add(cc);
+                    collected += cc.getDenomination();
+                } 
+            } 
+        }
+                    
+        boolean isAdded;
+        rest = amount - collected;
+        logger.debug(ltag, "rest = " + rest);
+        for (int i = 0; i < coins.length; i++) {
+            cc = new CloudCoin(Config.DEFAULT_NN, coins[i]);
+            denomination = cc.getDenomination();
+            
+            if (rest > denomination)
+                continue;
+            
+            isAdded = false;
+            for (CloudCoin xcc : coinsPicked) {
+                if (xcc.sn == cc.sn) {
+                    isAdded = true;
+                    break;
+                }
+            }
+            
+            if (isAdded) {
+                logger.debug(ltag, "Adding change: skipp added sn " + cc.sn);
+                continue;
+            }
+            
+            logger.debug(ltag, "Chosen for change: " + cc.sn + " denomination " + cc.getDenomination());
+            break;
+        }
+
+        return cc;
     }
     
     public boolean pickCoinsAmountFromArray(int[] coins, int amount) {
