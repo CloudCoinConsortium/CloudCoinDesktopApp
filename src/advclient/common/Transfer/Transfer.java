@@ -354,16 +354,13 @@ public class Transfer extends Servant {
         CloudCoin[] sccs;
 
         logger.debug(ltag, "Transferring with change to " + tosn);
-        
-        System.out.println("sss");
-        System.exit(1);
-        
+
         sbs = new StringBuilder[RAIDA.TOTAL_RAIDA_COUNT];
         posts = new String[RAIDA.TOTAL_RAIDA_COUNT];
         requests = new String[RAIDA.TOTAL_RAIDA_COUNT];
 
         for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
-            requests[i] = "transfer";
+            requests[i] = "transfer_with_change";
 
             sbs[i] = new StringBuilder();
             sbs[i].append("nn=");
@@ -463,9 +460,7 @@ public class Transfer extends Servant {
                 } else {
                     logger.error(ltag, "Unknown coin status from RAIDA" + i + ": " + strStatus);
                     cstatus = CloudCoin.STATUS_ERROR;
-                }
-                
-                
+                }      
             }
         }
 

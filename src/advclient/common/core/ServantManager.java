@@ -727,7 +727,10 @@ public class ServantManager {
                 
                 if (cmr.status == ChangeMakerResult.STATUS_ERROR) {
                     logger.debug(ltag, "Error in making Change");
-                    mcr.errText = "Failed to make Change. Please check the main.log file";
+                    if (!cmr.errText.isEmpty())
+                        mcr.errText = cmr.errText;
+                    else
+                        mcr.errText = "Failed to make Change. Please check the main.log file";
                     mcr.status = 0;
                     if (cb != null) {
                         cb.callback(mcr);

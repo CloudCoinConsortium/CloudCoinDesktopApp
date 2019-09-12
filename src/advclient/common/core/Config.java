@@ -180,4 +180,7 @@ public class Config {
     
     public static int PUBLIC_CHANGE_MAKER_ID = 2;
     
+    
+    public static int SECONDS_TO_AGGREGATE_ENVELOPES = 30;
+    
 }
