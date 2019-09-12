@@ -344,9 +344,7 @@ public class Transfer extends Servant {
     
     public boolean processTransferWithChange(CloudCoin tcc, CloudCoin cc, String tag, int tosn, int amount)  {       
         String[] results;
-        Object[] o;
         CommonResponse errorResponse;
-        TransferResponse[][] trs;
         String[] requests;
         StringBuilder[] sbs;
         String[] posts;
@@ -411,7 +409,6 @@ public class Transfer extends Servant {
         }
 
         sccs = new CloudCoin[1];
-        trs = new TransferResponse[RAIDA.TOTAL_RAIDA_COUNT][];
         for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
             logger.info(ltag, "i="+i+ " r="+results[i]);
             if (results[i] != null) {
@@ -421,7 +418,7 @@ public class Transfer extends Servant {
                 }
             }
 
-            o = parseArrayResponse(results[i], TransferResponse.class);
+            TransferResponse o = (TransferResponse) parseResponse(results[i], TransferResponse.class);
             if (o == null) {
                 errorResponse = (CommonResponse) parseResponse(results[i], CommonResponse.class);
                 if (errorResponse == null) {
@@ -432,36 +429,13 @@ public class Transfer extends Servant {
                 logger.error(ltag, "Failed to auth coin. Status: " + errorResponse.status);
                 continue;
             }
-
-            if (o.length != sccs.length) {
-                logger.error(ltag, "RAIDA " + i + " wrong number of coins: " + o.length);
+            
+            if (!o.status.equals(Config.REQUEST_STATUS_PASS)) {
+                logger.error(ltag, "Invalid status from raida " + i + " status: " + o.status);
                 continue;
             }
 
-            for (int j = 0; j < o.length; j++) {
-                String strStatus;
-                int rnn, rsn;
-                String ran;
-                boolean found;
-
-                trs[i] = new TransferResponse[o.length];
-                trs[i][j] = (TransferResponse) o[j];
-
-                strStatus = trs[i][j].status;
-
-                found = false;
-                int cstatus;
-                if (strStatus.equals(Config.REQUEST_STATUS_PASS)) {
-                    logger.info(ltag, "OK response from raida " + i);
-                    cstatus = CloudCoin.STATUS_PASS;
-                } else if (strStatus.equals(Config.REQUEST_STATUS_FAIL)) {
-                    logger.error(ltag, "Counterfeit response from raida " + i);
-                    cstatus = CloudCoin.STATUS_FAIL;
-                } else {
-                    logger.error(ltag, "Unknown coin status from RAIDA" + i + ": " + strStatus);
-                    cstatus = CloudCoin.STATUS_ERROR;
-                }      
-            }
+            logger.debug(ltag, "Change from RAIDA " + i + " OK");
         }
 
         logger.info(ltag, "Change Transferred");

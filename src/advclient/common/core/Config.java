@@ -112,7 +112,7 @@ public class Config {
     public static String SENDER_DOMAIN = "teleportnow.cc";
 
     public static int RAIDANUM_TO_QUERY_BY_DEFAULT = 7;
-    public static int RAIDANUM_TO_QUERY_REQUEST_CHANGE = 18;
+    public static int RAIDANUM_TO_QUERY_REQUEST_CHANGE = 7;
 
     public static int MAX_COMMON_LOG_LENGTH_MB = 128;
 
