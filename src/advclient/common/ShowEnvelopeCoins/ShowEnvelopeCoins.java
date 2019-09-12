@@ -138,9 +138,7 @@ public class ShowEnvelopeCoins extends Servant {
             ts = er[j].created;
 
             ats = ts / Config.SECONDS_TO_AGGREGATE_ENVELOPES;
-            
-            System.out.println("created="+ts + " ats="+ats);
-            
+
             rcc = new CloudCoin(cc.nn, rsn);
             int idx = Config.IDX_FOLDER_BANK;
             switch (rcc.getDenomination()) {
