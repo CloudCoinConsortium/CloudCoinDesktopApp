@@ -129,6 +129,7 @@ public class ShowEnvelopeCoins extends Servant {
             String tag;
             int rsn;
             int ts;
+            int ats;
             CloudCoin rcc;
  
             er[j] = (ShowEnvelopeCoinsResponse) o[j];
@@ -136,6 +137,10 @@ public class ShowEnvelopeCoins extends Servant {
             rsn = er[j].sn;
             ts = er[j].created;
 
+            ats = ts / Config.SECONDS_TO_AGGREGATE_ENVELOPES;
+            
+            System.out.println("created="+ts + " ats="+ats);
+            
             rcc = new CloudCoin(cc.nn, rsn);
             int idx = Config.IDX_FOLDER_BANK;
             switch (rcc.getDenomination()) {
@@ -158,7 +163,7 @@ public class ShowEnvelopeCoins extends Servant {
             
             result.coins[j] = rsn;
             result.tags[j] = tag;
-            key = ts + "." + tag;
+            key = ats + "." + tag;
             
             String[] coinData = new String[3];
             coinData[0] = tag;

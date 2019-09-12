@@ -5021,11 +5021,13 @@ public class AdvancedClient  {
             }
  
             Enumeration<String> enumeration = envelopes.keys();
+            ArrayList<String> hlist = Collections.list(enumeration);
+            Collections.sort(hlist);
+
 
             trs = new String[envelopes.size()][];
             int i = 0;
-            while (enumeration.hasMoreElements()) {
-                String key = enumeration.nextElement();
+            for (String key : hlist) {
                 String[] data = envelopes.get(key);
 
                 trs[i] = new String[4];

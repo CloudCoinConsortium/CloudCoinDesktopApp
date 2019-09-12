@@ -37,6 +37,7 @@ public class ChangeMaker extends Servant {
         csb = new StringBuilder();
         receiptId = AppCore.generateHex();
         cr.receiptId = receiptId;
+        cr.errText = "";
         
         launchThread(new Runnable() {
             @Override
@@ -57,7 +58,6 @@ public class ChangeMaker extends Servant {
         cmr.receiptId = cr.receiptId;
     }
     
-    
     public void doChange(int method, CloudCoin cc) {
         logger.info(ltag, "Method " + method);
 
@@ -75,8 +75,10 @@ public class ChangeMaker extends Servant {
             return;
         }
 
-/*
-        results = raida.query(new String[] { "show_change?sn=" + Config.PUBLIC_CHANGE_MAKER_ID }, null, null, new int[] {Config.RAIDANUM_TO_QUERY_BY_DEFAULT});
+        String seed = AppCore.generateHex().substring(0, 8);       
+        results = raida.query(new String[] { 
+            "show_change?sn=" + Config.PUBLIC_CHANGE_MAKER_ID + "&seed=" + seed 
+        }, null, null, new int[] { Config.RAIDANUM_TO_QUERY_REQUEST_CHANGE });
         if (results == null) {
             logger.error(ltag, "Failed to query showchange");
             cr.status = ChangeMakerResult.STATUS_ERROR;
@@ -89,35 +91,20 @@ public class ChangeMaker extends Servant {
             cr.status = ChangeMakerResult.STATUS_ERROR;
             return;
         }
-        */
 
-        resultMain = "{\n" +
-                "  \"server\":\"RAIDA1\",\n" +
-                "  \"status\":\"pass\",\n" +
-                "  \"d250\":[16777210, 16777211, 16777212, 16777213, 16777214],\n" +
-                "  \"d100\":[14680000, 14680001, 14680002, 14680003, 14680004],\n" +
-                "  \"d25\":[6291400, 6291401, 6291402, 6291403, 6291404],\n" +
-                "  \"d5\":[4194200, 4194201, 4194202, 4194203, 4194204, 4194205, 4194206, 4194207],\n" +
-                "  \"d1\":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50],\n" +
-                "  \"message\":\"Change:This report shows the serial numbers that are available to make change now.\",\n" +
-                "  \"version\":\"some version number here\",\n" +
-                "  \"time\":\"2016-44-19 7:44:PM\"\n" +
-                "}\n";
-
-        cresponse = (CommonResponse) parseResponse(resultMain, CommonResponse.class);
-        if (cresponse == null) {
+        ShowChangeResponse scr = (ShowChangeResponse) parseResponse(resultMain, ShowChangeResponse.class);
+        if (scr == null) {
             logger.error(ltag, "Failed to get response");
             cr.status = ChangeMakerResult.STATUS_ERROR;
             return;
         }
-
-        if (!cresponse.status.equals(Config.REQUEST_STATUS_PASS)) {
-            logger.error(ltag, "Failed to get response: " + cresponse.status);
+        
+        if (!scr.status.equals(Config.REQUEST_STATUS_PASS)) {
+            logger.error(ltag, "Failed to get response: " + scr.status);
             cr.status = ChangeMakerResult.STATUS_ERROR;
             return;
         }
-
-        ShowChangeResponse scr = (ShowChangeResponse) parseResponse(resultMain, ShowChangeResponse.class);
+        
         int[] sns;
         int rqDenom = 0;
 
@@ -190,6 +177,7 @@ public class ChangeMaker extends Servant {
 
         if (sns == null) {
             logger.info(ltag, "No coins");
+            cr.errText = "Not enough coins at the Public Change Maker";
             cr.status = ChangeMakerResult.STATUS_ERROR;
             return;
         }
