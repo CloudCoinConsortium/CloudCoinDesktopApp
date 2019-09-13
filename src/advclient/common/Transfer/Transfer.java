@@ -332,10 +332,30 @@ public class Transfer extends Servant {
                     cstatus = CloudCoin.STATUS_ERROR;
                 }
                 
-                
+                ccs.get(j).setDetectStatus(i, cstatus);            
             }
         }
 
+        boolean failed = false;
+        for (CloudCoin tcc : ccs) {
+            //tcc.setPownStringFromDetectStatus();
+            
+            int cnt = AppCore.getPassedCount(tcc);
+            
+            logger.info(ltag, "cc " + tcc.sn + " " + tcc.getPownString());
+            
+            if (cnt < Config.PASS_THRESHOLD) {
+                logger.error(ltag, "Coin " + tcc.sn + " was not transferred. PassCount: " + tcc.sn);
+                failed = true;
+            }
+        }
+        
+        if (failed) {
+            tr.errText = "Some coins were transferred with errors. Please check the main.log file";
+            logger.error(ltag, "Transfer failed");
+            return false;
+        }
+        
         logger.info(ltag, "Transferred");
 
         return true;
@@ -436,8 +456,17 @@ public class Transfer extends Servant {
             }
 
             logger.debug(ltag, "Change from RAIDA " + i + " OK");
+            tcc.setDetectStatus(i, CloudCoin.STATUS_PASS);
         }
 
+        int cnt = AppCore.getPassedCount(tcc);
+        logger.info(ltag, "cc " + tcc.sn + " " + tcc.getPownString());
+            
+        if (cnt < Config.PASS_THRESHOLD) {
+            logger.error(ltag, "Transfer Change Failed");
+            return false;
+        }
+        
         logger.info(ltag, "Change Transferred");
 
         return true;
