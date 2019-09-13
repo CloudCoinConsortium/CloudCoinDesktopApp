@@ -395,6 +395,13 @@ public class AppUI {
         frame.setResizable(false);
         frame.setVisible(true);
         
+        ClassLoader cl;
+        cl = AppUI.class.getClassLoader();
+
+        frame.setIconImage(
+            new ImageIcon(cl.getResource("resources/CloudCoinLogo.png")).getImage()
+        );
+        
         return frame;
     }
    
