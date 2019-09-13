@@ -416,11 +416,10 @@ public class AppUI {
         ClassLoader cl;            
         cl = AppUI.class.getClassLoader();
 
-        /*
         frame.setIconImage(
             new ImageIcon(cl.getResource("resources/CloudCoinLogo.png")).getImage()
         );
-        */
+        
         return frame;
     }
    
