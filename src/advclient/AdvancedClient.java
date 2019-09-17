@@ -1151,21 +1151,6 @@ public class AdvancedClient  {
                 
         Thread t = new Thread(new Runnable() {
             public void run(){
-                if (!ps.isEchoFinished) {
-                    pbarText.setText("Checking RAIDA ...");
-                    pbarText.repaint();
-                }
-                
-                try {
-                    Thread.sleep(200);
-                } catch (InterruptedException e) {}
-                
-                while (!ps.isEchoFinished) {
-                    try {
-                        Thread.sleep(300);
-                    } catch (InterruptedException e) {}
-                }
-
                 wl.debug(ltag, "Fixing coins in " + ps.srcWallet.getName());
                 
                 sm.setActiveWalletObj(ps.srcWallet);                
