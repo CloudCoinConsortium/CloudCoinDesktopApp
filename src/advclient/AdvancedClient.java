@@ -2770,7 +2770,7 @@ public class AdvancedClient  {
         
         AppUI.getTwoButtonPanel(subInnerCore, "", "Continue", null, new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                sm.setActiveWallet(ps.typedWalletName);
+                setActiveWallet(sm.getWalletByName(ps.typedWalletName));
                 ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
                 showScreen();
             }
@@ -2812,7 +2812,8 @@ public class AdvancedClient  {
         
         AppUI.getTwoButtonPanel(subInnerCore, "", "Continue", null, new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                sm.setActiveWallet(ps.domain + "." + ps.trustedServer);
+                //sm.setActiveWallet(ps.domain + "." + ps.trustedServer);
+                setActiveWallet(sm.getWalletByName(ps.domain + "." + ps.trustedServer));
                 ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
                 showScreen();
             }
