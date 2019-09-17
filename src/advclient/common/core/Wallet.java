@@ -6,6 +6,9 @@
 package global.cloudcoin.ccbank.core;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.Hashtable;
 
 
@@ -153,6 +156,24 @@ public class Wallet implements Comparable<Wallet> {
         String fileName = getTransactionsFileName();
         
         AppCore.copyFile(fileName, dstPath);
+    }
+    
+    public void saveEnvelopes(String dstPath) {
+        StringBuilder sb = new StringBuilder();
+
+        Enumeration<String> enumeration = envelopes.keys();
+        ArrayList<String> hlist = Collections.list(enumeration);
+        Collections.sort(hlist);
+
+        for (String key : hlist) {
+            String[] data = envelopes.get(key);
+
+            String value = data[0] + "," + data[2] + "," + data[1] + lsep;
+            sb.append(value);
+        }
+       
+        logger.debug(ltag, "Saving " + dstPath);
+        AppCore.saveFile(dstPath, sb.toString());  
     }
     
     public String[][] getTransactions() {

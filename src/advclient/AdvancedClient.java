@@ -53,7 +53,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.14";
+    String version = "2.1.15";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -5951,10 +5951,7 @@ public class AdvancedClient  {
         table.addMouseMotionListener(ma);
  
         ct.add(scrollPane);
-        
-
-        
-        
+    
         //print and export history from wallet 
         JPanel bp = getTwoButtonPanelCustom("Print", "Export History", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -5974,7 +5971,10 @@ public class AdvancedClient  {
 
                 int rVal = c.showSaveDialog(null);
                 if (rVal == JFileChooser.APPROVE_OPTION) {
-                    w.saveTransations(c.getSelectedFile().getAbsolutePath());
+                    if (w.isSkyWallet())
+                        w.saveEnvelopes(c.getSelectedFile().getAbsolutePath());
+                    else            
+                        w.saveTransations(c.getSelectedFile().getAbsolutePath());
                     if (!Desktop.isDesktopSupported())
                         return;
                     try {
