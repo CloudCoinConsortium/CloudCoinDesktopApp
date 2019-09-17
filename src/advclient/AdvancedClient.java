@@ -5255,7 +5255,10 @@ public class AdvancedClient  {
 
                 int rVal = c.showSaveDialog(null);
                 if (rVal == JFileChooser.APPROVE_OPTION) {
-                    w.saveTransations(c.getSelectedFile().getAbsolutePath());
+                    if (w.isSkyWallet())
+                        w.saveEnvelopes(c.getSelectedFile().getAbsolutePath());
+                    else
+                        w.saveTransations(c.getSelectedFile().getAbsolutePath());
                     if (!Desktop.isDesktopSupported())
                         return;
                     try {
