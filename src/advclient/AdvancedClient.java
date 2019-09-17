@@ -1125,16 +1125,17 @@ public class AdvancedClient  {
                         Thread.sleep(300);
                     } catch (InterruptedException e) {}
                 }
-
+                
                 wl.debug(ltag, "Fixing coins in " + ps.srcWallet.getName());
                 
                 if (ps.dstWallet != null)
                     sm.setActiveWalletObj(ps.dstWallet);                
                 else
                     sm.setActiveWalletObj(ps.srcWallet);
-                //sm.startFrackFixerService(new FrackFixerOnPurposeCb());
                 
-                sm.startLossFixerService(new LossFixerCb());
+                sm.startFrackFixerService(new FrackFixerOnPurposeCb());
+                
+                //sm.startLossFixerService(new LossFixerCb());
             }
         });
         
