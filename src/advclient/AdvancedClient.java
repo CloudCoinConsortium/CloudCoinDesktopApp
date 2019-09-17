@@ -2928,7 +2928,7 @@ public class AdvancedClient  {
         //JPanel bp = getOneButtonPanel();  
         JPanel bp = getOneButtonPanelCustom("Continue", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                sm.setActiveWallet(ps.typedWalletName);
+                setActiveWallet(sm.getWalletByName(ps.typedWalletName));
                 ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
                 showScreen();
             }
@@ -2969,10 +2969,9 @@ public class AdvancedClient  {
         
         subInnerCore.add(res);
 
-            
         JPanel bp = getOneButtonPanelCustom("Continue", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                sm.setActiveWallet(ps.domain + "." + ps.trustedServer);
+                setActiveWallet(sm.getWalletByName(ps.domain + "." + ps.trustedServer));
                 ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
                 showScreen();
             }
