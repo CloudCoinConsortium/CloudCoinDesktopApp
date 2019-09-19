@@ -117,8 +117,6 @@ public class ProgramState {
     
     int sendType;
     
-    boolean isUpdatedWallets;
-    
     int foundSN;
     
     boolean needBackup;
@@ -183,8 +181,6 @@ public class ProgramState {
         typedRemoteWallet = "";
         
         sendType = SEND_TYPE_WALLET;
-        
-        isUpdatedWallets = false;
         
         needBackup = false;
         
