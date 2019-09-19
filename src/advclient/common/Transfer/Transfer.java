@@ -76,7 +76,6 @@ public class Transfer extends Servant {
                 cb.callback(tr);
             return;
         }
-        
 
         CloudCoin extraCoin = null;
         if (!pickCoinsAmountFromArray(sns, amount)) {
@@ -120,6 +119,9 @@ public class Transfer extends Servant {
         logger.debug(ltag, "Maxcoins: " + maxCoins);
                
         globalResult.totalFiles = coinsPicked.size();
+        if (extraCoin != null)
+            globalResult.totalFiles++;
+        
         globalResult.totalRAIDAProcessed = 0;
         globalResult.totalFilesProcessed = 0;
         globalResult.totalCoinsProcessed = 0;
@@ -135,6 +137,10 @@ public class Transfer extends Servant {
         for (CloudCoin cc : coinsPicked) {
             globalResult.totalCoins += cc.getDenomination();
         }
+        
+        if (extraCoin != null)
+            globalResult.totalCoins += extraCoin.getDenomination();
+        
         
         int curValProcessed = 0;      
         for (CloudCoin cc : coinsPicked) {
