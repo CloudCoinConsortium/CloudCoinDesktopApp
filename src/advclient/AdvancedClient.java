@@ -881,7 +881,6 @@ public class AdvancedClient  {
                 showSetEmailScreen();
                 break;
             case ProgramState.SCREEN_WALLET_CREATED:
-                ps.isUpdatedWallets = false;
                 showWalletCreatedScreen();
                 break;
             case ProgramState.SCREEN_PREPARE_TO_ADD_WALLET:
@@ -908,7 +907,6 @@ public class AdvancedClient  {
                 showImportingScreen();
                 break;
             case ProgramState.SCREEN_IMPORT_DONE:
-                ps.isUpdatedWallets = false;
                 showImportDoneScreen();
                 break;
             case ProgramState.SCREEN_SUPPORT:
@@ -918,7 +916,6 @@ public class AdvancedClient  {
                 showConfirmTransferScreen();
                 break;
             case ProgramState.SCREEN_TRANSFER_DONE:
-                ps.isUpdatedWallets = false;
                 showTransferDoneScreen();
                 break;
             case ProgramState.SCREEN_BACKUP:
@@ -964,11 +961,9 @@ public class AdvancedClient  {
                 showConfirmDeleteWalletScreen();
                 break;
             case ProgramState.SCREEN_DELETE_WALLET_DONE:
-                ps.isUpdatedWallets = false;
                 showDeleteWalletDoneScreen();
                 break;
             case ProgramState.SCREEN_SKY_WALLET_CREATED:
-                ps.isUpdatedWallets = false;
                 showSkyWalletCreatedScreen();
                 break;
             case ProgramState.SCREEN_PREDEPOSIT:
@@ -6159,6 +6154,7 @@ public class AdvancedClient  {
                     setActiveWallet(fwallet);
                     ps.sendType = 0;
                     ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
+                    fwallet.setNotUpdated();
                     showScreen();
                 }   
                 
@@ -6865,7 +6861,6 @@ public class AdvancedClient  {
                 sm.getActiveWallet().setNotUpdated();
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {
-                        ps.isUpdatedWallets = false;
                         ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
                         //ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
                         showScreen();
