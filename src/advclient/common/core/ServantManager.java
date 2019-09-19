@@ -682,7 +682,6 @@ public class ServantManager {
         }
                
         logger.debug(ltag, "Sending to the ChangeMaker " + cc.sn + " denomination " + cc.getDenomination());
-        System.out.println("Sending to the ChangeMaker " + cc.sn);
         
         int method = 0;
         switch (cc.getDenomination()) {
@@ -971,7 +970,14 @@ public class ServantManager {
             }
             
             if (vresult.status == VaulterResult.STATUS_FINISHED) {
-                sendToChange(cc, w, skySN, mcb);
+                CloudCoin ncc = AppCore.findCoinBySN(Config.DIR_BANK, w.getName(), cc.sn);
+                if (ncc == null) {
+                    makeChangeResult mcr = new makeChangeResult();
+                    mcr.errText = "Failed to decrypt coin. The resulting coin is missing in the Bank";
+                    this.mcb.callback(mcr);
+                    return;
+                }
+                sendToChange(ncc, w, skySN, mcb);
             }
         }    
     }

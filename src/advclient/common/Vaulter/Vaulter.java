@@ -291,8 +291,7 @@ public class Vaulter extends Servant {
             return true;
         }
 
-        if (amount != 0) {
-            
+        if (amount != 0) {          
             if (addFolder != null) {
                 logger.debug(ltag, "Checking with fracked. Dir " + addFolder);
                 if (!pickCoinsAmountInDirs(folder, addFolder, amount)) {
