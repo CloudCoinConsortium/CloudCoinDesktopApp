@@ -61,6 +61,7 @@ public class ProgramState {
     final public static int SCREEN_CHECKING_SKYID = 43;
     final public static int SCREEN_SETTINGS = 44;
     final public static int SCREEN_SETTINGS_SAVED = 45;
+    final public static int SCREEN_WARN_FRACKED_TO_SEND = 46;
     
     
     final static int CB_STATE_INIT = 1;
@@ -96,7 +97,10 @@ public class ProgramState {
     Wallet dstWallet;
     Wallet srcWallet;
     
+    Wallet coinIDinFix;
+    
     boolean isEchoFinished;
+
     
     int statToBankValue, statToBank, statFailed, statLost;
     int statFailedValue, statLostValue;
@@ -212,7 +216,8 @@ public class ProgramState {
         popupVisible = false;
         
         isCheckingSkyID = false;
-
+        
+        coinIDinFix = null;
     }
  
     public String toString() {

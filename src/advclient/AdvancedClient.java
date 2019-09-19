@@ -198,8 +198,8 @@ public class AdvancedClient  {
     }
     
     public String getSkyIDError(String name, String pownString) {
-        return "Your Sky Coin ID <b>" + name + "</b> is not authentic. It is not safe to use it.<br><br>"
-            + "The Pown String is <b>" + pownString + "</b><br><br>Move the Coin to the Fracked folder of any Wallet and fix it";
+        return "Your Sky Coin ID <b>" + name + "</b> is counterfeit. It is not safe to use it.<br><br>"
+            + "The Pown String is <b>" + pownString + "</b>";
     }
 
     public String getSkyIDErrorIfRAIDAFailed() {
@@ -998,6 +998,10 @@ public class AdvancedClient  {
             case ProgramState.SCREEN_SETTINGS_SAVED:
                 showSettingsDoneScreen();
                 break;
+            case ProgramState.SCREEN_WARN_FRACKED_TO_SEND:
+                showWarnFrackedToSend();
+                break;
+
         }
         
         Component[] cs = lwrapperPanel.getComponents();
@@ -1562,6 +1566,7 @@ public class AdvancedClient  {
                 }
                 
                 CloudCoin skyCC = null;
+                ps.coinIDinFix = null;
                 if (ps.srcWallet.isSkyWallet()) {
                     ps.isCheckingSkyID = true;
                     skyCC = ps.srcWallet.getIDCoin();
@@ -1575,15 +1580,17 @@ public class AdvancedClient  {
                             Thread.sleep(300);
                         } catch (InterruptedException e) {}
                     }
-                    
-                    if (AppCore.getErrorCount(skyCC) > 0) {
+                   
+                    if (AppCore.getErrorCount(skyCC) > Config.MAX_FAILED_RAIDAS_TO_SEND) {
                         ps.errText = getSkyIDErrorIfRAIDAFailed();
                         showScreen();
                         return;
-                    }
-
-                    if (AppCore.getPassedCount(skyCC) != RAIDA.TOTAL_RAIDA_COUNT) {
+                    } else if (AppCore.getPassedCount(skyCC) < Config.PASS_THRESHOLD) {
                         ps.errText = getSkyIDError(ps.srcWallet.getName(), ps.srcWallet.getIDCoin().getPownString());
+                        showScreen();
+                        return;
+                    } else if (AppCore.getPassedCount(skyCC) != RAIDA.TOTAL_RAIDA_COUNT) {
+                        ps.currentScreen = ProgramState.SCREEN_WARN_FRACKED_TO_SEND;
                         showScreen();
                         return;
                     }
@@ -2325,6 +2332,72 @@ public class AdvancedClient  {
             }
         }, y, gridbag);   
       
+    }
+    
+    public void showWarnFrackedToSend() {
+        int y = 0;
+        JLabel fname, value;
+        MyTextField walletName = null;
+
+        JPanel subInnerCore = getPanel("Fix Fracked Coin");                
+        GridBagLayout gridbag = new GridBagLayout();
+        subInnerCore.setLayout(gridbag);
+      
+        fname = AppUI.wrapDiv("Your Address Coin for " + ps.srcWallet.getName() + " is fracked. This means that one or more of the "
+                + "RAIDA think that it is not authentic. Please fix it before sending");
+        AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
+        AppUI.setBoldFont(fname, 21);
+        y++;
+                          
+        AppUI.GBPad(subInnerCore, y, gridbag);        
+        y++;
+        
+        AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Fix Coin", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                showScreen();
+            }
+        }, new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                Wallet w = sm.getFirstNonSkyWallet();
+                if (w == null) {
+                    ps.errText = "Address Coin can't be fixed bacuse you do not have any wallets";
+                    showScreen();
+                    return;
+                }
+
+                wl.debug(ltag, "Chosen wallet for fixing: " + w.getName());
+
+                ps.coinIDinFix = ps.srcWallet;
+                ps.srcWallet = w;
+
+                int cnt = AppCore.getFilesCount(Config.DIR_FRACKED, ps.srcWallet.getName());
+                if (cnt != 0) {
+                    ps.errText = "Coin can't be fixed. Fracked forder of the wallet " + ps.srcWallet.getName() + " is not empty";
+                    showScreen();
+                    return;
+                }
+
+                String newFileName = AppCore.getUserDir(Config.DIR_FRACKED, ps.srcWallet.getName()) + File.separator + ps.coinIDinFix.getName() + ".stack";
+                wl.debug(ltag, "New name: " + newFileName);
+
+                if (!AppCore.saveFile(newFileName, ps.coinIDinFix.getIDCoin().getJson(false))) {
+                    ps.errText = "Failed to move ID Coin. Please, check main.log file";
+                    showScreen();
+                    return;
+                }
+                
+                AppCore.moveToFolder(ps.coinIDinFix.getIDCoin().originalFile, Config.DIR_TRASH, ps.srcWallet.getName());
+                
+                wl.debug(ltag, "Set fixing");
+                ps.currentScreen = ProgramState.SCREEN_FIXING_FRACKED;
+                showScreen();
+
+            }
+        }, y, gridbag);    
+        
+        subInnerCore.revalidate();
+        subInnerCore.repaint();
     }
     
     public void showConfirmClearScreen() {
@@ -5672,14 +5745,12 @@ public class AdvancedClient  {
                                 return;
                             }
                             
-                            if (AppCore.getErrorCount(fcc) > 0) {
+                             if (AppCore.getErrorCount(fcc) > Config.MAX_FAILED_RAIDAS_TO_SEND) {
                                 ps.currentScreen = ProgramState.SCREEN_SKY_WALLET_CREATED;
                                 ps.errText = getSkyIDErrorIfRAIDAFailed();
                                 showScreen();
                                 return;
-                            }
-
-                            if (AppCore.getPassedCount(fcc) != RAIDA.TOTAL_RAIDA_COUNT) {
+                            } else if (AppCore.getPassedCount(fcc) < Config.PASS_THRESHOLD) {         
                                 ps.currentScreen = ProgramState.SCREEN_SKY_WALLET_CREATED;
                                 ps.errText = getSkyIDError(wname, fcc.getPownString());
                                 showScreen();
@@ -6888,6 +6959,50 @@ public class AdvancedClient  {
             
             wl.debug(ltag, "LossFixer finished");
             
+            if (ps.coinIDinFix != null) {
+                wl.debug(ltag, "We are fixing coin id: " + ps.coinIDinFix.getName());
+                ps.coinIDinFix.setNotUpdated();
+                EventQueue.invokeLater(new Runnable() {
+                    public void run() {
+                        wl.debug(ltag, "Looking for: " + ps.srcWallet.getName() + " sn: " + ps.coinIDinFix.getIDCoin().sn);
+
+                        boolean fixed = true;
+                        CloudCoin cc = AppCore.findCoinBySN(Config.DIR_BANK, ps.srcWallet.getName(), ps.coinIDinFix.getIDCoin().sn);
+                        if (cc == null) {
+                            wl.debug(ltag, "Failed to fix. Trying to move the coin back");
+                            cc = AppCore.findCoinBySN(Config.DIR_FRACKED, ps.srcWallet.getName(), ps.coinIDinFix.getIDCoin().sn);
+                            if (cc == null) {
+                                ps.currentScreen = ProgramState.SCREEN_WITHDRAW;
+                                ps.errText = "Failed to find fixed coin. Please, check main.log file";
+                                showScreen();
+                                return;
+                            }
+
+                            fixed = false;
+                        }
+
+                        wl.debug(ltag, "Found cc: " + cc.originalFile);
+
+                        if (!AppCore.moveToFolderNewName(cc.originalFile, AppCore.getIDDir(), null, ps.coinIDinFix.getName() + ".stack")) {
+                            ps.currentScreen = ProgramState.SCREEN_WITHDRAW;
+                            ps.errText = "Failed to move ID Coin. Please, check main.log file";
+                            showScreen();
+                            return;
+                        }
+
+                        ps.currentScreen = ProgramState.SCREEN_WITHDRAW;
+                        if (fixed)
+                            ps.errText = "ID Coin has been fixed. Please try again";
+                        else
+                            ps.errText = "Failed to fix ID Coin. Please try again later";
+
+                        ps.coinIDinFix.setIDCoin(cc);
+                        showScreen();
+                    }
+                });
+                return;
+            }
+
             
             if (lr.recovered > 0) {
                 sm.getActiveWallet().appendTransaction("LossFixer Recovered", lr.recoveredValue, lr.receiptId);
