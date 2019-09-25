@@ -56,7 +56,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.15";
+    String version = "2.1.16";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -3583,6 +3583,10 @@ public class AdvancedClient  {
             return;
         }
 
+        JLabel tw = AppUI.wrapDiv("Deposit from Sky Wallet will deposit all coins from that Sky wallet!<br>" +
+            "You will be not able to select just part of the Sky Wallet coins.");
+        AppUI.getGBRow(subInnerCore, null, tw, y, gridbag);
+        y++;
         
         fname = new JLabel("Deposit From");
         int cnt = 0, scnt = 0;
@@ -3594,7 +3598,6 @@ public class AdvancedClient  {
                 cnt++;
         }
            
-
         final String[] options = new String[cnt + 1];
         final String[] doptions = new String[wallets.length - scnt];
         int j = 0, k = 0;     
@@ -5551,6 +5554,11 @@ public class AdvancedClient  {
         FileNameExtensionFilter filter = new FileNameExtensionFilter("CloudCoins", "jpg", "jpeg", "stack", "json", "txt");
         chooser.setFileFilter(filter);
         
+        
+        JLabel tw = AppUI.wrapDiv("The coin that you use for ID will be placed into your ID folder. "
+                + "It will not be available for spending until you close your SkyWallet");
+        AppUI.getGBRow(subInnerCore, null, tw, y, gridbag);
+        y++;
         
         fname = new JLabel("Add Existing");
         final MyCheckBoxToggle cb1 = new MyCheckBoxToggle();
