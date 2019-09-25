@@ -53,7 +53,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.15";
+    String version = "2.1.16";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -3900,12 +3900,27 @@ public class AdvancedClient  {
         c.anchor = GridBagConstraints.EAST;
         c.insets = new Insets(12, 18, 0, 0); 
         oct.setLayout(gridbag);
+       
         
+        JLabel tw = new JLabel("<html><div style='width:690px; text-align:center'>Deposit from Sky Wallet will deposit all coins from that Sky wallet! \n" +
+"<br>You will be not able to select just part of the Sky Wallet coins.</div></html>");
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;   
+        c.anchor = GridBagConstraints.NORTH; 
+        c.gridwidth = 2;
+        gridbag.setConstraints(tw, c);
+        AppUI.setFont(tw, 16);
+        AppUI.alignCenter(tw);
+        AppUI.setMargin(tw, 18);
+        rightPanel.add(tw);
+        
+        y++;
         
         // Deposit From
         c.gridx = GridBagConstraints.RELATIVE;
         c.gridy = y;   
         c.anchor = GridBagConstraints.EAST; 
+        c.gridwidth = 1;
         JLabel x = new JLabel("Deposit From");
         gridbag.setConstraints(x, c);
         AppUI.setCommonFont(x);
@@ -6726,6 +6741,21 @@ public class AdvancedClient  {
         
         y++;
 
+        
+        JLabel tw = new JLabel("<html><div style='width:360px'>Note: The coin that you use for ID "
+                + " will be placed into your ID folder. It will not be available for spending until you close"
+                + " your SkyWallet</div></html>");
+        c.insets = new Insets(2, 0, 0, 0);
+        c.gridx = 0;
+        c.gridy = y;
+        //c.gridwidth = 1;
+        gridbag.setConstraints(tw, c);
+        ct.add(tw);
+        AppUI.setFont(tw, 10);
+        
+        y++;
+        
+        
         JPanel bp = getTwoButtonPanel(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 
