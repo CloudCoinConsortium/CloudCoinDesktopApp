@@ -3,9 +3,9 @@ package global.cloudcoin.ccbank.ChangeMaker;
 import global.cloudcoin.ccbank.core.CommonResponse;
 
 public class ShowChangeResponse extends CommonResponse {
-    int[] d250;
-    int[] d100;
-    int[] d25;
-    int[] d5;
-    int[] d1;
+    public int[] d250;
+    public int[] d100;
+    public int[] d25;
+    public int[] d5;
+    public int[] d1;
 }

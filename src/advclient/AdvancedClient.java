@@ -1109,6 +1109,12 @@ public class AdvancedClient  {
         
         Thread t = new Thread(new Runnable() {
             public void run() {
+                try {
+                    while (!ps.isEchoFinished) {
+                        Thread.sleep(100);
+                    }
+                } catch (InterruptedException e) {}
+                
                 wl.debug(ltag, "Fixing coins in " + ps.srcWallet.getName());
                 
                 sm.setActiveWalletObj(ps.srcWallet);            
@@ -1476,21 +1482,7 @@ public class AdvancedClient  {
         ct.add(pbar);
         
         y++;
-        
-        // Cancel Button
-        /*
-        JPanel bp = getOneButtonPanelCustom("Cancel", new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                sm.cancel("Sender");
 
-                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
-                showScreen();
-            }
-        });
-       
-        
-        subInnerCore.add(bp);  
-        */
         subInnerCore.add(AppUI.hr(120));
         
         Thread t = new Thread(new Runnable() {
@@ -3230,6 +3222,13 @@ public class AdvancedClient  {
             String rpath = AppCore.getRootPath() + File.separator + w.getName();
             wl.debug(ltag, "Counting for " + w.getName());
             if (w.isSkyWallet()) {
+                
+                while (!ps.isEchoFinished) {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {}
+                }
+                
                 ShowEnvelopeCoins sc = new ShowEnvelopeCoins(rpath, wl);
                 int snID = w.getIDCoin().sn;
                 sc.launch(snID, "", new CallbackInterface() {
@@ -7208,11 +7207,18 @@ public class AdvancedClient  {
         AppUI.setSize(subInnerCore, tw - 260, th - headerHeight - 120);
         
         corePanel.add(mwrapperPanel);
-        updateWalletAmount();
-     
+        
         if (!ps.isEchoFinished)
             sm.startEchoService(new EchoCb());
         
+        Thread t = new Thread(new Runnable() {
+            public void run(){
+                updateWalletAmount();
+            }
+        });
+        
+        t.start();
+
         return subInnerCore;
     }
     
@@ -8329,9 +8335,12 @@ public class AdvancedClient  {
                 ps.errText = "Coins were not sent. Please check the logs";     
             }
             
-            ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
-            showScreen();
-                 
+            EventQueue.invokeLater(new Runnable() {
+                public void run() {
+                    ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                    showScreen();
+                }
+            });              
 	}
     }
     
