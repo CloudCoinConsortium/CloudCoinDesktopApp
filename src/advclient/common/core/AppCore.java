@@ -30,7 +30,10 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Locale;
+import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import org.json.JSONArray;
@@ -1147,5 +1150,65 @@ public class AppCore {
         return AppCore.saveFile(globalConfigFilename, data);
     }
     
-    
+    public static int[] getSNSOverlap(int[][] sns) {
+        int[] vsns;
+        
+        logger.debug(ltag, "Getting overlapped sns");
+        HashMap<Integer, Integer> hm = new HashMap<Integer, Integer>();
+
+        for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+            for (int j = 0; j < sns[i].length; j++) {
+                int sn = sns[i][j];
+                
+                if (!hm.containsKey(sn)) {
+                    hm.put(sn, 1);                 
+                    continue;
+                }
+                
+                int cnt = hm.get(sn);
+                cnt++;
+                
+                hm.put(sn, cnt);
+            }
+        }
+             
+        int valid = 0;
+        Iterator it = hm.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry) it.next();
+            
+            int sn = (int) pair.getKey();
+            int cnt = (int) pair.getValue();
+            
+            if (cnt < RAIDA.TOTAL_RAIDA_COUNT - Config.MAX_FAILED_RAIDAS_TO_SEND) {
+                logger.debug(ltag, "Skipping coin " + sn + ". Only " + cnt + " RAIDAs think it is ok");
+                continue;
+            }
+            
+            valid++;
+        }
+
+        logger.debug(ltag, "Number of valid coins: " + valid);
+        
+        int rsns[] = new int[valid];
+        
+        it = hm.entrySet().iterator();
+        int idx = 0;
+        while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry) it.next();
+            
+            int sn = (int) pair.getKey();
+            int cnt = (int) pair.getValue();
+            
+            if (cnt < RAIDA.TOTAL_RAIDA_COUNT - Config.MAX_FAILED_RAIDAS_TO_SEND) {
+                logger.debug(ltag, "Skipping coin " + sn + ". Only " + cnt + " RAIDAs think it is ok");
+                continue;
+            }
+            
+            rsns[idx] = sn;
+            idx++;
+        }
+        
+        return rsns;
+    }  
 }

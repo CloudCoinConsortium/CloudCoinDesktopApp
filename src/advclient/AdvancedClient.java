@@ -71,10 +71,7 @@ public class AdvancedClient  {
     //Sets the default screen width and height
     int tw = 1208;
     int th = 726;    
-    
- //   int tw = 870;
- //   int th = 524;
-    
+
     int headerHeight;
         
     ProgramState ps;
@@ -1151,7 +1148,12 @@ public class AdvancedClient  {
         Thread t = new Thread(new Runnable() {
             public void run(){
                 wl.debug(ltag, "Fixing coins in " + ps.srcWallet.getName());
-                
+                try {
+                    while (!ps.isEchoFinished) {
+                        Thread.sleep(100);
+                    }
+                } catch (InterruptedException e) {}
+
                 sm.setActiveWalletObj(ps.srcWallet);                
                 sm.startFrackFixerService(new FrackFixerOnPurposeCb());
             }
@@ -1340,20 +1342,7 @@ public class AdvancedClient  {
         c.gridy = 2;
         gridbag.setConstraints(pbar, c);
         ct.add(pbar);
-        
-        // Cancel button
-        /*
-        JPanel bp = getOneButtonPanelCustom("Cancel", new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                sm.cancel("Sender");
 
-                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
-                showScreen();
-            }
-        });
-       
-        subInnerCore.add(bp);  
-        */
         subInnerCore.add(AppUI.hr(120));
         
         pbar.setVisible(false);
@@ -7158,9 +7147,13 @@ public class AdvancedClient  {
                 ps.errText = "Coins were not sent. Please check the logs";     
             }
             
-            ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
-            showScreen();
-                 
+            EventQueue.invokeLater(new Runnable() {
+                public void run() {
+                    ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                    showScreen();
+                }
+            });
+       
 	}
     }
     

@@ -1,6 +1,8 @@
 package global.cloudcoin.ccbank.core;
 
 
+import global.cloudcoin.ccbank.ChangeMaker.ChangeMakerResult;
+import global.cloudcoin.ccbank.ChangeMaker.ShowChangeResponse;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -1049,5 +1051,510 @@ public class Servant {
         if (!AppCore.saveFile(fileName, rsb.toString())) {
             logger.error(ltag, "Failed to save file " + fileName);
         } 
+    }
+    
+    
+    protected int[] getA(int[] a, int cnt) {
+        int[] sns;
+        int i, j;
+
+        sns = new int[cnt];
+        for (i = 0, j = 0; i < a.length; i++) {
+            if (a[i] == 0)
+                continue;
+
+            sns[j] = a[i];
+            a[i] = 0;
+            j++;
+
+            if (j == cnt)
+                break;
+        }
+
+        if (j != cnt)
+            return null;
+
+        return sns;
+    }
+
+    protected int[] get25B(int[] sb, int[] ss) {
+        int[] sns, rsns;
+
+        rsns = new int[9];
+
+        sns = getA(ss, 5);
+        if (sns == null)
+            return null;
+
+        for (int i = 0; i < 5; i++)
+            rsns[i] = sns[i];
+
+        sns = getA(sb, 4);
+        if (sns == null)
+            return null;
+
+        for (int i = 0; i < 4; i++)
+            rsns[i + 5] = sns[i];
+
+        return rsns;
+    }
+
+    protected int[] get25C(int[] sb, int[] ss) {
+        int[] sns, rsns;
+
+        rsns = new int[17];
+
+        sns = getA(ss, 5);
+        if (sns == null)
+            return null;
+
+        for (int i = 0; i < 5; i++)
+            rsns[i] = sns[i];
+
+        sns = getA(ss, 5);
+        if (sns == null)
+            return null;
+
+        for (int i = 0; i < 5; i++)
+            rsns[i + 5] = sns[i];
+
+        sns = getA(ss, 5);
+        if (sns == null)
+            return null;
+
+        for (int i = 0; i < 5; i++)
+            rsns[i + 10] = sns[i];
+
+        sns = getA(sb, 2);
+        if (sns == null)
+            return null;
+
+        for (int i = 0; i < 2; i++)
+            rsns[i + 15] = sns[i];
+
+        return rsns;
+    }
+
+    protected int[] get25D(int[] sb) {
+        int[] sns, rsns;
+        int j;
+
+        rsns = new int[25];
+        for (j = 0; j < 5; j++) {
+            sns = getA(sb, 5);
+            if (sns == null)
+                return null;
+
+            for (int i = 0; i < 5; i++)
+                rsns[j * 5 + i] = sns[i];
+        }
+
+        return rsns;
+    }
+
+    protected int[] get100B(int[] sb, int[] ss) {
+        int[] sns, rsns;
+
+        rsns = new int[8];
+
+        sns = getA(ss, 5);
+        if (sns == null)
+            return null;
+
+        for (int i = 0; i < 5; i++)
+            rsns[i] = sns[i];
+
+        sns = getA(sb, 3);
+        if (sns == null)
+            return null;
+
+        for (int i = 0; i < 3; i++)
+            rsns[i + 5] = sns[i];
+
+        return rsns;
+    }
+
+    protected int[] get100C(int[] sb, int[] ss, int[] sss) {
+        int[] sns, rsns;
+
+        rsns = new int[16];
+
+        sns = get25B(ss, sss);
+        if (sns == null)
+            return null;
+
+        for (int i = 0; i < 9; i++)
+            rsns[i] = sns[i];
+
+        sns = getA(ss, 5);
+        if (sns == null)
+            return null;
+
+        for (int i = 0; i < 5; i++)
+            rsns[i + 9] = sns[i];
+
+        sns = getA(sb, 2);
+        for (int i = 0; i < 2; i++)
+            rsns[i + 14] = sns[i];
+
+        return rsns;
+    }
+
+    protected int[] get100D(int[] sb) {
+        int[] sns, rsns;
+        int j;
+
+        rsns = new int[100];
+        for (j = 0; j < 4; j++) {
+            sns = get25D(sb);
+            if (sns == null)
+                return null;
+
+            for (int i = 0; i < 25; i++)
+                rsns[j * 25 + i] = sns[i];
+        }
+
+        return rsns;
+    }
+    
+    protected int[] get100E(int[] sb, int[] ss, int[] sss) {
+        int[] sns, rsns;
+
+        rsns = new int[12];
+
+        sns = getA(sb, 3);
+        if (sns == null)
+            return null;
+
+        for (int i = 0; i < 3; i++)
+            rsns[i] = sns[i];
+
+        sns = getA(ss, 4);
+        if (sns == null)
+            return null;
+
+        for (int i = 0; i < 4; i++)
+            rsns[i + 3] = sns[i];
+        
+        sns = getA(sss, 5);
+        if (sns == null)
+            return null;
+
+        for (int i = 0; i < 5; i++)
+            rsns[i + 7] = sns[i];
+
+        return rsns;
+    }
+    
+
+    protected int[] get250A(int[] sb, int[] ss) {
+        int[] sns, rsns;
+
+        rsns = new int[4];
+
+        sns = getA(ss, 2);
+        if (sns == null)
+            return null;
+
+        for (int i = 0; i < 2; i++)
+            rsns[i] = sns[i];
+
+        sns = getA(sb, 2);
+        if (sns == null)
+            return null;
+
+        for (int i = 0; i < 2; i++)
+            rsns[i + 2] = sns[i];
+
+        return rsns;
+    }
+
+    protected int[] get250B(int[] sb, int[] ss, int[] sss) {
+        int[] sns, rsns;
+
+        rsns = new int[22];
+        sns = get25B(ss, sss);
+        if (sns == null)
+            return null;
+
+        for (int i = 0; i < 9; i++)
+            rsns[i] = sns[i];
+
+        sns = getA(ss, 5);
+        if (sns == null)
+            return null;
+
+        for (int i = 0; i < 5; i++)
+            rsns[i + 9] = sns[i];
+
+        sns = getA(sb, 4);
+        if (sns == null)
+            return null;
+
+        for (int i = 0; i < 4; i++)
+            rsns[i + 14] = sns[i];
+
+        sns = getA(sb, 4);
+        if (sns == null)
+            return null;
+
+        for (int i = 0; i < 4; i++)
+            rsns[i + 18] = sns[i];
+
+        return rsns;
+    }
+
+    protected int[] get250C(int[] sb, int[] ss, int[] sss) {
+        int[] sns, rsns;
+
+        rsns = new int[42];
+        sns = get25C(ss, sss);
+        if (sns == null)
+            return null;
+
+        for (int i = 0; i < 17; i++)
+            rsns[i] = sns[i];
+
+        sns = get25B(ss, sss);
+        if (sns == null)
+            return null;
+
+        for (int i = 0; i < 9; i++)
+            rsns[i + 17] = sns[i];
+
+        sns = get100B(sb, ss);
+        if (sns == null)
+            return null;
+
+        for (int i = 0; i < 8; i++)
+            rsns[i + 26] = sns[i];
+
+        sns = get100B(sb, ss);
+        if (sns == null)
+            return null;
+
+        for (int i = 0; i < 8; i++)
+            rsns[i + 34] = sns[i];
+
+        return rsns;
+    }
+
+    protected int[] get250D(int[] sb) {
+        int[] sns, rsns;
+
+        rsns = new int[250];
+
+        sns = get25D(sb);
+        if (sns == null)
+           return null;
+
+        for (int i = 0; i < 25; i++)
+           rsns[i] = sns[i];
+
+        sns = get25D(sb);
+        if (sns == null)
+            return null;
+
+        for (int i = 0; i < 25; i++)
+            rsns[i + 25] = sns[i];
+
+
+        sns = get100D(sb);
+        if (sns == null)
+            return null;
+
+        for (int i = 0; i < 100; i++)
+            rsns[i + 50] = sns[i];
+
+        sns = get100D(sb);
+        if (sns == null)
+            return null;
+
+        for (int i = 0; i < 100; i++)
+            rsns[i + 150] = sns[i];
+
+        return rsns;
+    }
+    
+    protected int[] get250E(int[] sb, int[] ss, int[] sss, int[] ssss) {
+        int[] sns, rsns;
+
+        rsns = new int[12];
+        sns = getA(sb, 2);
+        if (sns == null)
+            return null;
+
+        for (int i = 0; i < 2; i++)
+            rsns[i] = sns[i];
+
+        sns = getA(ss, 1);
+        if (sns == null)
+            return null;
+
+        rsns[2] = sns[0];
+
+        sns = getA(sss, 4);
+        if (sns == null)
+            return null;
+
+        for (int i = 0; i < 4; i++)
+            rsns[i + 3] = sns[i];
+
+        sns = getA(ssss, 5);
+        if (sns == null)
+            return null;
+
+        for (int i = 0; i < 5; i++)
+            rsns[i + 7] = sns[i];
+
+        return rsns;
+    }
+    
+    protected int[] showChange(int method, CloudCoin cc) {
+        String resultMain;
+        String[] results;
+        String[] requests;
+        StringBuilder[] sbs;
+        
+        String seed = AppCore.generateHex().substring(0, 8);
+        
+        sbs = new StringBuilder[RAIDA.TOTAL_RAIDA_COUNT];
+        requests = new String[RAIDA.TOTAL_RAIDA_COUNT];
+        for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+            sbs[i] = new StringBuilder();
+            sbs[i].append("show_change?nn=");
+            sbs[i].append(cc.nn);
+            sbs[i].append("&sn=");
+            sbs[i].append(Config.PUBLIC_CHANGE_MAKER_ID);
+            sbs[i].append("&seed=");
+            sbs[i].append(seed);
+            sbs[i].append("&denomination=");
+            sbs[i].append(cc.getDenomination());
+            
+            requests[i] = sbs[i].toString();
+        }
+        
+        results = raida.query(requests, null, null);
+        if (results == null) {
+            logger.error(ltag, "Failed to query showchange");
+            return null;
+        }
+
+        int[][] rsns1 = new int[RAIDA.TOTAL_RAIDA_COUNT][];
+        int[][] rsns5 = new int[RAIDA.TOTAL_RAIDA_COUNT][];
+        int[][] rsns25 = new int[RAIDA.TOTAL_RAIDA_COUNT][];
+        int[][] rsns100 = new int[RAIDA.TOTAL_RAIDA_COUNT][];
+        for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+            rsns1[i] = new int[0];  
+            rsns5[i] = new int[0];
+            rsns25[i] = new int[0];
+            rsns100[i] = new int[0];
+            if (results[i] != null) {
+                if (results[i].equals("")) {
+                    logger.error(ltag, "Skipped raida" + i);
+                    continue;
+                }
+            }
+            
+            ShowChangeResponse scr = (ShowChangeResponse) parseResponse(results[i], ShowChangeResponse.class);
+            if (scr == null) {
+                logger.error(ltag, "Failed to get response coin. RAIDA: " + i);
+                continue;
+            }
+        
+            if (!scr.status.equals(Config.REQUEST_STATUS_PASS)) {
+                logger.error(ltag, "Failed to show env coins. RAIDA: " + i + " Result: " + scr.status);       
+                continue;
+            }
+
+            rsns1[i] = scr.d1;
+            rsns5[i] = scr.d5;
+            rsns25[i] = scr.d25;
+            rsns100[i] = scr.d100;
+        }
+        
+        int[] vsns1, vsns5, vsns25, vsns100;      
+        vsns1 = AppCore.getSNSOverlap(rsns1);
+        if (vsns1 == null) {
+            logger.error(ltag, "Failed to get coins for denomination #1");
+            return null;
+        }
+        
+        vsns5 = AppCore.getSNSOverlap(rsns5);
+        if (vsns5 == null) {
+            logger.error(ltag, "Failed to get coins for denomination #5");
+            return null;
+        }
+        
+        vsns25 = AppCore.getSNSOverlap(rsns25);
+        if (vsns25 == null) {
+            logger.error(ltag, "Failed to get coins for denomination #25");
+            return null;
+        }
+        
+        vsns100 = AppCore.getSNSOverlap(rsns100);
+        if (vsns100 == null) {
+            logger.error(ltag, "Failed to get coins for denomination #100");
+            return null;
+        }
+        
+        int[] sns;
+        switch (method) {
+            case Config.CHANGE_METHOD_5A:
+                sns = getA(vsns1, 5);
+                break;
+            case Config.CHANGE_METHOD_25A:
+                sns = getA(vsns5, 5);
+                break;
+            case Config.CHANGE_METHOD_25B:
+                sns = get25B(vsns5, vsns1);
+                break;
+            case Config.CHANGE_METHOD_25C:
+                sns = get25C(vsns5, vsns1);
+                break;
+            case Config.CHANGE_METHOD_25D:
+                sns = get25D(vsns1);
+                break;
+            case Config.CHANGE_METHOD_100A:
+                sns = getA(vsns25, 4);
+                break;
+            case Config.CHANGE_METHOD_100B:
+                sns = get100B(vsns25, vsns5);
+                break;
+            case Config.CHANGE_METHOD_100C:
+                sns = get100C(vsns25, vsns5, vsns1);
+                break;
+            case Config.CHANGE_METHOD_100D:
+                sns = get100D(vsns1);
+                break;
+            case Config.CHANGE_METHOD_100E:
+                sns = get100E(vsns25, vsns5, vsns1);
+                break;    
+            case Config.CHANGE_METHOD_250A:
+                sns = get250A(vsns100, vsns25);
+                break;
+            case Config.CHANGE_METHOD_250B:
+                sns = get250B(vsns25, vsns5, vsns1);
+                break;
+            case Config.CHANGE_METHOD_250C:
+                sns = get250C(vsns25, vsns5, vsns1);
+                break;
+            case Config.CHANGE_METHOD_250D:
+                sns = get250D(vsns1);
+                break;
+            case Config.CHANGE_METHOD_250E:
+                sns = get250E(vsns100, vsns25, vsns5, vsns1);
+                break;
+            default:
+                logger.error(ltag, "Invalid method: " + method);
+                return null;
+        }
+        
+        if (sns == null) {
+            logger.error(ltag, "Failed to break coin");
+            return null;
+        }
+        
+        return sns;
     }
 }
