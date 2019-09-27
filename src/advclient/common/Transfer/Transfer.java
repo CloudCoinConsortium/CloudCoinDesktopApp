@@ -6,6 +6,7 @@ package global.cloudcoin.ccbank.Transfer;
  */
 
 
+import global.cloudcoin.ccbank.ChangeMaker.ChangeMakerResult;
 import global.cloudcoin.ccbank.core.AppCore;
 import global.cloudcoin.ccbank.core.CallbackInterface;
 import global.cloudcoin.ccbank.core.CloudCoin;
@@ -207,6 +208,7 @@ public class Transfer extends Servant {
             if (!processTransferWithChange(extraCoin, idcc, tag, tosn, remained)) {
                 tr = new TransferResult();
                 globalResult.status = TransferResult.STATUS_ERROR;
+                globalResult.errText = "Failed to make change";
                 copyFromGlobalResult(tr);
                 if (cb != null)
                     cb.callback(tr);
@@ -377,7 +379,74 @@ public class Transfer extends Servant {
         int i;
         CloudCoin[] sccs;
 
-        logger.debug(ltag, "Transferring with change to " + tosn);
+        System.out.println("change " + tosn + " amount=" + amount + " d=" + tcc.getDenomination());
+        
+
+        logger.debug(ltag, "Transferring with change to " + tosn + ". Target coin " + tcc.sn);
+        
+        int method = AppCore.getChangeMethod(tcc.getDenomination());
+        if (method == 0) {
+            logger.error(ltag, "Can't find suitable method");
+            return false;
+        }
+   
+        logger.debug(ltag, "Method chosen: " + method);
+        
+        int sns[] = showChange(method, tcc);
+        if (sns == null) {
+            logger.error(tag, "Not enough coins to make change");
+            return false;
+        }
+
+        for (i = 0; i < sns.length; i++) {
+            CloudCoin ccx = new CloudCoin(1, sns[i]);
+            logger.info(ltag, "sn "+ sns[i] + " d="+ccx.getDenomination());
+        }
+        
+        coinsPicked = new ArrayList<CloudCoin>();
+        ArrayList<CloudCoin> coinsToChange = new ArrayList<CloudCoin>();
+        valuesPicked = new int[sns.length];
+        if (!pickCoinsAmountFromArray(sns, amount)) {
+            logger.error(ltag, "Failed to pick amount: " + amount + " from the resulting coins from all RAIDAs");
+            return false;
+        }
+                
+        boolean present;
+        int totalToSend = 0;
+        int totalChange = 0;
+        for (i = 0; i < sns.length; i++) {
+            present = false;
+            for (CloudCoin vcc : coinsPicked) {
+                if (vcc.sn == sns[i]) {
+                    present = true;
+                    break;
+                }
+            }
+            if (!present) {
+                CloudCoin changeCC = new CloudCoin(Config.DEFAULT_NN, sns[i]);
+                coinsToChange.add(changeCC);
+                totalChange += changeCC.getDenomination();
+                
+                logger.debug(ltag, "to change: " + changeCC.sn + " d=" + changeCC.getDenomination());
+            }
+        }
+
+        for (CloudCoin vcc : coinsPicked) {
+            totalToSend += vcc.getDenomination();
+            logger.debug(ltag, "to send: " + vcc.sn + " d=" + vcc.getDenomination());
+        }
+        
+        logger.debug(ltag, "Total to send: " + totalToSend + " change: " + totalChange);
+        if (totalToSend != amount) {
+            logger.error(ltag, "Wrong amount: " + amount + " collected=" + totalToSend);
+            return false;
+        }
+        
+        if (totalToSend + totalChange != tcc.getDenomination()) {
+            logger.error(ltag, "Incorrectly broken: toSend=" + totalToSend + " change=" 
+                    + totalChange + " Coin: " + tcc.getDenomination());
+            return false;
+        }
 
         sbs = new StringBuilder[RAIDA.TOTAL_RAIDA_COUNT];
         posts = new String[RAIDA.TOTAL_RAIDA_COUNT];
@@ -411,6 +480,16 @@ public class Transfer extends Servant {
             sbs[i].append("&public_change_maker=");
             sbs[i].append(Config.PUBLIC_CHANGE_MAKER_ID);
 
+            for (CloudCoin vcc : coinsPicked) {
+                sbs[i].append("&paysns[]=");
+                sbs[i].append(vcc.sn);
+            }
+            
+            for (CloudCoin vcc : coinsToChange) {
+                sbs[i].append("&chsns[]=");
+                sbs[i].append(vcc.sn);
+            }
+            
             posts[i] = sbs[i].toString();
         }
 
