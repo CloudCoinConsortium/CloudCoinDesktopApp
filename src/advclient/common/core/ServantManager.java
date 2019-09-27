@@ -682,23 +682,7 @@ public class ServantManager {
         }
                
         logger.debug(ltag, "Sending to the ChangeMaker " + cc.sn + " denomination " + cc.getDenomination());
-        
-        int method = 0;
-        switch (cc.getDenomination()) {
-            case 250:
-                method = Config.CHANGE_METHOD_250E;
-                break;
-            case 100:
-                method = Config.CHANGE_METHOD_100E;
-                break;
-            case 25:
-                method = Config.CHANGE_METHOD_25B;
-                break;
-            case 5:
-                method = Config.CHANGE_METHOD_5A;
-                break;
-        }
-        
+        int method = AppCore.getChangeMethod(cc.getDenomination());
         if (method == 0) {
             logger.error(ltag, "Can't find suitable method");
             return false;
