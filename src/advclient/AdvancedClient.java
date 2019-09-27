@@ -6458,6 +6458,8 @@ public class AdvancedClient  {
         } catch (Exception e) {
             e.printStackTrace();
         }*/
+        Locale.setDefault(new Locale("EN"));
+        System.setProperty("user.language","EN");
         
         try {
            
