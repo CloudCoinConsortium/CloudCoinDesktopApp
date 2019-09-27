@@ -7648,6 +7648,9 @@ public class AdvancedClient  {
             e.printStackTrace();
         }*/
         
+        Locale.setDefault(new Locale("EN"));
+        System.setProperty("user.language","EN");
+        
         try {
            
            boolean isSet = false;
