@@ -226,8 +226,22 @@ public class Unpacker extends Servant {
         String path;
 
         path = AppCore.getUserDir(Config.DIR_SUSPECT, user) + File.separator + fileName;
+        
 
         logger.info(ltag, "Saving " + path + ": " + json);
+        File f = new File(path);
+        if (f.exists()) {
+            logger.info(ltag, "File " + path + " already exists. Moving to Trash. Continue");
+            path = AppCore.getUserDir(Config.DIR_TRASH, user) + File.separator + System.currentTimeMillis() +
+                    "-" + fileName;
+            
+            if (!AppCore.saveFile(path, json)) {
+                logger.error(ltag, "Failed to save file in Trash: " + path);
+                return false;
+            }        
+                    
+            return true;
+        }
 
         if (!AppCore.saveFile(path, json)) {
             logger.error(ltag, "Failed to save file: " + fileName);
@@ -263,12 +277,7 @@ public class Unpacker extends Servant {
         }
 
         addCoinToRccs(cc, fileName);
-        /*
-        if (!saveCoin(cc))
-            return false;
 
-        AppCore.moveToImported(fileName, user);
-*/
         return true;
     }
 
