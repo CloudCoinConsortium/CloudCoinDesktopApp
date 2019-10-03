@@ -141,7 +141,7 @@ public class Vaulter extends Servant {
 
                 
                 
-                logger.info(ltag, "cc=" + tcc.sn + " was AN" + i + ":" + tcc.ans[i]);
+                //logger.info(ltag, "cc=" + tcc.sn + " was AN" + i + ":" + tcc.ans[i]);
                 tcc.ans[i] = builder.toString().toLowerCase();
                 logger.info(ltag, "cc=" + tcc.sn + " is AN" + i + ":" + tcc.ans[i]);
             }
@@ -265,7 +265,7 @@ public class Vaulter extends Servant {
                     return;
                 }
 
-                logger.info(ltag, "cc=" + tcc.sn + " was AN" + i + ":" + tcc.ans[i]);
+                //logger.info(ltag, "cc=" + tcc.sn + " was AN" + i + ":" + tcc.ans[i]);
                 tcc.ans[i] = builder.toString().replace(")", "");
                 logger.info(ltag, "cc=" + tcc.sn + " is AN" + i + ":" + tcc.ans[i] + " move " + tcc.originalFile + " d=" + Config.DIR_VAULT);
             }

@@ -121,7 +121,7 @@ public class DetectionAgent {
             urlConnection.setRequestProperty("User-Agent", "CloudCoin Wallet Client");
 
             if (post != null) {
-                logger.debug(ltag, post);
+                logger.debug(ltag, AppCore.maskStr("pans\\[\\]=", post));
 
                 byte[] postDataBytes = post.getBytes("UTF-8");
 
