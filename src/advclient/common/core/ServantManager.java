@@ -502,13 +502,13 @@ public class ServantManager {
             return;
         }
         
-        logger.debug(ltag, "Vaulter password " + password);
+        //logger.debug(ltag, "Vaulter password " + password);
 	Vaulter v = (Vaulter) sr.getServant("Vaulter");
 	v.vault(password, 0, null, cb);
     }
     
     public void startVaulterService(CallbackInterface cb, String password) {
-        logger.debug(ltag, "Vaulter password " + password);
+        //logger.debug(ltag, "Vaulter password " + password);
         if (password.isEmpty()) {
             logger.error(ltag, "Empty password");
             return;
@@ -535,7 +535,7 @@ public class ServantManager {
             return;
         }
         
-        logger.debug(ltag, "Vaulter password " + password);
+        //logger.debug(ltag, "Vaulter password " + password);
 	Vaulter v = (Vaulter) sr.getServant("Vaulter");
 	v.unvault(password, amount, null, new eVaulterCb(exportType, amount, tag, dir, keepSrc, cb));
     }

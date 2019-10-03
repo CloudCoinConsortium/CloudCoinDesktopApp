@@ -1232,4 +1232,10 @@ public class AppCore {
         
         return method;
     }
+    
+    public static String maskStr(String key, String data) {
+        String result = data.replaceAll(key + "([A-Fa-f0-9]{28})", key + "***");
+        return result;
+    }
+    
 }
