@@ -135,13 +135,16 @@ public class Transfer extends Servant {
         
         logger.info(ltag, "total files "+ globalResult.totalFiles);
         
+        /*
         for (CloudCoin cc : coinsPicked) {
             globalResult.totalCoins += cc.getDenomination();
         }
         
         if (extraCoin != null)
             globalResult.totalCoins += extraCoin.getDenomination();
+        */
         
+        globalResult.totalCoins = amount;
         
         int curValProcessed = 0;      
         for (CloudCoin cc : coinsPicked) {

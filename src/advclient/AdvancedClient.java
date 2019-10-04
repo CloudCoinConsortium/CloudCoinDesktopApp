@@ -7879,8 +7879,6 @@ public class AdvancedClient  {
                             nsb.append(",");
                                     
                         nsb.append(data[0]);
-                        //ps.dstWallet.appendTransaction(data[0], total, ps.receiptId, data[2]); 
-                        
                     }
 
                     if (ps.typedMemo.isEmpty()) {
