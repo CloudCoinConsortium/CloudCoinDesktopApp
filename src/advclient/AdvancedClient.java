@@ -291,9 +291,10 @@ public class AdvancedClient  {
         return ps.currentWallet.getName().equals(wallet.getName());
     }
     
-    public void setActiveWallet(Wallet wallet) {    
+    public void setActiveWallet(Wallet wallet) {   
         ps.currentWallet = wallet;
         
+        sm.cancelSecs();
         sm.setActiveWalletObj(wallet);
     }
     
@@ -3000,7 +3001,7 @@ public class AdvancedClient  {
     public void updateWalletAmount() {
         if (wallets == null)
             wallets = sm.getWallets();
-        
+
         for (int i = 0; i < wallets.length; i++) {
             JLabel cntLabel = (JLabel) wallets[i].getuiRef();
             if (cntLabel == null)
@@ -3019,6 +3020,7 @@ public class AdvancedClient  {
         
         setTotalCoins();
         
+        sm.initIsolatedSec();
         for (int i = 0; i < wallets.length; i++) {
             final Wallet w = wallets[i];
             
@@ -3029,11 +3031,15 @@ public class AdvancedClient  {
             wl.debug(ltag, "Counting for " + w.getName());
             if (w.isSkyWallet()) {
                 ShowEnvelopeCoins sc = new ShowEnvelopeCoins(rpath, wl);
+                sm.addSec(sc);
                 int snID = w.getIDCoin().sn;
                 sc.launch(snID, "", new CallbackInterface() {
                     public void callback(Object o) {
                         ShowEnvelopeCoinsResult scresult = (ShowEnvelopeCoinsResult) o;
 
+                        if (scresult.status != ShowEnvelopeCoinsResult.STATUS_FINISHED)
+                            return;
+                        
                         wl.debug(ltag, "ShowEnvelopeCoins done");
                         w.setSNs(scresult.coins);
                         w.setEnvelopes(scresult.envelopes);
@@ -3066,12 +3072,9 @@ public class AdvancedClient  {
                         w.setCounters(counters);
                         setTotalCoins();
                     }
-                });
-            
-                
+                });                
             }
         }
-        
     }
     
     public void eraserGoNext() {
@@ -3132,7 +3135,6 @@ public class AdvancedClient  {
         GridBagLayout gridbag = new GridBagLayout();
         subInnerCore.setLayout(gridbag);
 
-        
         final optRv rvFrom = setOptionsForWalletsCommon(false, false, true, null);
         if (rvFrom.idxs.length == 0) {
             fname = AppUI.wrapDiv("No Wallets to Transfer From");

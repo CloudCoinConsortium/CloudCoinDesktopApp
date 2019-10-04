@@ -63,7 +63,7 @@ public class Servant {
         configHT = new Hashtable<String, String>();
 
         this.raida = new RAIDA(logger);
-
+        
         File f = new File(rootDir);
         this.user = f.getName();
         setLtag();
@@ -93,6 +93,14 @@ public class Servant {
     
     public boolean isUserBound() {
         return isUserBound;
+    }
+    
+    public void cancelForce() {
+        if (raida == null)
+            return;
+
+        cancel();
+        raida.cancel();
     }
     
     public void cancel() {

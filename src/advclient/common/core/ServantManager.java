@@ -66,12 +66,16 @@ public class ServantManager {
     String user;
     private Hashtable<String, Wallet> wallets;
     
+    ArrayList<ShowEnvelopeCoins> secs;
+    
     public ServantManager(GLogger logger, String home) {
         this.logger = logger;
         this.home = home;
         this.sr = new ServantRegistry();
         this.user = Config.DIR_DEFAULT_USER;
         this.wallets = new Hashtable<String, Wallet>();
+        
+        initIsolatedSec();
     }
     
     public Wallet getActiveWallet() {
@@ -1082,12 +1086,9 @@ public class ServantManager {
         while (itr.hasNext()) {
             Wallet w = (Wallet) itr.next();
             
-            System.out.println("w=" + w.getName() + " total=" + w.getTotal());
             if (w.isSkyWallet())
                 continue;
-            
-            
-            
+
             if (w.getTotal() != 0)
                 w.appendTransaction("Opening Balance", w.getTotal(), "openingbalance");      
         }
@@ -1170,6 +1171,22 @@ public class ServantManager {
         }
         
         return null;
+    }
+    
+    
+    public void initIsolatedSec() {
+        secs = new ArrayList<ShowEnvelopeCoins>();
+    }
+    
+    public void addSec(ShowEnvelopeCoins sec) {
+        secs.add(sec);
+    }
+    
+    public void cancelSecs() {
+        for (ShowEnvelopeCoins sec : secs)
+            sec.cancelForce();
+        
+        initIsolatedSec();
     }
     
 }

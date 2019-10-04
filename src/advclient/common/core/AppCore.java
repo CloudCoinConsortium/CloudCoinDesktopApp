@@ -960,11 +960,9 @@ public class AppCore {
             }
            
             String identifier = parts[1].toLowerCase();
-            System.out.println(identifier);
             if (!identifier.equals("cloudcoin") && !identifier.equals("cloudcoins"))
                 return "?";
-            
-            
+                     
             total += ltotal;
         }
         

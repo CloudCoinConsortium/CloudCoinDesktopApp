@@ -76,7 +76,7 @@ public class ServantRegistry {
             Servant s = servants.get(k);
             if (!s.isUserBound()) 
                 continue;
-            
+
             if (isRunning(k))
                 s.cancel();
             
@@ -122,7 +122,6 @@ public class ServantRegistry {
 
             for (int i = 0; i < es.length; i++) {
                 className = es[i].getClassName();
-
                 if (className.startsWith(targetClass))
                     return true;
             }
