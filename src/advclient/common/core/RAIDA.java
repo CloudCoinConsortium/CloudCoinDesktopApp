@@ -64,6 +64,11 @@ public class RAIDA {
                 agents[i].setDefaultFullUrl();
         }
         
+        public void cancel() {
+            for (int i = 0; i < TOTAL_RAIDA_COUNT; i++)
+                agents[i].stopConnection();
+        }
+        
 	public void setExactUrls(String[] urls) {
 		for (int i = 0; i < TOTAL_RAIDA_COUNT; i++) {
 			logger.info(ltag, "Set RAIDA url to " + urls[i]);

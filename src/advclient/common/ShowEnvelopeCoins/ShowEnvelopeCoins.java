@@ -93,6 +93,12 @@ public class ShowEnvelopeCoins extends Servant {
             return;
         }
 
+        if (isCancelled()) {
+            result.status = ShowEnvelopeCoinsResult.STATUS_CANCELLED;
+            logger.error(ltag, "ShowCoins cancelled");
+            return;
+        }
+        
         HashMap[] hashmaps = new HashMap[RAIDA.TOTAL_RAIDA_COUNT];
         int[][] sns = new int[RAIDA.TOTAL_RAIDA_COUNT][];
         for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
@@ -126,9 +132,7 @@ public class ShowEnvelopeCoins extends Servant {
             }
             
             logger.debug(ltag, "Returned length " + o.length);
-                
-            //System.out.println("r="+i+ " st="+cr.status + " length " + o.length);
-              
+
             ShowEnvelopeCoinsResponse[] er = new ShowEnvelopeCoinsResponse[o.length];
             sns[i] = new int[o.length];
             for (int j = 0; j < o.length; j++) {

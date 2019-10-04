@@ -296,6 +296,7 @@ public class AdvancedClient  {
     public void setActiveWallet(Wallet wallet) {    
         ps.currentWallet = wallet;
         
+        sm.cancelSecs();
         sm.setActiveWalletObj(wallet);
     }
     
@@ -3217,6 +3218,7 @@ public class AdvancedClient  {
         
         setTotalCoins();
 
+        sm.initIsolatedSec();
         for (int i = 0; i < wallets.length; i++) {
             final Wallet w = wallets[i];
             
@@ -3234,11 +3236,15 @@ public class AdvancedClient  {
                 }
                 
                 ShowEnvelopeCoins sc = new ShowEnvelopeCoins(rpath, wl);
+                sm.addSec(sc);
                 int snID = w.getIDCoin().sn;
                 sc.launch(snID, "", new CallbackInterface() {
                     public void callback(Object o) {
                         ShowEnvelopeCoinsResult scresult = (ShowEnvelopeCoinsResult) o;
             
+                        if (scresult.status != ShowEnvelopeCoinsResult.STATUS_FINISHED)
+                            return;
+
                         wl.debug(ltag, "ShowEnvelopeCoins done");
                         w.setSNs(scresult.coins);
                         w.setEnvelopes(scresult.envelopes);

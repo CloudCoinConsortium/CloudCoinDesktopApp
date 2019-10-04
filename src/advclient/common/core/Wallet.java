@@ -218,8 +218,7 @@ public class Wallet implements Comparable<Wallet> {
         
         int rest = 0;
         String[][] tr = getTransactions();
-        if (tr != null) {
-        
+        if (tr != null) {        
             String[] last = tr[tr.length - 1];
             String rRest = last[4];
             
@@ -229,18 +228,37 @@ public class Wallet implements Comparable<Wallet> {
                 rest = 0;
             }
         }
+         
+        int expectedRest = getTotal() + amount;
+        String result = "";
+        if (rest != getTotal()) {
+            int adjusted = getTotal() - rest;
+            
+            logger.debug(ltag, "Appending correcting transaction. Rest was: " + 
+                    rest + " total=" + getTotal() + " adjusted: " + adjusted);
+            
+            result = "Balance Auto Adjustment," + date + ",";
+            if (adjusted > 0) {
+                result += adjusted + ",,";
+            } else {
+                result += "," + adjusted + ",";
+            }
+            
+            result += getTotal() + ",dummy" + lsep;
+            rest = getTotal();
+        }
                 
-        String result = rMemo + "," + date + ",";
+        rest += amount;
+        result += rMemo + "," + date + ",";
         if (amount > 0) {
             result += amount + ",,";
         } else {
             result += "," + amount + ",";
         }
         
-        rest += amount;   
         result += rest;
         result += "," + receiptId + lsep;
-        
+ 
         logger.debug(ltag, "Saving " + result);
         AppCore.saveFileAppend(fileName, result, true);              
     }

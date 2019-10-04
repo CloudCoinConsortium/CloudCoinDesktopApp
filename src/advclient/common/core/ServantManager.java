@@ -66,12 +66,16 @@ public class ServantManager {
     String user;
     private Hashtable<String, Wallet> wallets;
     
+    ArrayList<ShowEnvelopeCoins> secs;
+    
     public ServantManager(GLogger logger, String home) {
         this.logger = logger;
         this.home = home;
         this.sr = new ServantRegistry();
         this.user = Config.DIR_DEFAULT_USER;
         this.wallets = new Hashtable<String, Wallet>();
+        
+        initIsolatedSec();
     }
     
     public Wallet getActiveWallet() {
@@ -326,7 +330,7 @@ public class ServantManager {
 	Authenticator at = (Authenticator) sr.getServant("Authenticator");
 	at.launch(cc, cb);
     }
-        
+
     public void startGraderService(CallbackInterface cb, ArrayList<CloudCoin> duplicates, String source) {
         if (sr.isRunning("Grader"))
             return;
@@ -1081,15 +1085,14 @@ public class ServantManager {
         Iterator itr = c.iterator();
         while (itr.hasNext()) {
             Wallet w = (Wallet) itr.next();
-
+            
             if (w.isSkyWallet())
                 continue;
 
             if (w.getTotal() != 0)
-                w.appendTransaction("Opening Balance", w.getTotal(), "openingbalance");
+                w.appendTransaction("Opening Balance", w.getTotal(), "openingbalance");      
         }
     }
-
     
     public int[] getRAIDAStatuses() {
         Servant e = sr.getServant("Echoer");
@@ -1168,6 +1171,22 @@ public class ServantManager {
         }
         
         return null;
+    }
+    
+    
+    public void initIsolatedSec() {
+        secs = new ArrayList<ShowEnvelopeCoins>();
+    }
+    
+    public void addSec(ShowEnvelopeCoins sec) {
+        secs.add(sec);
+    }
+    
+    public void cancelSecs() {
+        for (ShowEnvelopeCoins sec : secs)
+            sec.cancelForce();
+        
+        initIsolatedSec();
     }
     
 }

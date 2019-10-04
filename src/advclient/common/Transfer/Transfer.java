@@ -382,9 +382,6 @@ public class Transfer extends Servant {
         int i;
         CloudCoin[] sccs;
 
-        System.out.println("change " + tosn + " amount=" + amount + " d=" + tcc.getDenomination());
-        
-
         logger.debug(ltag, "Transferring with change to " + tosn + ". Target coin " + tcc.sn);
         
         int method = AppCore.getChangeMethod(tcc.getDenomination());

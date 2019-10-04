@@ -29,6 +29,9 @@ public class DetectionAgent {
     private int RAIDANumber;
 
     private int lastStatus;
+    
+    HttpURLConnection urlConnection;
+    
 
     public DetectionAgent(int RAIDANumber, GLogger logger) {
 
@@ -46,6 +49,12 @@ public class DetectionAgent {
         setDefaultFullUrl();
     }
 
+    public void stopConnection() {
+        if (urlConnection == null)
+            return;
+
+        urlConnection.disconnect();
+    }
     
     public void setReadTimeout(int timeout) {
         this.readTimeout = timeout;
@@ -96,6 +105,7 @@ public class DetectionAgent {
 	String data;
 	StringBuilder sb = new StringBuilder();
 
+        urlConnection = null;
 	if (fullURL == null) {
             logger.error(ltag, "Skipping raida: " + RAIDANumber);
             lastStatus = RAIDA.STATUS_FAILED;
@@ -111,8 +121,7 @@ public class DetectionAgent {
 
 	disableSSLCheck();
       
-	URL cloudCoinGlobal;
-	HttpURLConnection urlConnection = null;
+	URL cloudCoinGlobal;	
 	try {
             cloudCoinGlobal = new URL(urlIn);           
             urlConnection = (HttpURLConnection) cloudCoinGlobal.openConnection();
