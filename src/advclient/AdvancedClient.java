@@ -1392,9 +1392,13 @@ public class AdvancedClient  {
                         }
                         
                         if (!mcr.errText.isEmpty()) {
-                            ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
-                            ps.errText = mcr.errText;
-                            showScreen();
+                            EventQueue.invokeLater(new Runnable() {         
+                                    public void run() {  
+                                        ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                                        ps.errText = mcr.errText;
+                                        showScreen();
+                                    }
+                            });
                             return;
                         }
                     }                   
