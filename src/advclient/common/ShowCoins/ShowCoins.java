@@ -69,7 +69,7 @@ public class ShowCoins extends Servant {
             return;
         }
         
-        
+        int cnt = 0;
         for (File file: dirObj.listFiles()) {
             if (file.isDirectory())
                 continue;
@@ -99,10 +99,11 @@ public class ShowCoins extends Servant {
                     break;
             }
             
+            cnt += cc.getDenomination();
             ccs.add(cc);
         }
 
-        logger.debug(ltag, "Total coins in " + folder + ": " + ccs.size());
+        logger.debug(ltag, user + ": Total coins in " + folder + ": " + cnt);
 
         //createStatFile(folder, result.counters[idx]);
     }
