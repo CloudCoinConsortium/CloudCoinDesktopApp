@@ -360,7 +360,9 @@ public class AdvancedClient  {
         if (ps.currentScreen == ProgramState.SCREEN_PREDEPOSIT || 
                 ps.currentScreen == ProgramState.SCREEN_DEPOSIT ||
                 ps.currentScreen == ProgramState.SCREEN_IMPORTING ||
-                ps.currentScreen == ProgramState.SCREEN_IMPORT_DONE)
+                ps.currentScreen == ProgramState.SCREEN_IMPORT_DONE ||
+                ps.currentScreen == ProgramState.SCREEN_DEPOSIT_LEFTOVER)
+            
             return true;
         
         return false;
@@ -961,6 +963,9 @@ public class AdvancedClient  {
                 break;
             case ProgramState.SCREEN_WARN_FRACKED_TO_SEND:
                 showWarnFrackedToSend();
+                break;
+            case ProgramState.SCREEN_DEPOSIT_LEFTOVER:
+                showDepositLeftover();
                 break;
         }
         
@@ -2278,6 +2283,50 @@ public class AdvancedClient  {
              
         JPanel bp = getOneButtonPanel();
         subInnerCore.add(bp);       
+    }
+    
+    public void showDepositLeftover() {
+        JPanel subInnerCore;
+
+        subInnerCore = getModalJPanel("Deposit");
+     
+        
+        // Container
+        JPanel ct = new JPanel();
+        AppUI.noOpaque(ct);
+        subInnerCore.add(ct);
+
+        GridBagLayout gridbag = new GridBagLayout();
+        GridBagConstraints c = new GridBagConstraints();      
+        ct.setLayout(gridbag);
+                
+        int y = 0;
+        // From Label
+        JLabel x = new JLabel("<html><div style='width:460px;text-align:center'>Left over coins found from last time. Click to import them</div></html>");
+        AppUI.setCommonFont(x);
+        c.anchor = GridBagConstraints.CENTER;
+        c.insets = new Insets(0, 0, 4, 0); 
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+
+        y++; 
+
+        JPanel bp = getTwoButtonPanel(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                wl.debug(ltag, "Leftover deposit");
+                
+                ps.currentScreen = ProgramState.SCREEN_IMPORTING;
+                ps.files = new ArrayList<String>();
+                ps.typedMemo = "Recovered from Last time";
+                showScreen();
+            }
+        }, "Continue");
+         
+        subInnerCore.add(bp); 
+        subInnerCore.revalidate();
+        subInnerCore.repaint();
     }
     
     public void showWarnFrackedToSend() {
@@ -4479,42 +4528,18 @@ public class AdvancedClient  {
                 
                 
                 if (!w.isSkyWallet()) {
-                    int cnt;
-                    /*
-                    cnt = AppCore.getFilesCount(Config.DIR_FRACKED, w.getName());
-                    if (cnt != 0) {
-                        ps.errText = "Fracked folder is not empty. Please fix your coins first";
+                    int cnt = AppCore.staleFiles(w.getName());
+                    
+                    wl.debug(ltag, "Stale files: " + cnt);
+                    if (cnt > 0) {
+                        ps.currentScreen = ProgramState.SCREEN_DEPOSIT_LEFTOVER;
                         showScreen();
                         return;
-                    }*/
-                    
-                    cnt = AppCore.getFilesCount(Config.DIR_SUSPECT, w.getName());
-                    if (cnt != 0) {
-                        ps.errText = getNonEmptyFolderError("Suspect");
-                        showScreen();
-                        return;
-                    }
-                    
-                    cnt = AppCore.getFilesCount(Config.DIR_IMPORT, w.getName());
-                    if (cnt != 0) {
-                        wl.debug(ltag, "Import folder is not empty: " + cnt + " files. Cleaning");
-                        AppCore.moveFolderContentsToTrash(Config.DIR_IMPORT, w.getName());
-                        //ps.errText = getNonEmptyFolderError("Import");
-                        //showScreen();
-                        //return;
-                    }
-                    
-                    cnt = AppCore.getFilesCount(Config.DIR_DETECTED, w.getName());
-                    if (cnt != 0) {
-                        ps.errText = getNonEmptyFolderError("Detected");
-                        showScreen();
-                        return;
-                    }
+                    }       
+                    System.exit(1);
                 }
                 
-                
                 ps.currentScreen = ProgramState.SCREEN_IMPORTING;
-                
                 showScreen();
             }
         });

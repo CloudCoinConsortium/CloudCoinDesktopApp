@@ -1236,4 +1236,22 @@ public class AppCore {
         return result;
     }
     
+    public static int staleFiles(String user) {
+        int cnt;
+        
+        cnt = AppCore.getFilesCount(Config.DIR_IMPORT, user);
+        if (cnt != 0)
+            return 1;
+        
+        cnt = AppCore.getFilesCount(Config.DIR_SUSPECT, user);
+        if (cnt != 0) 
+            return 2;
+
+        cnt = AppCore.getFilesCount(Config.DIR_DETECTED, user);
+        if (cnt != 0)
+            return 3;
+      
+        return 0;
+    }
+    
 }
