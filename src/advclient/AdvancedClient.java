@@ -349,6 +349,13 @@ public class AdvancedClient  {
         return false;
     }
     
+    public boolean isMakingChange() {
+        if (ps.currentScreen == ProgramState.SCREEN_MAKING_CHANGE)
+            return true;
+        
+        return false;
+    }
+    
     public boolean isDepositing() {
         if (ps.currentScreen == ProgramState.SCREEN_PREDEPOSIT || 
                 ps.currentScreen == ProgramState.SCREEN_DEPOSIT ||
@@ -8121,13 +8128,13 @@ public class AdvancedClient  {
                 public void run() {
                     if (isDepositing()) {
                         ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
-                    } else if (isWithdrawing()) {
+                    } else if (isWithdrawing() || isMakingChange()) {
                         ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
                     } else if (isFixing()) {
                         ps.currentScreen = ProgramState.SCREEN_FIX_DONE;
                     } else if (isBackupping()) {
                         ps.currentScreen = ProgramState.SCREEN_BACKUP_DONE;
-                    }
+                    } 
                     
                     showScreen();
                 }
