@@ -32,6 +32,7 @@ public class Wallet implements Comparable<Wallet> {
     int[][] counters;
     public Hashtable<String, String[]> envelopes;
     boolean isUpdated;
+    boolean correctionAdded;
     
     public Wallet(String name, String email, boolean isEncrypted, String password, GLogger logger) {
         this.name = name;
@@ -42,6 +43,7 @@ public class Wallet implements Comparable<Wallet> {
         this.logger = logger;
         this.sns = new int[0];
         this.isUpdated = false;
+        this.correctionAdded = false;
                
         logger.debug(ltag, "wallet " + name + " EmailRecovery: " + email + " isEncrypted: " + isEncrypted);
         lsep = System.getProperty("line.separator");
@@ -231,7 +233,7 @@ public class Wallet implements Comparable<Wallet> {
          
         int expectedRest = getTotal() + amount;
         String result = "";
-        if (rest != getTotal()) {
+        if (rest != getTotal() && !correctionAdded) {
             int adjusted = getTotal() - rest;
             
             logger.debug(ltag, "Appending correcting transaction. Rest was: " + 
@@ -245,9 +247,11 @@ public class Wallet implements Comparable<Wallet> {
             }
             
             result += getTotal() + ",dummy" + lsep;
-            rest = getTotal();
+            rest = getTotal();    
         }
-                
+               
+        correctionAdded = true;
+        
         rest += amount;
         result += rMemo + "," + date + ",";
         if (amount > 0) {
