@@ -1715,7 +1715,7 @@ public class AdvancedClient  {
                     showScreen();
                     return;
                 }
-                
+
                 ps.dstWallet.setPassword(ps.typedPassword);
                 sm.setActiveWalletObj(ps.dstWallet);
                 
@@ -2316,10 +2316,20 @@ public class AdvancedClient  {
         JPanel bp = getTwoButtonPanel(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 wl.debug(ltag, "Leftover deposit");
-                
+
                 ps.currentScreen = ProgramState.SCREEN_IMPORTING;
+                ps.srcWallet = null;
                 ps.files = new ArrayList<String>();
                 ps.typedMemo = "Recovered from Last time";
+                
+                if (!ps.typedDstPassword.isEmpty()) {
+                    if (ps.typedPassword.isEmpty()) {
+                        ps.typedPassword = ps.typedDstPassword;
+                    }
+                }
+                    
+                System.out.println("p="+ps.typedPassword);
+                
                 showScreen();
             }
         }, "Continue");
@@ -4186,22 +4196,6 @@ public class AdvancedClient  {
                 }
                 
                 ps.dstWallet = w;
-                
-                int cnt = AppCore.getFilesCount(Config.DIR_SUSPECT, w.getName());
-                if (cnt != 0) {
-                    ps.errText = getNonEmptyFolderError("Suspect");
-                    showScreen();
-                    return;
-                }
-                
-                cnt = AppCore.getFilesCount(Config.DIR_IMPORT, w.getName());
-                if (cnt != 0) {
-                    wl.debug(ltag, "Import folder is not empty. Cleaning");
-                    AppCore.moveFolderContentsToTrash(Config.DIR_IMPORT, w.getName());
-                    //ps.errText = getNonEmptyFolderError("Import");
-                    //showScreen();
-                    //return;
-                }
 
                 int total;
                 total = ps.srcWallet.getTotal();
@@ -4235,6 +4229,16 @@ public class AdvancedClient  {
                     ps.typedDstPassword = password.getText();
                     ps.dstWallet.setPassword(ps.typedDstPassword);
                 }
+                
+                                
+                int cnt = AppCore.staleFiles(w.getName());
+                if (cnt > 0) {
+                    wl.debug(ltag, "Stale files: " + cnt);
+                    ps.currentScreen = ProgramState.SCREEN_DEPOSIT_LEFTOVER;
+                    showScreen();
+                    return;
+                }
+                
                 
                 ps.typedAmount = total;
                 ps.isSkyDeposit = true;
@@ -4536,7 +4540,6 @@ public class AdvancedClient  {
                         showScreen();
                         return;
                     }       
-                    System.exit(1);
                 }
                 
                 ps.currentScreen = ProgramState.SCREEN_IMPORTING;
@@ -7771,7 +7774,6 @@ public class AdvancedClient  {
             int sn = sm.getActiveWallet().getIDCoin().sn;
             wl.debug(ltag, "UnpackerForSender sn=" + sn);
 
-            //setRAIDAProgress(0, 0, AppCore.getFilesCount(Config.DIR_SUSPECT, sm.getActiveWallet().getName()));
             setRAIDAProgressCoins(0, 0, 0);
             sm.startSenderService(sn, null, 0, ps.typedMemo, sm.getActiveWallet().getName(), new SenderDepositCb());
 
@@ -7803,7 +7805,6 @@ public class AdvancedClient  {
 
             ps.duplicates = ur.duplicates;
             
-            //setRAIDAProgress(0, 0, AppCore.getFilesCount(Config.DIR_SUSPECT, sm.getActiveWallet().getName()));
             setRAIDAProgressCoins(0, 0, 0);
             sm.startAuthenticatorService(new AuthenticatorCb());
         }
