@@ -351,7 +351,8 @@ public class AdvancedClient  {
         if (ps.currentScreen == ProgramState.SCREEN_PREDEPOSIT || 
                 ps.currentScreen == ProgramState.SCREEN_DEPOSIT ||
                 ps.currentScreen == ProgramState.SCREEN_IMPORTING ||
-                ps.currentScreen == ProgramState.SCREEN_IMPORT_DONE)
+                ps.currentScreen == ProgramState.SCREEN_IMPORT_DONE ||
+                ps.currentScreen == ProgramState.SCREEN_DEPOSIT_LEFTOVER)
             return true;
         
         return false;
@@ -1002,6 +1003,10 @@ public class AdvancedClient  {
             case ProgramState.SCREEN_WARN_FRACKED_TO_SEND:
                 showWarnFrackedToSend();
                 break;
+            case ProgramState.SCREEN_DEPOSIT_LEFTOVER:
+                showDepositLeftover();
+                break;
+
 
         }
         
@@ -2329,6 +2334,51 @@ public class AdvancedClient  {
             }
         }, y, gridbag);   
       
+    }
+    
+    public void showDepositLeftover() {
+        int y = 0;
+        JLabel fname, value;
+        MyTextField walletName = null;
+
+        JPanel subInnerCore = getPanel("Fix Fracked Coin");                
+        GridBagLayout gridbag = new GridBagLayout();
+        subInnerCore.setLayout(gridbag);
+      
+        fname = AppUI.wrapDiv("Left over coins found from last time. Click to import them");
+        AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
+        AppUI.setBoldFont(fname, 21);
+        y++;
+                          
+        AppUI.GBPad(subInnerCore, y, gridbag);        
+        y++;
+        
+        AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Continue", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                showScreen();
+            }
+        }, new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                wl.debug(ltag, "Leftover deposit");
+
+                ps.srcWallet = null;
+                ps.currentScreen = ProgramState.SCREEN_IMPORTING;
+                ps.files = new ArrayList<String>();
+                ps.typedMemo = "Recovered from Last time";
+                
+                if (!ps.typedDstPassword.isEmpty()) {
+                    if (ps.typedPassword.isEmpty()) {
+                        ps.typedPassword = ps.typedDstPassword;
+                    }
+                }
+
+                showScreen();
+            }
+        }, y, gridbag);    
+        
+        subInnerCore.revalidate();
+        subInnerCore.repaint();
     }
     
     public void showWarnFrackedToSend() {
@@ -3756,22 +3806,6 @@ public class AdvancedClient  {
                 
                 ps.dstWallet = w;
                 
-                int cnt = AppCore.getFilesCount(Config.DIR_SUSPECT, w.getName());
-                if (cnt != 0) {
-                    ps.errText = getNonEmptyFolderError("Suspect");
-                    showScreen();
-                    return;
-                }
-                
-                cnt = AppCore.getFilesCount(Config.DIR_IMPORT, w.getName());
-                if (cnt != 0) {
-                    wl.debug(ltag, "Import folder is not empty: " + cnt + " files. Cleaning");
-                    AppCore.moveFolderContentsToTrash(Config.DIR_IMPORT, w.getName());
-//                    ps.errText = getNonEmptyFolderError("Import");
-  //                  showScreen();
-                    //return;
-                }
-
                 int total;
                 total = ps.srcWallet.getTotal();
                 if (total == 0) {
@@ -3805,6 +3839,14 @@ public class AdvancedClient  {
                     ps.dstWallet.setPassword(ps.typedDstPassword);
                 }
                 
+                int cnt = AppCore.staleFiles(w.getName());
+                wl.debug(ltag, "Stale files: " + cnt);
+                if (cnt > 0) {
+                    ps.currentScreen = ProgramState.SCREEN_DEPOSIT_LEFTOVER;
+                    showScreen();
+                    return;
+                }
+
                 ps.typedAmount = total;
                 ps.isSkyDeposit = true;
                 ps.sendType = ProgramState.SEND_TYPE_WALLET;
@@ -4011,35 +4053,10 @@ public class AdvancedClient  {
                 }
                                
                 if (!w.isSkyWallet()) {
-                    int cnt;
-                    /*
-                    cnt = AppCore.getFilesCount(Config.DIR_FRACKED, w.getName());
-                    if (cnt != 0) {
-                        ps.errText = "Fracked folder is not empty. Please fix your coins first";
-                        showScreen();
-                        return;
-                    }*/
-                    
-                    cnt = AppCore.getFilesCount(Config.DIR_SUSPECT, w.getName());
-                    if (cnt != 0) {
-                        ps.errText = getNonEmptyFolderError("Suspect");
-                        showScreen();
-                        return;
-                    }
-                    
-                    cnt = AppCore.getFilesCount(Config.DIR_IMPORT, w.getName());
-                    if (cnt != 0) {
-                        wl.debug(ltag, "Import folder is not empty: " + cnt + " files. Cleaning");
-                        AppCore.moveFolderContentsToTrash(Config.DIR_IMPORT, w.getName());
-
-                        //ps.errText = getNonEmptyFolderError("Import");
-                        //showScreen();
-                        //return;
-                    }
-                    
-                    cnt = AppCore.getFilesCount(Config.DIR_DETECTED, w.getName());
-                    if (cnt != 0) {
-                        ps.errText = getNonEmptyFolderError("Detected");
+                    int cnt = AppCore.staleFiles(w.getName());
+                    wl.debug(ltag, "Stale files: " + cnt);
+                    if (cnt > 0) {
+                        ps.currentScreen = ProgramState.SCREEN_DEPOSIT_LEFTOVER;
                         showScreen();
                         return;
                     }
