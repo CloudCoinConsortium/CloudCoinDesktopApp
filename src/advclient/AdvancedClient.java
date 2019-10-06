@@ -2327,9 +2327,7 @@ public class AdvancedClient  {
                         ps.typedPassword = ps.typedDstPassword;
                     }
                 }
-                    
-                System.out.println("p="+ps.typedPassword);
-                
+
                 showScreen();
             }
         }, "Continue");
