@@ -628,16 +628,24 @@ public class FrackFixer extends Servant {
         cc.setPownStringFromDetectStatus();
         cc.calcExpirationDate();
 
-        
-        AppCore.moveToFolder(cc.originalFile, Config.DIR_TRASH, user);
-        logger.debug(ltag, "Saving file: " + cc.originalFile + " pown " + cc.getPownString());
-        if (!AppCore.saveFile(cc.originalFile, cc.getJson(false))) {
+        String tmpFile = cc.originalFile + ".tmp";
+        //AppCore.moveToFolder(cc.originalFile, Config.DIR_TRASH, user);
+        logger.debug(ltag, "Saving file: " + tmpFile + " pown " + cc.getPownString());
+        if (!AppCore.saveFile(tmpFile, cc.getJson(false))) {
             logger.error(ltag, "Failed to save file: " + cc.originalFile);
             logger.debug(ltag, "Coin details: " + cc.getJson());
             return;
         }
 
-        logger.info(ltag, "saved");
+        AppCore.deleteFile(cc.originalFile);
+        
+        if (!AppCore.renameFile(tmpFile, cc.originalFile)) {
+            logger.error(ltag, "Failed to rename file");
+            logger.debug(ltag, "Coin details: " + cc.getJson());
+            return;
+        }
+        
+        logger.info(ltag, "Coin saved");
     }
 
 }

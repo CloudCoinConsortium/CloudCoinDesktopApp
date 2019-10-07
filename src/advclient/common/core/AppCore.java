@@ -317,7 +317,28 @@ public class AppCore {
         
         return true;
     }
-    
+
+    static public boolean renameFile(String oldFile, String newFile) {
+        logger.info(ltag, "Renaming " + oldFile + " -> " + newFile);
+        try {
+            File fsource = new File(oldFile);
+            File ftarget = new File(newFile);
+            if (ftarget.exists()) {
+                logger.error(ltag, "Target File exists. Leaving");
+                return false;
+            }
+
+            if (!fsource.renameTo(ftarget)) {
+                logger.error(ltag, "Failed to rename file");
+                return false;
+            }
+        } catch (Exception e) {
+            logger.error(ltag, "Failed to move file: " + e.getMessage());
+            return false;
+        }
+        
+        return true;
+    }
 
     static public void moveToTrash(String fileName, String user) {
         moveToFolder(fileName, Config.DIR_TRASH, user);
