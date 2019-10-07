@@ -732,10 +732,13 @@ public class AppCore {
     }
     
     public static String getCurrentDate() {
-        DateFormat dateFormat = new SimpleDateFormat("yyyy-MMM-d h-mma");
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MMM-dd hh:mma");
 	Date date = new Date();
         
-        return dateFormat.format(date);
+        String strDate = dateFormat.format(date).replaceAll("AM$", "am");
+        strDate = strDate.replaceAll("PM$", "pm");
+        
+        return strDate;
     }
     
     
