@@ -5858,7 +5858,6 @@ public class AdvancedClient  {
                     sl.setVisible(false); 
                     cb.enable();
                 }
-                System.out.println("changed " + isChecked);
             }
         });
     }
