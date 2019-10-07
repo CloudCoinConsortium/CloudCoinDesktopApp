@@ -5563,7 +5563,7 @@ public class AdvancedClient  {
     
     public void showCreateSkyWalletScreen() {
         int y = 0;
-        JLabel fname;
+        JLabel fname0, fname1, fname2, fname3, fname4;
         MyTextField walletName = null;
 
         JPanel subInnerCore = getPanel("Create Sky Wallet");                
@@ -5580,34 +5580,33 @@ public class AdvancedClient  {
         AppUI.getGBRow(subInnerCore, null, tw, y, gridbag);
         y++;
         
-        fname = new JLabel("Add Existing");
+        fname0 = new JLabel("Add Existing");
         final MyCheckBoxToggle cb1 = new MyCheckBoxToggle();
         if (ps.isCreatingNewSkyWallet)
             cb1.setSelected(false);
         else
             cb1.setSelected(true);
-        AppUI.getGBRow(subInnerCore, fname, cb1.getCheckBox(), y, gridbag);
+        AppUI.getGBRow(subInnerCore, fname0, cb1.getCheckBox(), y, gridbag);
         y++; 
-        
         
         String[] options = {
             Config.DDNS_DOMAIN,
         };
    
-        fname = new JLabel("DNS Name or IP Address of Trusted Server");
+        fname1 = new JLabel("DNS Name or IP Address of Trusted Server");
         final RoundedCornerComboBox cbox = new RoundedCornerComboBox(AppUI.getColor6(), "Select Server", options);
         cbox.setDefault(null);
-        AppUI.getGBRow(subInnerCore, fname, cbox.getComboBox(), y, gridbag);
+        AppUI.getGBRow(subInnerCore, fname1, cbox.getComboBox(), y, gridbag);
         y++; 
 
-        fname = new JLabel("Your Proposed Address");
+        fname2 = new JLabel("Your Proposed Address");
         final MyTextField tf0 = new MyTextField("JohnDoe", false);   
         if (!ps.skyVaultDomain.isEmpty())
             tf0.setData(ps.skyVaultDomain);
-        AppUI.getGBRow(subInnerCore, fname, tf0.getTextField(), y, gridbag);
+        AppUI.getGBRow(subInnerCore, fname2, tf0.getTextField(), y, gridbag);
         y++;     
         
-        fname = new JLabel("Select CloudCoin to be used as ID");
+        fname3 = new JLabel("Select CloudCoin to be used as ID");
         final MyTextField tf1 = new MyTextField("", false, true);
         tf1.disable();
         tf1.setFilepickerListener(new MouseAdapter() {
@@ -5636,15 +5635,45 @@ public class AdvancedClient  {
         if (!ps.chosenFile.isEmpty()) 
             tf1.setData(new File(ps.chosenFile).getName());
         
-        AppUI.getGBRow(subInnerCore, fname, tf1.getTextField(), y, gridbag);
+        AppUI.getGBRow(subInnerCore, fname3, tf1.getTextField(), y, gridbag);
         y++; 
- 
-
+   
+        
+        fname4 = new JLabel("Please put your ID coin here:                           ");
+        JLabel sl = AppUI.getHyperLink(AppCore.getIDDir(), "javascript:void(0); return false", 20);
+        sl.addMouseListener(new MouseAdapter() {
+            public void mouseReleased(MouseEvent e) {
+                if (!Desktop.isDesktopSupported())
+                    return;
+                try {
+                    Desktop.getDesktop().open(new File(AppCore.getIDDir()));
+                } catch (IOException ie) {
+                    wl.error(ltag, "Failed to open browser: " + ie.getMessage());
+                }
+            }
+        });
+         
+        AppUI.getGBRow(subInnerCore, fname4, sl, y, gridbag);
+        AppUI.setColor(sl, AppUI.getColor2());
+        AppUI.underLine(sl);
+        y++;
+        
+        if (ps.isCreatingNewSkyWallet) {
+            fname4.setVisible(false);
+            sl.setVisible(false);
+        } else {
+            fname4.setVisible(true);
+            sl.setVisible(true);  
+        }
+        
         
         AppUI.GBPad(subInnerCore, y, gridbag);        
         y++;
         
-        AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Continue", new ActionListener() {
+        
+        
+        
+        MyButton cb = AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Continue", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 ps.currentScreen = ProgramState.SCREEN_DEFAULT;
                 showScreen();
@@ -5804,6 +5833,34 @@ public class AdvancedClient  {
             }
         }, y, gridbag);
        
+        cb1.addListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+                boolean isChecked = e.getStateChange() == ItemEvent.SELECTED;
+                
+                if (isChecked) {
+                    fname1.setVisible(false);
+                    fname2.setVisible(false);
+                    fname3.setVisible(false);
+                    tf0.getTextField().setVisible(false);
+                    tf1.getTextField().setVisible(false);
+                    cbox.getComboBox().setVisible(false);
+                    fname4.setVisible(true);
+                    sl.setVisible(true); 
+                    cb.disable();
+                } else {
+                    fname1.setVisible(true);
+                    fname2.setVisible(true);
+                    fname3.setVisible(true);
+                    tf0.getTextField().setVisible(true);
+                    tf1.getTextField().setVisible(true);
+                    cbox.getComboBox().setVisible(true);      
+                    fname4.setVisible(false);
+                    sl.setVisible(false); 
+                    cb.enable();
+                }
+                System.out.println("changed " + isChecked);
+            }
+        });
     }
     
     public void showCreateWalletScreen() {

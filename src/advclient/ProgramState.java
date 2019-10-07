@@ -194,7 +194,7 @@ public class ProgramState {
         
         isSkyDeposit = false;
         
-        isCreatingNewSkyWallet = false;
+        isCreatingNewSkyWallet = true;
         
         skyVaultDomain = "";
         
