@@ -156,7 +156,6 @@ public class Vaulter extends Servant {
 
             logger.debug(ltag, "File has been successfully encrypted. Deleting the original file");
             AppCore.deleteFile(tcc.originalFile);
-            //AppCore.moveToFolder(tcc.originalFile, Config.DIR_TRASH, user);
         }
 
         vr.status = VaulterResult.STATUS_FINISHED;

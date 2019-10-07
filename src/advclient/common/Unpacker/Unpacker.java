@@ -141,9 +141,6 @@ public class Unpacker extends Servant {
             if (!rv) {
                 logger.error(ltag, "Error processing file: " + fileName);
                 AppCore.moveToTrash(file.toString(), user);
-                //globalResult.status = UnpackerResult.STATUS_ERROR;
-                //globalResult.errText = "Failed to parse: " + fileName;
-                //return;
                 continue;
             }
         }
@@ -214,8 +211,7 @@ public class Unpacker extends Servant {
             
             AppCore.moveToImported(cc.originalFile, user);             
         }
-        //privateLogDir
-        
+
         globalResult.status = UnpackerResult.STATUS_FINISHED;
     }
 
@@ -300,8 +296,6 @@ public class Unpacker extends Servant {
             addCoinToRccs(ccs[i], fileName);
         }
 
-        //AppCore.moveToImported(fileName, user);
-
         return true;
     }
 
@@ -324,8 +318,6 @@ public class Unpacker extends Servant {
         for (int i = 0; i < ccs.length; i++) {
             addCoinToRccs(ccs[i], fileName);
         }
-
-        //AppCore.moveToImported(fileName, user);
 
         return true;
     }
