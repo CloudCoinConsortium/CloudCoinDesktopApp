@@ -357,7 +357,7 @@ public class LossFixer extends Servant {
             return;
         }
 
-        AppCore.moveToImported(cc.originalFile, user);
+        AppCore.deleteFile(cc.originalFile);
     }
     
     public void moveCoinToFracked(CloudCoin cc) {
@@ -371,6 +371,6 @@ public class LossFixer extends Servant {
             return;
         }
 
-        AppCore.moveToImported(cc.originalFile, user);
+        AppCore.deleteFile(cc.originalFile);
     }
 }

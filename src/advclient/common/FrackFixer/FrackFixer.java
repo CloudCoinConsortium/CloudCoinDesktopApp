@@ -629,7 +629,6 @@ public class FrackFixer extends Servant {
         cc.calcExpirationDate();
 
         String tmpFile = cc.originalFile + ".tmp";
-        //AppCore.moveToFolder(cc.originalFile, Config.DIR_TRASH, user);
         logger.debug(ltag, "Saving file: " + tmpFile + " pown " + cc.getPownString());
         if (!AppCore.saveFile(tmpFile, cc.getJson(false))) {
             logger.error(ltag, "Failed to save file: " + cc.originalFile);
