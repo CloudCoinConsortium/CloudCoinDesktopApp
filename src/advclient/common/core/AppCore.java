@@ -294,6 +294,10 @@ public class AppCore {
     }
     
     static public boolean moveToFolderNoTs(String fileName, String folder, String user) {
+        return moveToFolderNoTs(fileName, folder, user, false);
+    }
+    
+    static public boolean moveToFolderNoTs(String fileName, String folder, String user, boolean isOverwrite) {
         logger.info(ltag, "Moving no Ts to " + folder + " -> " + fileName);
 
         try {
@@ -302,8 +306,13 @@ public class AppCore {
 
             File ftarget = new File(target);
             if (ftarget.exists()) {
-                logger.error(ltag, "File exists. Leaving " + fileName);
-                return false;
+                if (isOverwrite) {
+                    logger.info(ltag, "Overwriting file: " + target);
+                    ftarget.delete();
+                } else {
+                    logger.error(ltag, "File exists. Leaving " + fileName);
+                    return false;
+                }
             }
 
             if (!fsource.renameTo(ftarget)) {
@@ -353,7 +362,7 @@ public class AppCore {
     }
 
     static public void moveToImported(String fileName, String user) {
-        moveToFolder(fileName, Config.DIR_IMPORTED, user);
+        moveToFolderNoTs(fileName, Config.DIR_IMPORTED, user, true);
     }
 
     static public boolean copyFile(InputStream is, String fdst) {
