@@ -279,8 +279,8 @@ public class Vaulter extends Servant {
                 return;
             }
 
-            logger.debug(ltag, "File has been successfully decrypted. Moving the original file to Trash");
-            AppCore.moveToFolder(tcc.originalFile, Config.DIR_TRASH, user);
+            logger.debug(ltag, "File has been successfully decrypted. Deleting the original file");
+            AppCore.deleteFile(tcc.originalFile);
         }
         
         vr.status = VaulterResult.STATUS_FINISHED;
