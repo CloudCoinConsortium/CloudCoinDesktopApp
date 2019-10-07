@@ -1756,7 +1756,7 @@ public class AdvancedClient  {
                 for (String filename : ps.files) {
                     String name = sm.getActiveWallet().getName();
                     
-                    AppCore.moveToFolder(filename, Config.DIR_IMPORT, name);
+                    AppCore.moveToFolderNoTs(filename, Config.DIR_IMPORT, name);
                 }
 
                 pbarText.setText("Unpacking coins ...");
