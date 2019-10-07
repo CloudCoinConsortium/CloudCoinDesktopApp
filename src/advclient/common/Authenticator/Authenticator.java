@@ -228,10 +228,11 @@ public class Authenticator extends Servant {
                 logger.info(ltag, "Saving coin to Lost " + file);
                 if (!AppCore.saveFile(file, cc.getJson())) {
                     logger.error(ltag, "Failed to move coin to move to Lost: " + cc.getFileName());
+                    continue;
                 }
 
-                logger.debug(ltag, "Moving to Trash " + cc.sn);
-                AppCore.moveToTrash(cc.originalFile, user);
+                logger.debug(ltag, "Deleting " + cc.sn);
+                AppCore.deleteFile(cc.originalFile);
             }
         }
     }
