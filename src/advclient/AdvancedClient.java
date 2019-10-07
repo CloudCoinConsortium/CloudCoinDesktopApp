@@ -2406,13 +2406,8 @@ public class AdvancedClient  {
                     return;
                 }
                 
-                AppCore.moveToFolder(ps.coinIDinFix.getIDCoin().originalFile, Config.DIR_TRASH, ps.srcWallet.getName());
-                /*
-                if (!AppCore.moveToFolder(ps.coinIDinFix.getIDCoin().originalFile, Config.DIR_FRACKED, ps.srcWallet.getName())) {
-                    ps.errText = "Failed to move ID Coin. Please, check main.log file";
-                    showScreen();
-                    return;
-                }*/
+                AppCore.deleteFile(ps.coinIDinFix.getIDCoin().originalFile);
+                //AppCore.moveToFolder(ps.coinIDinFix.getIDCoin().originalFile, Config.DIR_TRASH, ps.srcWallet.getName());
              
                 wl.debug(ltag, "Set fixing");
                 ps.currentScreen = ProgramState.SCREEN_FIXING_FRACKED;

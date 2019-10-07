@@ -227,7 +227,9 @@ public class Unpacker extends Servant {
         logger.info(ltag, "Saving " + path + ": " + json);
         File f = new File(path);
         if (f.exists()) {
-            logger.info(ltag, "File " + path + " already exists. Moving to Trash. Continue");
+            logger.info(ltag, "File " + path + " already exists. Deleting the old version");
+            AppCore.deleteFile(path);
+            /*
             path = AppCore.getUserDir(Config.DIR_TRASH, user) + File.separator + System.currentTimeMillis() +
                     "-" + fileName;
             
@@ -235,8 +237,9 @@ public class Unpacker extends Servant {
                 logger.error(ltag, "Failed to save file in Trash: " + path);
                 return false;
             }        
-                    
+                   
             return true;
+                    */
         }
 
         if (!AppCore.saveFile(path, json)) {
