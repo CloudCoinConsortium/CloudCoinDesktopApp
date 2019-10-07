@@ -179,8 +179,12 @@ public class Grader extends Servant {
                 includePans = true;
             }
 
-            ccFile = AppCore.getUserDir(dstFolder, user) + File.separator +
-                + System.currentTimeMillis() + "-" + cc.getFileName();
+            ccFile = AppCore.getUserDir(dstFolder, user) + File.separator + cc.getFileName();
+            File f = new File(ccFile);
+            if (f.exists()) {
+                logger.debug(ltag, "This coin already exists. Overwriting it");
+                AppCore.deleteFile(ccFile);
+            }
         }
 
         cc.setAnsToPansIfPassed();

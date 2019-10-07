@@ -272,27 +272,6 @@ public class AppCore {
         
     }
 
-    static public boolean moveToFolder(String fileName, String folder, String user) {
-        logger.info(ltag, "Moving to " + folder + " -> " + fileName);
-
-        try {
-            File fsource = new File(fileName);
-            String target = AppCore.getUserDir(folder, user) + File.separator +
-                    System.currentTimeMillis() + "-" + fsource.getName();
-
-            File ftarget = new File(target);
-            if (!fsource.renameTo(ftarget)) {
-                logger.error(ltag, "Failed to rename file " + fileName);
-                return false;
-            }
-        } catch (Exception e) {
-            logger.error(ltag, "Failed to move file: " + e.getMessage());
-            return false;
-        }
-        
-        return true;
-    }
-    
     static public boolean moveToFolderNoTs(String fileName, String folder, String user) {
         return moveToFolderNoTs(fileName, folder, user, false);
     }
@@ -350,11 +329,7 @@ public class AppCore {
     }
 
     static public void moveToTrash(String fileName, String user) {
-        moveToFolder(fileName, Config.DIR_TRASH, user);
-    }
-
-    static public void moveToLost(String fileName, String user) {
-        moveToFolder(fileName, Config.DIR_LOST, user);
+        moveToFolderNoTs(fileName, Config.DIR_TRASH, user, true);
     }
 
     static public void moveToBank(String fileName, String user) { 

@@ -384,7 +384,7 @@ public class Sender extends Servant {
                 addCoinToReceipt(cc, "authentic", "Remote Wallet " + remoteWalletName);
                 a++;
                 av += cc.getDenomination();
-                AppCore.moveToFolder(cc.originalFile, Config.DIR_SENT, user);
+                AppCore.moveToFolderNoTs(cc.originalFile, Config.DIR_SENT, user, true);
             } else if (failed > 0) {
                 if (failed >= RAIDA.TOTAL_RAIDA_COUNT - Config.PASS_THRESHOLD) {
                     logger.info(ltag, "Moving to Counterfeit: " + cc.sn);
