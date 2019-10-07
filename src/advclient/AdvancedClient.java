@@ -6638,7 +6638,7 @@ public class AdvancedClient  {
         ct.setLayout(gridbag);
         
         
-        JLabel x;
+        JLabel x0, x1, x2, x3, x4;
         
         // Radio
         ButtonGroup nwGroup = new ButtonGroup();
@@ -6654,11 +6654,11 @@ public class AdvancedClient  {
         if (isError && !ps.isCreatingNewSkyWallet)
             rb0.select();
         
-        x = new JLabel("Add Existing");
+        x0 = new JLabel("Add Existing");
         c.insets = new Insets(0, 14, 4, 0); 
-        AppUI.setFont(x, 16);
-        gridbag.setConstraints(x, c);
-        ct.add(x);
+        AppUI.setFont(x0, 16);
+        gridbag.setConstraints(x0, c);
+        ct.add(x0);
         
         
         final MyRadioButton rb1 = new MyRadioButton();
@@ -6671,25 +6671,25 @@ public class AdvancedClient  {
         if (!isError || ps.isCreatingNewSkyWallet)
             rb1.select();
         
-        x = new JLabel("Create New");
+        x0 = new JLabel("Create New");
         c.insets = new Insets(0, 4, 4, 0); 
-        AppUI.setFont(x, 16);
-        gridbag.setConstraints(x, c);
-        ct.add(x);
+        AppUI.setFont(x0, 16);
+        gridbag.setConstraints(x0, c);
+        ct.add(x0);
         
         y++;
         
         c.gridwidth = 4;
         
         
-        x = new JLabel("DNS Name or IP Address of Trusted Server");
+        x1 = new JLabel("DNS Name or IP Address of Trusted Server");
         c.anchor = GridBagConstraints.WEST;
         c.insets = new Insets(10, 0, 4, 0); 
         c.gridx = GridBagConstraints.RELATIVE;
         c.gridy = y;
-        AppUI.setFont(x, 16);
-        gridbag.setConstraints(x, c);
-        ct.add(x);
+        AppUI.setFont(x1, 16);
+        gridbag.setConstraints(x1, c);
+        ct.add(x1);
         
         y++;
         
@@ -6711,15 +6711,15 @@ public class AdvancedClient  {
         y++;
         
         // Name Label
-        x = new JLabel("Your Proposed Address");
+        x2 = new JLabel("Your Proposed Address");
         c.anchor = GridBagConstraints.WEST;
         c.insets = new Insets(12, 0, 4, 0); 
         c.gridx = GridBagConstraints.RELATIVE;
         c.gridy = y;
-        AppUI.setFont(x, 16);
+        AppUI.setFont(x2, 16);
 
-        gridbag.setConstraints(x, c);
-        ct.add(x);
+        gridbag.setConstraints(x2, c);
+        ct.add(x2);
 
         y++;
         
@@ -6734,15 +6734,14 @@ public class AdvancedClient  {
         
         y++;
         // Text
-        JLabel txt = new JLabel("Select CloudCoin to be used as ID");
-        AppUI.setCommonFont(txt);
-        AppUI.alignCenter(txt);
+        x3 = new JLabel("Select CloudCoin to be used as ID");
+        AppUI.alignCenter(x3);
         c.insets = new Insets(12, 0, 4, 0);
         c.gridx = 0;
         c.gridy = y;
-        AppUI.setFont(txt, 16);
-        gridbag.setConstraints(txt, c);
-        ct.add(txt);
+        AppUI.setFont(x3, 16);
+        gridbag.setConstraints(x3, c);
+        ct.add(x3);
               
         y++;
         final MyTextField tf1 = new MyTextField("", false, true);
@@ -6783,11 +6782,55 @@ public class AdvancedClient  {
         
         y++;
 
+        x4 = new JLabel("Please put your ID coin here:                           ");
+        AppUI.setFont(x4, 16);
+        JLabel sl = AppUI.getHyperLink(AppCore.getIDDir(), "javascript:void(0); return false", 20);
+        sl.addMouseListener(new MouseAdapter() {
+            public void mouseReleased(MouseEvent e) {
+                if (!Desktop.isDesktopSupported())
+                    return;
+                try {
+                    Desktop.getDesktop().open(new File(AppCore.getIDDir()));
+                } catch (IOException ie) {
+                    wl.error(ltag, "Failed to open browser: " + ie.getMessage());
+                }
+            }
+        });
+
+        c.insets = new Insets(0, 0, 0, 0);
+        c.gridx = 0;
+        c.gridy = y;
+        gridbag.setConstraints(x4, c);
+        ct.add(x4);
+        
+        y++;
+        
+        c.insets = new Insets(10, 0, 0, 0);
+        c.gridx = 0;
+        c.gridy = y;
+        gridbag.setConstraints(sl, c);
+        ct.add(sl);
+        
+        
+       // AppUI.getGBRow(subInnerCore, fname4, sl, y, gridbag);
+       // AppUI.setColor(sl, AppUI.getColor2());
+        //AppUI.underLine(sl);
+        y++;
+
+        if (ps.isCreatingNewSkyWallet) {
+            x4.setVisible(false);
+            sl.setVisible(false);
+        } else {
+            x4.setVisible(true);
+            sl.setVisible(true);
+        }
+        
+        
         
         JLabel tw = new JLabel("<html><div style='width:360px'>Note: The coin that you use for ID "
                 + " will be placed into your ID folder. It will not be available for spending until you close"
                 + " your SkyWallet</div></html>");
-        c.insets = new Insets(2, 0, 0, 0);
+        c.insets = new Insets(12, 0, 0, 0);
         c.gridx = 0;
         c.gridy = y;
         //c.gridwidth = 1;
@@ -6952,6 +6995,34 @@ public class AdvancedClient  {
             }
         });
         
+        rb0.addListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+                boolean isChecked = e.getStateChange() == ItemEvent.SELECTED;
+
+                if (isChecked) {
+                    x1.setVisible(false);
+                    x2.setVisible(false);
+                    x3.setVisible(false);
+                    tf0.getTextField().setVisible(false);
+                    tf1.getTextField().setVisible(false);
+                    cbox.getComboBox().setVisible(false);
+                    x4.setVisible(true);
+                    sl.setVisible(true);
+                    //bp.disable();
+                } else {
+                    x1.setVisible(true);
+                    x2.setVisible(true);
+                    x3.setVisible(true);
+                    tf0.getTextField().setVisible(true);
+                    tf1.getTextField().setVisible(true);
+                    cbox.getComboBox().setVisible(true);
+                    x4.setVisible(false);
+                    sl.setVisible(false);
+                    //cb.enable();
+                }
+            }
+        });
+
         AppUI.hr(subInnerCore, 20);
         subInnerCore.add(bp);  
     }
