@@ -56,7 +56,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.17";
+    String version = "2.1.18";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -865,6 +865,11 @@ public class AdvancedClient  {
         wl.debug(ltag, "SCREEN " + ps.currentScreen + ": " + ps.toString());
 
         clear();   
+        if (ps.needInitWallets) {
+            sm.initWallets();
+            ps.needInitWallets = false;
+        }
+
 
         switch (ps.currentScreen) {
             case ProgramState.SCREEN_AGREEMENT:
@@ -5648,6 +5653,7 @@ public class AdvancedClient  {
                     return;
                 try {
                     Desktop.getDesktop().open(new File(AppCore.getIDDir()));
+                    ps.needInitWallets = true;
                 } catch (IOException ie) {
                     wl.error(ltag, "Failed to open browser: " + ie.getMessage());
                 }
@@ -5763,9 +5769,14 @@ public class AdvancedClient  {
         
                     t.start();
 
-                    ps.currentScreen = ProgramState.SCREEN_SETTING_DNS_RECORD;
-                    showScreen();
-                    return;
+                    EventQueue.invokeLater(new Runnable() {
+                        public void run() {
+                            ps.currentScreen = ProgramState.SCREEN_SETTING_DNS_RECORD;
+                            showScreen();
+                            return;
+                        }
+                    });
+
                 } else {
                     if (sn <= 0) {
                         ps.errText = "Wallet does not exist or network error occured";
