@@ -150,6 +150,8 @@ public class ProgramState {
     
     boolean isCheckingSkyID;
     
+    boolean needInitWallets;
+    
     public ProgramState() {
         currentScreen = SCREEN_AGREEMENT;
         cwalletRecoveryRequested = cwalletPasswordRequested = false;
@@ -216,6 +218,8 @@ public class ProgramState {
         isCheckingSkyID = false;
         
         coinIDinFix = null;
+        
+        needInitWallets = false;
     }
  
     public String toString() {
