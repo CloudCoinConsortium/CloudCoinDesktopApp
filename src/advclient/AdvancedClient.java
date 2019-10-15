@@ -1015,22 +1015,17 @@ public class AdvancedClient  {
 
         }
         
-        Component[] cs = lwrapperPanel.getComponents();
-        if (cs != null && cs.length != 0) {
-            Container c = (Container) cs[0];
-            if (c instanceof JScrollPane) {
-                JScrollPane sp = (JScrollPane) c;
-                Component[] spcs = sp.getComponents();           
-                spcs[0].requestFocus();
+        if (lwrapperPanel != null) {
+            Component[] cs = lwrapperPanel.getComponents();
+            if (cs != null && cs.length != 0) {
+                Container c = (Container) cs[0];
+                if (c instanceof JScrollPane) {
+                    JScrollPane sp = (JScrollPane) c;
+                    Component[] spcs = sp.getComponents();           
+                    spcs[0].requestFocus();
+                }
             }
         }
-        
-        
-     //   headerPanel.repaint();
-     //   headerPanel.revalidate();
-
-     //   corePanel.repaint();
-     //   corePanel.revalidate();
     }
   
     public void maybeShowError(JPanel p) {
@@ -4972,7 +4967,7 @@ public class AdvancedClient  {
                 rec = "<br><span style='font-size:0.4em; color: " + colstr + "'>Recovery Email: " + w.getEmail() + "</span>";
             }
             
-            String titleText = "<html>" + w.getName() + " - " 
+            String titleText = "<html>" + w.getName() + " : " 
                 + AppCore.formatNumber(w.getTotal()) + "<span style='font-size:0.8em'><sup>cc</sup></span>" + rec + "</html>";
             trTitle.setText(titleText);
             trTitle.validate();
@@ -5352,35 +5347,6 @@ public class AdvancedClient  {
                 }
             }
         }, 0, gridbag);
-             
-        
-        /*
-        if (ps.sendType == ProgramState.SEND_TYPE_FOLDER) {
-            Thread t = new Thread(new Runnable() {
-                public void run(){
-                    //UIManager.put("FileChooser.readOnly", Boolean.TRUE);  
-                    JFileChooser c = new JFileChooser(ps.chosenFile);
-                   // UIManager.put("FileChooser.readOnly", Boolean.FALSE);  
-                    c.setSelectedFile(new File(ps.typedAmount + ".CloudCoin." + ps.typedMemo + ".stack"));
-
-                    int rVal = c.showSaveDialog(null);
-                    if (rVal == JFileChooser.APPROVE_OPTION) {
-                        String file = c.getSelectedFile().getAbsolutePath();
-                        sm.setActiveWalletObj(ps.srcWallet);
-                        ps.srcWallet.setPassword(ps.typedSrcPassword);
-                        if (ps.srcWallet.isEncrypted()) {
-                            sm.startSecureExporterService(Config.TYPE_STACK, ps.typedAmount, ps.typedMemo, file, false, new ExporterCb());
-                        } else {
-                            sm.startExporterService(Config.TYPE_STACK, ps.typedAmount, ps.typedMemo, file, false, new ExporterCb());
-                        }
-                    }
-                }
-            });
-        
-            t.start();  
-        }
-        */
-        
 
     }
     
