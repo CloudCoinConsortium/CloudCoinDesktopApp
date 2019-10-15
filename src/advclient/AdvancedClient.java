@@ -5726,7 +5726,7 @@ public class AdvancedClient  {
     
     public synchronized void updateTransactionWalletData(Wallet w) {
         if (trTitle != null) {
-            trTitle.setText(w.getName() + " - " + w.getTotal() + " CC");
+            trTitle.setText(w.getName() + " : " + w.getTotal() + " CC");
             trTitle.validate();
             trTitle.repaint();
         }
