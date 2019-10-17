@@ -1619,7 +1619,7 @@ public class AdvancedClient  {
                     }
 
                     if (AppCore.getPassedCount(skyCC) != RAIDA.TOTAL_RAIDA_COUNT) {
-                        ps.errText = getSkyIDError(ps.srcWallet.getName(), ps.srcWallet.getIDCoin().getPownString());
+                        ps.errText = getSkyIDError(ps.dstWallet.getName(), ps.dstWallet.getIDCoin().getPownString());
                         showScreen();
                         return;
                     }
