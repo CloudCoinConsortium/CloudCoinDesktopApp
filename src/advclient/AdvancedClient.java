@@ -53,7 +53,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.17";
+    String version = "2.1.18";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -827,6 +827,11 @@ public class AdvancedClient  {
         wl.debug(ltag, "SCREEN " + ps.currentScreen + ": " + ps.toString());
         clear();
 
+        if (ps.needInitWallets) {
+            sm.initWallets();
+            ps.needInitWallets = false;
+        }
+        
         switch (ps.currentScreen) {
             case ProgramState.SCREEN_AGREEMENT:
                 resetState();
@@ -1930,23 +1935,7 @@ public class AdvancedClient  {
         c.gridy = y;
         gridbag.setConstraints(x, c);
         ct.add(x);
-        /*
-        JPanel bp = getTwoButtonPanelCustom("Show Folder", "Continue", new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                File file = new File(ps.chosenFile);
-                Desktop desktop = Desktop.getDesktop();
-                try {
-                    desktop.open(file);
-                } catch (IOException ex){ }
-                
-            }
-        },  new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
-                showScreen();
-            }
-        });*/
-  
+
         JPanel bp = this.getOneButtonPanel();
         
         resetState();
@@ -4614,19 +4603,6 @@ public class AdvancedClient  {
                 }
             });
 
-            
-            
-            //only tested on windows
-//            Desktop desktop = Desktop.getDesktop();
-//            File dirToOpen = null;
-//            try{
-//                String path = AppCore.getRootUserDir(wallets[i].getName());
-//                Runtime runtime = Runtime.getRuntime();
-//                runtime.exec("explorer.exe " + path);
-//            } catch(Exception E) {
-//                
-//            }
-            
             c.insets = new Insets(0, 10, 4, 0); 
             c.anchor = GridBagConstraints.WEST;
             c.gridx = GridBagConstraints.RELATIVE;
@@ -4636,11 +4612,8 @@ public class AdvancedClient  {
             gct.add(sl);
             
             y++;
-                
-   
         }
             
-   
         ct.add(gct);
     }
     
@@ -5753,7 +5726,7 @@ public class AdvancedClient  {
     
     public synchronized void updateTransactionWalletData(Wallet w) {
         if (trTitle != null) {
-            trTitle.setText(w.getName() + " - " + w.getTotal() + " CC");
+            trTitle.setText(w.getName() + " : " + w.getTotal() + " CC");
             trTitle.validate();
             trTitle.repaint();
         }
@@ -6679,7 +6652,7 @@ public class AdvancedClient  {
         
         x1 = new JLabel("DNS Name or IP Address of Trusted Server");
         c.anchor = GridBagConstraints.WEST;
-        c.insets = new Insets(10, 0, 4, 0); 
+        c.insets = new Insets(4, 0, 4, 0); 
         c.gridx = GridBagConstraints.RELATIVE;
         c.gridy = y;
         AppUI.setFont(x1, 16);
@@ -6708,7 +6681,7 @@ public class AdvancedClient  {
         // Name Label
         x2 = new JLabel("Your Proposed Address");
         c.anchor = GridBagConstraints.WEST;
-        c.insets = new Insets(12, 0, 4, 0); 
+        c.insets = new Insets(4, 0, 4, 0); 
         c.gridx = GridBagConstraints.RELATIVE;
         c.gridy = y;
         AppUI.setFont(x2, 16);
@@ -6731,7 +6704,7 @@ public class AdvancedClient  {
         // Text
         x3 = new JLabel("Select CloudCoin to be used as ID");
         AppUI.alignCenter(x3);
-        c.insets = new Insets(12, 0, 4, 0);
+        c.insets = new Insets(4, 0, 4, 0);
         c.gridx = 0;
         c.gridy = y;
         AppUI.setFont(x3, 16);
@@ -6786,6 +6759,7 @@ public class AdvancedClient  {
                     return;
                 try {
                     Desktop.getDesktop().open(new File(AppCore.getIDDir()));
+                    ps.needInitWallets = true;
                 } catch (IOException ie) {
                     wl.error(ltag, "Failed to open browser: " + ie.getMessage());
                 }
@@ -6825,7 +6799,7 @@ public class AdvancedClient  {
         JLabel tw = new JLabel("<html><div style='width:360px'>Note: The coin that you use for ID "
                 + " will be placed into your ID folder. It will not be available for spending until you close"
                 + " your SkyWallet</div></html>");
-        c.insets = new Insets(12, 0, 0, 0);
+        c.insets = new Insets(4, 0, 0, 0);
         c.gridx = 0;
         c.gridy = y;
         //c.gridwidth = 1;
@@ -6920,9 +6894,13 @@ public class AdvancedClient  {
         
                     t.start();
 
-                    ps.currentScreen = ProgramState.SCREEN_SETTING_DNS_RECORD;
-                    showScreen();
-                    return;
+                    EventQueue.invokeLater(new Runnable() {         
+                        public void run() {
+                            ps.currentScreen = ProgramState.SCREEN_SETTING_DNS_RECORD;
+                            showScreen();
+                            return;
+                        }
+                    });
                 } else {
                     if (sn <= 0) {
                         ps.errText = "Wallet does not exist or network error occured";
@@ -7003,7 +6981,7 @@ public class AdvancedClient  {
                     cbox.getComboBox().setVisible(false);
                     x4.setVisible(true);
                     sl.setVisible(true);
-                    //bp.disable();
+                    continueButton.disable();
                 } else {
                     x1.setVisible(true);
                     x2.setVisible(true);
@@ -7013,12 +6991,12 @@ public class AdvancedClient  {
                     cbox.getComboBox().setVisible(true);
                     x4.setVisible(false);
                     sl.setVisible(false);
-                    //cb.enable();
+                    continueButton.enable();
                 }
             }
         });
 
-        AppUI.hr(subInnerCore, 20);
+        AppUI.hr(subInnerCore, 12);
         subInnerCore.add(bp);  
     }
     
