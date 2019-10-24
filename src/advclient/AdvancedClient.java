@@ -53,7 +53,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.18";
+    String version = "2.1.19";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -5767,21 +5767,22 @@ public class AdvancedClient  {
     }
     
     public void showTransactionsScreen() {      
-        trTitle = trInventory = null;
+        
+        trTitle = AppUI.getTitle("");   
+        trInventory = new JLabel("");
+        Wallet w = sm.getActiveWallet(); 
+        updateTransactionWalletData(w);
         
         boolean isSky = sm.getActiveWallet().isSkyWallet() ? true : false;
     
         showLeftScreen();
  
-        Wallet w = sm.getActiveWallet();   
-
         JPanel rightPanel = getRightPanel(AppUI.getColor4());    
         JPanel ct = new JPanel();
         AppUI.setBoxLayout(ct, true);
         AppUI.noOpaque(ct);
         rightPanel.add(ct);
-        
-        trTitle = AppUI.getTitle("");   
+
         ct.add(trTitle);
    
         AppUI.hr(ct, 10);
@@ -5800,7 +5801,6 @@ public class AdvancedClient  {
         // Coins
         int[][] counters = w.getCounters();   
         if (counters != null && counters.length != 0) { 
-            trInventory = new JLabel("");
             AppUI.alignCenter(trInventory);
             AppUI.setFont(trInventory, 14);
             ct.add(trInventory);
@@ -5810,7 +5810,7 @@ public class AdvancedClient  {
             
         }
         
-        updateTransactionWalletData(w);
+        
         
         // File saver
         if (ps.sendType == ProgramState.SEND_TYPE_FOLDER) {
