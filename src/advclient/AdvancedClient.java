@@ -192,6 +192,7 @@ public class AdvancedClient  {
                 updateTransactionWalletData(w);
             }
         }     
+        
     }
     
     public String getSkyIDError(String name, String pownString) {
@@ -5063,7 +5064,7 @@ public class AdvancedClient  {
             hwrapper.add(invPanel);
         }
 
-        updateTransactionWalletData(w);
+        //updateTransactionWalletData(w);
         
         rightPanel.add(hwrapper);
         rightPanel.add(AppUI.hr(22));
