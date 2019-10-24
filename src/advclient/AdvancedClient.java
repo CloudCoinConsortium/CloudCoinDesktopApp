@@ -5030,23 +5030,21 @@ public class AdvancedClient  {
 
     
     public void showTransactionsScreen() {      
-        invPanel = null;
-        trTitle = null;
-        
-        boolean isSky = sm.getActiveWallet().isSkyWallet() ? true : false;
+        invPanel = new JPanel();         
+        trTitle = new JLabel("");
+        Wallet w = sm.getActiveWallet();  
+        updateTransactionWalletData(w);
+
+        boolean isSky = w.isSkyWallet() ? true : false;
          
         showLeftScreen();
         JPanel rightPanel = getRightPanel(); 
-        
-        Wallet w = sm.getActiveWallet();      
-  
+
         JPanel hwrapper = new JPanel();
         AppUI.setBoxLayout(hwrapper, false);
         AppUI.alignLeft(hwrapper);
         AppUI.noOpaque(hwrapper);
-        
-                                  
-        trTitle = new JLabel("");
+
         AppUI.alignLeft(trTitle);
         AppUI.alignTop(trTitle);
         AppUI.setFont(trTitle, 30);
@@ -5055,7 +5053,6 @@ public class AdvancedClient  {
         
         int[][] counters = w.getCounters(); 
         if (!isSky && counters != null && counters.length != 0) {
-            invPanel = new JPanel();
             AppUI.setBackground(invPanel, AppUI.getColor7());
             AppUI.alignTop(invPanel);
             AppUI.setSize(invPanel, 520, 62);
@@ -5064,7 +5061,6 @@ public class AdvancedClient  {
             hwrapper.add(invPanel);
         }
 
-        //updateTransactionWalletData(w);
         
         rightPanel.add(hwrapper);
         rightPanel.add(AppUI.hr(22));
