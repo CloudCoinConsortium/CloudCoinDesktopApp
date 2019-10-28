@@ -2001,8 +2001,13 @@ public class AdvancedClient  {
         String totalBankValue = AppCore.formatNumber(ps.statToBankValue);
         String totalFailedValue = AppCore.formatNumber(ps.statFailedValue);
         String totalLostValue = AppCore.formatNumber(ps.statLostValue);
-                
-        fname = AppUI.wrapDiv("Deposited <b>" +  total +  " CloudCoins</b> to <b>" + ps.dstWallet.getName() + " </b>");  
+        
+        if (ps.needExtra) {
+            fname = AppUI.wrapDiv("You wanted <b>" + AppCore.formatNumber(ps.typedAmount) + " CC</b> but you got <b>" + total + " CC</b>"
+                    + " because you did not have perfect change. The coins have been transferred to <b>" + ps.dstWallet.getName() + "</b>");
+        } else {
+            fname = AppUI.wrapDiv("Deposited <b>" +  total +  " CloudCoins</b> to <b>" + ps.dstWallet.getName() + " </b>");  
+        }
         AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
         y++;     
         
@@ -7357,6 +7362,9 @@ public class AdvancedClient  {
             if (ps.srcWallet != null)
                 name = ps.srcWallet.getName();
             
+            ps.needExtra = rr.needExtra;
+            ps.rrAmount = rr.amount;
+
             wl.debug(ltag, "rramount " + rr.amount + " typed " + ps.typedAmount + " name=" + name);
             sm.startGraderService(new GraderCb(), null, name);
 	}

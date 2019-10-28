@@ -64,11 +64,14 @@ public class Receiver extends Servant {
         rResult.amount = globalResult.amount;
         rResult.errText = globalResult.errText;
         rResult.receiptId = globalResult.receiptId;
+        rResult.needExtra = globalResult.needExtra;
     }
 
     public void doReceive(int sn, int[] sns, String fdstFolder, int amount, boolean needReceipt) {
         int i;
 
+        globalResult.needExtra = false;
+        
         if (!updateRAIDAStatus()) {
             logger.error(ltag, "Can't proceed. RAIDA is unavailable");
             rr.status = ReceiverResult.STATUS_ERROR;
@@ -80,15 +83,25 @@ public class Receiver extends Servant {
             return;
         }
 
+        CloudCoin extraCoin = null;
         if (!pickCoinsAmountFromArray(sns, amount)) {
-            logger.debug(ltag, "Not enough coins in the cloudfor amount " + amount);
-            globalResult.status = ReceiverResult.STATUS_ERROR;
-            globalResult.errText = Config.PICK_ERROR_MSG;
-            rr = new ReceiverResult();
-            copyFromGlobalResult(rr);
-            if (cb != null)
-                cb.callback(rr);          
-            return;
+            logger.debug(ltag, "Not enough coins in the cloudfor amount " + amount + ". Picking extra");
+            
+            coinsPicked = new ArrayList<CloudCoin>();
+            extraCoin = pickCoinsAmountFromArrayWithExtra(sns, amount);
+            if (extraCoin == null) {
+                globalResult.status = ReceiverResult.STATUS_ERROR;
+                globalResult.errText = "Failed to find coins in the Sky Wallet";
+                //globalResult.errText = Config.PICK_ERROR_MSG;
+                rr = new ReceiverResult();
+                copyFromGlobalResult(rr);
+                if (cb != null)
+                    cb.callback(rr);          
+                return;
+            }
+            
+            globalResult.needExtra = true;
+            coinsPicked.add(extraCoin);
         }
         
         setSenderRAIDA();

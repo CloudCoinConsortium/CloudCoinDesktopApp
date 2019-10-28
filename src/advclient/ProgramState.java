@@ -152,6 +152,10 @@ public class ProgramState {
     
     boolean needInitWallets;
     
+    boolean needExtra;
+    
+    int rrAmount;
+    
     public ProgramState() {
         currentScreen = SCREEN_AGREEMENT;
         cwalletRecoveryRequested = cwalletPasswordRequested = false;
@@ -219,6 +223,10 @@ public class ProgramState {
         coinIDinFix = null;
         
         needInitWallets = false;
+        
+        needExtra = false;
+        
+        rrAmount = 0;
     }
  
     public String toString() {
