@@ -1986,8 +1986,9 @@ public class AdvancedClient  {
         //    name += "." + Config.DDNS_DOMAIN;
         
         JLabel x = new JLabel("<html><div style='width:400px; text-align:center'>"
-                + "<b>" + AppCore.formatNumber(ps.typedAmount) + " CC</b> have been transferred to <b>" + to + "</b> from <b>"
-                + name + "</b></div></html>");
+            + "<b>" + AppCore.formatNumber(ps.typedAmount) + " CC</b> have been transferred to <b>" + to + "</b> from <b>"
+            + name + "</b></div></html>");
+        
         AppUI.setCommonFont(x);
  
         c.insets = new Insets(0, 0, 4, 0);
@@ -2054,7 +2055,16 @@ public class AdvancedClient  {
         String totalFailedValue = AppCore.formatNumber(ps.statFailedValue);
         String totalLostValue = AppCore.formatNumber(ps.statLostValue);
         
-        JLabel x = new JLabel("<html><div style='width:400px; text-align:center'>Deposited <b>" +  total +  " CloudCoins</b> to <b>" + ps.dstWallet.getName() + " </b></div></html>");
+        JLabel x;
+        if (ps.needExtra) {
+            x = new JLabel("<html><div style='width:400px; text-align:center'>"
+                + "You wanted <b>" + AppCore.formatNumber(ps.typedAmount) + " CC</b> but you got <b>" + total + " CC</b> "
+                + " because you did not have perfect change. The coin have been transferred to <b>" + ps.dstWallet.getName() + "</b> from <b>"
+                + "</b></div></html>");
+            
+        } else {
+            x = new JLabel("<html><div style='width:400px; text-align:center'>Deposited <b>" +  total +  " CloudCoins</b> to <b>" + ps.dstWallet.getName() + " </b></div></html>");
+        }
         AppUI.setCommonFont(x);
  
         int y = 0;
@@ -8554,6 +8564,9 @@ public class AdvancedClient  {
             String name = null;
             if (ps.srcWallet != null)
                 name = ps.srcWallet.getName();
+            
+            ps.needExtra = rr.needExtra;
+            ps.rrAmount = rr.amount;
             
             wl.debug(ltag, "rramount " + rr.amount + " typed " + ps.typedAmount + " name=" + name);
             sm.startGraderService(new GraderCb(), null, name);

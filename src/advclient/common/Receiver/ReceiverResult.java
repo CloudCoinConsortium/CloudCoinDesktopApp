@@ -9,6 +9,8 @@ public class ReceiverResult {
     public int totalCoins;
     public int totalCoinsProcessed;
     
+    public boolean needExtra;
+    
     public static int STATUS_PROCESSING = 1;
     public static int STATUS_FINISHED = 2;
     public static int STATUS_ERROR = 3;
@@ -28,5 +30,6 @@ public class ReceiverResult {
         amount = 0;
         memo = "Receive";
         status = STATUS_PROCESSING;
+        needExtra = false;
     }
 }
