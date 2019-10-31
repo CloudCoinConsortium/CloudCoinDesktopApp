@@ -728,7 +728,7 @@ public class Servant {
             if (amount == 0)
                 break;
             
-            if (i == 1 || exp_250 % 2 == 0) {
+            if (i == 1 || exp_250 == 0) {
                 if (loose)
                     break;
                 
