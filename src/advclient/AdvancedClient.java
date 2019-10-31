@@ -56,7 +56,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.19";
+    String version = "2.1.20";
 
     JPanel headerPanel;
     JPanel mainPanel;
