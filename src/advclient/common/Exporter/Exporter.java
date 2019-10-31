@@ -207,9 +207,6 @@ public class Exporter extends Servant {
 
             logger.info(ltag, "Loaded: " + bytes.length);
 
-            // Header
-            sb.append(Config.JPEG_MARKER);
-
             // Ans
             for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
                 sb.append(cc.ans[i]);
@@ -219,19 +216,13 @@ public class Exporter extends Servant {
             sb.append("00000000000000000000000000000000");
 
             // PownString
-            for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
-                sb.append("0");
-            }
-
-            // Append trailing zero
-            if (RAIDA.TOTAL_RAIDA_COUNT % 2 != 0)
-                sb.append("0");
-
+            sb.append("11111111111111111111111111");
+            
             // Append HC
             sb.append("00");
 
             // Append ED
-            sb.append("97E2");
+            sb.append("AC");//AC means nothing
 
             // NN
             sb.append("0" + cc.nn);
