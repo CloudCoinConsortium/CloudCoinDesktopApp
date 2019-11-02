@@ -544,9 +544,67 @@ public class ServantManager {
 	v.unvault(password, amount, null, new eVaulterCb(exportType, amount, tag, dir, keepSrc, cb));
     }
     
+    public int findNoteToChange(int needed, int b250, int b100, int b25, int b5, int b1) {
+        int totalReturn = 0;
+        int totalNeeded = needed;
+        int bankTotal = b250 * 250 + b100 * 100 + b25 * 25 + b5 * 5 + b1;
+        
+        logger.debug(ltag, "Finding note to change: " + needed + " 250s:" + b250 
+                + ", 100s: " + b100 + ", 25s: " +  b25 + ", 5s: " + b5 + ", 1s: " + b1);
+        
+        if (bankTotal < totalNeeded) {
+            logger.error(ltag, "Not enough bank total: " + bankTotal + " Wanted to send " + totalNeeded);
+            return -1;
+        }
+        
+        while (totalNeeded != totalReturn) {
+            if (b250 > 0 && totalNeeded >= 250) {
+                b250--;
+                totalNeeded -= 250;
+                totalReturn += 250;
+            } else if (b100 > 0 && totalNeeded >= 100) {
+                b100--;
+                totalNeeded -= 100;
+                totalReturn += 100;
+            } else if (b25 > 0 && totalNeeded >= 25) {
+                b25--;
+                totalNeeded -= 25;
+                totalReturn += 25;
+            } else if (b5 > 0 && totalNeeded >= 5) {
+                b5--;
+                totalNeeded -= 5;
+                totalReturn += 5;
+            } else if (b1 > 0 && totalNeeded >= 1) {
+                b1--;
+                totalNeeded -= 1;
+                totalReturn += 1;
+            } else {
+                if (b5 > 0)
+                    return 5;
+                
+                if (b25 > 0)
+                    return 25;
+                
+                if (b100 > 0)
+                    return 100;
+                
+                if (b250 > 0)
+                    return 250;
+                
+                logger.error(ltag, "Unable to find change");
+                return -1;
+            }
+        }
+        
+        logger.error(ltag, "No change required. Why did you call me?");
+        
+        return 0;
+    }
     
     public boolean makeChange(Wallet w, int amount, int skySN, CallbackInterface cb) {
         int min5sn, min25sn, min100sn, min250sn;
+        int b250, b100, b25, b5, b1;
+        
         makeChangeResult mcr = new makeChangeResult();
                 
         logger.debug(ltag, "Make Change");
@@ -564,6 +622,7 @@ public class ServantManager {
         }      
 
         min5sn = min25sn = min100sn = min250sn = 0;
+        b250 = b100 = b25 = b5 = b1 = 0;
         for (int i = 0; i < sns.length; i++) {
             CloudCoin cc = new CloudCoin(Config.DEFAULT_NN, sns[i]);
             int denomination = cc.getDenomination();
@@ -573,24 +632,51 @@ public class ServantManager {
             
             switch (denomination) {
                 case 5:
+                    b5++;
                     if (min5sn == 0 || min5sn < denomination) 
                         min5sn = sns[i];
                     break;
                 case 25:
+                    b25++;
                     if (min25sn == 0 || min25sn < denomination)
                         min25sn = sns[i];
                     break;
                 case 100:
+                    b100++;
                     if (min100sn == 0 || min100sn < denomination)
                         min100sn = sns[i];
                     break;
                 case 250:
+                    b250++;
                     if (min250sn == 0 || min250sn < denomination)
                         min250sn = sns[i];
                     break;
             }
         }
         
+        int rqDenom = findNoteToChange(amount, b250, b100, b25, b5, b1);
+        logger.debug(ltag, "rqDenom = " + rqDenom);
+        if (rqDenom <= 0) {
+            mcr.errText = "Failed to find a coin (SN) to make change";
+            if (cb != null)
+                cb.callback(mcr);
+            logger.error(ltag, "Failed to find a coin (SN) to change");
+            return false;
+        }
+        
+        int sn = 0;
+        for (int i = 0; i < sns.length; i++) {
+            CloudCoin cc = new CloudCoin(Config.DEFAULT_NN, sns[i]);
+            int denomination = cc.getDenomination();
+            
+            if (rqDenom == denomination) {
+                logger.debug(ltag, "Found denomination");
+                sn = cc.sn;
+                break;
+            }
+        }
+        
+        /*
         int[] ds = { min5sn, min25sn, min100sn, min250sn };
         int idx;
         if (amount < 5)
@@ -619,6 +705,7 @@ public class ServantManager {
             
             idx--;
         }
+        */
         
         if (sn == 0) {
             mcr.errText = "Failed to find a coin to make change";
