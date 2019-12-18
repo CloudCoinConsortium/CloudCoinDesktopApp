@@ -53,7 +53,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.21";
+    String version = "2.1.22";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -6870,6 +6870,16 @@ public class AdvancedClient  {
                     showScreen();
                     return;
                 }
+                
+                if (domain.indexOf(".") != -1) {
+                    ps.errText = "Dots are not allowed in Sky Wallet names";
+                    showScreen();
+                    return;
+                }
+                
+                System.out.println("d="+domain);
+                System.exit(1);
+                        
                 
                 final String newFileName = domain + "." + ps.trustedServer + ".stack";
                 final DNSSn d = new DNSSn(domain, ps.trustedServer, wl);
