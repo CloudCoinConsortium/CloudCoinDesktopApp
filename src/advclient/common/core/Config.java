@@ -186,6 +186,6 @@ public class Config {
     public static int MAX_COUNTERFEIT_RAIDAS_TO_SEND = 2;
     public static int MAX_FAILED_RAIDAS_TO_SEND = 2;
     
-
+    public static int MAX_EXPORTED_NOTES = 3000;
     
 }
