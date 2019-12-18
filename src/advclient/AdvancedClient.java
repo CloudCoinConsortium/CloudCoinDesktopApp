@@ -6876,11 +6876,7 @@ public class AdvancedClient  {
                     showScreen();
                     return;
                 }
-                
-                System.out.println("d="+domain);
-                System.exit(1);
-                        
-                
+ 
                 final String newFileName = domain + "." + ps.trustedServer + ".stack";
                 final DNSSn d = new DNSSn(domain, ps.trustedServer, wl);
                 int sn = d.getSN();
