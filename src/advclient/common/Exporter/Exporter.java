@@ -140,6 +140,21 @@ public class Exporter extends Servant {
         logger.debug(ltag, "Export isbackup " + keepSrc + " type " + type + " amount " + amount);
         
         if (type == Config.TYPE_STACK) {
+            if (!keepSrc) {
+                int totalNotes = coinsPicked.size();
+                if (totalNotes > Config.MAX_EXPORTED_NOTES) {
+                    er.status = ExporterResult.STATUS_ERROR;
+                    er.errText = "Exporting more than " +  Config.MAX_EXPORTED_NOTES 
+                            + " notes is not allowed. Try to export fewer coins";
+                    if (cb != null)
+                        cb.callback(er);
+                    
+                    return;
+                }
+            }
+            
+            System.out.println("cp="+coinsPicked.size());
+            System.exit(1);
             if (!exportStack(fullExportPath, tag)) {
                 er.status = ExporterResult.STATUS_ERROR;
                 if (cb != null)
