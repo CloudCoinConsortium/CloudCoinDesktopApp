@@ -1949,9 +1949,16 @@ public class AdvancedClient  {
             to = "?";
         }
         
-        String name = ps.srcWallet.getName();        
-        fname = AppUI.wrapDiv("<b>" + AppCore.formatNumber(ps.typedAmount) 
+        String name = ps.srcWallet.getName();  
+        if (ps.needExtra) {
+            String total = AppCore.formatNumber(ps.statToBankValue + ps.statFailedValue + ps.statLostValue);
+            fname = AppUI.wrapDiv("You wanted <b>" + AppCore.formatNumber(ps.typedAmount) + " CC</b> but you got <b>" + total + " CC</b>"
+                    + " because you did not have perfect change. "
+                    + "The coins have been transferred to <b>" + to + "</b> from <b>" + name + "</b>");
+        } else {
+            fname = AppUI.wrapDiv("<b>" + AppCore.formatNumber(ps.typedAmount) 
                 + " CC</b> have been transferred to <b>" + to + "</b> from <b>" + name + "</b>");     
+        }
         AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
         y++;     
                    
@@ -2006,12 +2013,8 @@ public class AdvancedClient  {
         String totalFailedValue = AppCore.formatNumber(ps.statFailedValue);
         String totalLostValue = AppCore.formatNumber(ps.statLostValue);
         
-        if (ps.needExtra) {
-            fname = AppUI.wrapDiv("You wanted <b>" + AppCore.formatNumber(ps.typedAmount) + " CC</b> but you got <b>" + total + " CC</b>"
-                    + " because you did not have perfect change. The coins have been transferred to <b>" + ps.dstWallet.getName() + "</b>");
-        } else {
-            fname = AppUI.wrapDiv("Deposited <b>" +  total +  " CloudCoins</b> to <b>" + ps.dstWallet.getName() + " </b>");  
-        }
+        
+        fname = AppUI.wrapDiv("Deposited <b>" +  total +  " CloudCoins</b> to <b>" + ps.dstWallet.getName() + " </b>");  
         AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
         y++;     
         
@@ -6815,7 +6818,10 @@ public class AdvancedClient  {
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {
                         ps.errText = "Operation Cancelled";
-                        ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
+                        if (isWithdrawing())
+                            ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                        else
+                            ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
                         showScreen();
                     }
                 });
@@ -7096,6 +7102,9 @@ public class AdvancedClient  {
                         if (isFixing()) {
                             ps.currentScreen = ProgramState.SCREEN_FIX_DONE;
                         } else {
+                        if (isWithdrawing())
+                            ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                        else
                             ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
                         }
                         showScreen();
