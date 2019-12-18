@@ -1986,9 +1986,19 @@ public class AdvancedClient  {
         //if (ps.srcWallet.isSkyWallet())
         //    name += "." + Config.DDNS_DOMAIN;
         
-        JLabel x = new JLabel("<html><div style='width:400px; text-align:center'>"
+        JLabel x;
+        
+        if (ps.needExtra) {
+            String total = AppCore.formatNumber(ps.statToBankValue + ps.statFailedValue + ps.statLostValue);
+            x = new JLabel("<html><div style='width:400px; text-align:center'>"
+                + "You wanted <b>" + AppCore.formatNumber(ps.typedAmount) + " CC</b> but you got <b>" + total + " CC</b> "
+                + " because you did not have perfect change. The coins have been transferred to <b>" + to + "</b> from <b>"
+                + name + "</b></div></html>");           
+        } else {
+            x = new JLabel("<html><div style='width:400px; text-align:center'>"
             + "<b>" + AppCore.formatNumber(ps.typedAmount) + " CC</b> have been transferred to <b>" + to + "</b> from <b>"
             + name + "</b></div></html>");
+        }
         
         AppUI.setCommonFont(x);
  
@@ -2057,15 +2067,8 @@ public class AdvancedClient  {
         String totalLostValue = AppCore.formatNumber(ps.statLostValue);
         
         JLabel x;
-        if (ps.needExtra) {
-            x = new JLabel("<html><div style='width:400px; text-align:center'>"
-                + "You wanted <b>" + AppCore.formatNumber(ps.typedAmount) + " CC</b> but you got <b>" + total + " CC</b> "
-                + " because you did not have perfect change. The coin have been transferred to <b>" + ps.dstWallet.getName() + "</b> from <b>"
-                + "</b></div></html>");
-            
-        } else {
-            x = new JLabel("<html><div style='width:400px; text-align:center'>Deposited <b>" +  total +  " CloudCoins</b> to <b>" + ps.dstWallet.getName() + " </b></div></html>");
-        }
+        x = new JLabel("<html><div style='width:400px; text-align:center'>Deposited <b>" +  total +  " CloudCoins</b> to <b>" + ps.dstWallet.getName() + " </b></div></html>");
+        
         AppUI.setCommonFont(x);
  
         int y = 0;
@@ -8027,7 +8030,10 @@ public class AdvancedClient  {
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {
                         ps.errText = "Operation Cancelled";
-                        ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
+                        if (isWithdrawing())
+                            ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                        else
+                            ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
                         showScreen();
                     }
                 });
@@ -8308,7 +8314,10 @@ public class AdvancedClient  {
                         if (isFixing()) {
                             ps.currentScreen = ProgramState.SCREEN_FIX_DONE;
                         } else {
-                            ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
+                            if (isWithdrawing())
+                                ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                            else
+                                ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
                         }
                         showScreen();
                     }
