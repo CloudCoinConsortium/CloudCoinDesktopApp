@@ -512,6 +512,9 @@ public class Servant {
             if (file.isDirectory())
                 continue;
 
+            if (!AppCore.hasCoinExtension(file))
+                continue;
+            
             logger.debug(ltag, "Parsing " + file);
 
             try {
@@ -573,6 +576,9 @@ public class Servant {
             if (file.isDirectory())
                 continue;
 
+            if (!AppCore.hasCoinExtension(file))
+                continue;
+            
             try {
                 cc = new CloudCoin(file.toString());
             } catch (JSONException e) {
@@ -643,6 +649,9 @@ public class Servant {
             if (file.isDirectory())
                 continue;
 
+            if (!AppCore.hasCoinExtension(file))
+                continue;
+            
             try {
                 cc = new CloudCoin(file.toString());
             } catch (JSONException e) {

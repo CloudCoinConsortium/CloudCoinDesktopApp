@@ -522,19 +522,30 @@ public class AppCore {
     }
 
     static public int getFilesCount(String dir, String user) {
-       String path = getUserDir(dir, user);
-       File rFile;
-       int rv;
+        String path = getUserDir(dir, user);
+        File rFile;
+        int rv;
 
-       try {
-           rFile = new File(path);
-           rv = rFile.listFiles().length;
-       } catch (Exception e) {
+        try {
+            rFile = new File(path);
+            //rv = rFile.listFiles().length;
+           
+            rv = 0;
+            for (File file: rFile.listFiles()) {
+                if (file.isDirectory())
+                    continue;
+            
+                if (!AppCore.hasCoinExtension(file))
+                    continue;
+                
+                rv++;
+            }               
+        } catch (Exception e) {
            logger.error(ltag, "Failed to read directory: " + e.getMessage());
            return 0;
-       }
+        }
 
-       return rv;
+        return rv;
     }
 
     static public String getMD5(String data) {
@@ -782,6 +793,9 @@ public class AppCore {
             if (file.isDirectory())
                 continue;
 
+            if (!AppCore.hasCoinExtension(file))
+                continue;
+            
             try {
                 cc = new CloudCoin(file.toString());
             } catch (JSONException e) {
@@ -1261,5 +1275,17 @@ public class AppCore {
       
         return 0;
     }
+    
+        
+    public static boolean hasCoinExtension(File file) {
+        String f = file.toString().toLowerCase();
+        if (f.endsWith(".stack") || f.endsWith(".jpg") || f.endsWith(".jpeg"))
+            return true;
+        
+        logger.debug(ltag, "Ignoring invalid extension " + file.toString());
+        
+        return false;        
+    }
+    
     
 }

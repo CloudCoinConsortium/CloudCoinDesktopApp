@@ -299,6 +299,9 @@ public class Authenticator extends Servant {
             if (file.isDirectory())
                 continue;
 
+            if (!AppCore.hasCoinExtension(file))
+                continue;
+            
             try {
                 cc = new CloudCoin(file.toString());
             } catch (JSONException e) {
@@ -317,6 +320,9 @@ public class Authenticator extends Servant {
             if (file.isDirectory())
                 continue;
 
+            if (!AppCore.hasCoinExtension(file))
+                continue;
+            
             try {
                 cc = new CloudCoin(file.toString());
             } catch (JSONException e) {
@@ -391,4 +397,5 @@ public class Authenticator extends Servant {
             cb.callback(ar);
 
     }
+
 }

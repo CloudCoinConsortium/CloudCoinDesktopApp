@@ -172,6 +172,9 @@ public class Sender extends Servant {
             if (file.isDirectory())
                 continue;
 
+            if (!AppCore.hasCoinExtension(file))
+                continue;
+            
             try {
                 cc = new CloudCoin(file.toString());
             } catch (JSONException e) {
