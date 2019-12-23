@@ -152,9 +152,7 @@ public class Exporter extends Servant {
                     return;
                 }
             }
-            
-            System.out.println("cp="+coinsPicked.size());
-            System.exit(1);
+
             if (!exportStack(fullExportPath, tag)) {
                 er.status = ExporterResult.STATUS_ERROR;
                 if (cb != null)
