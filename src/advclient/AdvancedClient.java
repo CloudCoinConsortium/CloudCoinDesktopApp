@@ -53,7 +53,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.22";
+    String version = "2.1.23";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -8413,6 +8413,10 @@ public class AdvancedClient  {
             
             if (sr.amount > 0) {
                 wl.debug(ltag, "sramount " + sr.amount + " typed " + ps.typedAmount);
+                
+                AppCore.appendSkySentCoinTransaction(ps.srcWallet.getName(), 
+                        ps.dstWallet.getName(), ps.dstWallet.getIDCoin().sn, sr.amount, ps.typedMemo);
+                
                 if (ps.typedAmount != sr.amount) {
                     ps.typedAmount = sr.amount;
                     ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;

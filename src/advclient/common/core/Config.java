@@ -188,4 +188,6 @@ public class Config {
     
     public static int MAX_EXPORTED_NOTES = 3000;
     
+    final public static String SENT_SKYCOINS_FILENAME = "sentcoins.csv";
+    
 }
