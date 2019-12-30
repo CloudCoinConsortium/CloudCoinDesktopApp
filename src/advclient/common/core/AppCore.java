@@ -996,21 +996,21 @@ public class AppCore {
     public static String getMS(int ms) {
         double dms = (double) ms / 1000;
         String s = String.format(Locale.US, "%.2f", dms);
-        
+
         if (s.charAt(0) == '0')
             s = s.substring(1, s.length());
 
         return s + " sec";
     }
-    
+
     public static String getRAIDAString(int idx) {
         String sidx;
-        
+
         if (idx < 10)
             sidx = "0" + idx;
         else
             sidx = "" + idx;
-     
+
         String[] countries = {
             "Australia",
             "Macedonia",
@@ -1038,7 +1038,7 @@ public class AppCore {
             "Germany",
             "Canada"
         };
-        
+
         if (idx > countries.length) {
             return sidx + " RAIDA";
         }
@@ -1068,7 +1068,7 @@ public class AppCore {
             if (cc.getDetectStatus(i) == CloudCoin.STATUS_PASS)
                 passed++;
         }
-    
+        
         cc.setPownStringFromDetectStatus();
         logger.debug(ltag, "Passed count " + passed + " cc " + cc.sn + " pown=" + cc.getPownString());
         
@@ -1276,28 +1276,65 @@ public class AppCore {
         return 0;
     }
     
-     public static void appendSkySentCoinTransaction(String from, String to, int tosn, int amount, String memo) {
+    public static void appendSkySentCoinTransaction(String from, String to, int tosn, int amount, String memo) {
         String rMemo = memo.replaceAll("\r\n", " ").replaceAll("\n", " ").replaceAll(",", " ");
         String fstr, result;
         String date = AppCore.getCurrentDate();
-
-        fstr = date + "," + from + "," + to + "," + tosn + "," + amount + "," +memo;
-
-        String fileName = AppCore.getLogDir() + File.separator + Config.SENT_SKYCOINS_FILENAME;
-        result = AppCore.loadFile(fileName);
-        if (result == null) {
-            logger.debug(ltag, "Failed to open transactions file for SentCoins");
+        
+        fstr = date + "," + from + "," + to + "," + tosn + "," + amount + "," +memo + ", closed";
+        
+        String fileName = AppCore.getLogDir() + File.separator + Config.SENT_SKYCOINS_FILENAME; 
+        logger.debug(ltag, "Append transaction: " + fstr + " s="+fileName);
+        
+        result = "\r\n" + fstr;
+        
+        if (!AppCore.saveFileAppend(fileName, result, true)) {
+            logger.debug(ltag, "Failed to write to the SkySent log. Maybe this file is open");
             return;
         }
-
-        System.out.println("str=" +fstr);
-        logger.debug(ltag, "Append transaction: " + fstr + " s="+fileName);
-
-        result += "\r\n" + fstr;
-
-        AppCore.saveFileAppend(fileName, result, true);
     }
-     
+
+    public static void rmSentCoins() {
+        String fileName = AppCore.getLogDir() + File.separator + Config.SENT_SKYCOINS_FILENAME;
+        File f = new File(fileName);
+        f.delete();
+    }
+    
+    public static String[][] getSentCoins() {
+        String fileName = AppCore.getLogDir() + File.separator + Config.SENT_SKYCOINS_FILENAME;
+        
+        String data = AppCore.loadFile(fileName);
+        if (data == null)
+            return null;
+        
+        String[] parts = data.split("\\r?\\n");
+        
+        String[] tmp;
+        
+        int j = 0;
+        for (int i = 0; i < parts.length; i++) {
+            tmp = parts[i].split(",");
+            if (tmp.length != 7) {
+                continue;
+            }
+            j++;
+        }
+
+        int r = 0;
+        String[][] rv = new String[j][];
+        for (int i = 0; i < parts.length; i++) {
+            tmp = parts[i].split(",");
+            if (tmp.length != 7) {
+                continue;
+            }
+
+            rv[r++] = tmp;
+        }
+        
+        return rv;         
+    }
+    
+    
     public static boolean hasCoinExtension(File file) {
         String f = file.toString().toLowerCase();
         if (f.endsWith(".stack") || f.endsWith(".jpg") || f.endsWith(".jpeg"))
@@ -1306,5 +1343,5 @@ public class AppCore {
         logger.debug(ltag, "Ignoring invalid extension " + file.toString());
         
         return false;        
-    } 
+    }
 }

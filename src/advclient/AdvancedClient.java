@@ -50,6 +50,7 @@ import javax.swing.plaf.ColorUIResource;
 import javax.swing.plaf.MenuItemUI;
 import javax.swing.plaf.basic.BasicScrollBarUI;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableCellRenderer;
 
 
 /**
@@ -4889,15 +4890,29 @@ public class AdvancedClient  {
         JLabel fname;
         int y = 0;
         
-        JPanel subInnerCore = getPanel("Sent Coins");                
-        GridBagLayout gridbag = new GridBagLayout();
-        subInnerCore.setLayout(gridbag);
+        showLeftScreen();
+        //JPanel subInnerCore = getPanel("Sent Coins");   
+        JPanel rightPanel = getRightPanel();
+        
+        JLabel xtrTitle = new JLabel("Sent Coins");
+
+
+       
+        AppUI.alignCenter(xtrTitle);
+        AppUI.alignTop(xtrTitle);
+        AppUI.setFont(xtrTitle, 30);
+        AppUI.setColor(xtrTitle, AppUI.getColor1());
+ 
+
+        rightPanel.add(xtrTitle);
+
+        rightPanel.add(AppUI.hr(22));
+        
+
+
+        //GridBagLayout gridbag = new GridBagLayout();
+        //subInnerCore.setLayout(gridbag);
                
-        fname = AppUI.wrapDiv("Sent Coins");   
-        AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
-        y++; 
-        
-        
         // Scrollbar & Table  
         DefaultTableCellRenderer r = new DefaultTableCellRenderer() {
             JLabel lbl;
@@ -4915,7 +4930,19 @@ public class AdvancedClient  {
                 lbl = (JLabel) this;
                 AppUI.setBackground(lbl, c);
                 AppUI.setColor(lbl, fgc);
-                lbl.setHorizontalAlignment(JLabel.LEFT);
+                if (column == 0)
+                    lbl.setHorizontalAlignment(JLabel.LEFT);
+                else if (column == 4) {
+                    lbl.setHorizontalAlignment(JLabel.RIGHT);
+                    String d = (String) value;
+                    try {
+                        String total = AppCore.formatNumber(Integer.parseInt(d));
+                        lbl.setText(total);
+                    } catch (NumberFormatException e) {
+                        
+                    }   
+                } else
+                    lbl.setHorizontalAlignment(JLabel.CENTER);
                 AppUI.setMargin(lbl, 8);
   
                 return lbl;
@@ -4927,25 +4954,65 @@ public class AdvancedClient  {
         if (serials == null) {
             return;
         }
-   
-        //serial number table
+        
         final JTable table = new JTable();
-        final JScrollPane scrollPane = AppUI.setupTable(table, new String[] {"Date", "From", "To", "SN", "Amount", "Memo"}, serials, r);
-        AppUI.setSize(scrollPane, 830, 285);
+        final TableCellRenderer hr = table.getTableHeader().getDefaultRenderer();
+        TableCellRenderer hrx = new TableCellRenderer() {
+                private JLabel lbl;
+                @Override
+                public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                    lbl = (JLabel) hr.getTableCellRendererComponent(table, value, true, true, row, column);
+                    //lbl.setHorizontalAlignment(SwingConstants.LEFT);
+
+                    if (column == 0)
+                        lbl.setHorizontalAlignment(SwingConstants.LEFT);
+                    else 
+                        lbl.setHorizontalAlignment(SwingConstants.CENTER);
+
+                    lbl.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, AppUI.getColor10()));
+                    lbl.setBorder(BorderFactory.createCompoundBorder(lbl.getBorder(), BorderFactory.createEmptyBorder(0, 6, 10, 0)));
+
+                    AppUI.setBackground(lbl, AppUI.getColor6());
+
+                    return lbl;
+                }
+        };
+        
+        //serial number table
+        
+        final JScrollPane scrollPane = AppUI.setupTable(table, new String[] {"Date", "From", "To", "SN", "Amount", "Memo"}, serials, r, hrx);
+        AppUI.setSize(scrollPane, 920, 325);
  
-        AppUI.getGBRow(subInnerCore, null, scrollPane, y, gridbag);
-        y++; 
+      
+       // AppUI.getGBRow(subInnerCore, null, scrollPane, y, gridbag);
+        //y++; 
         
         table.getColumnModel().getColumn(0).setPreferredWidth(120);
-        table.getColumnModel().getColumn(3).setPreferredWidth(10);
-        table.getColumnModel().getColumn(4).setPreferredWidth(10);
+        table.getColumnModel().getColumn(5).setPreferredWidth(120);
+      //  table.getColumnModel().getColumn(4).setPreferredWidth(10);
 
-
+ 
+        rightPanel.add(scrollPane);
+ 
+        JPanel subInnerCore = new JPanel();
+        AppUI.alignLeft(subInnerCore);
+        AppUI.noOpaque(subInnerCore);
+        rightPanel.add(subInnerCore);
+        
+        GridBagLayout gridbag = new GridBagLayout();
+        subInnerCore.setLayout(gridbag);
+        
+        
+        
+        
+        
+        
+        
         
         AppUI.GBPad(subInnerCore, y, gridbag);        
         y++;
         
-        AppUI.getTwoButtonPanel(subInnerCore, "Print", "", new ActionListener() {
+        AppUI.getTwoButtonPanel(subInnerCore, "", "Print", null, new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                     try {
                         table.print();
@@ -4953,7 +5020,7 @@ public class AdvancedClient  {
                         System.out.println("Failed to print");
                     }
                 }
-            }, null, y, gridbag);
+            }, y, gridbag);
              
         resetState();
     }
@@ -5017,7 +5084,7 @@ public class AdvancedClient  {
         
         //serial number table
         final JTable table = new JTable();
-        final JScrollPane scrollPane = AppUI.setupTable(table, new String[] {"Serial Number", "Denomination"}, serials, r);
+        final JScrollPane scrollPane = AppUI.setupTable(table, new String[] {"Serial Number", "Denomination"}, serials, r, null);
         AppUI.setSize(scrollPane, 460, 285);
  
         AppUI.getGBRow(subInnerCore, null, scrollPane, y, gridbag);
@@ -5321,7 +5388,7 @@ public class AdvancedClient  {
 
         
         final JTable table = new JTable();
-        final JScrollPane scrollPane = AppUI.setupTable(table, headers, trs, r);
+        final JScrollPane scrollPane = AppUI.setupTable(table, headers, trs, r, null);
         
         AppUI.alignLeft(scrollPane);
         

@@ -510,7 +510,8 @@ public class AppUI {
         return "- Local Folder";
     }
 
-    public static JScrollPane setupTable(JTable table, String[] columnNames, String[][] data, DefaultTableCellRenderer r) {
+    public static JScrollPane setupTable(JTable table, String[] columnNames, String[][] data, 
+            DefaultTableCellRenderer r, TableCellRenderer hrr) {
         final String[] fcolumnNames = columnNames;
         DefaultTableModel model = new DefaultTableModel(data.length, data[0].length - 1) {
             @Override
@@ -551,26 +552,29 @@ public class AppUI {
 
         
         final TableCellRenderer hr = table.getTableHeader().getDefaultRenderer();
-        header.setDefaultRenderer(new TableCellRenderer() {
-            private JLabel lbl;
-            @Override
-            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-                lbl = (JLabel) hr.getTableCellRendererComponent(table, value, true, true, row, column);
-                //lbl.setHorizontalAlignment(SwingConstants.LEFT);
+        if (hrr != null)
+            header.setDefaultRenderer(hrr);
+        else 
+            header.setDefaultRenderer(new TableCellRenderer() {
+                private JLabel lbl;
+                @Override
+                public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                    lbl = (JLabel) hr.getTableCellRendererComponent(table, value, true, true, row, column);
+                    //lbl.setHorizontalAlignment(SwingConstants.LEFT);
 
-                if (column == 0 || column == 1)
-                    lbl.setHorizontalAlignment(SwingConstants.LEFT);
-                else
-                    lbl.setHorizontalAlignment(SwingConstants.RIGHT);
+                    if (column == 0 || column == 1)
+                        lbl.setHorizontalAlignment(SwingConstants.LEFT);
+                    else
+                        lbl.setHorizontalAlignment(SwingConstants.RIGHT);
 
-                lbl.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, AppUI.getColor10()));
-                lbl.setBorder(BorderFactory.createCompoundBorder(lbl.getBorder(), BorderFactory.createEmptyBorder(0, 6, 10, 0)));
+                    lbl.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, AppUI.getColor10()));
+                    lbl.setBorder(BorderFactory.createCompoundBorder(lbl.getBorder(), BorderFactory.createEmptyBorder(0, 6, 10, 0)));
 
-                AppUI.setBackground(lbl, AppUI.getColor6());
+                    AppUI.setBackground(lbl, AppUI.getColor6());
 
-                return lbl;
-            }
-        });
+                    return lbl;
+                }
+            });
         
         
         //This is the wallet table size 
