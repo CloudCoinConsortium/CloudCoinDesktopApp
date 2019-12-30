@@ -1276,7 +1276,28 @@ public class AppCore {
         return 0;
     }
     
-        
+     public static void appendSkySentCoinTransaction(String from, String to, int tosn, int amount, String memo) {
+        String rMemo = memo.replaceAll("\r\n", " ").replaceAll("\n", " ").replaceAll(",", " ");
+        String fstr, result;
+        String date = AppCore.getCurrentDate();
+
+        fstr = date + "," + from + "," + to + "," + tosn + "," + amount + "," +memo;
+
+        String fileName = AppCore.getLogDir() + File.separator + Config.SENT_SKYCOINS_FILENAME;
+        result = AppCore.loadFile(fileName);
+        if (result == null) {
+            logger.debug(ltag, "Failed to open transactions file for SentCoins");
+            return;
+        }
+
+        System.out.println("str=" +fstr);
+        logger.debug(ltag, "Append transaction: " + fstr + " s="+fileName);
+
+        result += "\r\n" + fstr;
+
+        AppCore.saveFileAppend(fileName, result, true);
+    }
+     
     public static boolean hasCoinExtension(File file) {
         String f = file.toString().toLowerCase();
         if (f.endsWith(".stack") || f.endsWith(".jpg") || f.endsWith(".jpeg"))
@@ -1285,7 +1306,5 @@ public class AppCore {
         logger.debug(ltag, "Ignoring invalid extension " + file.toString());
         
         return false;        
-    }
-    
-    
+    } 
 }

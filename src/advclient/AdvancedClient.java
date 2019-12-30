@@ -56,7 +56,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.24";
+    String version = "2.1.25";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -666,7 +666,7 @@ public class AdvancedClient  {
         };
  
         String[] items = {"Backup", "List serials", "Clear History", "Fix Fracked", 
-            "Delete Wallet", "Show Folders", "Echo RAIDA", "Settings"};
+            "Delete Wallet", "Show Folders", "Echo RAIDA", "Settings", "Sent Coins"};
         for (int i = 0; i < items.length; i++) {
             JMenuItem menuItem = new JMenuItem(items[i]);
             menuItem.setActionCommand("" + i);
@@ -724,7 +724,10 @@ public class AdvancedClient  {
                         ps.currentScreen = ProgramState.SCREEN_ECHO_RAIDA;
                     } else if (action.equals("7")) {
                         ps.currentScreen = ProgramState.SCREEN_SETTINGS;
+                    } else if (action.equals("8")) {
+                        ps.currentScreen = ProgramState.SCREEN_SHOW_SENT_COINS;
                     }
+
                     showScreen();
                 }
             };
@@ -1012,8 +1015,9 @@ public class AdvancedClient  {
             case ProgramState.SCREEN_DEPOSIT_LEFTOVER:
                 showDepositLeftover();
                 break;
-
-
+            case ProgramState.SCREEN_SHOW_SENT_COINS:
+                showSentCoins();
+                break;
         }
         
         if (lwrapperPanel != null) {
@@ -3173,6 +3177,7 @@ public class AdvancedClient  {
             }
             
             wl.killMe();
+            AppCore.rmSentCoins();
             showScreen();
         }
     }
@@ -4877,6 +4882,80 @@ public class AdvancedClient  {
                 showScreen();
             }
         }, y, gridbag);
+    }
+    
+    public void showSentCoins() {
+        
+        JLabel fname;
+        int y = 0;
+        
+        JPanel subInnerCore = getPanel("Sent Coins");                
+        GridBagLayout gridbag = new GridBagLayout();
+        subInnerCore.setLayout(gridbag);
+               
+        fname = AppUI.wrapDiv("Sent Coins");   
+        AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
+        y++; 
+        
+        
+        // Scrollbar & Table  
+        DefaultTableCellRenderer r = new DefaultTableCellRenderer() {
+            JLabel lbl;
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                
+                Color c = AppUI.getColor6();
+                Color fgc = AppUI.getColor5();
+                if (table.isPaintingForPrint()) {
+                    c = AppUI.getColor5();
+                    fgc = Color.BLACK;
+                }
+                            
+                lbl = (JLabel) this;
+                AppUI.setBackground(lbl, c);
+                AppUI.setColor(lbl, fgc);
+                lbl.setHorizontalAlignment(JLabel.LEFT);
+                AppUI.setMargin(lbl, 8);
+  
+                return lbl;
+            }
+        };
+              
+
+        String[][] serials = AppCore.getSentCoins();
+        if (serials == null) {
+            return;
+        }
+   
+        //serial number table
+        final JTable table = new JTable();
+        final JScrollPane scrollPane = AppUI.setupTable(table, new String[] {"Date", "From", "To", "SN", "Amount", "Memo"}, serials, r);
+        AppUI.setSize(scrollPane, 830, 285);
+ 
+        AppUI.getGBRow(subInnerCore, null, scrollPane, y, gridbag);
+        y++; 
+        
+        table.getColumnModel().getColumn(0).setPreferredWidth(120);
+        table.getColumnModel().getColumn(3).setPreferredWidth(10);
+        table.getColumnModel().getColumn(4).setPreferredWidth(10);
+
+
+        
+        AppUI.GBPad(subInnerCore, y, gridbag);        
+        y++;
+        
+        AppUI.getTwoButtonPanel(subInnerCore, "Print", "", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                    try {
+                        table.print();
+                    } catch (PrinterException pe) {
+                        System.out.println("Failed to print");
+                    }
+                }
+            }, null, y, gridbag);
+             
+        resetState();
     }
     
     public void showListSerialsDone() {
@@ -7442,6 +7521,19 @@ public class AdvancedClient  {
                 });
                return;
             }
+
+            String dstName;
+            int sn;
+
+            if (ps.dstWallet != null) {
+                sn = ps.dstWallet.getIDCoin().sn;
+                dstName = ps.dstWallet.getName();
+            } else {
+                sn = ps.foundSN;
+                dstName = ps.typedRemoteWallet;
+            }
+
+            AppCore.appendSkySentCoinTransaction(ps.srcWallet.getName(), dstName, sn, ps.typedAmount, ps.typedMemo);
 
             ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
             showScreen();
