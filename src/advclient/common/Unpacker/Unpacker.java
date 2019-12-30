@@ -68,6 +68,9 @@ public class Unpacker extends Servant {
             if (file.isDirectory())
                 continue;
 
+            if (!AppCore.hasCoinExtension(file))
+                continue;
+            
             logger.debug(ltag, "Parsing " + file);
 
             try {
@@ -111,6 +114,9 @@ public class Unpacker extends Servant {
             if (file.isDirectory())
                 continue;
 
+            if (!AppCore.hasCoinExtension(file))
+                continue;
+            
             fileName = file.getName();
             index = fileName.lastIndexOf('.');
             if (index <= 0) {

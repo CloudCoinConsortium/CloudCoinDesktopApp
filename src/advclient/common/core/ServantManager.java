@@ -184,7 +184,7 @@ public class ServantManager {
         String[] idCoins = AppCore.getFilesInDir(AppCore.getIDDir(), null);
         
         for (int i = 0; i < idCoins.length; i++) {
-            if (idCoins[i].endsWith(".stack")) {
+            if (!idCoins[i].endsWith(".stack")) {
                 logger.info(ltag, "Skipping non-stack file in the ID folder: " + idCoins[i]);
                 continue;
             }

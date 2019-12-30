@@ -522,19 +522,30 @@ public class AppCore {
     }
 
     static public int getFilesCount(String dir, String user) {
-       String path = getUserDir(dir, user);
-       File rFile;
-       int rv;
+        String path = getUserDir(dir, user);
+        File rFile;
+        int rv;
 
-       try {
-           rFile = new File(path);
-           rv = rFile.listFiles().length;
-       } catch (Exception e) {
+        try {
+            rFile = new File(path);
+            //rv = rFile.listFiles().length;
+           
+            rv = 0;
+            for (File file: rFile.listFiles()) {
+                if (file.isDirectory())
+                    continue;
+            
+                if (!AppCore.hasCoinExtension(file))
+                    continue;
+                
+                rv++;
+            }               
+        } catch (Exception e) {
            logger.error(ltag, "Failed to read directory: " + e.getMessage());
            return 0;
-       }
+        }
 
-       return rv;
+        return rv;
     }
 
     static public String getMD5(String data) {
@@ -782,6 +793,9 @@ public class AppCore {
             if (file.isDirectory())
                 continue;
 
+            if (!AppCore.hasCoinExtension(file))
+                continue;
+            
             try {
                 cc = new CloudCoin(file.toString());
             } catch (JSONException e) {
@@ -1267,21 +1281,67 @@ public class AppCore {
         String fstr, result;
         String date = AppCore.getCurrentDate();
         
-        fstr = date + "," + from + "," + to + "," + tosn + "," + amount + "," +memo;
+        fstr = date + "," + from + "," + to + "," + tosn + "," + amount + "," +memo + ", closed";
         
-        String fileName = AppCore.getLogDir() + File.separator + Config.SENT_SKYCOINS_FILENAME;
-        result = AppCore.loadFile(fileName);
-        if (result == null) {
-            logger.debug(ltag, "Failed to open transactions file for SentCoins");
-            return;
-        }
-        
-        System.out.println("str=" +fstr);
+        String fileName = AppCore.getLogDir() + File.separator + Config.SENT_SKYCOINS_FILENAME; 
         logger.debug(ltag, "Append transaction: " + fstr + " s="+fileName);
         
-        result += "\r\n" + fstr;
+        result = "\r\n" + fstr;
         
-        AppCore.saveFileAppend(fileName, result, true);
+        if (!AppCore.saveFileAppend(fileName, result, true)) {
+            logger.debug(ltag, "Failed to write to the SkySent log. Maybe this file is open");
+            return;
+        }
+    }
+
+    public static void rmSentCoins() {
+        String fileName = AppCore.getLogDir() + File.separator + Config.SENT_SKYCOINS_FILENAME;
+        File f = new File(fileName);
+        f.delete();
     }
     
+    public static String[][] getSentCoins() {
+        String fileName = AppCore.getLogDir() + File.separator + Config.SENT_SKYCOINS_FILENAME;
+        
+        String data = AppCore.loadFile(fileName);
+        if (data == null)
+            return null;
+        
+        String[] parts = data.split("\\r?\\n");
+        
+        String[] tmp;
+        
+        int j = 0;
+        for (int i = 0; i < parts.length; i++) {
+            tmp = parts[i].split(",");
+            if (tmp.length != 7) {
+                continue;
+            }
+            j++;
+        }
+
+        int r = 0;
+        String[][] rv = new String[j][];
+        for (int i = 0; i < parts.length; i++) {
+            tmp = parts[i].split(",");
+            if (tmp.length != 7) {
+                continue;
+            }
+
+            rv[r++] = tmp;
+        }
+        
+        return rv;         
+    }
+    
+    
+    public static boolean hasCoinExtension(File file) {
+        String f = file.toString().toLowerCase();
+        if (f.endsWith(".stack") || f.endsWith(".jpg") || f.endsWith(".jpeg"))
+            return true;
+        
+        logger.debug(ltag, "Ignoring invalid extension " + file.toString());
+        
+        return false;        
+    }
 }

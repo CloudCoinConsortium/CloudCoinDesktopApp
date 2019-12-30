@@ -60,6 +60,9 @@ public class Grader extends Servant {
             if (file.isDirectory())
                 continue;
 
+            if (!AppCore.hasCoinExtension(file))
+                continue;
+            
             graded = true;
             try {
                 cc = new CloudCoin(file.toString());
