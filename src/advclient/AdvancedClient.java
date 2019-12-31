@@ -2070,6 +2070,7 @@ public class AdvancedClient  {
         String totalBankValue = AppCore.formatNumber(ps.statToBankValue);
         String totalFailedValue = AppCore.formatNumber(ps.statFailedValue);
         String totalLostValue = AppCore.formatNumber(ps.statLostValue);
+        String totalFailedFiles = AppCore.formatNumber(ps.failedFiles);
         
         JLabel x;
         x = new JLabel("<html><div style='width:400px; text-align:center'>Deposited <b>" +  total +  " CloudCoins</b> to <b>" + ps.dstWallet.getName() + " </b></div></html>");
@@ -2163,6 +2164,25 @@ public class AdvancedClient  {
             ct.add(x);
         
             x = new JLabel("" + ps.duplicates.size());
+            AppUI.setCommonBoldFont(x);
+            c.anchor = GridBagConstraints.WEST;
+            c.gridx = GridBagConstraints.RELATIVE;
+            c.gridy = y;
+            gridbag.setConstraints(x, c);
+            ct.add(x);
+        }
+        
+        if (ps.failedFiles > 0) {
+            x = new JLabel("Corrupted files:");
+            AppUI.setCommonFont(x);
+            c.anchor = GridBagConstraints.EAST;
+            c.insets = new Insets(10, 0, 4, 10);
+            c.gridx = 0;
+            c.gridy = y;
+            gridbag.setConstraints(x, c);
+            ct.add(x);
+        
+            x = new JLabel(totalFailedFiles);
             AppUI.setCommonBoldFont(x);
             c.anchor = GridBagConstraints.WEST;
             c.gridx = GridBagConstraints.RELATIVE;
@@ -4433,6 +4453,11 @@ public class AdvancedClient  {
         new FileDrop(null, ddPanel, new FileDrop.Listener() {
             public void filesDropped( java.io.File[] files ) {   
                 for( int i = 0; i < files.length; i++ ) {
+                    if (!AppCore.hasCoinExtension(files[i])) {
+                        ps.errText = "File must have .jpeg or .stack extension";
+                        maybeShowError(ct);
+                        return;
+                    }
                     ps.files.add(files[i].getAbsolutePath());
                 }
                 
@@ -7952,6 +7977,7 @@ public class AdvancedClient  {
             }
 
             ps.duplicates = ur.duplicates;
+            ps.failedFiles = ur.failedFiles;
             
             setRAIDAProgressCoins(0, 0, 0);
             sm.startAuthenticatorService(new AuthenticatorCb());

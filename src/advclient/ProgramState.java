@@ -157,6 +157,8 @@ public class ProgramState {
     
     int rrAmount;
     
+    int failedFiles;
+    
     public ProgramState() {
         currentScreen = SCREEN_AGREEMENT;
         cwalletRecoveryRequested = cwalletPasswordRequested = false;

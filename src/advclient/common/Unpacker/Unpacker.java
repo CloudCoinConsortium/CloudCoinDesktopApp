@@ -147,6 +147,7 @@ public class Unpacker extends Servant {
             if (!rv) {
                 logger.error(ltag, "Error processing file: " + fileName);
                 AppCore.moveToTrash(file.toString(), user);
+                globalResult.failedFiles++;
                 continue;
             }
         }

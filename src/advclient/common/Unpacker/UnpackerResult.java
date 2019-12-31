@@ -24,10 +24,12 @@ public class UnpackerResult {
     public ArrayList<CloudCoin> duplicates;
     
     public int status;
+    public int failedFiles;
     
     public UnpackerResult() {
         status = STATUS_PROCESSING;
         duplicates = new ArrayList<CloudCoin>();
+        failedFiles = 0;
     }
     
 }
