@@ -2017,6 +2017,7 @@ public class AdvancedClient  {
         String totalBankValue = AppCore.formatNumber(ps.statToBankValue);
         String totalFailedValue = AppCore.formatNumber(ps.statFailedValue);
         String totalLostValue = AppCore.formatNumber(ps.statLostValue);
+        String totalFailedFiles = AppCore.formatNumber(ps.failedFiles);
         
         
         fname = AppUI.wrapDiv("Deposited <b>" +  total +  " CloudCoins</b> to <b>" + ps.dstWallet.getName() + " </b>");  
@@ -2044,6 +2045,13 @@ public class AdvancedClient  {
             AppUI.getGBRow(subInnerCore, fname, value, y, gridbag);
             y++; 
         }       
+        
+        if (ps.failedFiles > 0) {
+            fname = new JLabel("Corrupted files:");
+            value = new JLabel(totalFailedFiles);
+            AppUI.getGBRow(subInnerCore, fname, value, y, gridbag);
+            y++; 
+        }   
         
         AppUI.GBPad(subInnerCore, y, gridbag);        
         y++;
@@ -3976,6 +3984,12 @@ public class AdvancedClient  {
         new FileDrop(null, ddPanel, new FileDrop.Listener() {
             public void filesDropped( java.io.File[] files ) {   
                 for( int i = 0; i < files.length; i++ ) {
+                    if (!AppCore.hasCoinExtension(files[i])) {
+                        ps.errText = "File must have .jpeg or .stack extension";
+                        showScreen();
+                        return;
+                    }
+
                     ps.files.add(files[i].getAbsolutePath());
                 }
                              
@@ -6797,6 +6811,7 @@ public class AdvancedClient  {
             }
 
             ps.duplicates = ur.duplicates;
+            ps.failedFiles = ur.failedFiles;
             
             //setRAIDAProgress(0, 0, AppCore.getFilesCount(Config.DIR_SUSPECT, sm.getActiveWallet().getName()));
             setRAIDAProgressCoins(0, 0, 0);
