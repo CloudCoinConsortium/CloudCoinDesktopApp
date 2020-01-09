@@ -53,7 +53,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.25";
+    String version = "2.1.26";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -1275,7 +1275,8 @@ public class AdvancedClient  {
             y++;
             String txt = "<html><div style='width:460px'>TIMED OUT means the response exceeded the " + Config.ECHO_TIMEOUT / 1000 + " seconds allowed. "
                 + "This could be caused by a slow network or because the RAIDA was blocked (usually by office routers). "
-                + "Try changing your settings to increase the Timeout.</div></html>";  
+                + "It could also be caused by your computer being old and unable to handle 25 threads at once. "
+                + "Try changing your settings to increase the Timeout. Or try using a more powerful computer.</div></html>";  
 
             x = new JLabel(txt);
             AppUI.setCommonTableFontSize(x, fontSize);      
