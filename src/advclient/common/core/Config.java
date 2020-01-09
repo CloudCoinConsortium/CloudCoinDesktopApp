@@ -189,5 +189,6 @@ public class Config {
     public static int MAX_EXPORTED_NOTES = 3000;
     
     final public static String SENT_SKYCOINS_FILENAME = "sentcoins.csv";
-    
+  
+    final public static int NEGATIVE_AMOUNT_FOR_COUNTERFEIT = -1;
 }
