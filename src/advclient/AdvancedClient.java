@@ -4435,8 +4435,53 @@ public class AdvancedClient  {
         final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(AppUI.getColor6(), "Make Selection", rv.options);
         cboxfrom.setDefault(null);
         AppUI.getGBRow(subInnerCore, fname, cboxfrom.getComboBox(), y, gridbag);
+        cboxfrom.addOption(AppUI.getLocalFolderOption());
         y++;
         
+        final JLabel lfText = new JLabel("Local folder");
+        final JFileChooser chooser = new JFileChooser();
+        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        chooser.setAcceptAllFileFilterUsed(false);
+     
+        final MyTextField localFolder = new MyTextField("Select Folder", false, true);
+        localFolder.setFilepickerListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (!Config.DEFAULT_EXPORT_DIR.isEmpty())
+                    chooser.setCurrentDirectory(new File(Config.DEFAULT_EXPORT_DIR));
+
+                int returnVal = chooser.showOpenDialog(null);
+                if (returnVal == JFileChooser.APPROVE_OPTION) {       
+                    ps.chosenFile = chooser.getSelectedFile().getAbsolutePath();
+                    localFolder.setData(chooser.getSelectedFile().getName());
+                }
+            }
+        });
+        AppUI.getGBRow(subInnerCore, lfText, localFolder.getTextField(), y, gridbag);
+        y++;
+        
+        
+        localFolder.getTextField().setVisible(false);
+        lfText.setVisible(false);
+        
+        
+        cboxfrom.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                int dstIdx = cboxfrom.getSelectedIndex() - 1;
+                
+                localFolder.getTextField().setVisible(false);
+                lfText.setVisible(false);
+       
+                // Remote Wallet
+                if (dstIdx == rv.idxs.length) {
+                    localFolder.getTextField().setVisible(true);
+                    lfText.setVisible(true);                  
+                    return;
+                }
+
+            }
+        });
+
         AppUI.GBPad(subInnerCore, y, gridbag);        
         y++;
        
@@ -4447,7 +4492,13 @@ public class AdvancedClient  {
             }
         }, new ActionListener() {
             public void actionPerformed(ActionEvent e) {              
-                int srcIdx = cboxfrom.getSelectedIndex() - 1;              
+                int srcIdx = cboxfrom.getSelectedIndex() - 1;   
+                if (srcIdx == rv.idxs.length) {
+                    ps.currentScreen = ProgramState.SCREEN_LIST_SERIALS_DONE;
+                    showScreen();
+                    return;
+                }
+
                 if (srcIdx < 0 || srcIdx >= rv.idxs.length) {
                     ps.errText = "Please select Wallet";
                     showScreen();
@@ -5049,17 +5100,37 @@ public class AdvancedClient  {
         GridBagLayout gridbag = new GridBagLayout();
         subInnerCore.setLayout(gridbag);
         
-        final Wallet w = ps.srcWallet;  
-        int[] sns = w.getSNs();
-        if (sns.length == 0) {
-            fname = new JLabel("No Serials");
+        final Wallet w = ps.srcWallet; 
+        int[] sns;
+        
+        if (w != null) {
+            sns = w.getSNs();
+            if (sns.length == 0) {
+                fname = new JLabel("No Serials");
+                AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
+                return;
+            }
+        
+            fname = AppUI.wrapDiv("Wallet <b>" + w.getName() + " - " + w.getTotal() + " CC</b>");   
+            AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
+            y++; 
+        } else if (ps.chosenFile == null) {
+            fname = new JLabel("No Folder or Wallet chosen");
             AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
             return;
+        } else {
+            CloudCoin[] ccs = AppCore.getCoinsInDir(ps.chosenFile);
+            if (ccs == null) {
+                fname = new JLabel("Failed to read folder " + ps.chosenFile);
+                AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
+                return;
+            }
+
+            sns = new int[ccs.length];
+            for (int i = 0; i < ccs.length; i++) {
+                sns[i] = ccs[i].sn;
+            }
         }
-        
-        fname = AppUI.wrapDiv("Wallet <b>" + w.getName() + " - " + w.getTotal() + " CC</b>");   
-        AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
-        y++; 
         
         
         // Scrollbar & Table  
