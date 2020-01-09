@@ -39,7 +39,7 @@ public class Validator {
     }
     
     public static boolean memo(String tag) {
-        Pattern p = Pattern.compile("[\\w ]+", Pattern.UNICODE_CHARACTER_CLASS);
+        Pattern p = Pattern.compile("[-_=\\.\\w ]+", Pattern.UNICODE_CHARACTER_CLASS);
         Matcher m = p.matcher(tag);
         
         return m.matches();
