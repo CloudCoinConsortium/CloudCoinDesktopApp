@@ -1344,4 +1344,52 @@ public class AppCore {
         
         return false;        
     }
+    
+    public static CloudCoin[] getCoinsInDir(String dir) {
+        File dirObj = new File(dir);
+        if (!dirObj.exists()) {
+            return null;
+        }
+        
+        int c = 0;
+        for (File file: dirObj.listFiles()) {
+            if (file.isDirectory())
+                continue;
+            
+            if (!AppCore.hasCoinExtension(file))
+                continue;
+               
+            CloudCoin cc;
+            try {
+                cc = new CloudCoin(file.getAbsolutePath());
+            } catch (JSONException e) {
+                continue;
+            }
+                    
+            c++;
+        }
+        
+        int i = 0;
+        CloudCoin[] ccs = new CloudCoin[c];
+        for (File file: dirObj.listFiles()) {
+            if (file.isDirectory())
+                continue;
+            
+            if (!AppCore.hasCoinExtension(file))
+                continue;
+            
+            CloudCoin cc;
+            try {
+                 cc = new CloudCoin(file.getAbsolutePath());
+            } catch (JSONException e) {
+                continue;
+            }
+                
+            ccs[i] = cc;
+            i++;
+        }
+        
+        return ccs;
+    }
+ 
 }
