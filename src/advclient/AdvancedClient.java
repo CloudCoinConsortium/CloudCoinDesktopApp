@@ -8069,9 +8069,9 @@ public class AdvancedClient  {
             ps.statFailed = gr.totalCounterfeit;
             ps.statLost = gr.totalLost + gr.totalUnchecked;
             ps.receiptId = gr.receiptId;
-            
+                     
+            Wallet w = sm.getActiveWallet();
             if (ps.statToBankValue != 0) {
-                Wallet w = sm.getActiveWallet();
                 Wallet wsrc = ps.srcWallet;
                 if (wsrc != null && wsrc.isSkyWallet()) {
                     wl.debug(ltag, "Appending sky transactions");
@@ -8108,6 +8108,15 @@ public class AdvancedClient  {
                 } else {
                     w.appendTransaction(ps.typedMemo, ps.statToBankValue, ps.receiptId);
                 }
+            } else {
+                // StatToBank == 0
+                String memo = "";
+                if (ps.statFailedValue > 0) {
+                    memo = AppCore.formatNumber(ps.statFailedValue) + " Counterfeit";                   
+                } else {
+                    memo = "Failed to Import";
+                }
+                w.appendTransaction(memo, Config.NEGATIVE_AMOUNT_FOR_COUNTERFEIT, "dummy");
             }
             
             EventQueue.invokeLater(new Runnable() {         

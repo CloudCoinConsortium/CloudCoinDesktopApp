@@ -214,6 +214,9 @@ public class Wallet implements Comparable<Wallet> {
         if (amount == 0)
             return;
         
+        if (amount == Config.NEGATIVE_AMOUNT_FOR_COUNTERFEIT)
+            amount = 0;
+        
         String fileName = getTransactionsFileName();
         String rMemo = memo.replaceAll("\r\n", " ").replaceAll("\n", " ").replaceAll(",", " ");
         //String sAmount = Integer.toString(amount);
