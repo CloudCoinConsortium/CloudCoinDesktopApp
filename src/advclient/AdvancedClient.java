@@ -3572,11 +3572,15 @@ public class AdvancedClient  {
         c.gridx = GridBagConstraints.RELATIVE;
         c.gridy = y;     
         
+        if (ps.chosenFile.isEmpty())
+            ps.chosenFile = Config.DEFAULT_EXPORT_DIR;
+
         final JFileChooser chooser = new JFileChooser();
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         chooser.setAcceptAllFileFilterUsed(false);
      
         final MyTextField localFolder = new MyTextField("Select Folder", false, true);
+        localFolder.setData(new File(ps.chosenFile).getName());
         localFolder.setFilepickerListener(new MouseAdapter() {
             @Override
             public void mouseReleased(MouseEvent e) {
@@ -3587,6 +3591,8 @@ public class AdvancedClient  {
                 if (returnVal == JFileChooser.APPROVE_OPTION) {       
                     ps.chosenFile = chooser.getSelectedFile().getAbsolutePath();
                     localFolder.setData(chooser.getSelectedFile().getName());
+                    Config.DEFAULT_EXPORT_DIR = ps.chosenFile;
+                    AppCore.writeConfig();
                 }
             }
         });
@@ -3860,6 +3866,12 @@ public class AdvancedClient  {
                         return;
                     }         
                 } else if (dstIdx == rvTo.idxs.length + 1) {
+                    if (ps.typedMemo.isEmpty()) {
+                        ps.errText = "Memo cannot be empty";
+                        showScreen();
+                        return;
+                    }
+
                     if (!Validator.memo(ps.typedMemo)) {
                         ps.errText = "Memo: special characters not allowed! Use numbers and letters only";
                         showScreen();
@@ -6657,6 +6669,7 @@ public class AdvancedClient  {
         oct.add(ddnsServer.getTextField());        
         y++;
         
+        /*
         // Export Dir
         c.gridx = GridBagConstraints.RELATIVE;
         c.gridy = y;   
@@ -6693,6 +6706,7 @@ public class AdvancedClient  {
         oct.add(localFolder.getTextField());   
    
         y++;
+        */
         
         JPanel bp = getTwoButtonPanel(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -6760,7 +6774,7 @@ public class AdvancedClient  {
                 
                 
                 Config.DDNSSN_SERVER = ddnssn;
-                Config.DEFAULT_EXPORT_DIR = ps.chosenFile;
+                //Config.DEFAULT_EXPORT_DIR = ps.chosenFile;
                 Config.DEFAULT_MAX_COINS_MULTIDETECT = notes;
                 Config.FIX_FRACKED_TIMEOUT = fixt * 1000;
                 Config.MULTI_DETECT_TIMEOUT = detectt * 1000;
