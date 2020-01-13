@@ -53,7 +53,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.27 ";
+    String version = "2.1.27";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -623,7 +623,7 @@ public class AdvancedClient  {
         };
  
         String[] items = {"Backup", "List serials", "Clear History", "Fix Fracked", 
-            "Delete Wallet", "Show Folders", "Echo RAIDA", "Settings", "Sent Coins"};
+            "Delete Wallet", "Show Folders", "Echo RAIDA", "Settings", "Sent Coins", "Export Keys"};
         for (int i = 0; i < items.length; i++) {
             JMenuItem menuItem = new JMenuItem(items[i]);
             menuItem.setActionCommand("" + i);
@@ -683,6 +683,8 @@ public class AdvancedClient  {
                         ps.currentScreen = ProgramState.SCREEN_SETTINGS;
                     } else if (action.equals("8")) {
                         ps.currentScreen = ProgramState.SCREEN_SHOW_SENT_COINS;                        
+                    } else if (action.equals("9")) {
+                        ps.currentScreen = ProgramState.SCREEN_SHOW_BACKUP_KEYS; 
                     }
                     showScreen();
                 }
@@ -976,6 +978,12 @@ public class AdvancedClient  {
                 break;
             case ProgramState.SCREEN_SHOW_SENT_COINS:
                 showSentCoins();
+                break;
+            case ProgramState.SCREEN_SHOW_BACKUP_KEYS:
+                showBackupKeys();
+                break;
+            case ProgramState.SCREEN_SHOW_BACKUP_KEYS_DONE:
+                showBackupKeysDone();
                 break;
         }
         
@@ -1847,6 +1855,36 @@ public class AdvancedClient  {
         resetState();
         
         subInnerCore.add(bp);       
+    }
+    
+    public void showBackupKeysDone() {
+        boolean isError = !ps.errText.equals("");
+        JPanel subInnerCore;
+        
+        if (isError) {
+            subInnerCore = getModalJPanel("Error");
+            AppUI.hr(subInnerCore, 32);
+            maybeShowError(subInnerCore);
+            resetState();
+            return;
+        }
+        
+        subInnerCore = getModalJPanel("Export Complete");
+        maybeShowError(subInnerCore);
+        
+        if (Desktop.isDesktopSupported()) {
+            try {
+                Desktop.getDesktop().open(new File(ps.chosenFile));
+            } catch (IOException e) {
+                wl.error(ltag, "Failed to open browser: " + e.getMessage());
+            }
+        }
+
+        JPanel bp = this.getOneButtonPanel();
+        resetState();
+        
+        subInnerCore.add(bp);     
+    
     }
     
     public void showBackupDoneScreen() {
@@ -5624,6 +5662,126 @@ public class AdvancedClient  {
         
     }
     
+    public void showBackupKeys() {
+        showLeftScreen();
+        
+        JPanel rightPanel = getRightPanel();    
+        JPanel ct = new JPanel();
+        AppUI.setBoxLayout(ct, true);
+        AppUI.noOpaque(ct);
+        rightPanel.add(ct);
+        
+        JLabel ltitle = AppUI.getTitle("Export Keys");   
+        ct.add(ltitle);
+        
+        maybeShowError(ct);
+           
+        String[] idCoins = AppCore.getFilesInDir(AppCore.getIDDir(), null);
+        if (idCoins.length == 0) {
+            JLabel nx = new JLabel("You have no keys to backup");
+            AppUI.setSemiBoldFont(nx, 20);
+            AppUI.alignCenter(nx);
+            ct.add(nx);
+            return;
+        }
+
+        // GridHolder Container
+        JPanel gct = new JPanel();
+        AppUI.noOpaque(gct);
+   
+        GridBagLayout gridbag = new GridBagLayout();
+        gct.setLayout(gridbag);   
+        GridBagConstraints c = new GridBagConstraints();    
+        
+        int y = 0;
+        
+        // Text
+        c.anchor = GridBagConstraints.CENTER;
+        c.insets = new Insets(0, 0, 80, 0); 
+        c.gridx = 0;
+        c.gridy = y;
+        c.gridwidth = 2;
+
+        JLabel l = new JLabel("Keys will not be encrypted. You should put them in a secure location");
+        AppUI.setCommonFont(l);
+        gridbag.setConstraints(l, c); 
+        gct.add(l);
+        
+        y++;
+        c.gridwidth = 1;
+ 
+        
+        
+        // Backup folder
+        JLabel txt = new JLabel("Backup Folder");
+        AppUI.setCommonFont(txt);
+        AppUI.alignCenter(txt);
+        c.insets = new Insets(0, 116, 10, 0);
+        c.anchor = GridBagConstraints.EAST;
+        c.gridx = 0;
+        c.gridy = y;
+        
+        gridbag.setConstraints(txt, c);
+        gct.add(txt);
+              
+        
+        final JFileChooser chooser = new JFileChooser();
+        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        chooser.setAcceptAllFileFilterUsed(false);
+        final MyTextField tf1 = new MyTextField("", false, true);
+        tf1.disable();
+        tf1.setFilepickerListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                int returnVal = chooser.showOpenDialog(null);
+                if (returnVal == JFileChooser.APPROVE_OPTION) {       
+                    ps.chosenFile = chooser.getSelectedFile().getAbsolutePath();
+                    tf1.setData(chooser.getSelectedFile().getName());
+                }
+            }
+        });
+        
+        c.insets = new Insets(0, 16, 10, 0);
+        c.anchor = GridBagConstraints.WEST;
+        c.gridx = GridBagConstraints.RELATIVE;;
+        c.gridy = y;
+        gridbag.setConstraints(tf1.getTextField(), c);
+        gct.add(tf1.getTextField());
+        
+
+        
+        rightPanel.add(gct); 
+
+        JPanel bp = getTwoButtonPanel(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {                      
+                if (ps.chosenFile.isEmpty()) {
+                    ps.errText = "Folder is not chosen";
+                    showScreen();
+                    return;
+                }
+                
+                for (int i = 0; i < idCoins.length; i++) {
+                    String src = AppCore.getIDDir() + File.separator + idCoins[i];
+                    String dst = ps.chosenFile + File.separator + idCoins[i];
+                    
+                    if (!AppCore.copyFile(src, dst)) {
+                        ps.errText = "Failed to copy file: " + idCoins[i];
+                        showScreen();
+                        return;
+                    }
+
+                }
+                
+                ps.currentScreen = ProgramState.SCREEN_SHOW_BACKUP_KEYS_DONE;
+                showScreen();
+            }
+        });
+        
+        AppUI.hr(rightPanel, 20);
+        rightPanel.add(bp); 
+        
+    }
+    
     public void showBackupScreen() {
         showLeftScreen();
         
@@ -6038,7 +6196,7 @@ public class AdvancedClient  {
         
         // File saver
         if (ps.sendType == ProgramState.SEND_TYPE_FOLDER) {
-             if (Desktop.isDesktopSupported()) {
+            if (Desktop.isDesktopSupported()) {
                 try {
                     Desktop.getDesktop().open(new File(ps.chosenFile));
                 } catch (IOException e) {
