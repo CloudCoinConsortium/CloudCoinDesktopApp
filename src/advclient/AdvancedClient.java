@@ -1872,13 +1872,52 @@ public class AdvancedClient  {
         subInnerCore = getModalJPanel("Export Complete");
         maybeShowError(subInnerCore);
         
-        if (Desktop.isDesktopSupported()) {
-            try {
-                Desktop.getDesktop().open(new File(ps.chosenFile));
-            } catch (IOException e) {
-                wl.error(ltag, "Failed to open browser: " + e.getMessage());
+        JPanel ct = new JPanel();
+        AppUI.noOpaque(ct);
+        subInnerCore.add(ct);
+        
+        GridBagLayout gridbag = new GridBagLayout();
+        GridBagConstraints c = new GridBagConstraints();      
+        ct.setLayout(gridbag);
+        
+        int y = 0;
+        
+        JLabel x = new JLabel("<html><div style='width:400px; text-align:center'>" +
+            "Your ID keys have been backed up into" +
+            "</div></html>");
+          
+        AppUI.setCommonFont(x);
+ 
+        c.insets = new Insets(0, 0, 4, 0);
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+        
+        y++;
+        
+        
+        final String fdir = ps.chosenFile;
+        JLabel sl = AppUI.getHyperLink(fdir, "javascript:void(0); return false", 20);
+        sl.addMouseListener(new MouseAdapter() {
+            public void mouseReleased(MouseEvent e) {
+                if (!Desktop.isDesktopSupported())
+                    return;
+                try {
+                    Desktop.getDesktop().open(new File(fdir));
+                } catch (IOException ie) {
+                    wl.error(ltag, "Failed to open browser: " + ie.getMessage());
+                }
             }
-        }
+        });
+        
+        c.insets = new Insets(0, 0, 4, 0);
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+        gridbag.setConstraints(sl, c);
+        ct.add(sl);
+        
+        y++;
 
         JPanel bp = this.getOneButtonPanel();
         resetState();
