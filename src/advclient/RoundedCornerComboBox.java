@@ -7,6 +7,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.geom.*;
+import java.awt.image.BufferedImage;
 import java.util.*;
 import javax.accessibility.*;
 import javax.imageio.ImageIO;
@@ -385,7 +386,8 @@ class ColorArrowUI extends BasicComboBoxUI {
 
         //button.setBounds(100,100,100,100);
         try {
-            Image img = ImageIO.read(getClass().getClassLoader().getResource("resources/arrow.png"));
+            BufferedImage img = ImageIO.read(getClass().getClassLoader().getResource("resources/arrow.png"));
+            AppUI.invertImage(img);
             button.setIcon(new ImageIcon(img));
             button.setForeground(background);
             button.setText(" ");
