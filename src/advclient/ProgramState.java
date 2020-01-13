@@ -64,6 +64,8 @@ public class ProgramState {
     final public static int SCREEN_WARN_FRACKED_TO_SEND = 46;
     final public static int SCREEN_DEPOSIT_LEFTOVER = 47;
     final public static int SCREEN_SHOW_SENT_COINS = 48;
+    final public static int SCREEN_SHOW_BACKUP_KEYS = 49;
+    final public static int SCREEN_SHOW_BACKUP_KEYS_DONE = 50;
     
     
     final static int CB_STATE_INIT = 1;
