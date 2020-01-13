@@ -109,9 +109,10 @@ public class MyTextField  {
         if (isPassword) {
             tf.hide();        
             try {
-                Image img;
+                BufferedImage img;
             
-                img = ImageIO.read(getClass().getClassLoader().getResource("resources/eye.png"));       
+                img = ImageIO.read(getClass().getClassLoader().getResource("resources/eye.png"));   
+                AppUI.invertImage(img);
                 imgEye = new ImageIcon(img);
             } catch (Exception ex) {
 
@@ -130,9 +131,10 @@ public class MyTextField  {
             AppUI.setHandCursor(label);
         } else if (isFilepicker) {
             try {
-                Image img;
+                BufferedImage img;
             
-                img = ImageIO.read(getClass().getClassLoader().getResource("resources/lg0.png"));       
+                img = ImageIO.read(getClass().getClassLoader().getResource("resources/lg0.png"));   
+                AppUI.invertImage(img);
                 imgEye = new ImageIcon(img);
             } catch (Exception ex) {
 
