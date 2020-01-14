@@ -182,9 +182,10 @@ public class ServantManager {
     
     public void checkIDCoins() {
         String[] idCoins = AppCore.getFilesInDir(AppCore.getIDDir(), null);
+        String coinExt = ".stack";
         
         for (int i = 0; i < idCoins.length; i++) {
-            if (!idCoins[i].endsWith(".stack")) {
+            if (!idCoins[i].endsWith(coinExt)) {
                 logger.info(ltag, "Skipping non-stack file in the ID folder: " + idCoins[i]);
                 continue;
             }
@@ -199,13 +200,13 @@ public class ServantManager {
             
             int dots = 0;
             
-            String wname = idCoins[i].substring(0, idCoins[i].indexOf('.'));
+            String wname = idCoins[i].substring(0, idCoins[i].length() - coinExt.length());
             for (int y = 0; y < wname.length(); y++) {
                 if (wname.charAt(y) == '.')
                     dots++;
             }
 
-            if (dots <= 2)
+            if (dots < 2)
                 wname += "." + Config.DDNS_DOMAIN;
 
             initCloudWallet(cc, wname);
@@ -1156,16 +1157,10 @@ public class ServantManager {
         Collection c = wallets.values();
 
         Iterator itr = c.iterator();
-        while (itr.hasNext()) {
+        while (itr.hasNext()) {                     
             Wallet tw = (Wallet) itr.next();
             if (tw.getName().equals(walletName)) 
-                return tw;
-            
-            if (tw.isSkyWallet()) {
-                String name = tw.getName() + "." + Config.DDNS_DOMAIN;
-                if (name.equals(walletName))
-                    return tw;
-            }                
+                return tw;            
         }
         
         return null;
