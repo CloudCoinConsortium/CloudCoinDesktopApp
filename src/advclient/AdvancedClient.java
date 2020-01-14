@@ -3200,8 +3200,8 @@ public class AdvancedClient  {
 			AppCore.getTotal(counters[Config.IDX_FOLDER_FRACKED]) +
                         AppCore.getTotal(counters[Config.IDX_FOLDER_VAULT]);
 
-                        walletSetTotal(w, totalCnt);
                         w.setCounters(counters);
+                        walletSetTotal(w, totalCnt);
                         setTotalCoins();
                         
                         wl.debug(ltag, "ShowEnvelopeCoins return");
@@ -3219,8 +3219,8 @@ public class AdvancedClient  {
 			AppCore.getTotal(counters[Config.IDX_FOLDER_FRACKED]) +
                         AppCore.getTotal(counters[Config.IDX_FOLDER_VAULT]);
 
-                        walletSetTotal(w, totalCnt);
                         w.setCounters(counters);
+                        walletSetTotal(w, totalCnt);
                         setTotalCoins();
                     }
                 });                
