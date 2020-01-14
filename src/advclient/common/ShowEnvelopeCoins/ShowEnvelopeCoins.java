@@ -152,6 +152,12 @@ public class ShowEnvelopeCoins extends Servant {
                 logger.debug(ltag, "Wallet " + sn + " raida" + i + " coin#" + j + " sn=" +rsn + " t=" + tag + " ts="+ts);
             }  
         }
+        
+        if (isCancelled()) {
+            result.status = ShowEnvelopeCoinsResult.STATUS_CANCELLED;
+            logger.error(ltag, "ShowCoins cancelled p. 2");
+            return;
+        }
       
         int vsns[] = AppCore.getSNSOverlap(sns);
         if (vsns == null) {
