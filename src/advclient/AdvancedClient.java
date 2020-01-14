@@ -7600,10 +7600,15 @@ public class AdvancedClient  {
                     ps.dstWallet.getName(), ps.dstWallet.getIDCoin().sn, sr.amount, ps.typedMemo);
 
                 if (ps.typedAmount != sr.amount) {
-                    ps.typedAmount = sr.amount;
-                    ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
-                    ps.errText = "Not all coins were sent. Please check the logs";
-                    showScreen();
+                    EventQueue.invokeLater(new Runnable() {         
+                        public void run() {
+                            ps.typedAmount = sr.amount;
+                            ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                            ps.errText = "Not all coins were sent. Please check the logs";
+                            showScreen();
+                            return;
+                        }
+                    });
                     return;
                 }
                 
