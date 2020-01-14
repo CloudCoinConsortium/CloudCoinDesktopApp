@@ -2065,10 +2065,7 @@ public class AdvancedClient  {
             to = "?";
         }
         
-        String name = ps.srcWallet.getName();
-        //if (ps.srcWallet.isSkyWallet())
-        //    name += "." + Config.DDNS_DOMAIN;
-        
+        String name = ps.srcWallet.getName();      
         JLabel x;
         
         if (ps.needExtra) {
@@ -2800,8 +2797,6 @@ public class AdvancedClient  {
         ct.add(x);
 
         String name = ps.srcWallet.getName();
-        //if (ps.srcWallet.isSkyWallet())
-        //    name += "." + Config.DDNS_DOMAIN;
         
         x = new JLabel(name);
         AppUI.setCommonBoldFont(x);
@@ -2815,10 +2810,7 @@ public class AdvancedClient  {
         
         String to;
         if (ps.sendType == ProgramState.SEND_TYPE_WALLET) {
-            name = ps.dstWallet.getName();
-            //if (ps.dstWallet.isSkyWallet())
-            //    name += "." + Config.DDNS_DOMAIN;
-            
+            name = ps.dstWallet.getName();            
             to = name;
             
         } else if (ps.sendType == ProgramState.SEND_TYPE_REMOTE) {
@@ -7086,7 +7078,6 @@ public class AdvancedClient  {
         
         String[] options = {
             Config.DDNS_DOMAIN,
-        //    "Enter Custom Server"
         };
         
         c.anchor = GridBagConstraints.WEST;
