@@ -623,7 +623,7 @@ public class AdvancedClient  {
         };
  
         String[] items = {"Backup", "List serials", "Clear History", "Fix Fracked", 
-            "Delete Wallet", "Show Folders", "Echo RAIDA", "Settings", "Sent Coins", "Export Keys"};
+            "Delete Wallet", "Show Folders", "Echo RAIDA", "Settings", "Sent Coins", "Export Keys", "Bill Pay"};
         for (int i = 0; i < items.length; i++) {
             JMenuItem menuItem = new JMenuItem(items[i]);
             menuItem.setActionCommand("" + i);
@@ -685,6 +685,8 @@ public class AdvancedClient  {
                         ps.currentScreen = ProgramState.SCREEN_SHOW_SENT_COINS;                        
                     } else if (action.equals("9")) {
                         ps.currentScreen = ProgramState.SCREEN_SHOW_BACKUP_KEYS; 
+                    } else if (action.equals("10")) {
+                        ps.currentScreen = ProgramState.SCREEN_SHOW_BILL_PAY; 
                     }
                     showScreen();
                 }
@@ -984,6 +986,12 @@ public class AdvancedClient  {
                 break;
             case ProgramState.SCREEN_SHOW_BACKUP_KEYS_DONE:
                 showBackupKeysDone();
+                break;
+            case ProgramState.SCREEN_SHOW_BILL_PAY:
+                showBillPayScreen();
+                break;
+            case ProgramState.SCREEN_SHOW_CONFIRM_BILL_PAY:
+                showConfirmBillPay();
                 break;
         }
         
@@ -2773,6 +2781,186 @@ public class AdvancedClient  {
         subInnerCore.add(bp); 
     }
     
+    public void showConfirmBillPay() {
+        JPanel subInnerCore = getModalJPanel("Bill Pay Confirmation");
+     
+        // Container
+        JPanel ct = new JPanel();
+        AppUI.noOpaque(ct);
+        subInnerCore.add(ct);
+        
+        GridBagLayout gridbag = new GridBagLayout();
+        GridBagConstraints c = new GridBagConstraints();      
+        ct.setLayout(gridbag);
+        
+        int y = 0;
+        // From Label
+        JLabel x = new JLabel("From:   ");
+        AppUI.setCommonFont(x);
+        c.anchor = GridBagConstraints.EAST;
+        c.insets = new Insets(0, 0, 4, 0); 
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+
+        String name = ps.srcWallet.getName();
+        
+        x = new JLabel(name);
+        AppUI.setCommonBoldFont(x);
+        c.anchor = GridBagConstraints.WEST;
+        c.gridx = GridBagConstraints.RELATIVE;;
+        c.gridy = y;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+               
+        y++;
+        
+        String to;
+        if (ps.sendType == ProgramState.SEND_TYPE_WALLET) {
+            name = ps.dstWallet.getName();            
+            to = name;
+            
+        } else if (ps.sendType == ProgramState.SEND_TYPE_REMOTE) {
+            to = ps.typedRemoteWallet;
+        } else if (ps.sendType == ProgramState.SEND_TYPE_FOLDER) {
+            to = ps.chosenFile;
+
+        } else {
+            to = "?";
+        }
+        
+        if (to.length() > 24) {
+            to = to.substring(0, 24) + "...";
+        }
+        
+        
+        // To Label
+        x = new JLabel("To:   ");
+        AppUI.setCommonFont(x);
+        c.anchor = GridBagConstraints.EAST;
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+
+        x = new JLabel(to);
+        AppUI.setCommonBoldFont(x);
+        c.anchor = GridBagConstraints.WEST;
+        c.gridx = GridBagConstraints.RELATIVE;;
+        c.gridy = y;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+               
+        y++;
+        
+        
+        
+        // Amount
+        x = new JLabel("Amount:   ");
+        AppUI.setCommonFont(x);
+        c.insets = new Insets(32, 0, 4, 0);
+        c.anchor = GridBagConstraints.EAST;
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+
+        x = new JLabel(ps.typedAmount + " CC");
+        AppUI.setCommonBoldFont(x);
+        c.anchor = GridBagConstraints.WEST;
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+               
+        y++;
+        
+        String memo = ps.typedMemo;
+        if (memo.length() > 24) {
+            memo = memo.substring(0, 24) + "...";
+        }
+        
+        // Memo
+        x = new JLabel("Memo:   ");
+        AppUI.setCommonFont(x);
+        c.insets = new Insets(0, 0, 4, 0);
+        c.anchor = GridBagConstraints.EAST;
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+
+        x = new JLabel(memo);
+        AppUI.setCommonBoldFont(x);
+        c.anchor = GridBagConstraints.WEST;
+        c.gridx = GridBagConstraints.RELATIVE;;
+        c.gridy = y;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+               
+        y++; 
+        
+        
+        // Q
+        x = new JLabel("Do you wish to continue?");
+        AppUI.setCommonFont(x);
+        c.insets = new Insets(32, 0, 4, 0);
+        c.anchor = GridBagConstraints.CENTER;
+        c.gridx = GridBagConstraints.RELATIVE;;
+        c.gridy = y;
+        c.gridwidth = 2;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+               
+        y++; 
+             
+        JPanel bp = getTwoButtonPanel(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                ps.srcWallet.setPassword(ps.typedSrcPassword);
+                
+                sm.setActiveWalletObj(ps.srcWallet);
+                if (ps.sendType == ProgramState.SEND_TYPE_FOLDER) {                
+                    if (ps.srcWallet.isEncrypted()) {
+                        sm.startSecureExporterService(Config.TYPE_STACK, ps.typedAmount, ps.typedMemo, ps.chosenFile, false, new ExporterCb());
+                    } else {
+                        sm.startExporterService(Config.TYPE_STACK, ps.typedAmount, ps.typedMemo, ps.chosenFile, false, new ExporterCb());
+                    }
+                    ps.currentScreen = ProgramState.SCREEN_EXPORTING;
+                    ps.isSkyDeposit = false;
+                    showScreen();
+                } else if (ps.sendType == ProgramState.SEND_TYPE_WALLET) {
+                    ps.dstWallet.setPassword(ps.typedDstPassword);              
+                    ps.currentScreen = ProgramState.SCREEN_SENDING;
+                    if (ps.srcWallet.isSkyWallet()) {
+                        ps.isSkyDeposit = true;
+                    } else {
+                        ps.isSkyDeposit = false;
+                    }
+                    showScreen();
+                } else if (ps.sendType == ProgramState.SEND_TYPE_REMOTE) {              
+                    DNSSn d = new DNSSn(ps.typedRemoteWallet, null, wl);
+                    int sn = d.getSN();
+                    if (sn < 0) {
+                        ps.errText = "Failed to query receiver. Check that the name is valid";
+                        ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                        showScreen();
+                        return;
+                    }
+                    
+                    ps.foundSN = sn;
+                    ps.isSkyDeposit = false;
+                    ps.currentScreen = ProgramState.SCREEN_SENDING;
+                    showScreen();
+                }
+            }
+        });
+  
+        
+        subInnerCore.add(bp);    
+        
+    }
+    
     public void showConfirmTransferScreen() {
         JPanel subInnerCore = getModalJPanel("Transfer Confirmation");
      
@@ -3488,8 +3676,7 @@ public class AdvancedClient  {
                 + "Go to tools and then Show Folders to see the location of your " + folder + " Folder. Then cut your coins from the folder and put them in a place where you can find them. "
                 + "Please click cancel below to reset. Then deposit them again.</div></html>";
     }
-    
-    
+        
     
     public void showTransferScreen() {
         showLeftScreen();
@@ -4040,6 +4227,227 @@ public class AdvancedClient  {
                 
                 ps.currentScreen = ProgramState.SCREEN_CONFIRM_TRANSFER;
                 showScreen();
+            }
+        });
+        
+        AppUI.hr(rightPanel, 20);
+        rightPanel.add(bp);   
+    }
+    
+    
+    public void showBillPayScreen() {
+        showLeftScreen();
+        JPanel rightPanel = getRightPanel();    
+    
+        JPanel ct = new JPanel();
+        AppUI.setBoxLayout(ct, true);
+        AppUI.noOpaque(ct);
+        rightPanel.add(ct);
+        
+        JLabel ltitle = AppUI.getTitle("Bill Pay");   
+        ct.add(ltitle);
+        AppUI.alignTop(ct);
+        AppUI.alignTop(ltitle);
+        
+        AppUI.hr(ct, 10);
+
+        
+        maybeShowError(ct);
+        
+        // Outer Container
+        JPanel oct = new JPanel();
+        AppUI.noOpaque(oct);
+        
+        int y = 0;
+        
+        GridBagLayout gridbag = new GridBagLayout();
+        GridBagConstraints c = new GridBagConstraints(); 
+        c.gridwidth = 1;
+        c.anchor = GridBagConstraints.EAST;
+        c.insets = new Insets(12, 18, 0, 0); 
+        oct.setLayout(gridbag);
+        
+        
+        // Pay from
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;   
+        JLabel x = new JLabel("         Pay From");
+        gridbag.setConstraints(x, c);
+        AppUI.setCommonFont(x);
+        oct.add(x);
+        
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;     
+ 
+        
+        final optRv rvFrom = setOptionsForWalletsCommon(false, false, true, null);
+        if (rvFrom.idxs.length == 0) {
+            ps.errText = "No Wallets to Transfer From";
+            maybeShowError(ct);
+            return;
+        }
+        
+        final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(AppUI.getColor2(), "Make Selection", rvFrom.options);
+        gridbag.setConstraints(cboxfrom.getComboBox(), c);
+        oct.add(cboxfrom.getComboBox());
+        
+        y++;
+
+        // Password From
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;   
+        final JLabel spText = new JLabel("Password");
+        gridbag.setConstraints(spText, c);
+        AppUI.setCommonFont(spText);
+        oct.add(spText);
+        
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;     
+        final MyTextField passwordSrc = new MyTextField("Wallet Password", true);
+        gridbag.setConstraints(passwordSrc.getTextField(), c);
+        oct.add(passwordSrc.getTextField());     
+        y++;
+        
+        passwordSrc.getTextField().setVisible(false);
+        spText.setVisible(false);
+        
+        
+        
+        // Local folder
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;   
+        final JLabel lfText = new JLabel("Local folder");
+        gridbag.setConstraints(lfText, c);
+        AppUI.setCommonFont(lfText);
+        oct.add(lfText);
+        
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;     
+
+
+        final JFileChooser chooser = new JFileChooser();
+        chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        chooser.setAcceptAllFileFilterUsed(false);
+        FileNameExtensionFilter filter = new FileNameExtensionFilter("CloudCoins", "csv");
+        chooser.setFileFilter(filter);
+     
+        final MyTextField localFolder = new MyTextField("Select Folder", false, true);
+        localFolder.setData(new File(ps.chosenFile).getName());
+        localFolder.setFilepickerListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (!Config.DEFAULT_EXPORT_DIR.isEmpty())
+                    chooser.setCurrentDirectory(new File(Config.DEFAULT_EXPORT_DIR));
+                
+                int returnVal = chooser.showOpenDialog(null);
+                if (returnVal == JFileChooser.APPROVE_OPTION) {       
+                    ps.chosenFile = chooser.getSelectedFile().getAbsolutePath();
+                    localFolder.setData(chooser.getSelectedFile().getName());
+                    Config.DEFAULT_EXPORT_DIR = ps.chosenFile;
+                    AppCore.writeConfig();
+                }
+            }
+        });
+        gridbag.setConstraints(localFolder.getTextField(), c);
+        oct.add(localFolder.getTextField());     
+        y++;
+       
+        rightPanel.add(oct);
+
+        cboxfrom.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                int srcIdx = cboxfrom.getSelectedIndex() - 1;
+                if (srcIdx < 0 || srcIdx >= wallets.length) 
+                    return;
+                
+                srcIdx = rvFrom.idxs[srcIdx];
+                Wallet srcWallet = wallets[srcIdx];
+                if (srcWallet == null)
+                    return;
+
+                if (srcWallet.isEncrypted()) {                 
+                    passwordSrc.getTextField().setVisible(true);
+                    spText.setVisible(true);
+                } else {
+                    passwordSrc.getTextField().setVisible(false);
+                    spText.setVisible(false);
+                }          
+            }
+        });
+        
+
+        if (ps.srcWallet != null && ps.selectedFromIdx > 0) {
+            cboxfrom.setDefaultIdx(ps.selectedFromIdx);
+        }
+
+        // Space
+        AppUI.hr(oct, 22);
+        
+        JPanel bp = getTwoButtonPanel(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                int srcIdx = cboxfrom.getSelectedIndex() - 1;
+
+                
+                ps.selectedFromIdx = cboxfrom.getSelectedIndex();
+                if (srcIdx < 0 || srcIdx >= rvFrom.idxs.length) {                    
+                    ps.errText = "Please select From Wallet";
+                    showScreen();
+                    return;
+                }
+                
+                srcIdx = rvFrom.idxs[srcIdx];                  
+                Wallet srcWallet = wallets[srcIdx];
+                ps.srcWallet = srcWallet;
+                ps.typedMemo = ps.typedMemo.trim();
+                if (!ps.typedMemo.isEmpty()) {
+                    if (!Validator.memo(ps.typedMemo)) {
+                        ps.errText = "Memo: special characters not allowed! Use numbers and letters only";
+                        showScreen();
+                        return;
+                    }
+                }
+
+                if (srcWallet.isEncrypted()) {
+                    if (passwordSrc.getText().isEmpty()) {
+                        ps.errText = "From Password is empty";
+                        showScreen();
+                        return;
+                    }
+                    
+                    String wHash = srcWallet.getPasswordHash();
+                    String providedHash = AppCore.getMD5(passwordSrc.getText());
+                    if (wHash == null) {
+                        ps.errText = "From Wallet is corrupted";
+                        showScreen();
+                        return;
+                    }
+                    
+                    if (!wHash.equals(providedHash)) {
+                        ps.errText = "From Password is incorrect";
+                        showScreen();
+                        return;
+                    } 
+                    
+                    ps.typedSrcPassword = passwordSrc.getText();
+                }
+
+                // File
+                if (ps.chosenFile.isEmpty()) {
+                    ps.errText = "Folder is not chosen";
+                    showScreen();
+                    return;
+                }
+                    
+                if (ps.srcWallet.isSkyWallet()) {
+                    ps.errText = "Transfer from Sky Wallet to Local Folder is not supported yet";
+                    showScreen();
+                    return;
+                }
+
+                setActiveWallet(ps.srcWallet);
+                ps.currentScreen = ProgramState.SCREEN_SHOW_CONFIRM_BILL_PAY;
+                showScreen();
+                return;
             }
         });
         
