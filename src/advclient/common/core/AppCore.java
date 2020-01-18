@@ -1392,4 +1392,36 @@ public class AppCore {
         return ccs;
     }
  
+    public static String[][] parseBillPayCsv(String filename) {
+        String [][] rvs;
+        BufferedReader reader;
+        ArrayList<String> as = new ArrayList<String>();
+	try {            
+            reader = new BufferedReader(new FileReader(filename));
+            String line = reader.readLine();
+            while (line != null) {
+                as.add(line);
+		line = reader.readLine();
+            }
+            reader.close();
+            
+            int i = 0;
+            rvs = new String[as.size()][];
+            for (String s : as) {
+                String[] parts = s.split(",");
+                if (parts.length != 9) {
+                    logger.debug(ltag, "Failed to parse string: " + s);
+                    return null;
+                }
+                
+                rvs[i++] = parts;
+            }
+            
+	} catch (IOException e) {
+            logger.debug(ltag, "Failed to read file: " + filename + ": " +e.getMessage());
+            return null;
+	}
+        
+        return rvs;
+    }
 }

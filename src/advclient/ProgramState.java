@@ -165,6 +165,8 @@ public class ProgramState {
     
     int failedFiles;
     
+    String[][] billpays;
+    
     public ProgramState() {
         currentScreen = SCREEN_AGREEMENT;
         cwalletRecoveryRequested = cwalletPasswordRequested = false;
@@ -237,6 +239,8 @@ public class ProgramState {
         needExtra = false;
         
         rrAmount = 0;
+        
+        billpays = null;
     }
  
     public String toString() {

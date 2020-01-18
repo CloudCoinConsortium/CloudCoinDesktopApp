@@ -53,7 +53,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.27";
+    String version = "2.1.28";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -2793,12 +2793,14 @@ public class AdvancedClient  {
         GridBagConstraints c = new GridBagConstraints();      
         ct.setLayout(gridbag);
         
+       
+        
         int y = 0;
         // From Label
         JLabel x = new JLabel("From:   ");
         AppUI.setCommonFont(x);
         c.anchor = GridBagConstraints.EAST;
-        c.insets = new Insets(0, 0, 4, 0); 
+        c.insets = new Insets(10, 0, 4, 0); 
         c.gridx = GridBagConstraints.RELATIVE;
         c.gridy = y;
         gridbag.setConstraints(x, c);
@@ -2816,104 +2818,45 @@ public class AdvancedClient  {
                
         y++;
         
-        String to;
-        if (ps.sendType == ProgramState.SEND_TYPE_WALLET) {
-            name = ps.dstWallet.getName();            
-            to = name;
-            
-        } else if (ps.sendType == ProgramState.SEND_TYPE_REMOTE) {
-            to = ps.typedRemoteWallet;
-        } else if (ps.sendType == ProgramState.SEND_TYPE_FOLDER) {
-            to = ps.chosenFile;
 
-        } else {
-            to = "?";
+        
+        String v = "<html>";
+        for (int i = 0; i < ps.billpays.length; i++) {
+            v += "<p style=\"font-size:10px\">" + ps.billpays[i][0] + ": " + ps.billpays[i][1] + ": " + ps.billpays[i][1] + ": " + ps.billpays[i][2] + " : " + ps.billpays[i][3]  + " : " + ps.billpays[i][4] +
+                    ps.billpays[i][5] + ": " + ps.billpays[i][6] + ": " + ps.billpays[i][7] + " : " + ps.billpays[i][8] + "</p><br>";
         }
-        
-        if (to.length() > 24) {
-            to = to.substring(0, 24) + "...";
-        }
-        
-        
-        // To Label
-        x = new JLabel("To:   ");
-        AppUI.setCommonFont(x);
-        c.anchor = GridBagConstraints.EAST;
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = y;
-        gridbag.setConstraints(x, c);
-        ct.add(x);
-
-        x = new JLabel(to);
+        v+="</html>";
+        x = new JLabel(v);
+        AppUI.noOpaque(x);
         AppUI.setCommonBoldFont(x);
         c.anchor = GridBagConstraints.WEST;
-        c.gridx = GridBagConstraints.RELATIVE;;
-        c.gridy = y;
-        gridbag.setConstraints(x, c);
-        ct.add(x);
-               
-        y++;
-        
-        
-        
-        // Amount
-        x = new JLabel("Amount:   ");
-        AppUI.setCommonFont(x);
-        c.insets = new Insets(32, 0, 4, 0);
-        c.anchor = GridBagConstraints.EAST;
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = y;
-        gridbag.setConstraints(x, c);
-        ct.add(x);
-
-        x = new JLabel(ps.typedAmount + " CC");
-        AppUI.setCommonBoldFont(x);
-        c.anchor = GridBagConstraints.WEST;
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = y;
-        gridbag.setConstraints(x, c);
-        ct.add(x);
-               
-        y++;
-        
-        String memo = ps.typedMemo;
-        if (memo.length() > 24) {
-            memo = memo.substring(0, 24) + "...";
-        }
-        
-        // Memo
-        x = new JLabel("Memo:   ");
-        AppUI.setCommonFont(x);
-        c.insets = new Insets(0, 0, 4, 0);
-        c.anchor = GridBagConstraints.EAST;
-        c.gridx = GridBagConstraints.RELATIVE;
-        c.gridy = y;
-        gridbag.setConstraints(x, c);
-        ct.add(x);
-
-        x = new JLabel(memo);
-        AppUI.setCommonBoldFont(x);
-        c.anchor = GridBagConstraints.WEST;
-        c.gridx = GridBagConstraints.RELATIVE;;
-        c.gridy = y;
-        gridbag.setConstraints(x, c);
-        ct.add(x);
-               
-        y++; 
-        
-        
-        // Q
-        x = new JLabel("Do you wish to continue?");
-        AppUI.setCommonFont(x);
-        c.insets = new Insets(32, 0, 4, 0);
-        c.anchor = GridBagConstraints.CENTER;
         c.gridx = GridBagConstraints.RELATIVE;;
         c.gridy = y;
         c.gridwidth = 2;
-        gridbag.setConstraints(x, c);
-        ct.add(x);
-               
-        y++; 
+        
+
+        JPanel jp = new JPanel();
+        jp.add(x);
+        JScrollBar scrollBar = new JScrollBar(JScrollBar.VERTICAL) {
+            @Override
+            public boolean isVisible() {
+                return true;
+            }
+        };
+        
+        JScrollPane scrollPane = new JScrollPane(jp);
+        scrollPane.setVerticalScrollBar(scrollBar);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(42);
+        scrollPane.getViewport().setOpaque(false);
+        scrollPane.setOpaque(false);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        AppUI.setSize(scrollPane, 600, 260);
+        
+        gridbag.setConstraints(scrollPane, c);
+        ct.add(scrollPane);
+
+        y++;
              
         JPanel bp = getTwoButtonPanel(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -4310,20 +4253,17 @@ public class AdvancedClient  {
         
         passwordSrc.getTextField().setVisible(false);
         spText.setVisible(false);
-        
-        
-        
+   
         // Local folder
         c.gridx = GridBagConstraints.RELATIVE;
         c.gridy = y;   
-        final JLabel lfText = new JLabel("Local folder");
+        final JLabel lfText = new JLabel("CSV File");
         gridbag.setConstraints(lfText, c);
         AppUI.setCommonFont(lfText);
         oct.add(lfText);
         
         c.gridx = GridBagConstraints.RELATIVE;
         c.gridy = y;     
-
 
         final JFileChooser chooser = new JFileChooser();
         chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
@@ -4381,8 +4321,7 @@ public class AdvancedClient  {
         }
 
         // Space
-        AppUI.hr(oct, 22);
-        
+        AppUI.hr(oct, 22);       
         JPanel bp = getTwoButtonPanel(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 int srcIdx = cboxfrom.getSelectedIndex() - 1;
@@ -4390,7 +4329,7 @@ public class AdvancedClient  {
                 
                 ps.selectedFromIdx = cboxfrom.getSelectedIndex();
                 if (srcIdx < 0 || srcIdx >= rvFrom.idxs.length) {                    
-                    ps.errText = "Please select From Wallet";
+                    ps.errText = "Please select Wallet";
                     showScreen();
                     return;
                 }
@@ -4398,18 +4337,10 @@ public class AdvancedClient  {
                 srcIdx = rvFrom.idxs[srcIdx];                  
                 Wallet srcWallet = wallets[srcIdx];
                 ps.srcWallet = srcWallet;
-                ps.typedMemo = ps.typedMemo.trim();
-                if (!ps.typedMemo.isEmpty()) {
-                    if (!Validator.memo(ps.typedMemo)) {
-                        ps.errText = "Memo: special characters not allowed! Use numbers and letters only";
-                        showScreen();
-                        return;
-                    }
-                }
 
                 if (srcWallet.isEncrypted()) {
                     if (passwordSrc.getText().isEmpty()) {
-                        ps.errText = "From Password is empty";
+                        ps.errText = "Password is empty";
                         showScreen();
                         return;
                     }
@@ -4417,13 +4348,13 @@ public class AdvancedClient  {
                     String wHash = srcWallet.getPasswordHash();
                     String providedHash = AppCore.getMD5(passwordSrc.getText());
                     if (wHash == null) {
-                        ps.errText = "From Wallet is corrupted";
+                        ps.errText = "Wallet is corrupted";
                         showScreen();
                         return;
                     }
                     
                     if (!wHash.equals(providedHash)) {
-                        ps.errText = "From Password is incorrect";
+                        ps.errText = "Password is incorrect";
                         showScreen();
                         return;
                     } 
@@ -4444,6 +4375,14 @@ public class AdvancedClient  {
                     return;
                 }
 
+                String[][] s = AppCore.parseBillPayCsv(ps.chosenFile);
+                if (s == null) {
+                    ps.errText = "Failed to parse file. Make sure it is formatted corretly";
+                    showScreen();
+                    return;
+                }
+                
+                ps.billpays = s;
                 setActiveWallet(ps.srcWallet);
                 ps.currentScreen = ProgramState.SCREEN_SHOW_CONFIRM_BILL_PAY;
                 showScreen();
