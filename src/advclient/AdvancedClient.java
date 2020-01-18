@@ -2836,6 +2836,7 @@ public class AdvancedClient  {
         
 
         JPanel jp = new JPanel();
+        AppUI.noOpaque(jp);
         jp.add(x);
         JScrollBar scrollBar = new JScrollBar(JScrollBar.VERTICAL) {
             @Override
@@ -4271,7 +4272,7 @@ public class AdvancedClient  {
         FileNameExtensionFilter filter = new FileNameExtensionFilter("CloudCoins", "csv");
         chooser.setFileFilter(filter);
      
-        final MyTextField localFolder = new MyTextField("Select Folder", false, true);
+        final MyTextField localFolder = new MyTextField("Select File", false, true);
         localFolder.setData(new File(ps.chosenFile).getName());
         localFolder.setFilepickerListener(new MouseAdapter() {
             @Override
