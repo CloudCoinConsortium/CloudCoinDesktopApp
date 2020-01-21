@@ -27,6 +27,8 @@ import global.cloudcoin.ccbank.Sender.Sender;
 import global.cloudcoin.ccbank.Sender.SenderResult;
 import global.cloudcoin.ccbank.Transfer.Transfer;
 import global.cloudcoin.ccbank.Transfer.TransferResult;
+import global.cloudcoin.ccbank.Emailer.Emailer;
+import global.cloudcoin.ccbank.Emailer.EmailerResult;
 import global.cloudcoin.ccbank.ShowCoins.ShowCoins;
 import global.cloudcoin.ccbank.ShowEnvelopeCoins.ShowEnvelopeCoins;
 import global.cloudcoin.ccbank.ShowEnvelopeCoins.ShowEnvelopeCoinsResult;
@@ -158,7 +160,8 @@ public class ServantManager {
                 "ShowEnvelopeCoins",
                 "Eraser",
                 "Backupper",
-                "Transfer"
+                "Transfer",
+                "Emailer"
         }, AppCore.getRootPath() + File.separator + user, logger);
    
 
@@ -528,6 +531,10 @@ public class ServantManager {
 	v.vault(password, 0, null, cb);
     }
     
+    public void startEmailerService(String[] emails, String[] subjects, String[] bodies, String[][] attachments, CallbackInterface icb) {
+        Emailer el = (Emailer) sr.getServant("Emailer");
+        el.launch(emails, subjects, bodies, attachments, icb);
+    }
     
     public void startExporterService(int exportType, int amount, String tag, String dir, boolean keepSrc, CallbackInterface cb) {
         if (sr.isRunning("Exporter"))

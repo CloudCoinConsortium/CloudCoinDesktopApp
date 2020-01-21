@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLDecoder;
@@ -34,6 +35,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Properties;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import org.json.JSONArray;
@@ -91,6 +93,9 @@ public class AppCore {
         
         rootPath = new File(path, Config.DIR_ROOT);
 
+        if (!createDirectory(Config.DIR_EMAIL_TEMPLATES))
+            return false;
+        
         if (!createDirectory(Config.DIR_ACCOUNTS))
             return false;
         
@@ -104,6 +109,9 @@ public class AppCore {
             return false;
         
         if (!createDirectory(Config.DIR_BACKUPS))
+            return false;
+        
+        if (!createDirectory(Config.DIR_EMAIL_TEMPLATES))
             return false;
         
         return true;
@@ -1075,6 +1083,9 @@ public class AppCore {
         return passed;
     }
     
+    public static String getMailConfigFilename() {
+        return rootPath + File.separator + Config.MAIL_CONFIG_FILENAME;
+    }
     
     public static void readConfig() {
         String globalConfigFilename = rootPath + File.separator + Config.GLOBAL_CONFIG_FILENAME;
@@ -1423,5 +1434,91 @@ public class AppCore {
 	}
         
         return rvs;
+    }
+    
+    public static Map<String, Properties> parseINI(Reader reader) throws IOException {
+        Map<String, Properties> result = new HashMap();
+        new Properties() {
+            private Properties section;
+
+            @Override
+            public Object put(Object key, Object value) {
+                String header = (((String) key) + " " + value).trim();
+                if (header.startsWith("[") && header.endsWith("]")) {
+                    return result.put(header.substring(1, header.length() - 1), 
+                        section = new Properties());
+                }
+                else {
+                    return section.put(key, value);
+                }
+            }
+        }.load(reader);
+        return result;
+    }
+    
+    public static String getEmailTemplate(String template) {
+        String fname = AppCore.rootPath + File.separator + Config.DIR_EMAIL_TEMPLATES + File.separator + template;
+        File f = new File(fname);
+        
+        String fdata = AppCore.loadFile(fname);
+        if (fdata == null) {
+            logger.debug(ltag, "Failed to load email template: " + fname);
+            return null;
+        }
+        
+        System.out.println("LOADED file " + fdata);
+        
+        return fdata;
+    }
+    
+    public static boolean checkEmailTemplate(String template) {
+        String fname = AppCore.rootPath + File.separator + Config.DIR_EMAIL_TEMPLATES + File.separator + template;
+        File f = new File(fname);
+        if (!f.exists()) {
+            logger.debug(ltag, "FileTemplate " + fname + " doesn't exist");
+            return false;
+        }
+        
+        return true;
+    }
+    
+    public static String checkBillPays(Wallet w, String[][] s) {
+        for (int i = 0; i < s.length; i++) {
+            String[] line = s[i];
+            
+            int total, s1, s5, s25, s100, s250;
+            total = s1 = s5 = s25 = s100 = s250 = 0;
+            
+            try {
+                total = Integer.parseInt(line[1]);
+                s1 = Integer.parseInt(line[2]);
+                s5 = Integer.parseInt(line[3]);
+                s25 = Integer.parseInt(line[4]);
+                s100 = Integer.parseInt(line[5]);
+                s250 = Integer.parseInt(line[6]);
+            } catch (NumberFormatException e) {
+                return "Failed to numbers. Line: " + i;
+            }
+            
+            if (total < 0 || s1 < 0 || s5 < 0 || s25 < 0 || s100 < 0 || s250 < 0) {
+                return "Invalid amount value. Line " + i;
+            }
+            
+            if (total != 0 && (s1 > 0 || s5 > 0 || s25 > 0 || s100 > 0 || s250 > 0)) {
+                return "Both total and denominations are set";
+            }
+            
+            if (total == 0)
+                total = s1 + s5 + s25 + s100 + s250;
+            
+            if (w.getTotal() < total) {
+                return "Not enough funds. Required: " + total;
+            }
+            
+           // if (total != 0 && (s1 ))
+            
+        }
+        
+        return null;
     }
 }

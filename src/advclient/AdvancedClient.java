@@ -3,6 +3,7 @@ package advclient;
 import advclient.common.core.Validator;
 import global.cloudcoin.ccbank.Authenticator.AuthenticatorResult;
 import global.cloudcoin.ccbank.Backupper.BackupperResult;
+import global.cloudcoin.ccbank.Emailer.EmailerResult;
 import global.cloudcoin.ccbank.Eraser.EraserResult;
 import global.cloudcoin.ccbank.Exporter.ExporterResult;
 import global.cloudcoin.ccbank.FrackFixer.FrackFixerResult;
@@ -993,6 +994,12 @@ public class AdvancedClient  {
             case ProgramState.SCREEN_SHOW_CONFIRM_BILL_PAY:
                 showConfirmBillPay();
                 break;
+            case ProgramState.SCREEN_BILL_PAY_DONE:
+                showBillPayDoneScreen();
+                break;
+            case ProgramState.SCREEN_DOING_BILL_PAY:
+                showSendingBillPay();
+                break;
         }
         
         
@@ -1070,6 +1077,16 @@ public class AdvancedClient  {
         String tc = AppCore.formatNumber(totalCoins);
         
         pbarText.setText("Transferred " + stc + " / " + tc + " CloudCoins");
+        pbarText.repaint();
+    }
+    
+    private void setEmailerStatus(int emailsSent, int totalEmails) {
+        pbar.setVisible(false);
+        
+        String sent = AppCore.formatNumber(emailsSent);
+        String total = AppCore.formatNumber(totalEmails);
+        
+        pbarText.setText("Emails sent: " + sent + " / " + total + "");
         pbarText.repaint();
     }
     
@@ -1445,6 +1462,146 @@ public class AdvancedClient  {
                     }                   
                 });
             
+            }
+        });
+        
+        t.start();
+        
+    }
+    public void showSendingBillPay() {
+        JPanel subInnerCore = getModalJPanel("Sending in Progress");
+        maybeShowError(subInnerCore);
+
+        JPanel ct = new JPanel();
+        AppUI.noOpaque(ct);
+        subInnerCore.add(ct);
+        
+        GridBagLayout gridbag = new GridBagLayout();
+        GridBagConstraints c = new GridBagConstraints();      
+        ct.setLayout(gridbag);
+        
+        String fwallet = ps.srcWallet.getName();        
+        int y = 0;
+        
+        // Info
+        JLabel x = new JLabel("<html><div style='width:480px;text-align:center'>From Wallet <b>" + fwallet + " </b></div></html>");
+        AppUI.setFont(x, 18);
+        c.anchor = GridBagConstraints.CENTER;
+        c.insets = new Insets(4, 0, 4, 0); 
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+        
+        y++;
+        
+        // Warning Label
+        x = new JLabel("<html><div style='width:480px;text-align:center'>Do not close the application until all emails are sent!</div></html>");
+        AppUI.setCommonFont(x);
+        AppUI.setColor(x, AppUI.getErrorColor());
+        c.anchor = GridBagConstraints.CENTER;
+        c.insets = new Insets(20, 0, 4, 0); 
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+        
+        y++;
+        
+        pbarText = new JLabel("");
+        AppUI.setCommonFont(pbarText);
+        c.insets = new Insets(40, 20, 4, 0);
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+        gridbag.setConstraints(pbarText, c);
+        ct.add(pbarText);
+        
+        y++;
+        
+        // ProgressBar
+        pbar = new JProgressBar();
+        pbar.setStringPainted(true);
+        AppUI.setMargin(pbar, 0);
+        AppUI.setSize(pbar, (int) (tw / 2.6f) , 50);
+        pbar.setMinimum(0);
+        pbar.setMaximum(24);
+        pbar.setValue(0);
+        pbar.setUI(new FancyProgressBar());
+        AppUI.noOpaque(pbar);
+        
+        c.insets = new Insets(20, 20, 4, 0);
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+        gridbag.setConstraints(pbar, c);
+        ct.add(pbar);
+        
+        y++;
+
+        subInnerCore.add(AppUI.hr(120));
+        
+        Thread t = new Thread(new Runnable() {
+            public void run(){
+                pbar.setVisible(false);
+
+                CloudCoin skyCC = null;
+                ps.coinIDinFix = null;
+                if (ps.srcWallet.isSkyWallet()) {
+                    ps.isCheckingSkyID = true;
+                    skyCC = ps.srcWallet.getIDCoin();
+                 
+                    pbarText.setText("Checking Your Source SkyWallet ID");
+                    pbarText.repaint();
+
+                    sm.startAuthenticatorService(skyCC, new AuthenticatorForSkyCoinCb());
+                    while (ps.isCheckingSkyID) {
+                        try {
+                            Thread.sleep(300);
+                        } catch (InterruptedException e) {}
+                    }
+                    
+                    if (AppCore.getErrorCount(skyCC) > Config.MAX_FAILED_RAIDAS_TO_SEND) {
+                        ps.errText = getSkyIDErrorIfRAIDAFailed();
+                        showScreen();
+                        return;
+                    } else if (AppCore.getPassedCount(skyCC) < Config.PASS_THRESHOLD) {
+                        ps.errText = getSkyIDError(ps.srcWallet.getName(), ps.srcWallet.getIDCoin().getPownString());
+                        showScreen();
+                        return;
+                    } else if (AppCore.getPassedCount(skyCC) != RAIDA.TOTAL_RAIDA_COUNT) {
+                        ps.currentScreen = ProgramState.SCREEN_WARN_FRACKED_TO_SEND;
+                        showScreen();
+                        return;
+                    }
+                } 
+
+                setEmailerStatus(0, ps.billpays.length);
+                
+                String tdata = AppCore.getEmailTemplate(ps.billpays[0][8]);
+                System.out.println("sss="+tdata);
+                
+                String[][] att = new String[1][];
+                att[0] = new String[] {"file1.txt","file21.txt" };
+
+                
+                sm.startEmailerService(new String[] { 
+                    "miroch.alexander@gmail.com",
+                 "miroch.alexander1@gmail.com",
+                "miroch.alexander2@gmail.com",
+                "miroch.alexander3@gmail.com",
+                "miroch.alexander4@gmail.com",
+                "miroch.alexander5@gmail.com",
+                "miroch.alexander6@gmail.com",
+                "miroch.alexander7@gmail.com",
+                "miroch.alexander8@gmail.com",
+                "miroch.alexander9@gmail.com",
+                "miroch.alexander10@gmail.com",
+                "miroch.alexander11@gmail.com",
+                "miroch.alexander12@gmail.com",
+                }, new String[] { "Subject0" }, new String[] { "bodyyy" }, att, new EmailerCb());
+                
+                
+                
+                
             }
         });
         
@@ -2033,6 +2190,63 @@ public class AdvancedClient  {
         resetState();
         
         subInnerCore.add(bp);     
+    }
+    
+    public void showBillPayDoneScreen() {
+        boolean isError = !ps.errText.equals("");
+        JPanel subInnerCore;
+        
+        if (isError) {
+            subInnerCore = getModalJPanel("Error");
+            AppUI.hr(subInnerCore, 32);
+            maybeShowError(subInnerCore);
+            resetState();
+            return;
+        }
+ 
+        ps.srcWallet.setNotUpdated();
+
+        subInnerCore = getModalJPanel("Bill Pay Complete");
+        maybeShowError(subInnerCore);
+        
+        JPanel ct = new JPanel();
+        AppUI.noOpaque(ct);
+        subInnerCore.add(ct);
+        
+        GridBagLayout gridbag = new GridBagLayout();
+        GridBagConstraints c = new GridBagConstraints();      
+        ct.setLayout(gridbag);
+        
+        String name = ps.srcWallet.getName();      
+        JLabel x = new JLabel("Coins have been sent successfully from " + name);
+        
+        
+        
+        AppUI.setCommonFont(x);
+ 
+        c.insets = new Insets(0, 0, 4, 0);
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = 0;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+        
+        JPanel bp = getTwoButtonPanelCustom("Next Pay", "Done", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                resetState();
+                ps.currentScreen = ProgramState.SCREEN_SHOW_BILL_PAY;
+                showScreen();
+            }
+        },  new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                showScreen();
+            }
+        });
+  
+        //resetState();
+        
+        subInnerCore.add(bp);   
+        
     }
     
     public void showTransferDoneScreen() {
@@ -2861,42 +3075,14 @@ public class AdvancedClient  {
              
         JPanel bp = getTwoButtonPanel(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                ps.srcWallet.setPassword(ps.typedSrcPassword);
+             
                 
-                sm.setActiveWalletObj(ps.srcWallet);
-                if (ps.sendType == ProgramState.SEND_TYPE_FOLDER) {                
-                    if (ps.srcWallet.isEncrypted()) {
-                        sm.startSecureExporterService(Config.TYPE_STACK, ps.typedAmount, ps.typedMemo, ps.chosenFile, false, new ExporterCb());
-                    } else {
-                        sm.startExporterService(Config.TYPE_STACK, ps.typedAmount, ps.typedMemo, ps.chosenFile, false, new ExporterCb());
-                    }
-                    ps.currentScreen = ProgramState.SCREEN_EXPORTING;
-                    ps.isSkyDeposit = false;
-                    showScreen();
-                } else if (ps.sendType == ProgramState.SEND_TYPE_WALLET) {
-                    ps.dstWallet.setPassword(ps.typedDstPassword);              
-                    ps.currentScreen = ProgramState.SCREEN_SENDING;
-                    if (ps.srcWallet.isSkyWallet()) {
-                        ps.isSkyDeposit = true;
-                    } else {
-                        ps.isSkyDeposit = false;
-                    }
-                    showScreen();
-                } else if (ps.sendType == ProgramState.SEND_TYPE_REMOTE) {              
-                    DNSSn d = new DNSSn(ps.typedRemoteWallet, null, wl);
-                    int sn = d.getSN();
-                    if (sn < 0) {
-                        ps.errText = "Failed to query receiver. Check that the name is valid";
-                        ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
-                        showScreen();
-                        return;
-                    }
-                    
-                    ps.foundSN = sn;
-                    ps.isSkyDeposit = false;
-                    ps.currentScreen = ProgramState.SCREEN_SENDING;
-                    showScreen();
-                }
+                
+                
+                 ps.currentScreen = ProgramState.SCREEN_DOING_BILL_PAY;
+                 showScreen();
+                
+                  
             }
         });
   
@@ -4195,7 +4381,7 @@ public class AdvancedClient  {
         
         AppUI.hr(ct, 10);
 
-        
+       
         maybeShowError(ct);
         
         // Outer Container
@@ -4383,8 +4569,16 @@ public class AdvancedClient  {
                     return;
                 }
                 
+                String err = AppCore.checkBillPays(ps.srcWallet, s);
+                if (err != null) {
+                    ps.errText = "Parse error: " + err;
+                    showScreen();
+                    return;
+                }
+                
                 ps.billpays = s;
                 setActiveWallet(ps.srcWallet);
+                
                 ps.currentScreen = ProgramState.SCREEN_SHOW_CONFIRM_BILL_PAY;
                 showScreen();
                 return;
@@ -9415,6 +9609,52 @@ public class AdvancedClient  {
             showScreen();
 	}
     }
+    
+    class EmailerCb implements CallbackInterface {
+	public void callback(Object result) {
+            final EmailerResult er = (EmailerResult) result;
+
+            wl.debug(ltag, "Emailer finished: " + er.status);
+            System.out.println("Emailer finished " + er.status);
+            if (er.status == EmailerResult.STATUS_PROCESSING) {
+                //setRAIDATransferProgressCoins(tr.totalRAIDAProcessed, tr.totalCoinsProcessed, tr.totalCoins);
+                setEmailerStatus(er.sentEmails, er.totalEmails);
+                return;
+            }
+
+            if (er.status == TransferResult.STATUS_CANCELLED) {
+                EventQueue.invokeLater(new Runnable() {         
+                    public void run() {
+                        ps.errText = "Operation Cancelled";
+                        ps.currentScreen = ProgramState.SCREEN_BILL_PAY_DONE;
+                        sm.resumeAll();
+                        showScreen();
+                    }
+                });
+                return;
+            }
+      
+            if (er.status == ReceiverResult.STATUS_ERROR) {
+                EventQueue.invokeLater(new Runnable() {         
+                    public void run() {
+                        ps.currentScreen = ProgramState.SCREEN_BILL_PAY_DONE;
+                        if (!er.errText.isEmpty()) {
+                                ps.errText = er.errText;
+                        }
+                        else  
+                            ps.errText = "Error occurred. Please check the logs";
+                        
+                        showScreen();
+                    }
+                });
+		return;
+            } 
+
+            ps.currentScreen = ProgramState.SCREEN_BILL_PAY_DONE;
+            showScreen();
+	}
+    }
+    
     
     class optRv {
         int[] idxs;

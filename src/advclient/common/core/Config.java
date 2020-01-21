@@ -33,7 +33,7 @@ public class Config {
     public static String DIR_VAULT = "Vault";
 
 
-
+    public static String DIR_EMAIL_TEMPLATES = "EmailTemplates";
     public static String DIR_ACCOUNTS = "Accounts";
     public static String DIR_DEFAULT_USER = "Default_User_NonExist";
     public static String DIR_MAIN_LOGS = "Logs";
@@ -41,6 +41,12 @@ public class Config {
     public static String DIR_BACKUPS = "Backups";
 
     public static String GLOBAL_CONFIG_FILENAME = "global.config";
+    public static String MAIL_CONFIG_FILENAME = "mailsettings.ini";
+    
+    public static int DEFAULT_MAX_EMAILS_PER_RUN = 10;
+    public static String DEFAULT_EMAIL_HOST = "localhost";
+    public static int DEFAULT_EMAIL_PORT = 1025;
+    
     public static int THREAD_POOL_SIZE = 60;
 
     public static int READ_TIMEOUT = 40000; // ms
