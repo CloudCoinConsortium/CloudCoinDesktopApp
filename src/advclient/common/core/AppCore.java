@@ -756,6 +756,7 @@ public class AppCore {
         return bdir;
     }
     
+    
     public static String getDate(String ts) {
         int lts;
         
@@ -1456,7 +1457,7 @@ public class AppCore {
         return result;
     }
     
-    public static String getEmailTemplate(String template) {
+    public static String getEmailTemplate(String template, int amount) {
         String fname = AppCore.rootPath + File.separator + Config.DIR_EMAIL_TEMPLATES + File.separator + template;
         File f = new File(fname);
         
@@ -1466,8 +1467,8 @@ public class AppCore {
             return null;
         }
         
-        System.out.println("LOADED file " + fdata);
-        
+        fdata = fdata.replaceAll("%amountToSend%", "" + amount);
+      
         return fdata;
     }
     
@@ -1497,11 +1498,11 @@ public class AppCore {
                 s100 = Integer.parseInt(line[5]);
                 s250 = Integer.parseInt(line[6]);
             } catch (NumberFormatException e) {
-                return "Failed to numbers. Line: " + i;
+                return "Failed to numbers. Line: " + (i + 1);
             }
             
             if (total < 0 || s1 < 0 || s5 < 0 || s25 < 0 || s100 < 0 || s250 < 0) {
-                return "Invalid amount value. Line " + i;
+                return "Invalid amount value. Line " + (i + 1);
             }
             
             if (total != 0 && (s1 > 0 || s5 > 0 || s25 > 0 || s100 > 0 || s250 > 0)) {
@@ -1515,10 +1516,36 @@ public class AppCore {
                 return "Not enough funds. Required: " + total;
             }
             
+            if (!AppCore.checkEmailTemplate(line[8])) {
+                return "Template " + line[8] + " doesn't exist. Line " + (i + 1);
+            }
            // if (total != 0 && (s1 ))
             
         }
         
         return null;
     }
+    
+    public static int getTotalToSend(String[] line) {
+        int total, s1, s5, s25, s100, s250;
+        total = s1 = s5 = s25 = s100 = s250 = 0;
+            
+        try {
+            total = Integer.parseInt(line[1]);
+            s1 = Integer.parseInt(line[2]);
+            s5 = Integer.parseInt(line[3]);
+            s25 = Integer.parseInt(line[4]);
+            s100 = Integer.parseInt(line[5]);
+            s250 = Integer.parseInt(line[6]);
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+            
+        if (total == 0)
+            total = s1 + s5 + s25 + s100 + s250;
+        
+        return total;
+    }
+    
+    
 }

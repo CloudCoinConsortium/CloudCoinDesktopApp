@@ -169,6 +169,11 @@ public class ProgramState {
     
     String[][] billpays;
     
+    boolean frombillpay;
+    
+    boolean finishedMc;
+
+    
     public ProgramState() {
         currentScreen = SCREEN_AGREEMENT;
         cwalletRecoveryRequested = cwalletPasswordRequested = false;
@@ -243,6 +248,11 @@ public class ProgramState {
         rrAmount = 0;
         
         billpays = null;
+        
+        frombillpay = false;
+        
+        finishedMc = false;
+
     }
  
     public String toString() {

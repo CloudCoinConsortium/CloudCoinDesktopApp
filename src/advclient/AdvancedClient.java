@@ -998,7 +998,7 @@ public class AdvancedClient  {
                 showBillPayDoneScreen();
                 break;
             case ProgramState.SCREEN_DOING_BILL_PAY:
-                showSendingBillPay();
+                showSendingBillPayScreen();
                 break;
         }
         
@@ -1380,16 +1380,28 @@ public class AdvancedClient  {
         pbar.setVisible(false);
         int cnt = AppCore.getFilesCount(Config.DIR_DETECTED, ps.srcWallet.getName());
         if (cnt != 0) {
-            ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
             ps.errText = getNonEmptyFolderError("Detected");
+            if (ps.frombillpay) {
+                ps.finishedMc = true;
+                ps.currentScreen = ProgramState.SCREEN_BILL_PAY_DONE;
+                return;
+            }
+            
+            ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
             showScreen();
             return;
         }
             
         final int skySN = getSkyWalletSN();
         if (skySN == 0) {
-            ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
             ps.errText = "<html><div style='width:690; text-align:center'>Transaction cannot be completed. You must have the exact denominations of CloudCoin notes or use the Change Maker.  You must have at least one Sky Wallet created to access the Change Maker</div></html>";
+            if (ps.frombillpay) {
+                ps.finishedMc = true;
+                ps.currentScreen = ProgramState.SCREEN_BILL_PAY_DONE;
+                return;
+            }
+            
+            ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
             showScreen();
             return;
         }
@@ -1425,7 +1437,10 @@ public class AdvancedClient  {
                             pbar.setValue(mcr.progress);
                         } else if (mcr.status == 2) {
                             wl.debug(ltag, "Change done successfully. Retrying");
-                            if (ps.changeFromExport) {
+                            if (ps.frombillpay) {
+                                ps.currentScreen = ProgramState.SCREEN_BILL_PAY_DONE;
+                                ps.finishedMc = true;
+                            } else if (ps.changeFromExport) {
                                 EventQueue.invokeLater(new Runnable() {         
                                     public void run() {                                    
                                         if (ps.srcWallet.isEncrypted()) {
@@ -1452,8 +1467,13 @@ public class AdvancedClient  {
                         if (!mcr.errText.isEmpty()) {
                             EventQueue.invokeLater(new Runnable() {         
                                     public void run() {  
-                                        ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
                                         ps.errText = mcr.errText;
+                                        if (ps.frombillpay) {
+                                            ps.currentScreen = ProgramState.SCREEN_BILL_PAY_DONE;
+                                            return;
+                                        }
+                                        
+                                        ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
                                         showScreen();
                                     }
                             });
@@ -1468,7 +1488,8 @@ public class AdvancedClient  {
         t.start();
         
     }
-    public void showSendingBillPay() {
+    
+    public void showSendingBillPayScreen() {
         JPanel subInnerCore = getModalJPanel("Sending in Progress");
         maybeShowError(subInnerCore);
 
@@ -1573,35 +1594,114 @@ public class AdvancedClient  {
                         return;
                     }
                 } 
+                
+                ps.finishedMc = false;
+                String[][] attachments = new String[ps.billpays.length][1];
+                for (int i = 0; i < ps.billpays.length; i++) {
+                    String email = ps.billpays[i][7];
+                    pbarText.setText("Exporting coins for " + email);
+                    pbarText.repaint();
+                    
+                    ps.typedAmount = AppCore.getTotalToSend(ps.billpays[i]); 
+                    System.out.println("typed="+ps.typedAmount);
+                    ps.finishedMc = false;
+                    ps.triedToChange = false;
+                    
+                    final int fi = i;
+                    CallbackInterface cb = new CallbackInterface() {
+                        public void callback(Object result) {
+                            final Object eresult = result;
+                            final ExporterResult er = (ExporterResult) eresult;
+
+                            if (er.status == ExporterResult.STATUS_ERROR) {
+                                EventQueue.invokeLater(new Runnable() {         
+                                    public void run() {
+                                        if (!er.errText.isEmpty()) {
+                                            if (er.errText.equals(Config.PICK_ERROR_MSG)) {
+                                                    ps.errText = "Failed to find enough denominations";
+                                                    ps.finishedMc = true;
+                                                    
+                                                /*
+                                                if (ps.triedToChange) {
+                                                    ps.errText = "Failed to change coins";
+                                                    ps.finishedMc = true;
+                                                } else {
+                                                    ps.finishedMc = false;
+                                                    ps.frombillpay = true;
+                                                    ps.changeFromExport = true;
+                                                    ps.triedToChange = true;
+                                                    ps.currentScreen = ProgramState.SCREEN_MAKING_CHANGE;
+                                                    showScreen();
+                                                    return;
+                                                }*/
+                                            } else {
+                                                ps.errText = er.errText;
+                                                ps.finishedMc = true;
+                                            }
+                                        } else {
+                                            ps.errText = "Failed to export coins";
+                                            ps.finishedMc = true;
+                                        }
+                                    }
+                                });
+       
+                                return;
+                            }
+          
+                            
+                            if (er.status == ExporterResult.STATUS_FINISHED) {
+                                if (er.totalExported != ps.typedAmount) {
+                                    ps.errText = "Some of the coins were not exported";
+                                }
+                            }
+
+                            sm.getActiveWallet().appendTransaction("Sent to " + email, er.totalExported * -1, er.receiptId);
+                            ps.finishedMc = true;
+                            
+                            attachments[fi][0] = er.exportedFileNames.get(0);
+                        }
+                    };
+
+                    String tag = email.replaceAll("\\.", "_");
+                    if (ps.srcWallet.isEncrypted()) {
+                        sm.startSecureExporterService(Config.TYPE_STACK, ps.typedAmount, tag, null, false, cb);
+                    } else {
+                        sm.startExporterService(Config.TYPE_STACK, ps.typedAmount, tag, null, false, cb);
+                    } 
+                    
+                    
+                    while (!ps.finishedMc) {
+                        try {
+                            Thread.sleep(200);
+                        } catch(InterruptedException e) {}
+                    }
+
+                    if (!ps.errText.isEmpty()) {
+                        ps.errText =  ps.errText + " for " + email;
+                        ps.currentScreen = ProgramState.SCREEN_BILL_PAY_DONE;
+                        showScreen();
+                        return;
+                    }   
+                }
+
+                sm.getActiveWallet().setNotUpdated();
 
                 setEmailerStatus(0, ps.billpays.length);
                 
-                String tdata = AppCore.getEmailTemplate(ps.billpays[0][8]);
-                System.out.println("sss="+tdata);
+               
                 
-                String[][] att = new String[1][];
-                att[0] = new String[] {"file1.txt","file21.txt" };
-
+                String[] bodies = new String[ps.billpays.length];
+                String[] subjects = new String[ps.billpays.length];
+                String[] emails = new String[ps.billpays.length];
                 
-                sm.startEmailerService(new String[] { 
-                    "miroch.alexander@gmail.com",
-                 "miroch.alexander1@gmail.com",
-                "miroch.alexander2@gmail.com",
-                "miroch.alexander3@gmail.com",
-                "miroch.alexander4@gmail.com",
-                "miroch.alexander5@gmail.com",
-                "miroch.alexander6@gmail.com",
-                "miroch.alexander7@gmail.com",
-                "miroch.alexander8@gmail.com",
-                "miroch.alexander9@gmail.com",
-                "miroch.alexander10@gmail.com",
-                "miroch.alexander11@gmail.com",
-                "miroch.alexander12@gmail.com",
-                }, new String[] { "Subject0" }, new String[] { "bodyyy" }, att, new EmailerCb());
-                
-                
-                
-                
+                for (int i = 0; i < ps.billpays.length; i++) {
+                    int total = AppCore.getTotalToSend(ps.billpays[i]);
+                    bodies[i] = AppCore.getEmailTemplate(ps.billpays[i][8], total);
+                    subjects[i] =  total + " CloudCoins";
+                    emails[i] = ps.billpays[i][7];
+                }
+              
+                sm.startEmailerService(emails, subjects, bodies, attachments, new EmailerCb());       
             }
         });
         
@@ -3036,7 +3136,7 @@ public class AdvancedClient  {
         
         String v = "<html>";
         for (int i = 0; i < ps.billpays.length; i++) {
-            v += "<p style=\"font-size:10px\">" + ps.billpays[i][0] + ": " + ps.billpays[i][1] + ": " + ps.billpays[i][1] + ": " + ps.billpays[i][2] + " : " + ps.billpays[i][3]  + " : " + ps.billpays[i][4] +
+            v += "<p style=\"text-align: left; font-size:10px\">" + ps.billpays[i][0] + ": " + ps.billpays[i][1] + ": " + ps.billpays[i][1] + ": " + ps.billpays[i][2] + " : " + ps.billpays[i][3]  + " : " + ps.billpays[i][4] +
                     ps.billpays[i][5] + ": " + ps.billpays[i][6] + ": " + ps.billpays[i][7] + " : " + ps.billpays[i][8] + "</p><br>";
         }
         v+="</html>";
@@ -3075,20 +3175,13 @@ public class AdvancedClient  {
              
         JPanel bp = getTwoButtonPanel(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-             
-                
-                
-                
                  ps.currentScreen = ProgramState.SCREEN_DOING_BILL_PAY;
-                 showScreen();
-                
-                  
+                 showScreen();     
             }
         });
   
         
-        subInnerCore.add(bp);    
-        
+        subInnerCore.add(bp);         
     }
     
     public void showConfirmTransferScreen() {
@@ -6778,33 +6871,6 @@ public class AdvancedClient  {
             }
         }
         
-        /*
-        if (ps.sendType == ProgramState.SEND_TYPE_FOLDER) {
-            Thread t = new Thread(new Runnable() {
-                public void run(){
-                    //UIManager.put("FileChooser.readOnly", Boolean.TRUE);  
-                    JFileChooser c = new JFileChooser(ps.chosenFile);
-                   // UIManager.put("FileChooser.readOnly", Boolean.FALSE);  
-                    c.setSelectedFile(new File(ps.typedAmount + ".CloudCoin." + ps.typedMemo + ".stack"));
-
-                    int rVal = c.showSaveDialog(null);
-                    if (rVal == JFileChooser.APPROVE_OPTION) {
-                        String file = c.getSelectedFile().getAbsolutePath();
-                        sm.setActiveWalletObj(ps.srcWallet);
-                        ps.srcWallet.setPassword(ps.typedSrcPassword);
-                        if (ps.srcWallet.isEncrypted()) {
-                            sm.startSecureExporterService(Config.TYPE_STACK, ps.typedAmount, ps.typedMemo, file, false, new ExporterCb());
-                        } else {
-                            sm.startExporterService(Config.TYPE_STACK, ps.typedAmount, ps.typedMemo, file, false, new ExporterCb());
-                        }
-                    }
-                }
-            });
-        
-            t.start();  
-        }
-        */
-        
         // Create transactions
         final String[][] trs;
         JLabel trLabel;
@@ -9072,6 +9138,7 @@ public class AdvancedClient  {
                                     //ps.errText = getPickError(ps.srcWallet);
                                     ps.errText = "Failed to change coins";
                                 } else { 
+                                    ps.frombillpay = false;
                                     ps.changeFromExport = true;
                                     ps.triedToChange = true;
                                     ps.currentScreen = ProgramState.SCREEN_MAKING_CHANGE;
@@ -9342,6 +9409,7 @@ public class AdvancedClient  {
                                 if (ps.triedToChange) {
                                     ps.errText = "Failed to change coins";
                                 } else { 
+                                    ps.frombillpay = false;
                                     ps.changeFromExport = false;
                                     ps.triedToChange = true;
                                     ps.currentScreen = ProgramState.SCREEN_MAKING_CHANGE;
@@ -9615,7 +9683,6 @@ public class AdvancedClient  {
             final EmailerResult er = (EmailerResult) result;
 
             wl.debug(ltag, "Emailer finished: " + er.status);
-            System.out.println("Emailer finished " + er.status);
             if (er.status == EmailerResult.STATUS_PROCESSING) {
                 //setRAIDATransferProgressCoins(tr.totalRAIDAProcessed, tr.totalCoinsProcessed, tr.totalCoins);
                 setEmailerStatus(er.sentEmails, er.totalEmails);
