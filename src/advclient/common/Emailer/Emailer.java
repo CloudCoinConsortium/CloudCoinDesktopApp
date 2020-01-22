@@ -302,8 +302,8 @@ public class Emailer extends Servant {
                 return;
             }
             
-            writer.println("MAIL FROM: <" + this.from + ">");
-            logger.debug(ltag, "MAIL FROM: <" + this.from + ">");
+            writer.println("MAIL FROM: " + this.mail_from);
+            logger.debug(ltag, "MAIL FROM: " + this.mail_from);
             
             line = reader.readLine();
             logger.debug(ltag, line);
@@ -332,7 +332,7 @@ public class Emailer extends Servant {
                 return;
             }
             
-
+            String fname = new File(attachments[0]).getName().replaceAll("@", "_");
             String attachment = Base64.getEncoder().encodeToString((fileData).getBytes());
             String boundary = this.generateBoundary();
             String msg = "Subject: " + subject + "\r\n" +
@@ -340,7 +340,7 @@ public class Emailer extends Servant {
                     "To: " + email + "\r\n" +
                     "From: " + this.from + "\r\n" +
                     "MIME-Version: 1.0\r\n" +
-                    "Content-type: multipart/mixed; boundary=\"XXXBoundary\"\r\n" +
+                    "Content-type: multipart/mixed; boundary=\"" + boundary + "\"\r\n" +
                     "\r\n" +
                     "This is a multipart message in MIME format.\r\n\r\n" +
                     "--" + boundary  + "\r\n" +
@@ -348,14 +348,14 @@ public class Emailer extends Servant {
                     "" + body + "\r\n" +
                     "--" + boundary + "\r\n" +
                     "Content-Type: text/plain\r\n" +
-                    "Content-Disposition: attachment; filename=" + attachments[0] + "\r\n" +
+                    "Content-Disposition: attachment; filename=" + fname + "\r\n" +
                     "Content-Transfer-Encoding: Base64\r\n\r\n" +
                     "" + attachment + "\r\n" +
                     "--" + boundary + "--";
             
 
             writer.println(msg);   
-            logger.debug(ltag, "msg");
+            logger.debug(ltag, msg);
             writer.println(".");
             logger.debug(ltag, ".");
             
@@ -366,9 +366,7 @@ public class Emailer extends Servant {
                 setError("Proton rejected the message. Please check the logs");
                 return;
             }
-            
-            
-            
+
             writer.println("QUIT");
             logger.debug(ltag, "QUIT");
  

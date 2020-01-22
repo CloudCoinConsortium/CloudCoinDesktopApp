@@ -1603,7 +1603,6 @@ public class AdvancedClient  {
                     pbarText.repaint();
                     
                     ps.typedAmount = AppCore.getTotalToSend(ps.billpays[i]); 
-                    System.out.println("typed="+ps.typedAmount);
                     ps.finishedMc = false;
                     ps.triedToChange = false;
                     
@@ -1662,7 +1661,7 @@ public class AdvancedClient  {
                         }
                     };
 
-                    String tag = email.replaceAll("\\.", "_");
+                    String tag = i + "_" + email.replaceAll("\\.", "_");
                     if (ps.srcWallet.isEncrypted()) {
                         sm.startSecureExporterService(Config.TYPE_STACK, ps.typedAmount, tag, null, false, cb);
                     } else {
