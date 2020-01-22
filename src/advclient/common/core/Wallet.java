@@ -180,7 +180,7 @@ public class Wallet implements Comparable<Wallet> {
     
     public String[][] getTransactions() {
         String fileName = getTransactionsFileName();
-        
+
         String data = AppCore.loadFile(fileName);
         if (data == null)
             return null;

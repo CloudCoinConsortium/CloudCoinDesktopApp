@@ -68,6 +68,8 @@ public class ProgramState {
     final public static int SCREEN_SHOW_BACKUP_KEYS_DONE = 50;
     final public static int SCREEN_SHOW_BILL_PAY = 51;
     final public static int SCREEN_SHOW_CONFIRM_BILL_PAY = 52;
+    final public static int SCREEN_DOING_BILL_PAY = 53;
+    final public static int SCREEN_BILL_PAY_DONE = 54;
     
     
     
@@ -167,6 +169,11 @@ public class ProgramState {
     
     String[][] billpays;
     
+    boolean frombillpay;
+    
+    boolean finishedMc;
+
+    
     public ProgramState() {
         currentScreen = SCREEN_AGREEMENT;
         cwalletRecoveryRequested = cwalletPasswordRequested = false;
@@ -240,6 +247,11 @@ public class ProgramState {
         rrAmount = 0;
         
         billpays = null;
+        
+        frombillpay = false;
+        
+        finishedMc = false;
+
     }
  
     public String toString() {
