@@ -3174,8 +3174,11 @@ public class AdvancedClient  {
              
         JPanel bp = getTwoButtonPanel(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                 ps.currentScreen = ProgramState.SCREEN_DOING_BILL_PAY;
-                 showScreen();     
+		ps.srcWallet.setPassword(ps.typedSrcPassword);
+                sm.setActiveWalletObj(ps.srcWallet);
+
+                ps.currentScreen = ProgramState.SCREEN_DOING_BILL_PAY;
+                showScreen();     
             }
         });
   
