@@ -54,7 +54,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.28";
+    String version = "2.1.29";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -614,7 +614,7 @@ public class AdvancedClient  {
    
         // Do stuff popup menu
         final int mWidth = 212;
-        final int mHeight = 60;
+        final int mHeight = 48;
         final JPopupMenu popupMenu = new JPopupMenu() {
             @Override
             public void paintComponent(final Graphics g) {
@@ -696,7 +696,7 @@ public class AdvancedClient  {
             menuItem.addMouseListener(ma);
             
             AppUI.setSize(menuItem, mWidth, mHeight);
-            AppUI.setFont(menuItem, 28);
+            AppUI.setFont(menuItem, 24);
             menuItem.setOpaque(true);
 
             menuItem.setBackground(AppUI.getColor6());
@@ -720,7 +720,7 @@ public class AdvancedClient  {
             popupMenu.add(menuItem);
         }
         
-        AppUI.setMargin(popupMenu, 0);
+        AppUI.setMargin(popupMenu, 0, 0, 0, 0);
         AppUI.noOpaque(popupMenu);
         AppUI.setHandCursor(popupMenu);
 
@@ -761,7 +761,7 @@ public class AdvancedClient  {
                 AppUI.setBackground(ficon, AppUI.getColor6());
 
                 ficon.repaint();              
-                popupMenu.show(ficon, 0 - mWidth  + ficon.getWidth(), ficon.getHeight());
+                popupMenu.show(ficon, 0 - (int)(mWidth * 0.6) + ficon.getWidth(), ficon.getHeight());
             }
             
             public void mouseExited(MouseEvent e) {
