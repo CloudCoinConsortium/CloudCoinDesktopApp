@@ -195,7 +195,7 @@ public class AdvancedClient  {
     }
     
     public String getSkyIDError(String name, String pownString) {
-        return "<html><div style='width:520px;text-align:center'>Your Sky Coin ID <b>" + name + "</b> is counterfeit. It is not safe to use it.<br><br>"
+        return "<html><div style='width:520px;text-align:center'>Your Sky Coin ID <b>" + name + "</b> is not 100% authentic. It is not safe to use it.<br><br>"
             + "The Pown String is <b>" + pownString + "</b></div></html>";
     }
     
