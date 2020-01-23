@@ -264,7 +264,7 @@ public class Servant {
         File file = new File(configFilename);
         try {
             if (!file.exists()) {
-                logger.error(ltag, "No config found for user " + user);
+                // No probleam, actually. Will use default values
                 return false;
             } 
             
