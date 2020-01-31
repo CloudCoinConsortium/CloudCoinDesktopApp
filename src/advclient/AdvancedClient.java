@@ -8166,12 +8166,20 @@ public class AdvancedClient  {
                         sm.changeServantUser("Vaulter", dstWallet.getName());
                         sm.startVaulterService(new VaulterCb(), dstWallet.getPassword());
                     } else {
-                        ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
-                        showScreen();
+                        EventQueue.invokeLater(new Runnable() {
+                            public void run() {
+                                ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                                showScreen();
+                            }
+                        });
                     }
                 } else {
-                    ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
-                    showScreen();
+                    EventQueue.invokeLater(new Runnable() {
+                            public void run() {
+                                ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                                showScreen();
+                            }
+                    });
                 }
                 
                 return;
