@@ -263,6 +263,7 @@ public class Emailer extends Servant {
             line = reader.readLine();
             if (!isResponseOk(line, 220)) {
                 setError("Invalid response from Protonmail. Please check the logs");
+                socket.close();
                 return false;
             }
             
@@ -274,6 +275,7 @@ public class Emailer extends Servant {
                 
                 if (!isResponseOk(line, 250)) {
                     setError("Invalid response from Protonmail (EHLO). Please check the logs");
+                    socket.close();
                     return false;
                 }
                 
@@ -289,6 +291,7 @@ public class Emailer extends Servant {
             line = reader.readLine();
             if (!isResponseOk(line, 334)) {
                 setError("Invalid response from Protonmail (Login). Please check the logs");
+                socket.close();
                 return false;
             }
             
@@ -298,6 +301,7 @@ public class Emailer extends Servant {
             line = reader.readLine();
             if (!isResponseOk(line, 334)) {
                 setError("Invalid response from Protonmail (Login). Please check the logs");
+                socket.close();
                 return false;
             }
             
@@ -307,6 +311,7 @@ public class Emailer extends Servant {
             line = reader.readLine();
             if (!isResponseOk(line, 235)) {
                 setError("Proton auth failed. Please check your credentials");
+                socket.close();
                 return false;
             }
 
@@ -316,6 +321,7 @@ public class Emailer extends Servant {
             line = reader.readLine();
             if (!isResponseOk(line, 250)) {
                 setError("Invalid response from Protonmail (MAIL FROM). Please check the logs");
+                socket.close();
                 return false;
             }
             
@@ -334,6 +340,7 @@ public class Emailer extends Servant {
             line = reader.readLine();
             if (!isResponseOk(line, 250)) {
                 setError("Invalid response from Protonmail (RCPT TO). Please check the logs");
+                socket.close();
                 return false;
             }
             
@@ -343,6 +350,7 @@ public class Emailer extends Servant {
             line = reader.readLine();
             if (!isResponseOk(line, 354)) {
                 setError("Invalid response from Protonmail (DATA). Please check the logs");
+                socket.close();
                 return false;
             }
             
@@ -376,12 +384,14 @@ public class Emailer extends Servant {
             line = reader.readLine();
             if (!isResponseOk(line, 250)) {
                 setError("Proton rejected the message. Please check the logs");
+                socket.close();
                 return false;
             }
 
             writer.println("QUIT");
             logger.debug(ltag, "QUIT");
  
+            socket.close();
         } catch (UnknownHostException ex) {
             logger.error(ltag, "Unknown network error: " + ex.getMessage());
             ger.status = EmailerResult.STATUS_ERROR;

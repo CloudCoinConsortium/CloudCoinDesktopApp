@@ -3135,8 +3135,8 @@ public class AdvancedClient  {
         
         String v = "<html>";
         for (int i = 0; i < ps.billpays.length; i++) {
-            v += "<p style=\"text-align: left; font-size:10px\">" + ps.billpays[i][0] + ": " + ps.billpays[i][1] + ": " + ps.billpays[i][1] + ": " + ps.billpays[i][2] + " : " + ps.billpays[i][3]  + " : " + ps.billpays[i][4] +
-                    ps.billpays[i][5] + ": " + ps.billpays[i][6] + ": " + ps.billpays[i][7] + " : " + ps.billpays[i][8] + "</p><br>";
+            v += "<p style=\"text-align: left; font-size:10px\">" + ps.billpays[i][0] + "," + ps.billpays[i][1] + "," + ps.billpays[i][2] + "," + ps.billpays[i][3]  + "," + ps.billpays[i][4] +
+                    "," + ps.billpays[i][5] + "," + ps.billpays[i][6] + "," + ps.billpays[i][7] + "," + ps.billpays[i][8] + "</p><br>";
         }
         v+="</html>";
         x = new JLabel(v);
