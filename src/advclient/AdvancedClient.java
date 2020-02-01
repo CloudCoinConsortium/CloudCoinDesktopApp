@@ -58,7 +58,7 @@ import javax.swing.table.TableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.28";
+    String version = "2.1.29";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -441,7 +441,7 @@ public class AdvancedClient  {
             img = ImageIO.read(getClass().getClassLoader().getResource("resources/CloudCoinText.png"));
             icon2 = new JLabel(new ImageIcon(img));
             
-            img = ImageIO.read(getClass().getClassLoader().getResource("resources/CloudCoinLogo.png"));
+            img = ImageIO.read(getClass().getClassLoader().getResource("resources/wr.png"));
             icon3 = new JLabel(new ImageIcon(img));
             
             img = ImageIO.read(getClass().getClassLoader().getResource("resources/depositicon.png"));
@@ -468,13 +468,13 @@ public class AdvancedClient  {
         
         headerPanel.add(p);
         
-        c.insets = new Insets(0, 12, 0, 0); 
+        c.insets = new Insets(0, 0, 0, 0); 
         gridbag.setConstraints(icon3, c);
         p.add(icon3);
         
-        c.insets = new Insets(0, 20, 0, 0); 
-        gridbag.setConstraints(icon2, c);
-        p.add(icon2);
+        //c.insets = new Insets(0, 20, 0, 0); 
+        //gridbag.setConstraints(icon2, c);
+        //p.add(icon2);
         
         JLabel wlabel = new JLabel("wallet");
         AppUI.setTitleFont(wlabel, 20);
