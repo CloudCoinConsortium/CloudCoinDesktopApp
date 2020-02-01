@@ -1,5 +1,6 @@
 package global.cloudcoin.ccbank.core;
 
+import global.cloudcoin.ccbank.ServantManager.ServantManager;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -1486,7 +1487,8 @@ public class AppCore {
         return true;
     }
     
-    public static String checkBillPays(Wallet w, String[][] s) {
+    public static String checkBillPays(ServantManager sm, Wallet w, String[][] s) {
+        int globalTotal = 0;
         for (int i = 0; i < s.length; i++) {
             String[] line = s[i];
             
@@ -1514,16 +1516,21 @@ public class AppCore {
             
             if (total == 0)
                 total = s1 + s5 + s25 + s100 + s250;
-            
-            if (w.getTotal() < total) {
-                return "Not enough funds. Required: " + total;
-            }
-            
+             
+            globalTotal += total;
             if (!AppCore.checkEmailTemplate(line[8])) {
                 return "Template " + line[8] + " doesn't exist. Line " + (i + 1);
             }
            // if (total != 0 && (s1 ))
             
+        }
+        
+        if (w.getTotal() < globalTotal) {
+            return "Not enough funds. Required: " + globalTotal;
+        }
+        
+        if (!sm.checkCoins(globalTotal)) {
+            return "Failed to collect denominations";
         }
         
         return null;

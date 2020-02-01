@@ -3803,17 +3803,20 @@ public class AdvancedClient  {
                     return;
                 }
                 
-                String err = AppCore.checkBillPays(ps.srcWallet, s);
-                if (err != null) {
-                    ps.errText = "Parse error: " + err;
-                    showScreen();
-                    return;
-                }
+                setActiveWallet(ps.srcWallet);
                 
-                infox.setText("Checking Email Gateway...");
+                infox.setText("Checking Denominations...");
                 Thread t = new Thread(new Runnable() {
                     public void run() {
-                        String err = sm.getEmailerError();
+                        String err = AppCore.checkBillPays(sm, ps.srcWallet, s);
+                        if (err != null) {
+                            ps.errText = "Parse error: " + err;
+                            showScreen();
+                            return;
+                        }
+
+                        infox.setText("Checking Email Gateway...");
+                        err = sm.getEmailerError();
                         infox.setText("");
                         if (err != null) {
                             ps.errText = err;
@@ -3822,8 +3825,6 @@ public class AdvancedClient  {
                         }
 
                         ps.billpays = s;
-                        setActiveWallet(ps.srcWallet);
-
                         ps.currentScreen = ProgramState.SCREEN_SHOW_CONFIRM_BILL_PAY;
                         showScreen();
                         return;
