@@ -1769,7 +1769,7 @@ public class AdvancedClient  {
         y++;
         
         // Warning Label
-        x = new JLabel("Do not close the application until all emails are sentd!");
+        x = new JLabel("Do not close the application until all emails are sent!");
         AppUI.setCommonFont(x);
         AppUI.setColor(x, AppUI.getErrorColor());
         c.anchor = GridBagConstraints.CENTER;
@@ -3055,8 +3055,8 @@ public class AdvancedClient  {
   
         String v = "<html>";
         for (int i = 0; i < ps.billpays.length; i++) {
-            v += "<p style=\"font-size:12px; text-align:left; color:white\">" + ps.billpays[i][0] + ": " + ps.billpays[i][1] + ": " + ps.billpays[i][1] + ": " + ps.billpays[i][2] + " : " + ps.billpays[i][3]  + " : " + ps.billpays[i][4] +
-                    ps.billpays[i][5] + ": " + ps.billpays[i][6] + ": " + ps.billpays[i][7] + " : " + ps.billpays[i][8] + "</p><br>";
+            v += "<p style=\"font-size:12px; text-align:left; color:white\">" + ps.billpays[i][0] + ": " + ps.billpays[i][1] + ": " + ps.billpays[i][2] + ": " + ps.billpays[i][3] + " : " + ps.billpays[i][4]  + " : " + ps.billpays[i][5] +
+                    ": " + ps.billpays[i][6] + ": " + ps.billpays[i][7] + ": " + ps.billpays[i][8] + "</p><br>";
         }
         v+="</html>";
         JLabel x = new JLabel(v);
@@ -3666,6 +3666,11 @@ public class AdvancedClient  {
             AppUI.GBPad(subInnerCore, y, gridbag);  
             return;
         }
+        
+        JLabel infox = AppUI.wrapDiv("");
+        AppUI.getGBRow(subInnerCore, null, infox, y, gridbag);
+        y++;
+        
 
         fname = new JLabel("From");
         final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(AppUI.getColor6(), "Make Selection", rvFrom.options);
@@ -3804,15 +3809,29 @@ public class AdvancedClient  {
                     showScreen();
                     return;
                 }
+                
+                infox.setText("Checking Email Gateway...");
+                Thread t = new Thread(new Runnable() {
+                    public void run() {
+                        String err = sm.getEmailerError();
+                        infox.setText("");
+                        if (err != null) {
+                            ps.errText = err;
+                            showScreen();
+                            return;
+                        }
 
+                        ps.billpays = s;
+                        setActiveWallet(ps.srcWallet);
 
-                ps.billpays = s;
+                        ps.currentScreen = ProgramState.SCREEN_SHOW_CONFIRM_BILL_PAY;
+                        showScreen();
+                        return;
+                    }
+                });
 
-                setActiveWallet(ps.srcWallet);
-                ps.currentScreen = ProgramState.SCREEN_SHOW_CONFIRM_BILL_PAY;
-                showScreen();
-                    
-                return;                    
+                t.start();
+                 
             }
         }, y, gridbag);
              
