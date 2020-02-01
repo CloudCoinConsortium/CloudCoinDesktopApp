@@ -531,6 +531,8 @@ public class ServantManager {
 	v.vault(password, 0, null, cb);
     }
     
+    
+    
     public void startEmailerService(String[] emails, String[] subjects, String[] bodies, String[][] attachments, CallbackInterface icb) {
         Emailer el = (Emailer) sr.getServant("Emailer");
         el.launch(emails, subjects, bodies, attachments, icb);
@@ -555,6 +557,19 @@ public class ServantManager {
         //logger.debug(ltag, "Vaulter password " + password);
 	Vaulter v = (Vaulter) sr.getServant("Vaulter");
 	v.unvault(password, amount, null, new eVaulterCb(exportType, amount, tag, dir, keepSrc, cb));
+    }
+    
+    public String getEmailerError() {
+        String error = null;
+        
+        Emailer el = (Emailer) sr.getServant("Emailer");
+        
+        if (!el.doChecks()) {
+            error = el.ger.errText;
+            return error;
+        }
+
+        return error;
     }
     
     public int findNoteToChange(int needed, int b250, int b100, int b25, int b5, int b1) {

@@ -30,7 +30,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class Emailer extends Servant {
-    EmailerResult ger;
+    public EmailerResult ger;
     String ltag = "Emailer";
     
     String host;
@@ -40,6 +40,7 @@ public class Emailer extends Servant {
     
     public Emailer(String rootDir, GLogger logger) {
         super("Emailer", rootDir, logger);
+        ger = new EmailerResult();
     }
 
     public void launch(String[] emails, String[] subjects, String[] bodies, String[][] attachments, CallbackInterface icb) {
@@ -53,7 +54,7 @@ public class Emailer extends Servant {
         this.maxConcurrent = Config.DEFAULT_MAX_EMAILS_PER_RUN;
         this.host = Config.DEFAULT_EMAIL_HOST;
         this.port = Config.DEFAULT_EMAIL_PORT;
-        
+         
         ger = new EmailerResult();
         launchThread(new Runnable() {
             @Override
@@ -172,7 +173,16 @@ public class Emailer extends Servant {
         return true;
     }
     
-    
+    public boolean doChecks() {
+        logger.debug(ltag, "Doing Email checks");
+        if (!this.readConfig())
+            return false;
+        
+        if (!sendEmail(null, null, null, null, true))
+            return false;
+        
+        return true;
+    }
     
     public void doEmail(String[] emails, String[] subjects, String[] bodies, String[][] attachments, CallbackInterface cb) {
         if (!this.readConfig()) {
@@ -193,7 +203,7 @@ public class Emailer extends Servant {
             final int fi = i;
             Thread t = new Thread() {
                 public void run() {
-                    sendEmail(femail, fsubject, fbody, fattachments);
+                    sendEmail(femail, fsubject, fbody, fattachments, false);
                     if (!ger.errText.isEmpty()) {
                         logger.error(ltag, "Terminating sending to " + femail);
                         return;
@@ -228,13 +238,16 @@ public class Emailer extends Servant {
             ger.status = EmailerResult.STATUS_FINISHED; 
     }
     
-    public void sendEmail(String email, String subject, String body, String[] attachments) {
-        logger.debug(ltag, "Sedning " + email + " s=" + subject + " a=" + attachments[0] + " total="+attachments.length);
-        String fileData = AppCore.loadFile(attachments[0]);
-        if (fileData == null) {
-            setError("Failed to load file: " + attachments[0]);
-            return;
-        }
+    public boolean sendEmail(String email, String subject, String body, String[] attachments, boolean checkOnly) {
+        String fileData = null;
+        if (!checkOnly) {
+            logger.debug(ltag, "Sedning " + email + " s=" + subject + " a=" + attachments[0] + " total="+attachments.length);
+            fileData = AppCore.loadFile(attachments[0]);
+            if (fileData == null) {
+                setError("Failed to load file: " + attachments[0]);
+                return false;
+            }
+        } 
         
         try {
             logger.debug(ltag, "Connecting to " + this.host + ":" + this.port);
@@ -247,24 +260,21 @@ public class Emailer extends Servant {
             PrintWriter writer = new PrintWriter(output, true);
 
             String line; 
-            
             line = reader.readLine();
-            logger.debug(ltag, line);
             if (!isResponseOk(line, 220)) {
                 setError("Invalid response from Protonmail. Please check the logs");
-                return;
+                return false;
             }
             
             writer.println("EHLO localhost");
             logger.debug(ltag, "EHLO localhost");            
             while ((line = reader.readLine()) != null) {
-                logger.debug(ltag, line);
                 if (isInterimResponse(line))
                     continue;
                 
                 if (!isResponseOk(line, 250)) {
                     setError("Invalid response from Protonmail (EHLO). Please check the logs");
-                    return;
+                    return false;
                 }
                 
                 break;
@@ -277,10 +287,9 @@ public class Emailer extends Servant {
             logger.debug(ltag, "AUTH LOGIN");
 
             line = reader.readLine();
-            logger.debug(ltag, line);
             if (!isResponseOk(line, 334)) {
                 setError("Invalid response from Protonmail (Login). Please check the logs");
-                return;
+                return false;
             }
             
             writer.println(login);
@@ -289,47 +298,52 @@ public class Emailer extends Servant {
             line = reader.readLine();
             if (!isResponseOk(line, 334)) {
                 setError("Invalid response from Protonmail (Login). Please check the logs");
-                return;
+                return false;
             }
             
             writer.println(password);
             logger.debug(ltag, password);
             
             line = reader.readLine();
-            logger.debug(ltag, line);
             if (!isResponseOk(line, 235)) {
                 setError("Proton auth failed. Please check your credentials");
-                return;
+                return false;
             }
-            
+
             writer.println("MAIL FROM: " + this.mail_from);
             logger.debug(ltag, "MAIL FROM: " + this.mail_from);
             
             line = reader.readLine();
-            logger.debug(ltag, line);
             if (!isResponseOk(line, 250)) {
                 setError("Invalid response from Protonmail (MAIL FROM). Please check the logs");
-                return;
+                return false;
             }
+            
+                        
+            if (checkOnly) {
+                writer.println("QUIT");
+                logger.debug(ltag, "QUIT");
+                socket.close();
+                return true;
+            }
+            
             
             writer.println("RCPT TO: " + email);
             logger.debug(ltag, "RCPT TO: " + email);
             
             line = reader.readLine();
-            logger.debug(ltag, line);
             if (!isResponseOk(line, 250)) {
                 setError("Invalid response from Protonmail (RCPT TO). Please check the logs");
-                return;
+                return false;
             }
             
             writer.println("DATA");
             logger.debug(ltag, "DATA");
             
             line = reader.readLine();
-            logger.debug(ltag, line);
             if (!isResponseOk(line, 354)) {
                 setError("Invalid response from Protonmail (DATA). Please check the logs");
-                return;
+                return false;
             }
             
             String fname = new File(attachments[0]).getName().replaceAll("@", "_");
@@ -359,12 +373,10 @@ public class Emailer extends Servant {
             writer.println(".");
             logger.debug(ltag, ".");
             
-                    
             line = reader.readLine();
-            logger.debug(ltag, line);
             if (!isResponseOk(line, 250)) {
                 setError("Proton rejected the message. Please check the logs");
-                return;
+                return false;
             }
 
             writer.println("QUIT");
@@ -374,12 +386,15 @@ public class Emailer extends Servant {
             logger.error(ltag, "Unknown network error: " + ex.getMessage());
             ger.status = EmailerResult.STATUS_ERROR;
             setError("Unknown network error. Please check the logs");
-            return;
+            return false;
         } catch (IOException ex) {
             setError("Failed to connect to the ProtonMail bridge. Make sure it is running");
             logger.error(ltag, "Failed to connect to the ProtonMail bridge: " + ex.getMessage());
-            return; 
+            return false; 
         }
+        
+       
+        return true;
     }
     
     protected String generateBoundary() {
@@ -396,6 +411,7 @@ public class Emailer extends Servant {
     private final static char[] MULTIPART_CHARS = "-_1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
     
     public boolean isInterimResponse(String response) {
+        logger.debug(ltag, response);
         if (response.length() > 3 && response.charAt(3) == '-')
             return true;
         

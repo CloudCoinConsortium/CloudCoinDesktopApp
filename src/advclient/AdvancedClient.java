@@ -4479,6 +4479,16 @@ public class AdvancedClient  {
        
         maybeShowError(ct);
         
+        
+
+        JLabel infox = new JLabel("");
+        AppUI.setFont(infox, 16);
+        AppUI.alignCenter(infox);
+        ct.add(infox);
+
+        
+        
+        
         // Outer Container
         JPanel oct = new JPanel();
         AppUI.noOpaque(oct);
@@ -4607,8 +4617,6 @@ public class AdvancedClient  {
         JPanel bp = getTwoButtonPanel(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 int srcIdx = cboxfrom.getSelectedIndex() - 1;
-
-                
                 ps.selectedFromIdx = cboxfrom.getSelectedIndex();
                 if (srcIdx < 0 || srcIdx >= rvFrom.idxs.length) {                    
                     ps.errText = "Please select Wallet";
@@ -4671,12 +4679,31 @@ public class AdvancedClient  {
                     return;
                 }
                 
-                ps.billpays = s;
-                setActiveWallet(ps.srcWallet);
                 
-                ps.currentScreen = ProgramState.SCREEN_SHOW_CONFIRM_BILL_PAY;
-                showScreen();
-                return;
+                
+                infox.setText("Checking Email Gateway...");
+                Thread t = new Thread(new Runnable() {
+                    public void run() {
+                
+                
+                        String err = sm.getEmailerError();
+                        infox.setText("");
+                        if (err != null) {
+                            ps.errText = err;
+                            showScreen();
+                            return;
+                        }
+                
+                        ps.billpays = s;
+                        setActiveWallet(ps.srcWallet);
+                
+                        ps.currentScreen = ProgramState.SCREEN_SHOW_CONFIRM_BILL_PAY;
+                        showScreen();
+                        return;
+                    }
+                });
+                
+                t.start();
             }
         });
         
