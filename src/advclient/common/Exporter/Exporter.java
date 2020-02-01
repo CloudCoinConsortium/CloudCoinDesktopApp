@@ -22,6 +22,8 @@ public class Exporter extends Servant {
 
     public Exporter(String rootDir, GLogger logger) {
         super("Exporter", rootDir, logger);
+        coinsPicked = new ArrayList<CloudCoin>();
+        valuesPicked = new int[AppCore.getDenominations().length];
     }
 
     public void launch(CallbackInterface icb) {
@@ -80,6 +82,22 @@ public class Exporter extends Servant {
         });
     }
 
+    public boolean checkCoins(int amount) {
+        String fullFrackedPath = AppCore.getUserDir(Config.DIR_FRACKED, user);
+        String fullBankPath = AppCore.getUserDir(Config.DIR_BANK, user);
+        
+        boolean rv = pickCoinsAmountInDirs(fullBankPath, fullFrackedPath, amount);
+        if (rv)
+            return rv;
+        
+        String fullVaultPath = AppCore.getUserDir(Config.DIR_VAULT, user);
+        rv = pickCoinsAmountInDirs(fullVaultPath, fullFrackedPath, amount);
+        
+        
+        return rv;
+        
+    }
+    
     public void doExport(int type, int[] values, int amount, String dir, boolean keepSrc, String tag) {
         if (tag.equals(""))
             tag = Config.DEFAULT_TAG;

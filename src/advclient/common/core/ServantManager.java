@@ -559,11 +559,15 @@ public class ServantManager {
 	v.unvault(password, amount, null, new eVaulterCb(exportType, amount, tag, dir, keepSrc, cb));
     }
     
+    public boolean checkCoins(int amount) {
+        Exporter er = (Exporter) sr.getServant("Exporter");
+        return er.checkCoins(amount);
+    }
+    
     public String getEmailerError() {
         String error = null;
         
-        Emailer el = (Emailer) sr.getServant("Emailer");
-        
+        Emailer el = (Emailer) sr.getServant("Emailer");   
         if (!el.doChecks()) {
             error = el.ger.errText;
             return error;
