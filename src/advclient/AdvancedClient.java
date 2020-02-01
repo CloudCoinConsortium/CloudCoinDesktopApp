@@ -58,7 +58,7 @@ import javax.swing.table.TableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.28";
+    String version = "2.1.29";
 
     JPanel headerPanel;
     JPanel mainPanel;
