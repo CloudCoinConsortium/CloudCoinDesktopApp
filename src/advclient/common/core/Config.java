@@ -111,6 +111,7 @@ public class Config {
     public static int TYPE_STACK = 1;
     public static int TYPE_JPEG = 2;
     public static int TYPE_CSV = 3;
+    public static int TYPE_PNG = 4;
 
     public static String JPEG_MARKER = "01C34A46494600010101006000601D05";
 
