@@ -157,20 +157,21 @@ public class Exporter extends Servant {
 
         logger.debug(ltag, "Export isbackup " + keepSrc + " type " + type + " amount " + amount);
         
-        if (type == Config.TYPE_STACK) {
-            if (!keepSrc) {
-                int totalNotes = coinsPicked.size();
-                if (totalNotes > Config.MAX_EXPORTED_NOTES) {
-                    er.status = ExporterResult.STATUS_ERROR;
-                    er.errText = "Exporting more than " +  Config.MAX_EXPORTED_NOTES 
-                            + " notes is not allowed. Try to export fewer coins";
-                    if (cb != null)
-                        cb.callback(er);
+        if (!keepSrc) {
+            int totalNotes = coinsPicked.size();
+            if (totalNotes > Config.MAX_EXPORTED_NOTES) {
+                er.status = ExporterResult.STATUS_ERROR;
+                er.errText = "Exporting more than " +  Config.MAX_EXPORTED_NOTES 
+                    + " notes is not allowed. Try to export fewer coins";
+                if (cb != null)
+                    cb.callback(er);
                     
-                    return;
-                }
+                return;
             }
-
+        }
+        
+        //type = Config.TYPE_PNG;
+        if (type == Config.TYPE_STACK) {
             if (!exportStack(fullExportPath, tag)) {
                 er.status = ExporterResult.STATUS_ERROR;
                 if (cb != null)
@@ -186,6 +187,14 @@ public class Exporter extends Servant {
 
                 return;
             }
+        } else if (type == Config.TYPE_PNG) {
+                if (!exportPng(fullExportPath, tag)) {
+                    er.status = ExporterResult.STATUS_ERROR;
+                    if (cb != null)
+                        cb.callback(er);
+
+                    return;
+                }
         } else {
             logger.error(ltag, "Unsupported format");
             er.status = ExporterResult.STATUS_ERROR;
@@ -286,6 +295,122 @@ public class Exporter extends Servant {
         return true;
     }
 
+    
+    private boolean exportPng(String dir, String tag) {
+        StringBuilder sb = new StringBuilder();
+        boolean first = true;
+        int total = 0;
+        String fileName;
+        String data;
+
+        sb.append("{" + ls + "\t\"cloudcoin\": [");
+        for (CloudCoin cc : coinsPicked) {
+            if (!first)
+                sb.append(", ");
+
+            sb.append(cc.getSimpleJson());
+            first = false;
+
+            total += cc.getDenomination();
+        }
+
+        sb.append("]" + ls + "}");
+        data = sb.toString();
+        
+        File sdir = new File(dir);
+        if (sdir.isDirectory()) {
+            fileName = total + ".CloudCoin." + tag + ".png";
+            fileName = dir + File.separator + fileName;
+        } else {
+            fileName = dir;
+        }
+        
+        String tdir = AppCore.getUserDir(Config.DIR_TEMPLATES, user);
+        File dirObj = new File(tdir);
+        if (!dirObj.exists()) {
+            logger.error(ltag, "Template dir doesn't exist: " + tdir);
+            er.status = ExporterResult.STATUS_ERROR;
+            er.errText = "Template dir doesn't exist";
+            return false;
+        }
+
+        String templateFileName = null;
+        for (File file: dirObj.listFiles()) {
+            if (file.isDirectory())
+                continue;
+            
+            templateFileName = file.getAbsolutePath();
+            if (!templateFileName.endsWith(".png")) {
+                templateFileName = null;
+                continue;
+            }
+            
+            break;
+        }
+
+        logger.debug(ltag, "Picked png template: " + templateFileName);
+        if (templateFileName == null) {
+            logger.error(ltag, "Failed to find any png in " + tdir);
+            er.status = ExporterResult.STATUS_ERROR;
+            er.errText = "Failed to find any PNG templates";
+            return false;
+        }
+        
+        byte[] bytes = AppCore.loadFileToBytes(templateFileName);
+        if (bytes == null) {
+            logger.error(ltag, "Failed to load template");
+            return false;
+        }
+        
+        logger.info(ltag, "Loaded: " + bytes.length);
+        int dl = data.length();
+        logger.debug(ltag, "data length " + dl);
+        
+        byte[] nbytes = new byte[bytes.length + dl + 12];
+        for (int i = 0; i < 33; i++) {
+            nbytes[i] = bytes[i];
+        }
+
+        int totalLength = dl + 8;
+        
+        nbytes[33] = (byte)(totalLength >> 24);
+        nbytes[34] = (byte)(totalLength >> 16);
+        nbytes[35] = (byte)(totalLength >> 8);
+        nbytes[36] = (byte)(totalLength);
+        
+        nbytes[37] = nbytes[38] = nbytes[39] = nbytes[40] = 0x20;
+        
+        
+        
+        for (int i = 0; i < dl; i++) {
+            nbytes[i + 41] = (byte) data.charAt(i);
+        }
+        
+        nbytes[41 + dl] = nbytes[41 + dl + 1] = nbytes[41 + dl + 2] = nbytes[41 + dl + 3] = 0x20;
+        
+        for (int i = 0; i < bytes.length - 33; i++) {
+            nbytes[i + 41 + dl + 4] = bytes[i + 33];
+        }
+
+        File f = new File(fileName);
+        if (f.exists()) {
+            logger.error(ltag, "File exists: " + fileName);
+            er.status = ExporterResult.STATUS_ERROR;
+            er.errText = "Exported file with the same tag already exists";
+            return false;
+        }
+        
+        if (!AppCore.saveFileFromBytes(fileName, nbytes)) {
+            logger.error(ltag, "Failed to write file");
+            return false;
+        }
+
+        er.exportedFileNames.add(fileName);
+        er.totalExported = total;
+        
+        return true;
+        
+    }
 
     private boolean exportStack(String dir, String tag) {
         StringBuilder sb = new StringBuilder();
