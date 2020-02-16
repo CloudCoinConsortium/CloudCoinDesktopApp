@@ -400,7 +400,7 @@ public class AppUI {
         cl = AppUI.class.getClassLoader();
 
         frame.setIconImage(
-            new ImageIcon(cl.getResource("resources/CloudCoinLogo.png")).getImage()
+            new ImageIcon(cl.getResource("resources/CloudCoinLogo2.png")).getImage()
         );
         
         return frame;
