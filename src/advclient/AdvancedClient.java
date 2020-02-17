@@ -7735,7 +7735,7 @@ public class AdvancedClient  {
                 } else {
                     memo = "Failed to Import";
                 }
-                w.appendTransaction(memo, Config.NEGATIVE_AMOUNT_FOR_COUNTERFEIT, "dummy");
+                w.appendTransaction(memo, 0, "COUNTERFEIT");
             }
             
             EventQueue.invokeLater(new Runnable() {         
