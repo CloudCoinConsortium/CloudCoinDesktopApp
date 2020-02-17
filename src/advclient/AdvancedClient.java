@@ -8158,8 +8158,9 @@ public class AdvancedClient  {
             if (sr.amount > 0) {
                 wl.debug(ltag, "sramount " + sr.amount + " typed " + ps.typedAmount);
                 
-                AppCore.appendSkySentCoinTransaction(ps.srcWallet.getName(),
-                    ps.dstWallet.getName(), ps.dstWallet.getIDCoin().sn, sr.amount, ps.typedMemo);
+                if (ps.dstWallet.getIDCoin() != null)
+                    AppCore.appendSkySentCoinTransaction(ps.srcWallet.getName(),
+                        ps.dstWallet.getName(), ps.dstWallet.getIDCoin().sn, sr.amount, ps.typedMemo);
 
                 if (ps.typedAmount != sr.amount) {
                     EventQueue.invokeLater(new Runnable() {         
