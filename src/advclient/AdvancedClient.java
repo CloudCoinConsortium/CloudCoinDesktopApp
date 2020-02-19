@@ -58,7 +58,7 @@ import javax.swing.table.TableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.30";
+    String version = "2.1.31";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -658,7 +658,7 @@ public class AdvancedClient  {
    
         // Do stuff popup menu
         final int mWidth = 172;
-        final int mHeight = 48;
+        final int mHeight = 42;
         final JPopupMenu popupMenu = new JPopupMenu() {
             @Override
             public void paintComponent(final Graphics g) {
@@ -6044,7 +6044,7 @@ public class AdvancedClient  {
         
         if (isSky) {
             Hashtable<String, String[]> envelopes = sm.getActiveWallet().getEnvelopes();
-            thlabel.setText("Skywallet Contents. Click Transfer to Download");
+            thlabel.setText("Skywallet Contents ");
             if (envelopes == null || envelopes.size() == 0) {
                 thlabel.setText("No Coins");
                 return;
@@ -6267,6 +6267,10 @@ public class AdvancedClient  {
         GridBagLayout gridbag = new GridBagLayout();
         subInnerCore.setLayout(gridbag);
         
+        int y = 0;
+        AppUI.GBPad(subInnerCore, y, gridbag);  
+        y++;
+        
         AppUI.getTwoButtonPanel(subInnerCore, "Print", "Export History", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                     try {
@@ -6298,7 +6302,7 @@ public class AdvancedClient  {
                     }
                 }
             }
-        }, 0, gridbag);
+        }, y, gridbag);
 
     }
     
@@ -8158,9 +8162,18 @@ public class AdvancedClient  {
             if (sr.amount > 0) {
                 wl.debug(ltag, "sramount " + sr.amount + " typed " + ps.typedAmount);
                 
-                if (ps.dstWallet.getIDCoin() != null)
-                    AppCore.appendSkySentCoinTransaction(ps.srcWallet.getName(),
-                        ps.dstWallet.getName(), ps.dstWallet.getIDCoin().sn, sr.amount, ps.typedMemo);
+                int sn = 0;
+                String name;
+                if (ps.dstWallet == null) {
+                    sn = ps.foundSN;
+                    name = ps.typedRemoteWallet;
+                } else {
+                    sn = ps.dstWallet.getIDCoin().sn;
+                    name = ps.dstWallet.getName();
+                }
+                AppCore.appendSkySentCoinTransaction(ps.srcWallet.getName(),
+                        name, sn, sr.amount, ps.typedMemo);
+
 
                 if (ps.typedAmount != sr.amount) {
                     EventQueue.invokeLater(new Runnable() {         

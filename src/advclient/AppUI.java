@@ -150,7 +150,7 @@ public class AppUI {
     }
     
     public static Color getColor2() {
-        return new Color(0x2492E7);
+        return new Color(0x338FFF);
     }
     
     public static Color getColor3() {
