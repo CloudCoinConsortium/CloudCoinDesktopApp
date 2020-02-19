@@ -54,7 +54,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.30";
+    String version = "2.1.31";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -6906,7 +6906,7 @@ public class AdvancedClient  {
         
         if (isSky) {
             Hashtable<String, String[]> envelopes = sm.getActiveWallet().getEnvelopes();
-            trLabel = new JLabel("Skywallet Contents. Click Transfer to Download");
+            trLabel = new JLabel("Skywallet Contents");
             if (envelopes == null || envelopes.size() == 0) {
                 trLabel = new JLabel("No Coins");
                 AppUI.setSemiBoldFont(trLabel, 20);
@@ -9462,9 +9462,17 @@ public class AdvancedClient  {
             if (sr.amount > 0) {
                 wl.debug(ltag, "sramount " + sr.amount + " typed " + ps.typedAmount);
                 
-                if (ps.dstWallet.getIDCoin() != null)
-                    AppCore.appendSkySentCoinTransaction(ps.srcWallet.getName(), 
-                        ps.dstWallet.getName(), ps.dstWallet.getIDCoin().sn, sr.amount, ps.typedMemo);
+                int sn = 0;
+                String name;
+                if (ps.dstWallet == null) {
+                    sn = ps.foundSN;
+                    name = ps.typedRemoteWallet;
+                } else {
+                    sn = ps.dstWallet.getIDCoin().sn;
+                    name = ps.dstWallet.getName();
+                }
+                AppCore.appendSkySentCoinTransaction(ps.srcWallet.getName(), 
+                        name, sn, sr.amount, ps.typedMemo);
                 
                 if (ps.typedAmount != sr.amount) {
                     EventQueue.invokeLater(new Runnable() {
