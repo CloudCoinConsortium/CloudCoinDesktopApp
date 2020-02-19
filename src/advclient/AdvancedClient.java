@@ -54,7 +54,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.31";
+    String version = "2.1.32";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -9468,10 +9468,13 @@ public class AdvancedClient  {
                     sn = ps.foundSN;
                     name = ps.typedRemoteWallet;
                 } else {
-                    sn = ps.dstWallet.getIDCoin().sn;
+                    if (ps.dstWallet.getIDCoin() != null)
+                        sn = ps.dstWallet.getIDCoin().sn;
                     name = ps.dstWallet.getName();
                 }
-                AppCore.appendSkySentCoinTransaction(ps.srcWallet.getName(), 
+                
+                if (sn != 0)
+                    AppCore.appendSkySentCoinTransaction(ps.srcWallet.getName(), 
                         name, sn, sr.amount, ps.typedMemo);
                 
                 if (ps.typedAmount != sr.amount) {
