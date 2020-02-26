@@ -94,7 +94,7 @@ public class AppCore {
         
         rootPath = new File(path, Config.DIR_ROOT);
 
-        if (!createDirectory(Config.DIR_EMAIL_TEMPLATES))
+        if (!createDirectory(Config.DIR_TEMPLATES))
             return false;
         
         if (!createDirectory(Config.DIR_ACCOUNTS))
@@ -142,7 +142,6 @@ public class AppCore {
             Config.DIR_REQUESTRESPONSE,
             Config.DIR_SENT,
             Config.DIR_SUSPECT,
-            Config.DIR_TEMPLATES,
             Config.DIR_TRASH,
             Config.DIR_TRUSTEDTRANSFER,
             Config.DIR_VAULT
@@ -171,6 +170,12 @@ public class AppCore {
 
    static public String getBackupDir() {
        File f = new File(rootPath, Config.DIR_BACKUPS);
+       
+       return f.toString();
+   }
+   
+   static public String getTemplateDir() {
+       File f = new File(rootPath, Config.DIR_TEMPLATES);
        
        return f.toString();
    }
@@ -680,58 +685,71 @@ public class AppCore {
     }
     
     
-    public static void copyTemplatesFromJar(String user) {
+    public static void copyTemplatesFromJar() {
         int d;
-        String templateDir, fileName;
+        String templateDir;
 
-	templateDir = AppCore.getUserDir(Config.DIR_TEMPLATES, user);
-	fileName = templateDir + File.separator + "jpeg1.jpg";
-	File f = new File(fileName);
-	if (!f.exists()) {
-            for (int i = 0; i < AppCore.getDenominations().length; i++) {
-                d = AppCore.getDenominations()[i];
-                fileName = "jpeg" + d + ".jpg";
-                   
-                URL u = AppCore.class.getClassLoader().getResource("resources/" + fileName);
-                if (u == null)
-                    continue;
+        String[] templates = new String[] {
+            "jpeg1.jpg",
+            "jpeg5.jpg",
+            "jpeg25.jpg",
+            "jpeg100.jpg",
+            "jpeg250.jpg",
+            Config.PNG_TEMPLATE_NAME
+        };
+        
+	templateDir = AppCore.rootPath + File.separator + Config.DIR_TEMPLATES;
+
+        for (int i = 0; i < templates.length; i++) {
+            String fileName = templates[i];
+            
+            URL u = AppCore.class.getClassLoader().getResource("resources/" + fileName);
+            if (u == null) {
+                logger.debug(ltag, "Failed to find resource " + fileName);
+                continue;
+            }
+            
+            String url;
+            try {
+                url = URLDecoder.decode(u.toString(), "UTF-8");
+            }  catch (UnsupportedEncodingException e) {
+                logger.error(ltag, "Failed to decode url");
+                return;
+            }
+
+            int bang = url.indexOf("!");
+            String JAR_URI_PREFIX = "jar:file:";
+            JarFile jf;
                 
-                String url;
-                try {
-                    url = URLDecoder.decode(u.toString(), "UTF-8");
-                }  catch (UnsupportedEncodingException e) {
-                    logger.error(ltag, "Failed to decode url");
+            logger.debug(ltag, "jurl " + url);
+            try {
+                if (url.startsWith(JAR_URI_PREFIX) && bang != -1) {
+                    jf = new JarFile(url.substring(JAR_URI_PREFIX.length(), bang)) ;
+                } else if (url.startsWith("file:/")) {
+                    String file = url.substring(6, url.length());
+                    logger.debug(ltag, "template file " + file);
+                    String dst = templateDir + File.separator + fileName;
+                    AppCore.copyFile(file, dst);                    
+                    continue;
+                } else {
+                    logger.error(ltag, "Invalid jar");
                     return;
                 }
-
-                int bang = url.indexOf("!");
-                String JAR_URI_PREFIX = "jar:file:";
-                JarFile jf;
                 
-                try {
-                    if (url.startsWith(JAR_URI_PREFIX) && bang != -1) {
-                        jf = new JarFile(url.substring(JAR_URI_PREFIX.length(), bang)) ;
-                    } else {
-                        logger.error(ltag, "Invalid jar");
-                        return;
-                    }
-                
-                    for (Enumeration<JarEntry> entries = jf.entries(); entries.hasMoreElements();) {
-                        JarEntry entry = entries.nextElement();
+                System.out.println("file="+fileName);
+                for (Enumeration<JarEntry> entries = jf.entries(); entries.hasMoreElements();) {
+                    JarEntry entry = entries.nextElement();
 
-                        if (entry.getName().equals("resources/" + fileName)) {
-                            InputStream in = jf.getInputStream(entry);
-                            String dst = AppCore.getUserDir(Config.DIR_TEMPLATES, user);
-                            dst += File.separator + fileName;
-
-                            AppCore.copyFile(in, dst);
-                        }
+                    if (entry.getName().equals("resources/" + fileName)) {
+                        InputStream in = jf.getInputStream(entry);
+                        String dst = templateDir + File.separator + fileName;
+                        AppCore.copyFile(in, dst);
                     }
-                } catch (IOException e) {
-                    logger.error(ltag, "Failed to copy templates: " + e.getMessage());
-                    return ;
-                }          
-            }
+                }
+            } catch (IOException e) {
+                logger.error(ltag, "Failed to copy templates: " + e.getMessage());
+                return ;
+            }                      
         }
     }
     

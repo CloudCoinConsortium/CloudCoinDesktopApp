@@ -27,7 +27,7 @@ public class ProgramState {
     final public static int SCREEN_CREATE_SKY_WALLET = 9;
     final public static int SCREEN_SHOW_TRANSACTIONS = 10;
     final public static int SCREEN_DEPOSIT = 11;
-    final public static int SCREEN_WITHDRAW = 12;
+    final public static int SCREEN_TRANSFER = 12;
     final public static int SCREEN_IMPORTING = 13;
     final public static int SCREEN_IMPORT_DONE = 14;
     final public static int SCREEN_SUPPORT = 15;
@@ -70,8 +70,8 @@ public class ProgramState {
     final public static int SCREEN_SHOW_CONFIRM_BILL_PAY = 52;
     final public static int SCREEN_DOING_BILL_PAY = 53;
     final public static int SCREEN_BILL_PAY_DONE = 54;
-    
-    
+    final public static int SCREEN_WITHDRAW = 55;
+    final public static int SCREEN_CONFIRM_WITHDRAW = 56;
     
     
     final static int CB_STATE_INIT = 1;
@@ -173,6 +173,7 @@ public class ProgramState {
     
     boolean finishedMc;
 
+    int exportType;
     
     public ProgramState() {
         currentScreen = SCREEN_AGREEMENT;
@@ -253,6 +254,7 @@ public class ProgramState {
         
         finishedMc = false;
 
+        exportType = 0;
     }
  
     public String toString() {

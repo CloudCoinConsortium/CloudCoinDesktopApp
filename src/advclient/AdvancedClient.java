@@ -54,7 +54,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.32";
+    String version = "2.1.33";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -134,6 +134,7 @@ public class AdvancedClient  {
         }
     
         AppCore.readConfig();
+        AppCore.copyTemplatesFromJar();
         resetState();
     }
    
@@ -284,7 +285,7 @@ public class AdvancedClient  {
 
         //AppCore.setDefaultWallet(ps.typedWalletName);
             
-        //AppCore.copyTemplatesFromJar(ps.typedWalletName);
+        
     }
     
     public boolean isActiveWallet(Wallet wallet) {
@@ -369,8 +370,8 @@ public class AdvancedClient  {
         return false;
     }
     
-    public boolean isWithdrawing() {
-        if (ps.currentScreen == ProgramState.SCREEN_WITHDRAW ||
+    public boolean isTransferring() {
+        if (ps.currentScreen == ProgramState.SCREEN_TRANSFER ||
                 ps.currentScreen == ProgramState.SCREEN_CONFIRM_TRANSFER ||
                 ps.currentScreen == ProgramState.SCREEN_SENDING ||
                 ps.currentScreen == ProgramState.SCREEN_TRANSFER_DONE)
@@ -378,6 +379,17 @@ public class AdvancedClient  {
         
         return false;
     }
+    
+    public boolean isWithdrawing() {
+        if (ps.currentScreen == ProgramState.SCREEN_WITHDRAW ||
+                ps.currentScreen == ProgramState.SCREEN_CONFIRM_WITHDRAW)
+            return true;
+        
+        return false;
+        
+    }
+    
+    
     
     public boolean isFixing() {
         if (ps.currentScreen == ProgramState.SCREEN_FIX_FRACKED ||
@@ -496,7 +508,7 @@ public class AdvancedClient  {
             //p.add(padd0);
                         
             c.weightx = 0;
-            c.insets = new Insets(0, 10, 0, 60); 
+            c.insets = new Insets(0, 0, 0, 0); 
             
             // Deposit Button 
             final JButton b0 = new JButton("Deposit");
@@ -504,17 +516,39 @@ public class AdvancedClient  {
             b0.setFocusPainted(false);
             b0.setBorderPainted(false);
             AppUI.noOpaque(b0);
-            AppUI.setTitleBoldFont(b0, 32);
+            AppUI.setTitleBoldFont(b0, 26);
             AppUI.setHandCursor(b0);
             if (isDepositing()) {
-                AppUI.underLine(b0);
+                AppUI.underLine(b0);  
             } else {
                 AppUI.noUnderLine(b0);
             }
             
             gridbag.setConstraints(b0, c);
             p.add(b0);
-            c.insets = new Insets(0, 10, 0, 0); 
+            c.insets = new Insets(0, 5, 0, 0); 
+            
+            
+            // Withdraw button
+            final JButton b2 = new JButton("Withdraw");
+            b2.setContentAreaFilled(false);
+            b2.setFocusPainted(false);
+            b2.setBorderPainted(false);
+            AppUI.noOpaque(b2);
+            AppUI.setTitleBoldFont(b2, 26);
+            AppUI.setHandCursor(b2);
+            if (isWithdrawing()) {
+                AppUI.underLine(b2);
+            } else {
+                AppUI.noUnderLine(b2);
+            }
+            
+            gridbag.setConstraints(b2, c);
+            p.add(b2);
+            c.insets = new Insets(0, 5, 0, 0); 
+            
+            
+            
 
             // Transfer Button
             final JButton b1 = new JButton("Transfer");
@@ -522,10 +556,10 @@ public class AdvancedClient  {
             b1.setContentAreaFilled(false);
             b1.setBorderPainted(false);
             b1.setFocusPainted(false);
-            AppUI.setTitleBoldFont(b1, 32);
+            AppUI.setTitleBoldFont(b1, 26);
             AppUI.setHandCursor(b1);
             
-            if (isWithdrawing()) {
+            if (isTransferring()) {
                 AppUI.underLine(b1);
             } else {
                 AppUI.noUnderLine(b1);
@@ -540,12 +574,25 @@ public class AdvancedClient  {
                     JButton b = (JButton) e.getSource();
                     
                     resetState();
-                    ps.currentScreen = ProgramState.SCREEN_PREDEPOSIT;
+                    //ps.currentScreen = ProgramState.SCREEN_PREDEPOSIT;
+                    ps.isSkyDeposit = false;
+                    ps.currentScreen = ProgramState.SCREEN_DEPOSIT;
                     showScreen();
                 }
             };
             
             ActionListener al1 = new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    JButton b = (JButton) e.getSource();
+                    
+                    resetState();
+                    ps.currentScreen = ProgramState.SCREEN_TRANSFER;
+                    showScreen();
+                }
+            };
+            
+            ActionListener al2 = new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     JButton b = (JButton) e.getSource();
@@ -579,6 +626,20 @@ public class AdvancedClient  {
                 public void mouseExited(MouseEvent e) {                   
                     JButton b = (JButton) e.getSource();
                     
+                    if (!isTransferring())
+                        AppUI.noUnderLine(b);
+                }
+            };
+            
+            MouseAdapter ma2 = new MouseAdapter() {
+                public void mouseEntered(MouseEvent e) {                   
+                    JButton b = (JButton) e.getSource();
+                    
+                    AppUI.underLine(b);
+                }
+                public void mouseExited(MouseEvent e) {                   
+                    JButton b = (JButton) e.getSource();
+                    
                     if (!isWithdrawing())
                         AppUI.noUnderLine(b);
                 }
@@ -586,8 +647,10 @@ public class AdvancedClient  {
                    
             b0.addActionListener(al0);
             b1.addActionListener(al1);
+            b2.addActionListener(al2);
             b0.addMouseListener(ma0);
             b1.addMouseListener(ma1);
+            b2.addMouseListener(ma2);
         }
 
         c.weightx = 1;
@@ -879,7 +942,7 @@ public class AdvancedClient  {
                 ps.currentWallet = null;
                 showDepositScreen();
                 break;
-            case ProgramState.SCREEN_WITHDRAW:
+            case ProgramState.SCREEN_TRANSFER:
                 ps.currentWallet = null;
                 showTransferScreen();
                 break;
@@ -999,6 +1062,12 @@ public class AdvancedClient  {
                 break;
             case ProgramState.SCREEN_DOING_BILL_PAY:
                 showSendingBillPayScreen();
+                break;
+            case ProgramState.SCREEN_WITHDRAW:
+                showWithdrawScreen();
+                break;
+            case ProgramState.SCREEN_CONFIRM_WITHDRAW:
+                showConfirmWithdrawScreen();
                 break;
         }
         
@@ -2412,7 +2481,7 @@ public class AdvancedClient  {
         JPanel bp = getTwoButtonPanelCustom("Next Transfer", "Done", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 resetState();
-                ps.currentScreen = ProgramState.SCREEN_WITHDRAW;
+                ps.currentScreen = ProgramState.SCREEN_TRANSFER;
                 showScreen();
             }
         },  new ActionListener() {
@@ -2591,7 +2660,9 @@ public class AdvancedClient  {
         JPanel bp = getTwoButtonPanelCustom("Next Deposit", "Continue", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 resetState();
-                ps.currentScreen = ProgramState.SCREEN_PREDEPOSIT;
+                //ps.currentScreen = ProgramState.SCREEN_PREDEPOSIT;
+                ps.isSkyDeposit = false;
+                ps.currentScreen = ProgramState.SCREEN_DEPOSIT;
                 showScreen();
             }
         },  new ActionListener() {
@@ -3185,6 +3256,147 @@ public class AdvancedClient  {
         
         subInnerCore.add(bp);         
     }
+    
+    public void showConfirmWithdrawScreen() {
+        JPanel subInnerCore = getModalJPanel("Withdraw Confirmation");
+     
+        // Container
+        JPanel ct = new JPanel();
+        AppUI.noOpaque(ct);
+        subInnerCore.add(ct);
+        
+        GridBagLayout gridbag = new GridBagLayout();
+        GridBagConstraints c = new GridBagConstraints();      
+        ct.setLayout(gridbag);
+        
+        int y = 0;
+        // From Label
+        JLabel x = new JLabel("From:   ");
+        AppUI.setCommonFont(x);
+        c.anchor = GridBagConstraints.EAST;
+        c.insets = new Insets(0, 0, 4, 0); 
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+
+        String name = ps.srcWallet.getName();
+        
+        x = new JLabel(name);
+        AppUI.setCommonBoldFont(x);
+        c.anchor = GridBagConstraints.WEST;
+        c.gridx = GridBagConstraints.RELATIVE;;
+        c.gridy = y;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+               
+        y++;
+        
+        String to;
+        to = ps.chosenFile;
+        if (to.length() > 24) {
+            to = to.substring(0, 24) + "...";
+        }
+               
+        // To Label
+        x = new JLabel("To:   ");
+        AppUI.setCommonFont(x);
+        c.anchor = GridBagConstraints.EAST;
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+
+        x = new JLabel(to);
+        AppUI.setCommonBoldFont(x);
+        c.anchor = GridBagConstraints.WEST;
+        c.gridx = GridBagConstraints.RELATIVE;;
+        c.gridy = y;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+               
+        y++;
+        
+               
+        // Amount
+        x = new JLabel("Amount:   ");
+        AppUI.setCommonFont(x);
+        c.insets = new Insets(32, 0, 4, 0);
+        c.anchor = GridBagConstraints.EAST;
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+
+        x = new JLabel(ps.typedAmount + " CC");
+        AppUI.setCommonBoldFont(x);
+        c.anchor = GridBagConstraints.WEST;
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+               
+        y++;
+        
+        String memo = ps.typedMemo;
+        if (memo.length() > 24) {
+            memo = memo.substring(0, 24) + "...";
+        }
+        
+        // Memo
+        x = new JLabel("Memo:   ");
+        AppUI.setCommonFont(x);
+        c.insets = new Insets(0, 0, 4, 0);
+        c.anchor = GridBagConstraints.EAST;
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+
+        x = new JLabel(memo);
+        AppUI.setCommonBoldFont(x);
+        c.anchor = GridBagConstraints.WEST;
+        c.gridx = GridBagConstraints.RELATIVE;;
+        c.gridy = y;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+               
+        y++; 
+        
+        
+        // Q
+        x = new JLabel("Do you wish to continue?");
+        AppUI.setCommonFont(x);
+        c.insets = new Insets(32, 0, 4, 0);
+        c.anchor = GridBagConstraints.CENTER;
+        c.gridx = GridBagConstraints.RELATIVE;;
+        c.gridy = y;
+        c.gridwidth = 2;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+               
+        y++; 
+             
+        JPanel bp = getTwoButtonPanel(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                ps.srcWallet.setPassword(ps.typedSrcPassword);         
+                sm.setActiveWalletObj(ps.srcWallet);               
+                if (ps.srcWallet.isEncrypted()) {
+                    sm.startSecureExporterService(ps.exportType, ps.typedAmount, ps.typedMemo, ps.chosenFile, false, new ExporterCb());
+                } else {
+                    sm.startExporterService(ps.exportType, ps.typedAmount, ps.typedMemo, ps.chosenFile, false, new ExporterCb());
+                }
+                
+                ps.currentScreen = ProgramState.SCREEN_EXPORTING;
+                ps.isSkyDeposit = false;
+                showScreen();
+            }
+        });
+  
+        
+        subInnerCore.add(bp);    
+    }
+            
     
     public void showConfirmTransferScreen() {
         JPanel subInnerCore = getModalJPanel("Transfer Confirmation");
@@ -4452,6 +4664,387 @@ public class AdvancedClient  {
                 
                 ps.currentScreen = ProgramState.SCREEN_CONFIRM_TRANSFER;
                 showScreen();
+            }
+        });
+        
+        AppUI.hr(rightPanel, 20);
+        rightPanel.add(bp);   
+    }
+    
+    public void showWithdrawDoneScreen() {
+        
+    }
+    
+    public void showWithdrawScreen() {
+        showLeftScreen();
+        JPanel rightPanel = getRightPanel();    
+    
+        JPanel ct = new JPanel();
+        AppUI.setBoxLayout(ct, true);
+        AppUI.noOpaque(ct);
+        rightPanel.add(ct);
+        
+        JLabel ltitle = AppUI.getTitle("Withdraw");   
+        ct.add(ltitle);
+        AppUI.alignTop(ct);
+        AppUI.alignTop(ltitle);
+        
+        AppUI.hr(ct, 10);
+
+        
+        maybeShowError(ct);
+        
+        // Outer Container
+        JPanel oct = new JPanel();
+        AppUI.noOpaque(oct);
+        
+        int y = 0;
+        
+        GridBagLayout gridbag = new GridBagLayout();
+        GridBagConstraints c = new GridBagConstraints(); 
+        c.gridwidth = 1;
+        c.anchor = GridBagConstraints.EAST;
+        c.insets = new Insets(12, 18, 0, 0); 
+        oct.setLayout(gridbag);
+        
+        
+        // Transfer from
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;   
+        JLabel x = new JLabel("         Withdraw From");
+        gridbag.setConstraints(x, c);
+        AppUI.setCommonFont(x);
+        oct.add(x);
+        
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;     
+ 
+        
+        final optRv rvFrom = setOptionsForWalletsCommon(false, false, false, null);
+        if (rvFrom.idxs.length == 0) {
+            ps.errText = "No Wallets to Transfer From";
+            maybeShowError(ct);
+            return;
+        }
+        
+        final optRv rvTo = setOptionsForWalletsAll(null);
+        final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(AppUI.getColor2(), "Make Selection", rvFrom.options);
+        gridbag.setConstraints(cboxfrom.getComboBox(), c);
+        oct.add(cboxfrom.getComboBox());
+        
+        y++;
+
+        // Password From
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;   
+        final JLabel spText = new JLabel("Password From");
+        gridbag.setConstraints(spText, c);
+        AppUI.setCommonFont(spText);
+        oct.add(spText);
+        
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;     
+        final MyTextField passwordSrc = new MyTextField("Wallet Password", true);
+        gridbag.setConstraints(passwordSrc.getTextField(), c);
+        oct.add(passwordSrc.getTextField());     
+        y++;
+        
+        passwordSrc.getTextField().setVisible(false);
+        spText.setVisible(false);
+               
+        // Local folder
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;   
+        final JLabel lfText = new JLabel("Local folder");
+        gridbag.setConstraints(lfText, c);
+        AppUI.setCommonFont(lfText);
+        oct.add(lfText);
+        
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;     
+        
+        if (ps.chosenFile.isEmpty())
+            ps.chosenFile = Config.DEFAULT_EXPORT_DIR;
+
+        final JFileChooser chooser = new JFileChooser();
+        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        chooser.setAcceptAllFileFilterUsed(false);
+     
+        final MyTextField localFolder = new MyTextField("Select Folder", false, true);
+        localFolder.setData(new File(ps.chosenFile).getName());
+        localFolder.setFilepickerListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (!Config.DEFAULT_EXPORT_DIR.isEmpty())
+                    chooser.setCurrentDirectory(new File(Config.DEFAULT_EXPORT_DIR));
+                
+                int returnVal = chooser.showOpenDialog(null);
+                if (returnVal == JFileChooser.APPROVE_OPTION) {       
+                    ps.chosenFile = chooser.getSelectedFile().getAbsolutePath();
+                    localFolder.setData(chooser.getSelectedFile().getName());
+                    Config.DEFAULT_EXPORT_DIR = ps.chosenFile;
+                    AppCore.writeConfig();
+                }
+            }
+        });
+        gridbag.setConstraints(localFolder.getTextField(), c);
+        oct.add(localFolder.getTextField());     
+        y++;
+        
+        
+        // Amount
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;   
+        x = new JLabel("Amount");
+        gridbag.setConstraints(x, c);
+        AppUI.setCommonFont(x);
+        oct.add(x);
+        
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;     
+        final MyTextField amount = new MyTextField("0 CC", false);
+        gridbag.setConstraints(amount.getTextField(), c);
+        if (ps.typedAmount > 0)
+            amount.setData("" + ps.typedAmount);
+        oct.add(amount.getTextField());    
+        y++;
+                    
+        // Memo
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;   
+        x = new JLabel("Memo (Note)");
+        gridbag.setConstraints(x, c);
+        AppUI.setCommonFont(x);
+        oct.add(x);
+        
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;     
+        final MyTextField memo = new MyTextField("Optional", false);
+        gridbag.setConstraints(memo.getTextField(), c);
+        if (!ps.typedMemo.isEmpty())
+            memo.setData(ps.typedMemo);
+        oct.add(memo.getTextField());   
+        y++;
+        
+        
+        JPanel xct = new JPanel();
+        AppUI.setBoxLayout(xct, false);
+        AppUI.alignCenter(xct);
+        AppUI.setSize(xct, 600, 80);
+        AppUI.noOpaque(xct);
+        
+        
+        // Radio
+        ButtonGroup nwGroup = new ButtonGroup();
+        
+        final MyRadioButton rb0 = new MyRadioButton();
+        xct.add(rb0.getRadioButton());
+        rb0.attachToGroup(nwGroup);
+        rb0.select();
+        JLabel x0 = new JLabel("Stack");
+        AppUI.setMargin(x0, 0, 0, 0, 32);
+        AppUI.setFont(x0, 16);
+        xct.add(x0);
+        
+        
+        final MyRadioButton rb1 = new MyRadioButton();
+        gridbag.setConstraints(rb1.getRadioButton(), c);
+        xct.add(rb1.getRadioButton());
+        rb1.attachToGroup(nwGroup);     
+        x0 = new JLabel("PNG");
+        AppUI.setMargin(x0, 0, 0, 0, 32);
+        AppUI.setFont(x0, 16);
+        xct.add(x0);
+        
+        final MyRadioButton rb2 = new MyRadioButton();
+        gridbag.setConstraints(rb2.getRadioButton(), c);
+        xct.add(rb2.getRadioButton());
+        rb2.attachToGroup(nwGroup);     
+        x0 = new JLabel("JPEG");
+        AppUI.setFont(x0, 16);
+        xct.add(x0);
+        
+        c.gridwidth = 2;
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+        gridbag.setConstraints(xct, c);
+        oct.add(xct);
+        
+        y++;
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+
+        rightPanel.add(oct);
+
+        cboxfrom.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                int srcIdx = cboxfrom.getSelectedIndex() - 1;
+                if (srcIdx < 0 || srcIdx >= wallets.length) 
+                    return;
+                
+                srcIdx = rvFrom.idxs[srcIdx];
+                Wallet srcWallet = wallets[srcIdx];
+                if (srcWallet == null)
+                    return;
+
+                if (srcWallet.isEncrypted()) {                 
+                    passwordSrc.getTextField().setVisible(true);
+                    spText.setVisible(true);
+                } else {
+                    passwordSrc.getTextField().setVisible(false);
+                    spText.setVisible(false);
+                }          
+            }
+        });
+        
+             
+        if (ps.srcWallet != null && ps.selectedFromIdx > 0) {
+            cboxfrom.setDefaultIdx(ps.selectedFromIdx);
+        }
+    
+        // Space
+        AppUI.hr(oct, 22);
+        
+        JPanel bp = getTwoButtonPanel(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                
+                ps.typedMemo = memo.getText().trim();
+              
+                int srcIdx = cboxfrom.getSelectedIndex() - 1;
+                
+                ps.selectedFromIdx = cboxfrom.getSelectedIndex();
+
+       
+                if (srcIdx < 0 || srcIdx >= rvFrom.idxs.length) {                    
+                    ps.errText = "Please select From Wallet";
+                    showScreen();
+                    return;
+                }
+                
+                srcIdx = rvFrom.idxs[srcIdx];                  
+                Wallet srcWallet = wallets[srcIdx];
+                ps.srcWallet = srcWallet;
+
+       
+                try {
+                    ps.typedAmount = Integer.parseInt(amount.getText());
+                } catch (NumberFormatException ex) {
+                    ps.errText = "Invalid amount";
+                    showScreen();
+                    return;   
+                };
+                
+                if (ps.typedAmount <= 0) {
+                    ps.errText = "Transfer must be higher than zero";
+                    showScreen();
+                    return;  
+                }
+                
+                if (!Validator.memoLength(ps.typedMemo)) {
+                    ps.errText = "Memo too long. Only 64 characters are allowed";
+                    showScreen();
+                    return;
+                }
+                
+                ps.typedMemo = ps.typedMemo.trim();
+                if (!ps.typedMemo.isEmpty()) {
+                    if (!Validator.memo(ps.typedMemo)) {
+                        ps.errText = "Memo: special characters not allowed! Use numbers and letters only";
+                        showScreen();
+                        return;
+                    }
+                }
+
+                if (srcWallet.isEncrypted()) {
+                    if (passwordSrc.getText().isEmpty()) {
+                        ps.errText = "From Password is empty";
+                        showScreen();
+                        return;
+                    }
+                    
+                    String wHash = srcWallet.getPasswordHash();
+                    String providedHash = AppCore.getMD5(passwordSrc.getText());
+                    if (wHash == null) {
+                        ps.errText = "From Wallet is corrupted";
+                        showScreen();
+                        return;
+                    }
+                    
+                    if (!wHash.equals(providedHash)) {
+                        ps.errText = "From Password is incorrect";
+                        showScreen();
+                        return;
+                    } 
+                    
+                    ps.typedSrcPassword = passwordSrc.getText();
+                }
+                
+                if (ps.typedAmount > srcWallet.getTotal()) {
+                    ps.errText = "Insufficient funds";
+                    showScreen();
+                    return;
+                }
+                
+                    
+                ps.typedMemo = ps.typedMemo.trim();
+                    
+                // Local folder
+                if (ps.chosenFile.isEmpty()) {
+                    ps.errText = "Folder is not chosen";
+                    showScreen();
+                    return;
+                }
+                    
+                if (ps.srcWallet.isSkyWallet()) {
+                    ps.errText = "Transfer from Sky Wallet to Local Folder is not supported";
+                    showScreen();
+                    return;
+                }
+                    
+                if (ps.typedMemo.isEmpty())
+                    ps.typedMemo = "Export";
+                    
+                String filename = ps.chosenFile + File.separator + ps.typedAmount + ".CloudCoin." + ps.typedMemo + ".stack";
+                File f = new File(filename);
+                if (f.exists()) {
+                    ps.errText = "<html><div style='width:660px;text-align:center'>File with the same Memo already exists in " 
+                        + ps.chosenFile + " folder. Use different Memo or change folder for your transfer</div></html>";
+                    showScreen();
+                    return;
+                }
+
+                if (rb0.isSelected())
+                    ps.exportType = Config.TYPE_STACK;
+                else if (rb1.isSelected())
+                    ps.exportType = Config.TYPE_PNG;
+                else if (rb2.isSelected())
+                    ps.exportType = Config.TYPE_JPEG;
+                
+                ps.sendType = ProgramState.SEND_TYPE_FOLDER;    
+                    
+                setActiveWallet(ps.srcWallet);
+                ps.currentScreen = ProgramState.SCREEN_CONFIRM_WITHDRAW;
+                showScreen();
+                
             }
         });
         
@@ -7297,7 +7890,7 @@ public class AdvancedClient  {
     public void showExportingScreen() {
         boolean isError = !ps.errText.equals("");
         
-        JPanel subInnerCore = getModalJPanel("Exporting Coins. Please wait...");
+        JPanel subInnerCore = getModalJPanel("Withdrawing Coins. Please wait...");
         maybeShowError(subInnerCore);
       
         AppUI.hr(subInnerCore, 4);
@@ -8914,7 +9507,7 @@ public class AdvancedClient  {
             wl.debug(ltag, "AuthenticatorSkyCoin finished");
             
             final Object fresult = result;
-            if (isWithdrawing())
+            if (isTransferring())
                 ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
             else
                 ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
@@ -9076,7 +9669,7 @@ public class AdvancedClient  {
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {
                         ps.errText = "Operation Cancelled";
-                        if (isWithdrawing())
+                        if (isTransferring())
                             ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
                         else
                             ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
@@ -9266,7 +9859,7 @@ public class AdvancedClient  {
                 public void run() {
                     if (isDepositing()) {
                         ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
-                    } else if (isWithdrawing() || isMakingChange()) {
+                    } else if (isTransferring() || isMakingChange()) {
                         ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
                     } else if (isFixing()) {
                         ps.currentScreen = ProgramState.SCREEN_FIX_DONE;
@@ -9310,7 +9903,7 @@ public class AdvancedClient  {
                             wl.debug(ltag, "Failed to fix. Trying to move the coin back");
                             cc = AppCore.findCoinBySN(Config.DIR_FRACKED, ps.srcWallet.getName(), ps.coinIDinFix.getIDCoin().sn);
                             if (cc == null) {
-                                ps.currentScreen = ProgramState.SCREEN_WITHDRAW;
+                                ps.currentScreen = ProgramState.SCREEN_TRANSFER;
                                 ps.errText = "Failed to find fixed coin. Please, check main.log file";
                                 showScreen();
                                 return;
@@ -9322,13 +9915,13 @@ public class AdvancedClient  {
                         wl.debug(ltag, "Found cc: " + cc.originalFile);
                         
                         if (!AppCore.moveToFolderNewName(cc.originalFile, AppCore.getIDDir(), null, ps.coinIDinFix.getName() + ".stack")) {
-                            ps.currentScreen = ProgramState.SCREEN_WITHDRAW;
+                            ps.currentScreen = ProgramState.SCREEN_TRANSFER;
                             ps.errText = "Failed to move ID Coin. Please, check main.log file";
                             showScreen();
                             return;
                         }
                         
-                        ps.currentScreen = ProgramState.SCREEN_WITHDRAW;
+                        ps.currentScreen = ProgramState.SCREEN_TRANSFER;
                         if (fixed)
                             ps.errText = "ID Coin has been fixed. Please try again";
                         else
@@ -9361,7 +9954,7 @@ public class AdvancedClient  {
                         if (isFixing()) {
                             ps.currentScreen = ProgramState.SCREEN_FIX_DONE;
                         } else {
-                            if (isWithdrawing())
+                            if (isTransferring())
                                 ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
                             else
                                 ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;

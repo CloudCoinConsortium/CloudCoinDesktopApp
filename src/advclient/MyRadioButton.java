@@ -78,10 +78,10 @@ public class MyRadioButton {
         try {
             Image img;
             
-            img = ImageIO.read(getClass().getClassLoader().getResource("resources/radio.png"));
+            img = ImageIO.read(getClass().getClassLoader().getResource("resources/radiodark.png"));
             imgUnchecked = new ImageIcon(img);
             
-            img = ImageIO.read(getClass().getClassLoader().getResource("resources/radioChecked.png"));
+            img = ImageIO.read(getClass().getClassLoader().getResource("resources/radiodarkChecked.png"));
             imgChecked = new ImageIcon(img);
         } catch (Exception ex) {
 
@@ -105,32 +105,5 @@ public class MyRadioButton {
          
          
         return p;
-         
-         
-         
-         
-         
-         
-         
-         
-      /*   
-         radio.setOpaque(false);
-           radio2.setOpaque(false);
-         
-         
-         
-         
-         
-      
-         JPanel p = new JPanel(new FlowLayout());
-    ui.setSize(p, w + 120, h + 10);
-    p.add(radio);
-    p.add(radio2);
-   // p.add(combo2);
-    p.setOpaque(false);
-    p.setBackground(new Color(0x775FA8FF));
-    
-    return p;
-    */
     }
 }

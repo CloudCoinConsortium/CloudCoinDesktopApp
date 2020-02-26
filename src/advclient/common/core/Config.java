@@ -25,7 +25,7 @@ public class Config {
     public static String DIR_REQUESTS = "Requests";
     public static String DIR_REQUESTRESPONSE = "RequestsResponse";
     public static String DIR_SUSPECT = "Suspect";
-    public static String DIR_TEMPLATES = "Templates";
+    
     public static String DIR_TRASH = "Trash";
     public static String DIR_TRUSTEDTRANSFER = "TrustedTransfer";
     public static String DIR_CONFIG = "Config";
@@ -33,6 +33,7 @@ public class Config {
     public static String DIR_VAULT = "Vault";
 
 
+    public static String DIR_TEMPLATES = "Templates";
     public static String DIR_EMAIL_TEMPLATES = "EmailTemplates";
     public static String DIR_ACCOUNTS = "Accounts";
     public static String DIR_DEFAULT_USER = "Default_User_NonExist";
@@ -196,5 +197,7 @@ public class Config {
     public static int MAX_EXPORTED_NOTES = 3000;
     
     final public static String SENT_SKYCOINS_FILENAME = "sentcoins.csv";
+    
+    final public static String PNG_TEMPLATE_NAME = "template.png";
 
 }

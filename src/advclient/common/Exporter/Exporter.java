@@ -228,11 +228,11 @@ public class Exporter extends Servant {
     }
 
     private boolean exportJpeg(String dir, String user, String tag) {
-        String templateDir = AppCore.getUserDir(Config.DIR_TEMPLATES, user);
+        String templateDir = AppCore.getTemplateDir();
         String fileName;
         StringBuilder sb;
 
-        sb = new StringBuilder();
+        
 
         byte[] bytes;
         for (CloudCoin cc : coinsPicked) {
@@ -247,6 +247,7 @@ public class Exporter extends Servant {
 
             logger.info(ltag, "Loaded: " + bytes.length);
 
+            sb = new StringBuilder();
             // Ans
             for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
                 sb.append(cc.ans[i]);
@@ -270,6 +271,7 @@ public class Exporter extends Servant {
             // SN
             sb.append(AppCore.padString(Integer.toHexString(cc.sn).toUpperCase(), 6, '0'));
 
+            System.out.println(AppCore.padString(Integer.toHexString(cc.sn).toUpperCase(), 6, '0'));
 
             byte[] ccArray = AppCore.hexStringToByteArray(sb.toString());
             int offset = 20;
@@ -277,7 +279,7 @@ public class Exporter extends Servant {
                 bytes[offset + j] = ccArray[j];
             }
 
-            fileName = cc.getDenomination() + ".CloudCoin." + tag + ".jpeg";
+            fileName = cc.getDenomination() + "." + cc.sn + ".CloudCoin." + tag + ".jpeg";
             fileName = dir + File.separator + fileName;
 
             logger.info(ltag, "saving bytes " + bytes.length);
