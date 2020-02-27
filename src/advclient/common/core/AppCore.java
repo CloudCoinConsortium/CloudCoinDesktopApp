@@ -17,6 +17,7 @@ import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -30,6 +31,7 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -39,6 +41,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.zip.CRC32;
+import java.util.zip.Checksum;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -1371,7 +1375,7 @@ public class AppCore {
     
     public static boolean hasCoinExtension(File file) {
         String f = file.toString().toLowerCase();
-        if (f.endsWith(".stack") || f.endsWith(".jpg") || f.endsWith(".jpeg"))
+        if (f.endsWith(".stack") || f.endsWith(".jpg") || f.endsWith(".jpeg") || f.endsWith(".png"))
             return true;
         
         logger.debug(ltag, "Ignoring invalid extension " + file.toString());
@@ -1575,5 +1579,59 @@ public class AppCore {
         return total;
     }
     
+    public static int basicPngChecks(byte[] bytes) {    
+        if (bytes[0] != 0x89 && bytes[1] != 0x50 && bytes[2] != 0x4e && bytes[3] != 0x45 
+                && bytes[4] != 0x0d && bytes[5] != 0x0a && bytes[6] != 0x1a && bytes[7] != 0x0a) {
+            logger.error(ltag, "Invalid PNG signature");
+            return -1;
+        }
+
+        long chunkLength = AppCore.getUint32(bytes, 8);
+        long headerSig = AppCore.getUint32(bytes, 12);
+        if (headerSig != 0x49484452) {
+            logger.error(ltag, "Invalid PNG header");
+            return -1;
+        }
+   
+        int idx = (int)(16 + chunkLength);        
+        long crcSig = AppCore.getUint32(bytes, idx);
+        long calcCrc = AppCore.crc32(bytes, 12, (int)(chunkLength + 4));
+        if (crcSig != calcCrc) {
+            logger.error(ltag, "Invalid PNG Crc32 checksum");
+            return -1;
+        }
+               
+        
+        return idx;
+    }
     
+    public static long getUint32(byte[] bytes, int offset) {
+        byte[] nbytes = Arrays.copyOfRange(bytes, offset, offset + 4);
+        ByteBuffer buffer = ByteBuffer.allocate(8).put(new byte[]{0, 0, 0, 0}).put(nbytes);
+        buffer.position(0);
+
+        return buffer.getLong();
+    }
+    
+    public static void setUint32(byte[] data, int offset, long value) {
+        byte[] bytes = new byte[8];
+        ByteBuffer.wrap(bytes).putLong(value);
+
+        data[offset] = bytes[4];
+        data[offset + 1] = bytes[5];
+        data[offset + 2] = bytes[6];
+        data[offset + 3] = bytes[7];
+        
+        return;
+    }
+
+    public static long crc32(byte[] data, int offset, int length) {
+        byte[] nbytes = Arrays.copyOfRange(data, offset, offset + length);
+        Checksum checksum = new CRC32();
+        checksum.update(nbytes, 0, nbytes.length);
+        long checksumValue = checksum.getValue();
+        
+        return checksumValue;
+    }
+
 }

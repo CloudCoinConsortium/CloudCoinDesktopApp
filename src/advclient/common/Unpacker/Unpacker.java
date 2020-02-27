@@ -22,6 +22,7 @@ import global.cloudcoin.ccbank.core.GLogger;
 import global.cloudcoin.ccbank.core.RAIDA;
 import global.cloudcoin.ccbank.core.Servant;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class Unpacker extends Servant {
     String ltag = "Unpacker";
@@ -139,7 +140,9 @@ public class Unpacker extends Servant {
             } else if (extension.equals("stack")) {
                 rv = doUnpackStack(file.toString());
             } else if (extension.equals("coin")) {
-                rv = doUnpackBinary(file.toString());
+                rv = doUnpackBinary(file.toString()); 
+            } else if (extension.equals("png")) {
+                rv = doUnpackPng(file.toString());
             } else {
                 rv = doUnpackStack(file.toString());
             }
@@ -286,6 +289,86 @@ public class Unpacker extends Servant {
 
         return true;
     }
+    
+    
+    public boolean doUnpackPng(String fileName) {
+        logger.info(ltag, "Unpacking png");
+
+        CloudCoin[] ccs;
+        
+        byte[] bytes = AppCore.loadFileToBytes(fileName);
+        if (bytes == null) {
+            logger.error(ltag, "Failed to load file " + fileName);
+            return false;
+        }
+
+        int idx = AppCore.basicPngChecks(bytes);
+        if (idx == -1) {
+            System.out.println("cirrupted");
+            logger.error(ltag, "PNG is corrupted");
+            return false;
+        }
+
+        int i = 0;
+        long length;
+                        
+        while (true) {
+            length = AppCore.getUint32(bytes, idx + 4 + i);
+            System.out.println("l="+length);
+            if (length == 0) {
+                i += 12;
+                System.out.println("zero");
+                if (i > bytes.length) {
+                    System.out.println("zero out");
+                    logger.error(ltag, "CloudCoin was not found");
+                    return false;
+                }
+            }
+                       
+            StringBuilder sb = new StringBuilder();
+            sb.append(Character.toChars(bytes[idx + 4 + i + 4]));
+            sb.append(Character.toChars(bytes[idx + 4 + i + 5]));
+            sb.append(Character.toChars(bytes[idx + 4 + i + 6]));
+            sb.append(Character.toChars(bytes[idx + 4 + i + 7]));
+            String signature = sb.toString();
+
+            logger.debug(ltag, "sig " + signature);
+            if (signature.equals("cLDc")) {
+                long crcSig = AppCore.getUint32(bytes, idx + 4 + i + 8 + (int) length);
+                long calcCrc = AppCore.crc32(bytes, idx + 4 + i + 4, (int)(length + 4));
+
+                System.out.println("crc " + crcSig + " calc="+calcCrc);
+                if (crcSig != calcCrc) {
+                    logger.error(ltag, "Invalid CRC32");
+                    return false;
+                }
+
+                break;
+            }
+
+            i += length + 12;
+            if (i > bytes.length) {
+                logger.error(ltag, "CloudCoin was not found");
+                return false;
+            }
+        }
+        
+        byte[] nbytes =  Arrays.copyOfRange(bytes, idx + 4 + i + 8, idx + 4 + i + 8 + (int)length);
+        String sdata = new String(nbytes);
+
+
+        logger.debug(ltag, "Extracted coin. Length: " + sdata.length());     
+        ccs = parseStack(sdata);
+        if (ccs == null)
+            return false;
+
+        for (i = 0; i < ccs.length; i++) {
+            addCoinToRccs(ccs[i], fileName);
+        }
+
+        return true;
+    }
+    
 
     public boolean doUnpackStack(String fileName) {
         logger.info(ltag, "Unpacking stack");

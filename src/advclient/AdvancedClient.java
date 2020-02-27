@@ -5792,7 +5792,7 @@ public class AdvancedClient  {
             public void filesDropped( java.io.File[] files ) {   
                 for( int i = 0; i < files.length; i++ ) {
                     if (!AppCore.hasCoinExtension(files[i])) {
-                        ps.errText = "File must have .jpeg or .stack extension";
+                        ps.errText = "File must have .png, .jpeg or .stack extension";
                         maybeShowError(ct);
                         return;
                     }

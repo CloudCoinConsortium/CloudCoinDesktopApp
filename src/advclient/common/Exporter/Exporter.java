@@ -271,8 +271,6 @@ public class Exporter extends Servant {
             // SN
             sb.append(AppCore.padString(Integer.toHexString(cc.sn).toUpperCase(), 6, '0'));
 
-            System.out.println(AppCore.padString(Integer.toHexString(cc.sn).toUpperCase(), 6, '0'));
-
             byte[] ccArray = AppCore.hexStringToByteArray(sb.toString());
             int offset = 20;
             for (int j =0; j < ccArray.length; j++) {
@@ -291,8 +289,6 @@ public class Exporter extends Servant {
             er.totalExported += cc.getDenomination();
             er.exportedFileNames.add(fileName);
         }
-
- 
 
         return true;
     }
@@ -327,7 +323,7 @@ public class Exporter extends Servant {
             fileName = dir;
         }
         
-        String tdir = AppCore.getUserDir(Config.DIR_TEMPLATES, user);
+        String tdir = AppCore.getTemplateDir();
         File dirObj = new File(tdir);
         if (!dirObj.exists()) {
             logger.error(ltag, "Template dir doesn't exist: " + tdir);
@@ -364,34 +360,43 @@ public class Exporter extends Servant {
             return false;
         }
         
-        logger.info(ltag, "Loaded: " + bytes.length);
+        int idx = AppCore.basicPngChecks(bytes);
+        if (idx == -1) {
+            logger.error(ltag, "PNG checks failed");
+            return false;
+        }
+         
+        logger.info(ltag, "Loaded, bytes: " + bytes.length);
         int dl = data.length();
+        int chunkLength = dl + 12;
         logger.debug(ltag, "data length " + dl);
-        
-        byte[] nbytes = new byte[bytes.length + dl + 12];
-        for (int i = 0; i < 33; i++) {
+        byte[] nbytes = new byte[bytes.length + chunkLength];
+        for (int i = 0; i < idx + 4; i++) {
             nbytes[i] = bytes[i];
         }
 
-        int totalLength = dl + 8;
+        // Setting up the chunk
+        // Set length
+        AppCore.setUint32(nbytes, idx + 4, dl);
         
-        nbytes[33] = (byte)(totalLength >> 24);
-        nbytes[34] = (byte)(totalLength >> 16);
-        nbytes[35] = (byte)(totalLength >> 8);
-        nbytes[36] = (byte)(totalLength);
-        
-        nbytes[37] = nbytes[38] = nbytes[39] = nbytes[40] = 0x20;
-        
-        
-        
+        // Header cLDc
+        nbytes[idx + 4 + 4] = 0x63;
+        nbytes[idx + 4 + 5] = 0x4c;
+        nbytes[idx + 4 + 6] = 0x44;
+        nbytes[idx + 4 + 7] = 0x63;
+                
         for (int i = 0; i < dl; i++) {
-            nbytes[i + 41] = (byte) data.charAt(i);
+            nbytes[i + idx + 4 + 8] = (byte) data.charAt(i);
         }
+
+        // crc
+        long crc32 = AppCore.crc32(nbytes, idx + 8, dl + 4);
+        AppCore.setUint32(nbytes, idx + 8 + dl + 4, crc32);
+        logger.debug(ltag, "crc32 " + crc32);
         
-        nbytes[41 + dl] = nbytes[41 + dl + 1] = nbytes[41 + dl + 2] = nbytes[41 + dl + 3] = 0x20;
-        
-        for (int i = 0; i < bytes.length - 33; i++) {
-            nbytes[i + 41 + dl + 4] = bytes[i + 33];
+        // Rest data
+        for (int i = 0; i < bytes.length - idx - 4; i++) {
+            nbytes[i + idx + 8 + dl + 4 + 4] = bytes[i + idx + 4];
         }
 
         File f = new File(fileName);
@@ -410,8 +415,7 @@ public class Exporter extends Servant {
         er.exportedFileNames.add(fileName);
         er.totalExported = total;
         
-        return true;
-        
+        return true;       
     }
 
     private boolean exportStack(String dir, String tag) {
