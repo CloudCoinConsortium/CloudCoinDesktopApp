@@ -733,6 +733,11 @@ public class AppCore {
                     String file = url.substring(6, url.length());
                     logger.debug(ltag, "template file " + file);
                     String dst = templateDir + File.separator + fileName;
+                    
+                    File f = new File(dst);
+                    if (f.exists())
+                        continue;
+                    
                     AppCore.copyFile(file, dst);                    
                     continue;
                 } else {
@@ -740,13 +745,17 @@ public class AppCore {
                     return;
                 }
                 
-                System.out.println("file="+fileName);
                 for (Enumeration<JarEntry> entries = jf.entries(); entries.hasMoreElements();) {
                     JarEntry entry = entries.nextElement();
 
                     if (entry.getName().equals("resources/" + fileName)) {
                         InputStream in = jf.getInputStream(entry);
                         String dst = templateDir + File.separator + fileName;
+                        
+                        File f = new File(dst);
+                        if (f.exists())
+                            continue;
+                        
                         AppCore.copyFile(in, dst);
                     }
                 }

@@ -4205,7 +4205,7 @@ public class AdvancedClient  {
 
         final RoundedCornerComboBox cboxto = new RoundedCornerComboBox(AppUI.getColor2(), "Make Selection", rvTo.options);
         cboxto.addOption(AppUI.getRemoteUserOption());
-        cboxto.addOption(AppUI.getLocalFolderOption());
+        //cboxto.addOption(AppUI.getLocalFolderOption());
         gridbag.setConstraints(cboxto.getComboBox(), c);
         oct.add(cboxto.getComboBox());   
         y++;
@@ -4358,7 +4358,7 @@ public class AdvancedClient  {
                 rvTo.options = lrvTo.options;
                 cboxto.setOptions(rvTo.options);
                 cboxto.addOption(AppUI.getRemoteUserOption());
-                cboxto.addOption(AppUI.getLocalFolderOption());
+                //cboxto.addOption(AppUI.getLocalFolderOption());
                 cboxto.setDefault(value);              
             }
         });

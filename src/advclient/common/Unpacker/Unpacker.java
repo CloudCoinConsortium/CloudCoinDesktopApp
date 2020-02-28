@@ -239,17 +239,6 @@ public class Unpacker extends Servant {
         if (f.exists()) {
             logger.info(ltag, "File " + path + " already exists. Deleting the old version");
             AppCore.deleteFile(path);
-            /*
-            path = AppCore.getUserDir(Config.DIR_TRASH, user) + File.separator + System.currentTimeMillis() +
-                    "-" + fileName;
-            
-            if (!AppCore.saveFile(path, json)) {
-                logger.error(ltag, "Failed to save file in Trash: " + path);
-                return false;
-            }        
-                   
-            return true;
-                    */
         }
 
         if (!AppCore.saveFile(path, json)) {
@@ -304,7 +293,6 @@ public class Unpacker extends Servant {
 
         int idx = AppCore.basicPngChecks(bytes);
         if (idx == -1) {
-            System.out.println("cirrupted");
             logger.error(ltag, "PNG is corrupted");
             return false;
         }
@@ -314,12 +302,9 @@ public class Unpacker extends Servant {
                         
         while (true) {
             length = AppCore.getUint32(bytes, idx + 4 + i);
-            System.out.println("l="+length);
             if (length == 0) {
                 i += 12;
-                System.out.println("zero");
                 if (i > bytes.length) {
-                    System.out.println("zero out");
                     logger.error(ltag, "CloudCoin was not found");
                     return false;
                 }
@@ -337,7 +322,6 @@ public class Unpacker extends Servant {
                 long crcSig = AppCore.getUint32(bytes, idx + 4 + i + 8 + (int) length);
                 long calcCrc = AppCore.crc32(bytes, idx + 4 + i + 4, (int)(length + 4));
 
-                System.out.println("crc " + crcSig + " calc="+calcCrc);
                 if (crcSig != calcCrc) {
                     logger.error(ltag, "Invalid CRC32");
                     return false;
@@ -355,7 +339,6 @@ public class Unpacker extends Servant {
         
         byte[] nbytes =  Arrays.copyOfRange(bytes, idx + 4 + i + 8, idx + 4 + i + 8 + (int)length);
         String sdata = new String(nbytes);
-
 
         logger.debug(ltag, "Extracted coin. Length: " + sdata.length());     
         ccs = parseStack(sdata);
