@@ -58,7 +58,7 @@ import javax.swing.table.TableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.32";
+    String version = "2.1.33";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -136,6 +136,7 @@ public class AdvancedClient  {
         }
                
         AppCore.readConfig();
+        AppCore.copyTemplatesFromJar();
         resetState();
     }
    
@@ -283,8 +284,6 @@ public class AdvancedClient  {
             ps.errText = "Failed to init Wallet"; 
             return;
         }
-                
-        //AppCore.copyTemplatesFromJar(ps.typedWalletName);
     }
     
     public boolean isActiveWallet(Wallet wallet) {
@@ -361,8 +360,8 @@ public class AdvancedClient  {
         return false;
     }
     
-    public boolean isWithdrawing() {
-        if (ps.currentScreen == ProgramState.SCREEN_WITHDRAW ||
+    public boolean isTransferring() {
+        if (ps.currentScreen == ProgramState.SCREEN_TRANSFER ||
                 ps.currentScreen == ProgramState.SCREEN_CONFIRM_TRANSFER ||
                 ps.currentScreen == ProgramState.SCREEN_SENDING ||
                 ps.currentScreen == ProgramState.SCREEN_TRANSFER_DONE)
@@ -371,6 +370,14 @@ public class AdvancedClient  {
         return false;
     }
     
+    public boolean isWithdrawing() {
+        if (ps.currentScreen == ProgramState.SCREEN_WITHDRAW ||
+                ps.currentScreen == ProgramState.SCREEN_CONFIRM_WITHDRAW)
+            return true;
+
+        return false;
+    }
+
     public boolean isFixing() {
         if (ps.currentScreen == ProgramState.SCREEN_FIX_FRACKED ||
                 ps.currentScreen == ProgramState.SCREEN_FIXING_FRACKED ||
@@ -425,8 +432,8 @@ public class AdvancedClient  {
 
 
         JLabel icon0, icon1, icon2, icon3;
-        final JLabel depositIcon, transferIcon, coinsIcon;
-        final ImageIcon depositIi, transferIi, depositIiLight, transferIiLight;
+        final JLabel depositIcon, transferIcon, withdrawIcon, coinsIcon;
+        final ImageIcon depositIi, transferIi, withdrawIi, depositIiLight, transferIiLight, withdrawIiLight;
         ImageIcon ii;
         try {
             Image img;
@@ -448,6 +455,11 @@ public class AdvancedClient  {
             depositIi = new ImageIcon(img);
             depositIcon = new JLabel(new ImageIcon(img));
             
+            img = ImageIO.read(getClass().getClassLoader().getResource("resources/withdrawicon.png"));
+            withdrawIi = new ImageIcon(img);
+            withdrawIcon = new JLabel(new ImageIcon(img));
+            
+            
             img = ImageIO.read(getClass().getClassLoader().getResource("resources/transfericon.png"));
             transferIi = new ImageIcon(img);
             transferIcon = new JLabel(new ImageIcon(img));
@@ -460,6 +472,9 @@ public class AdvancedClient  {
                       
             img = ImageIO.read(getClass().getClassLoader().getResource("resources/transfericonlight.png"));
             transferIiLight = new ImageIcon(img);
+            
+            img = ImageIO.read(getClass().getClassLoader().getResource("resources/withdrawiconlight.png"));
+            withdrawIiLight = new ImageIcon(img);
             
         } catch (Exception ex) {
             wl.error(ltag, "Failed to open file: " + ex.getMessage());
@@ -502,7 +517,7 @@ public class AdvancedClient  {
             
             return;
         } else {
-            int bwidth = 168;
+            int bwidth = 158;
             // Coins
             wrp.add(coinsIcon);
             wrp.add(AppUI.vr(16));
@@ -521,7 +536,7 @@ public class AdvancedClient  {
             AppUI.setMargin(titleText, 0, 6, 16, 0);
             wrp.add(titleText);
                       
-            c.insets = new Insets(0, 32, 0, 0);
+            c.insets = new Insets(0, 2, 0, 0);
             c.anchor = GridBagConstraints.NORTH;
             gridbag.setConstraints(wrp, c);
             p.add(wrp);
@@ -539,11 +554,9 @@ public class AdvancedClient  {
             if (isDepositing()) {
                 depositIcon.setIcon(depositIiLight);
                 AppUI.opaque(wrpDeposit);
-
             } else {               
                 AppUI.setHandCursor(wrpDeposit);
                 depositIcon.setIcon(depositIi);
-
             }
                                     
             wrpDeposit.add(AppUI.vr(6));
@@ -552,11 +565,45 @@ public class AdvancedClient  {
             AppUI.setTitleFont(titleText, 20);
             wrpDeposit.add(titleText);
             
-            c.insets = new Insets(0, 32, 0, 0);
+            c.insets = new Insets(0, 2, 0, 0);
             c.anchor = GridBagConstraints.NORTH;
             gridbag.setConstraints(wrpDeposit, c);
             p.add(wrpDeposit);
-                        
+            
+            
+            
+            // Withdraw
+            JPanel wrpWithdraw = new JPanel();
+            AppUI.setBoxLayout(wrpWithdraw, false);
+            AppUI.setSize(wrpWithdraw, bwidth, headerHeight);
+            AppUI.setBackground(wrpWithdraw, AppUI.getColor1());
+            AppUI.noOpaque(wrpWithdraw);
+            
+            wrpWithdraw.add(AppUI.vr(12));
+            
+            wrpWithdraw.add(withdrawIcon);
+            if (isWithdrawing()) {
+                depositIcon.setIcon(withdrawIiLight);
+                AppUI.opaque(wrpWithdraw);
+            } else {               
+                AppUI.setHandCursor(wrpWithdraw);
+                depositIcon.setIcon(withdrawIi);
+            }
+                                    
+            wrpWithdraw.add(AppUI.vr(6));
+            
+            titleText = new JLabel("Withdraw");
+            AppUI.setTitleFont(titleText, 20);
+            wrpWithdraw.add(titleText);
+            
+            c.insets = new Insets(0, 2, 0, 0);
+            c.anchor = GridBagConstraints.NORTH;
+            gridbag.setConstraints(wrpWithdraw, c);
+            p.add(wrpWithdraw);
+            
+
+            
+            
             // Transfer
             JPanel wrpTransfer = new JPanel();
             AppUI.setBoxLayout(wrpTransfer, false);
@@ -566,7 +613,7 @@ public class AdvancedClient  {
             
             wrpTransfer.add(AppUI.vr(12));
             
-            if (isWithdrawing()) {
+            if (isTransferring()) {
                 transferIcon.setIcon(transferIiLight);
                 AppUI.opaque(wrpTransfer);
             } else {               
@@ -581,7 +628,7 @@ public class AdvancedClient  {
             AppUI.setTitleFont(titleText, 20);
             wrpTransfer.add(titleText);
             
-            c.insets = new Insets(0, 32, 0, 0);
+            c.insets = new Insets(0, 2, 0, 0);
             c.anchor = GridBagConstraints.NORTH;
             gridbag.setConstraints(wrpTransfer, c);
             p.add(wrpTransfer);
@@ -589,7 +636,9 @@ public class AdvancedClient  {
             MouseAdapter ma0 = new MouseAdapter() {
                 public void mouseReleased(MouseEvent e) {
                     resetState();
-                    ps.currentScreen = ProgramState.SCREEN_PREDEPOSIT;
+                    //ps.currentScreen = ProgramState.SCREEN_PREDEPOSIT;
+                    ps.isSkyDeposit = false;
+                    ps.currentScreen = ProgramState.SCREEN_DEPOSIT;
                     showScreen();
                 }
                 public void mouseEntered(MouseEvent e) {
@@ -614,7 +663,7 @@ public class AdvancedClient  {
             MouseAdapter ma1 = new MouseAdapter() {
                 public void mouseReleased(MouseEvent e) {
                     resetState();
-                    ps.currentScreen = ProgramState.SCREEN_WITHDRAW;
+                    ps.currentScreen = ProgramState.SCREEN_TRANSFER;
                     showScreen();
                 }
                 
@@ -627,9 +676,34 @@ public class AdvancedClient  {
                 }
                 public void mouseExited(MouseEvent e) {                   
                     JPanel p = (JPanel) e.getSource();
-                    if (!isWithdrawing()) {
+                    if (!isTransferring()) {
                         AppUI.noOpaque(p);
                         transferIcon.setIcon(transferIi);
+                        p.revalidate();
+                        p.repaint();
+                    }
+                }
+            };
+            
+            MouseAdapter ma2 = new MouseAdapter() {
+                public void mouseReleased(MouseEvent e) {
+                    resetState();
+                    ps.currentScreen = ProgramState.SCREEN_WITHDRAW;
+                    showScreen();
+                }
+                
+                public void mouseEntered(MouseEvent e) {             
+                    JPanel p = (JPanel) e.getSource();
+                    AppUI.opaque(p);
+                    withdrawIcon.setIcon(withdrawIiLight);
+                    p.revalidate();
+                    p.repaint();
+                }
+                public void mouseExited(MouseEvent e) {                   
+                    JPanel p = (JPanel) e.getSource();
+                    if (!isWithdrawing()) {
+                        AppUI.noOpaque(p);
+                        withdrawIcon.setIcon(withdrawIi);
                         p.revalidate();
                         p.repaint();
                     }
@@ -638,9 +712,10 @@ public class AdvancedClient  {
 
             wrpDeposit.addMouseListener(ma0);
             wrpTransfer.addMouseListener(ma1);
+            wrpWithdraw.addMouseListener(ma2);
         }
 
-        c.insets = new Insets(0, 42, 0, 0);
+        c.insets = new Insets(0, 32, 0, 0);
         c.gridwidth = 1;
         c.weightx = 0;
         c.fill = GridBagConstraints.NORTH;
@@ -921,7 +996,7 @@ public class AdvancedClient  {
                 ps.currentWallet = null;
                 showDepositScreen();
                 break;
-            case ProgramState.SCREEN_WITHDRAW:
+            case ProgramState.SCREEN_TRANSFER:
                 ps.currentWallet = null;
                 showTransferScreen();
                 break;
@@ -1042,6 +1117,13 @@ public class AdvancedClient  {
             case ProgramState.SCREEN_DOING_BILL_PAY:
                 showSendingBillPayScreen();
                 break;
+            case ProgramState.SCREEN_WITHDRAW:
+                showWithdrawScreen();
+                break;
+            case ProgramState.SCREEN_CONFIRM_WITHDRAW:
+                showConfirmWithdrawScreen();
+                break;
+
 
 
 
@@ -2341,7 +2423,7 @@ public class AdvancedClient  {
         AppUI.getTwoButtonPanel(subInnerCore, "Next Transfer", "Continue", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 resetState();
-                ps.currentScreen = ProgramState.SCREEN_WITHDRAW;
+                ps.currentScreen = ProgramState.SCREEN_TRANSFER;
                 showScreen();
             }
         },  new ActionListener() {
@@ -3215,6 +3297,83 @@ public class AdvancedClient  {
         
     }
     
+    public void showConfirmWithdrawScreen() {
+        int y = 0;
+        JLabel fname, value;
+        MyTextField walletName = null;
+
+        JPanel subInnerCore = getPanel("Withdraw Confirmation");                
+        GridBagLayout gridbag = new GridBagLayout();
+        subInnerCore.setLayout(gridbag);
+      
+        String total = AppCore.formatNumber(ps.statToBankValue + ps.statFailedValue + ps.statLostValue);
+        String totalBankValue = AppCore.formatNumber(ps.statToBankValue);
+        String totalFailedValue = AppCore.formatNumber(ps.statFailedValue);
+        String totalLostValue = AppCore.formatNumber(ps.statLostValue);
+                
+        fname = new JLabel("Do you wish to continue?");
+        AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
+        y++;  
+        
+        //fname = AppUI.wrapDiv("Deposited <b>" +  total +  " CloudCoins</b> to <b>" + ps.dstWallet.getName() + " </b>");  
+        JLabel fromLabel = new JLabel("From: ");
+        JLabel fromValue = new JLabel(ps.srcWallet.getName());
+        AppUI.getGBRow(subInnerCore, fromLabel, fromValue, y, gridbag);
+        y++;     
+        
+        
+        JLabel toLabel = new JLabel("To: ");
+        String to = ps.chosenFile;
+        if (to.length() > 24) {
+            to = to.substring(0, 24) + "...";
+        }
+        JLabel toValue = new JLabel(to);
+        AppUI.getGBRow(subInnerCore, toLabel, toValue, y, gridbag);
+        y++;   
+        
+        
+        fname = new JLabel("Amount: ");
+        JLabel amountValue = new JLabel(ps.typedAmount + " CC");
+        AppUI.getGBRow(subInnerCore, fname, amountValue, y, gridbag);
+        y++;   
+        
+        String memo = ps.typedMemo;
+        if (memo.length() > 24) {
+            memo = memo.substring(0, 24) + "...";
+        }
+        
+        fname = new JLabel("Memo: ");
+        JLabel memoValue = new JLabel(memo);
+        AppUI.getGBRow(subInnerCore, fname, memoValue, y, gridbag);
+        y++; 
+               
+        AppUI.GBPad(subInnerCore, y, gridbag);        
+        y++;
+        
+        AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Confirm", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                showScreen();
+            }
+        }, new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                ps.srcWallet.setPassword(ps.typedSrcPassword);
+                
+                sm.setActiveWalletObj(ps.srcWallet);
+                ps.isSkyDeposit = false;
+                ps.currentScreen = ProgramState.SCREEN_EXPORTING;
+                if (ps.srcWallet.isEncrypted()) {
+                    sm.startSecureExporterService(Config.TYPE_STACK, ps.typedAmount, ps.typedMemo, ps.chosenFile, false, new ExporterCb());
+                } else {
+                    sm.startExporterService(Config.TYPE_STACK, ps.typedAmount, ps.typedMemo, ps.chosenFile, false, new ExporterCb());
+                }                 
+                
+                showScreen();
+            }
+        }, y, gridbag);
+        
+    }
+    
     
     public void showSetEmailScreen() {
         int y = 0;
@@ -3838,6 +3997,255 @@ public class AdvancedClient  {
              
     }
     
+    public void showWithdrawScreen() {
+        int y = 0;
+        JLabel fname;
+        MyTextField walletName = null;
+
+        JPanel subInnerCore = getPanel("Transfer");                
+        GridBagLayout gridbag = new GridBagLayout();
+        subInnerCore.setLayout(gridbag);
+
+        final optRv rvFrom = setOptionsForWalletsCommon(false, false, false, null);
+        if (rvFrom.idxs.length == 0) {
+            fname = AppUI.wrapDiv("No Wallets to Withdraw From");
+            AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
+            y++;
+            AppUI.GBPad(subInnerCore, y, gridbag);  
+            return;
+        }
+
+        final optRv rvTo = setOptionsForWalletsAll(null);
+
+        
+        fname = new JLabel("Withdraw From");
+        final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(AppUI.getColor6(), "Make Selection", rvFrom.options);
+        AppUI.getGBRow(subInnerCore, fname, cboxfrom.getComboBox(), y, gridbag);
+        y++;     
+        
+        final JLabel spText = new JLabel("Password");;
+        final MyTextField passwordSrc = new MyTextField("Wallet Password", true);
+        AppUI.getGBRow(subInnerCore, spText, passwordSrc.getTextField(), y, gridbag);
+        y++; 
+        
+        passwordSrc.getTextField().setVisible(false);
+        spText.setVisible(false);
+           
+        if (ps.chosenFile.isEmpty()) 
+            ps.chosenFile = Config.DEFAULT_EXPORT_DIR;
+        
+        final JLabel lfText = new JLabel("Local folder");
+        final JFileChooser chooser = new JFileChooser();
+        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        chooser.setAcceptAllFileFilterUsed(false);
+            
+        final MyTextField localFolder = new MyTextField("Select Folder", false, true);
+        localFolder.setData(new File(ps.chosenFile).getName());
+        localFolder.setFilepickerListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (!Config.DEFAULT_EXPORT_DIR.isEmpty())
+                    chooser.setCurrentDirectory(new File(Config.DEFAULT_EXPORT_DIR));
+
+                int returnVal = chooser.showOpenDialog(null);
+                if (returnVal == JFileChooser.APPROVE_OPTION) {       
+                    ps.chosenFile = chooser.getSelectedFile().getAbsolutePath();
+                    localFolder.setData(chooser.getSelectedFile().getName());
+                    Config.DEFAULT_EXPORT_DIR = ps.chosenFile;
+                    AppCore.writeConfig();
+                }
+            }
+        });
+        AppUI.getGBRow(subInnerCore, lfText, localFolder.getTextField(), y, gridbag);
+        y++;
+       
+        fname = new JLabel("Amount");
+        final MyTextField amount = new MyTextField("0 CC", false);
+        if (ps.typedAmount > 0)
+            amount.setData("" + ps.typedAmount);
+        AppUI.getGBRow(subInnerCore, fname, amount.getTextField(), y, gridbag);
+        y++;
+        
+        
+        fname = new JLabel("Memo (Note)");
+        final MyTextField memo = new MyTextField("Optional", false);
+        if (!ps.typedMemo.isEmpty())
+            memo.setData(ps.typedMemo);
+        AppUI.getGBRow(subInnerCore, fname, memo.getTextField(), y, gridbag);
+        y++;
+            
+        fname = new JLabel("Format");
+        final RoundedCornerComboBox boxformat = new RoundedCornerComboBox(AppUI.getColor6(), "Make Selection", new String[]{"Stack", "PNG", "JPEG"} );
+        AppUI.getGBRow(subInnerCore, fname, boxformat.getComboBox(), y, gridbag);
+        boxformat.setDefaultIdx(1);
+        y++;    
+        
+        
+        AppUI.GBPad(subInnerCore, y, gridbag);        
+        y++;
+        
+        cboxfrom.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                int srcIdx = cboxfrom.getSelectedIndex() - 1;
+                if (srcIdx < 0 || srcIdx >= wallets.length) 
+                    return;
+                
+                srcIdx = rvFrom.idxs[srcIdx];
+                Wallet srcWallet = wallets[srcIdx];
+                if (srcWallet == null)
+                    return;
+
+                if (srcWallet.isEncrypted()) {                 
+                    passwordSrc.getTextField().setVisible(true);
+                    spText.setVisible(true);
+                } else {
+                    passwordSrc.getTextField().setVisible(false);
+                    spText.setVisible(false);
+                }
+            }
+        });
+              
+        if (ps.srcWallet != null && ps.selectedFromIdx > 0) {
+            cboxfrom.setDefaultIdx(ps.selectedFromIdx);
+        }
+
+        AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Continue", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                showScreen();
+            }
+        }, new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                
+                ps.typedMemo = memo.getText().trim();
+              
+                int srcIdx = cboxfrom.getSelectedIndex() - 1;         
+                ps.selectedFromIdx = cboxfrom.getSelectedIndex();    
+                if (srcIdx < 0 || srcIdx >= rvFrom.idxs.length) {                    
+                    ps.errText = "Please select From Wallet";
+                    showScreen();
+                    return;
+                }
+                
+                srcIdx = rvFrom.idxs[srcIdx];                  
+                Wallet srcWallet = wallets[srcIdx];
+                ps.srcWallet = srcWallet;
+            
+
+                try {
+                    ps.typedAmount = Integer.parseInt(amount.getText());
+                } catch (NumberFormatException ex) {
+                    ps.errText = "Invalid amount";
+                    showScreen();
+                    return;   
+                };
+                
+                if (ps.typedAmount <= 0) {
+                    ps.errText = "Transfer must be higher than zero";
+                    showScreen();
+                    return;  
+                }
+                
+                if (!Validator.memoLength(ps.typedMemo)) {
+                    ps.errText = "Memo too long. Only 64 characters are allowed";
+                    showScreen();
+                    return;
+                }
+                
+                ps.typedMemo = ps.typedMemo.trim();
+                if (!ps.typedMemo.isEmpty()) {
+                    if (!Validator.memo(ps.typedMemo)) {
+                        ps.errText = "Memo: special characters not allowed! Use numbers and letters only";
+                        showScreen();
+                        return;
+                    }
+                }
+
+                if (srcWallet.isEncrypted()) {
+                    if (passwordSrc.getText().isEmpty()) {
+                        ps.errText = "From Password is empty";
+                        showScreen();
+                        return;
+                    }
+                    
+                    String wHash = srcWallet.getPasswordHash();
+                    String providedHash = AppCore.getMD5(passwordSrc.getText());
+                    if (wHash == null) {
+                        ps.errText = "From Wallet is corrupted";
+                        showScreen();
+                        return;
+                    }
+                    
+                    if (!wHash.equals(providedHash)) {
+                        ps.errText = "From Password is incorrect";
+                        showScreen();
+                        return;
+                    } 
+                    
+                    ps.typedSrcPassword = passwordSrc.getText();
+                }
+                
+                if (ps.typedAmount > srcWallet.getTotal()) {
+                    ps.errText = "Insufficient funds";
+                    showScreen();
+                    return;
+                }
+
+                if (ps.typedMemo.isEmpty())
+                    ps.typedMemo = "Export";
+                
+                if (!Validator.memo(ps.typedMemo)) {
+                    ps.errText = "Memo: special characters not allowed! Use numbers and letters only";
+                    showScreen();
+                    return;
+                }
+                    
+                ps.typedMemo = ps.typedMemo.trim();
+                    
+                // Local folder
+                if (ps.chosenFile.isEmpty()) {
+                    ps.errText = "Folder is not chosen";
+                    showScreen();
+                    return;
+                }
+                    
+                if (ps.srcWallet.isSkyWallet()) {
+                    ps.errText = "Withdraw from Sky Wallet to Local Folder is not supported";
+                    showScreen();
+                    return;
+                }
+                    
+
+                   
+                String filename = ps.chosenFile + File.separator + ps.typedAmount + ".CloudCoin." + ps.typedMemo + ".stack";
+                File f = new File(filename);
+                if (f.exists()) {
+                    ps.errText = "File with the same Memo already exists in "
+                        + ps.chosenFile + " folder. Use different Memo or change folder for your transfer";
+                    showScreen();
+                    return;
+                }
+                
+                int ftype = boxformat.getSelectedIndex();
+                if (ftype == 1)
+                    ps.exportType = Config.TYPE_STACK;
+                else if (ftype == 2)
+                    ps.exportType = Config.TYPE_PNG;
+                else if (ftype == 3)
+                    ps.exportType = Config.TYPE_JPEG;
+
+                ps.sendType = ProgramState.SEND_TYPE_FOLDER;    
+                    
+                setActiveWallet(ps.srcWallet);
+                ps.currentScreen = ProgramState.SCREEN_CONFIRM_WITHDRAW;
+                showScreen();
+                    
+                return;                    
+            }
+        }, y, gridbag);
+             
+    }
+    
     public void showTransferScreen() {
         int y = 0;
         JLabel fname;
@@ -3875,7 +4283,7 @@ public class AdvancedClient  {
         fname = new JLabel("Transfer To");
         final RoundedCornerComboBox cboxto = new RoundedCornerComboBox(AppUI.getColor6(), "Make Selection", rvTo.options);
         cboxto.addOption(AppUI.getRemoteUserOption());
-        cboxto.addOption(AppUI.getLocalFolderOption());
+        //cboxto.addOption(AppUI.getLocalFolderOption());
         AppUI.getGBRow(subInnerCore, fname, cboxto.getComboBox(), y, gridbag);
         y++; 
 
@@ -3973,7 +4381,7 @@ public class AdvancedClient  {
                 rvTo.options = lrvTo.options;
                 cboxto.setOptions(rvTo.options);
                 cboxto.addOption(AppUI.getRemoteUserOption());
-                cboxto.addOption(AppUI.getLocalFolderOption());
+                //cboxto.addOption(AppUI.getLocalFolderOption());
                 cboxto.setDefault(value);
             }
         });
@@ -4622,7 +5030,7 @@ public class AdvancedClient  {
             public void filesDropped( java.io.File[] files ) {   
                 for( int i = 0; i < files.length; i++ ) {
                     if (!AppCore.hasCoinExtension(files[i])) {
-                        ps.errText = "File must have .jpeg or .stack extension";
+                        ps.errText = "File must have .png .jpeg or .stack extension";
                         showScreen();
                         return;
                     }
@@ -6471,7 +6879,7 @@ public class AdvancedClient  {
     
     
     public void showExportingScreen() {
-        JPanel subInnerCore = getPanel("Exporting Coins. Please wait...");
+        JPanel subInnerCore = getPanel("Withdrawing Coins. Please wait...");
       
         AppUI.hr(subInnerCore, 4);
     }
@@ -7611,7 +8019,7 @@ public class AdvancedClient  {
             wl.debug(ltag, "AuthenticatorSkyCoin finished");
 
             final Object fresult = result;
-            if (isWithdrawing())
+            if (isTransferring())
                 ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
             else
                 ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
@@ -7775,7 +8183,7 @@ public class AdvancedClient  {
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {
                         ps.errText = "Operation Cancelled";
-                        if (isWithdrawing())
+                        if (isTransferring())
                             ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
                         else
                             ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
@@ -7965,7 +8373,7 @@ public class AdvancedClient  {
                 public void run() {
                     if (isDepositing()) {
                         ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
-                    } else if (isWithdrawing() || isMakingChange()) {
+                    } else if (isTransferring() || isMakingChange()) {
                         ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
                     } else if (isFixing()) {
                         ps.currentScreen = ProgramState.SCREEN_FIX_DONE;
@@ -8008,7 +8416,7 @@ public class AdvancedClient  {
                             wl.debug(ltag, "Failed to fix. Trying to move the coin back");
                             cc = AppCore.findCoinBySN(Config.DIR_FRACKED, ps.srcWallet.getName(), ps.coinIDinFix.getIDCoin().sn);
                             if (cc == null) {
-                                ps.currentScreen = ProgramState.SCREEN_WITHDRAW;
+                                ps.currentScreen = ProgramState.SCREEN_TRANSFER;
                                 ps.errText = "Failed to find fixed coin. Please, check main.log file";
                                 showScreen();
                                 return;
@@ -8020,13 +8428,13 @@ public class AdvancedClient  {
                         wl.debug(ltag, "Found cc: " + cc.originalFile);
 
                         if (!AppCore.moveToFolderNewName(cc.originalFile, AppCore.getIDDir(), null, ps.coinIDinFix.getName() + ".stack")) {
-                            ps.currentScreen = ProgramState.SCREEN_WITHDRAW;
+                            ps.currentScreen = ProgramState.SCREEN_TRANSFER;
                             ps.errText = "Failed to move ID Coin. Please, check main.log file";
                             showScreen();
                             return;
                         }
 
-                        ps.currentScreen = ProgramState.SCREEN_WITHDRAW;
+                        ps.currentScreen = ProgramState.SCREEN_TRANSFER;
                         if (fixed)
                             ps.errText = "ID Coin has been fixed. Please try again";
                         else
@@ -8060,7 +8468,7 @@ public class AdvancedClient  {
                         if (isFixing()) {
                             ps.currentScreen = ProgramState.SCREEN_FIX_DONE;
                         } else {
-                        if (isWithdrawing())
+                        if (isTransferring())
                             ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
                         else
                             ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
