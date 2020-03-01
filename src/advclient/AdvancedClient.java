@@ -58,7 +58,7 @@ import javax.swing.table.TableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.33";
+    String version = "2.1.34";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -583,11 +583,11 @@ public class AdvancedClient  {
             
             wrpWithdraw.add(withdrawIcon);
             if (isWithdrawing()) {
-                depositIcon.setIcon(withdrawIiLight);
+                withdrawIcon.setIcon(withdrawIiLight);
                 AppUI.opaque(wrpWithdraw);
             } else {               
                 AppUI.setHandCursor(wrpWithdraw);
-                depositIcon.setIcon(withdrawIi);
+                withdrawIcon.setIcon(withdrawIi);
             }
                                     
             wrpWithdraw.add(AppUI.vr(6));
