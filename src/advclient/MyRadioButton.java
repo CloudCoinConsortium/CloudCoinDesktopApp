@@ -81,7 +81,7 @@ public class MyRadioButton {
             img = ImageIO.read(getClass().getClassLoader().getResource("resources/radiodark.png"));
             imgUnchecked = new ImageIcon(img);
             
-            img = ImageIO.read(getClass().getClassLoader().getResource("resources/radiodarkChecked.png"));
+            img = ImageIO.read(getClass().getClassLoader().getResource("resources/radiodarkchecked.png"));
             imgChecked = new ImageIcon(img);
         } catch (Exception ex) {
 
