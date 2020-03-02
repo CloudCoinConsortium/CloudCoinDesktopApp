@@ -54,7 +54,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.33";
+    String version = "2.1.35";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -4827,10 +4827,21 @@ public class AdvancedClient  {
         y++;
         
         
+        x = new JLabel("Memo (Note)");
+        gridbag.setConstraints(x, c);
+        AppUI.setCommonFont(x);
+        c.gridwidth = 1;
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+        gridbag.setConstraints(x, c);
+        oct.add(x);
+        
+        
+        
         JPanel xct = new JPanel();
         AppUI.setBoxLayout(xct, false);
         AppUI.alignCenter(xct);
-        AppUI.setSize(xct, 600, 80);
+        AppUI.setSize(xct, 400, 80);
         AppUI.noOpaque(xct);
         
         
@@ -4864,7 +4875,7 @@ public class AdvancedClient  {
         AppUI.setFont(x0, 16);
         xct.add(x0);
         
-        c.gridwidth = 2;
+        c.gridwidth = 1;
         c.gridx = GridBagConstraints.RELATIVE;
         c.gridy = y;
         gridbag.setConstraints(xct, c);
@@ -5809,7 +5820,7 @@ public class AdvancedClient  {
         
         final JFileChooser chooser = new JFileChooser();
         FileNameExtensionFilter filter = new FileNameExtensionFilter(
-                "CloudCoins", "jpg", "jpeg", "stack", "json", "txt");
+                "CloudCoins", "jpg", "jpeg", "png", "stack", "json", "txt");
         chooser.setFileFilter(filter);
         chooser.setMultiSelectionEnabled(true);
         
@@ -8223,7 +8234,7 @@ public class AdvancedClient  {
         
         final JFileChooser chooser = new JFileChooser();
         FileNameExtensionFilter filter = new FileNameExtensionFilter(
-                "CloudCoins", "jpg", "jpeg", "stack", "json", "txt");
+                "CloudCoins", "jpg", "jpeg", "png", "stack", "json", "txt");
         chooser.setFileFilter(filter);
         
         
