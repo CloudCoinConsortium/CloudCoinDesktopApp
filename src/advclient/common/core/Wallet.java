@@ -256,7 +256,7 @@ public class Wallet implements Comparable<Wallet> {
         
         rest += amount;
         result += rMemo + "," + date + ",";
-        if (amount > 0) {
+        if (amount >= 0) {
             result += amount + ",,";
         } else {
             result += "," + amount + ",";
