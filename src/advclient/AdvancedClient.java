@@ -7026,8 +7026,8 @@ public class AdvancedClient  {
         final JFileChooser chooser = new JFileChooser();
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         chooser.setAcceptAllFileFilterUsed(false);
-        final MyTextField tf1 = new MyTextField("", false, true);
-        tf1.disable();
+        final MyTextField tf1 = new MyTextField("Click here to select folder", false, true);
+        //tf1.disable();
         tf1.setFilepickerListener(new MouseAdapter() {
             @Override
             public void mouseReleased(MouseEvent e) {
@@ -7207,8 +7207,8 @@ public class AdvancedClient  {
         final JFileChooser chooser = new JFileChooser();
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         chooser.setAcceptAllFileFilterUsed(false);
-        final MyTextField tf1 = new MyTextField("", false, true);
-        tf1.disable();
+        final MyTextField tf1 = new MyTextField("Click here to select folder", false, true);
+        //tf1.disable();
         tf1.setFilepickerListener(new MouseAdapter() {
             @Override
             public void mouseReleased(MouseEvent e) {
