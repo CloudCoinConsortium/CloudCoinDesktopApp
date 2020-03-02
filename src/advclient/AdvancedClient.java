@@ -58,7 +58,7 @@ import javax.swing.table.TableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.34";
+    String version = "2.1.35";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -4002,7 +4002,7 @@ public class AdvancedClient  {
         JLabel fname;
         MyTextField walletName = null;
 
-        JPanel subInnerCore = getPanel("Transfer");                
+        JPanel subInnerCore = getPanel("Withdraw");                
         GridBagLayout gridbag = new GridBagLayout();
         subInnerCore.setLayout(gridbag);
 
