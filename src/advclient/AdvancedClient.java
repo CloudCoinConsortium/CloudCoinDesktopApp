@@ -3363,9 +3363,9 @@ public class AdvancedClient  {
                 ps.isSkyDeposit = false;
                 ps.currentScreen = ProgramState.SCREEN_EXPORTING;
                 if (ps.srcWallet.isEncrypted()) {
-                    sm.startSecureExporterService(Config.TYPE_STACK, ps.typedAmount, ps.typedMemo, ps.chosenFile, false, new ExporterCb());
+                    sm.startSecureExporterService(ps.exportType, ps.typedAmount, ps.typedMemo, ps.chosenFile, false, new ExporterCb());
                 } else {
-                    sm.startExporterService(Config.TYPE_STACK, ps.typedAmount, ps.typedMemo, ps.chosenFile, false, new ExporterCb());
+                    sm.startExporterService(ps.exportType, ps.typedAmount, ps.typedMemo, ps.chosenFile, false, new ExporterCb());
                 }                 
                 
                 showScreen();
