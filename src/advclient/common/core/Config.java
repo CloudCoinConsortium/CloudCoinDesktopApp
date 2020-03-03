@@ -200,4 +200,5 @@ public class Config {
     
     final public static String PNG_TEMPLATE_NAME = "template.png";
 
+    final public static String TAG_RANDOM = "random";
 }

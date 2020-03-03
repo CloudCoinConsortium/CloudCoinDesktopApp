@@ -94,8 +94,7 @@ public class Exporter extends Servant {
         rv = pickCoinsAmountInDirs(fullVaultPath, fullFrackedPath, amount);
         
         
-        return rv;
-        
+        return rv;     
     }
     
     public void doExport(int type, int[] values, int amount, String dir, boolean keepSrc, String tag) {
@@ -113,6 +112,11 @@ public class Exporter extends Servant {
             return;
         }
       
+        if (tag.toLowerCase().equals(Config.TAG_RANDOM)) {
+            tag = AppCore.generateHex();
+            logger.debug(ltag, "Generated random tag: " + tag);
+        }
+        
         String fullExportPath = AppCore.getUserDir(Config.DIR_EXPORT, user);
         
         if (dir != null)
