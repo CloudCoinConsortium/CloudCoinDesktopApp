@@ -142,24 +142,32 @@ public class AppUI {
     }
     
     public static Color getColor0() {
-        return new Color(0x1C1F28);
+       // return new Color(0x1C1F28);
+        return new Color(0xE61D2B);
     }
     
     public static Color getColor1() {
-        return new Color(0x338FFF);
+        //return new Color(0x338FFF);
+        return new Color(0xeeeeee);
     }
     
     public static Color getColor2() {
-        return new Color(0x338FFF);
+        return new Color(0xE61D2B);
+        //return new Color(0x338FFF);
     }
     
     public static Color getColor3() {
         //return new Color(0xBFFFFFFF, true);
-        return new Color(0x303441);
+        return new Color(0xE3434F);
+        //return new Color(0xE61D2B);
+        //return new Color(0xE61D2B);
+        //return new Color(0x303441);
     }
     
     public static Color getColor4() {
-        return new Color(0x2C303D);
+        //return new Color(0xE3434F);
+        return new Color(0xE61D2B);
+        //return new Color(0x2C303D);
     }
     
     public static Color getColor5() {
@@ -167,10 +175,13 @@ public class AppUI {
         //return Color.WHITE;
     }
     public static Color getColor6() {
+        //return new Color(0xE3434F);
         return new Color(0x1F222B);
+        //return new Color(0xFFFFFF);
     }
     public static Color getColor7() {
-        return new Color(0x14161E);
+        return new Color(0xE3434F);
+        //return new Color(0x14161E);
     }
     
     public static Color getColor8() {
@@ -202,7 +213,9 @@ public class AppUI {
     }
     
     public static Color getColor15() {
-        return new Color(0x224068);
+        return new Color(0xE61D2B);
+        //return new Color(0xE3434F);
+        //return new Color(0x224068);
     }
     
     public static Color getDisabledColor() {
@@ -406,7 +419,7 @@ public class AppUI {
     public static JFrame getMainFrame(String version) {
         JFrame frame = new JFrame();
         
-        frame.setTitle("CloudCoin Wallet " + version);
+        frame.setTitle("CocaCola Wallet " + version);
         frame.setLayout(new BorderLayout());
         frame.setSize(new Dimension(tw, th));
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -418,7 +431,8 @@ public class AppUI {
         cl = AppUI.class.getClassLoader();
 
         frame.setIconImage(
-            new ImageIcon(cl.getResource("resources/CloudCoinLogo.png")).getImage()
+            //new ImageIcon(cl.getResource("resources/CloudCoinLogo.png")).getImage()
+                new ImageIcon(cl.getResource("resources/coke-logo.png")).getImage()
         );
         
         return frame;
@@ -787,6 +801,21 @@ public class AppUI {
                 col = new Color(255 - col.getRed(),
                                 255 - col.getGreen(),
                                 255 - col.getBlue(), col.getAlpha());
+                img.setRGB(x, y, col.getRGB());
+            }
+        }
+    }
+    
+    public static void repaintImage(BufferedImage img, Color color) {
+        for (int x = 0; x < img.getWidth(); x++) {
+            for (int y = 0; y < img.getHeight(); y++) {
+                int rgba = img.getRGB(x, y);
+                Color col = new Color(rgba, true);
+                col = new Color(color.getRed(),
+                                color.getBlue(),
+                                color.getGreen(), col.getAlpha());
+                //Color col = new Color(rgba, true);
+                //col = new Color(color);
                 img.setRGB(x, y, col.getRGB());
             }
         }

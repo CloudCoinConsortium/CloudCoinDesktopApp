@@ -37,6 +37,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
 import java.awt.print.PrinterException;
 import java.io.File;
 import java.io.IOException;
@@ -62,7 +63,8 @@ public class AdvancedClient  {
 
     JPanel headerPanel;
     JPanel mainPanel;
-    ImageJPanel corePanel;
+    //ImageJPanel corePanel;
+    JPanel corePanel;
     JPanel wpanel;
     
     JPanel lwrapperPanel;
@@ -445,27 +447,34 @@ public class AdvancedClient  {
             img = ImageIO.read(getClass().getClassLoader().getResource("resources/supporticon.png"));
             icon1 = new JLabel(new ImageIcon(img));
 
-            img = ImageIO.read(getClass().getClassLoader().getResource("resources/CloudCoinText.png"));
-            icon2 = new JLabel(new ImageIcon(img));
+            //img = ImageIO.read(getClass().getClassLoader().getResource("resources/CloudCoinText.png"));
+            //icon2 = new JLabel(new ImageIcon(img));
             
-            img = ImageIO.read(getClass().getClassLoader().getResource("resources/CloudCoinLogo.png"));
+            //img = ImageIO.read(getClass().getClassLoader().getResource("resources/CloudCoinLogo.png"));
+            img = ImageIO.read(getClass().getClassLoader().getResource("resources/cocacola.png"));
+            img = img.getScaledInstance(178, 58, Image.SCALE_SMOOTH);
             icon3 = new JLabel(new ImageIcon(img));
             
-            img = ImageIO.read(getClass().getClassLoader().getResource("resources/depositicon.png"));
-            depositIi = new ImageIcon(img);
+            BufferedImage bi;
+            bi = ImageIO.read(getClass().getClassLoader().getResource("resources/depositicon.png"));
+            AppUI.repaintImage(bi, Color.white);
+            depositIi = new ImageIcon(bi);
             depositIcon = new JLabel(new ImageIcon(img));
             
-            img = ImageIO.read(getClass().getClassLoader().getResource("resources/withdrawicon.png"));
-            withdrawIi = new ImageIcon(img);
+            bi = ImageIO.read(getClass().getClassLoader().getResource("resources/withdrawicon.png"));
+            AppUI.repaintImage(bi, Color.white);
+            withdrawIi = new ImageIcon(bi);
             withdrawIcon = new JLabel(new ImageIcon(img));
             
             
-            img = ImageIO.read(getClass().getClassLoader().getResource("resources/transfericon.png"));
-            transferIi = new ImageIcon(img);
+            bi = ImageIO.read(getClass().getClassLoader().getResource("resources/transfericon.png"));
+            AppUI.repaintImage(bi, Color.white);
+            transferIi = new ImageIcon(bi);
             transferIcon = new JLabel(new ImageIcon(img));
             
-            img = ImageIO.read(getClass().getClassLoader().getResource("resources/coinsicon.png"));
-            coinsIcon = new JLabel(new ImageIcon(img));
+            bi = ImageIO.read(getClass().getClassLoader().getResource("resources/coinsicon.png"));
+            AppUI.repaintImage(bi, Color.white);
+            coinsIcon = new JLabel(new ImageIcon(bi));
             
             img = ImageIO.read(getClass().getClassLoader().getResource("resources/depositiconlight.png"));
             depositIiLight = new ImageIcon(img);
@@ -488,8 +497,8 @@ public class AdvancedClient  {
         p.add(icon3);
         
         c.insets = new Insets(0, 20, 0, 0); 
-        gridbag.setConstraints(icon2, c);
-        p.add(icon2);
+        //gridbag.setConstraints(icon2, c);
+        //p.add(icon2);
         
         JLabel wlabel = new JLabel("wallet");
         AppUI.setTitleFont(wlabel, 20);
@@ -545,7 +554,7 @@ public class AdvancedClient  {
             JPanel wrpDeposit = new JPanel();
             AppUI.setBoxLayout(wrpDeposit, false);
             AppUI.setSize(wrpDeposit, bwidth, headerHeight);
-            AppUI.setBackground(wrpDeposit, AppUI.getColor1());
+            AppUI.setBackground(wrpDeposit, AppUI.getColor3());
             AppUI.noOpaque(wrpDeposit);
             
             wrpDeposit.add(AppUI.vr(12));
@@ -576,7 +585,7 @@ public class AdvancedClient  {
             JPanel wrpWithdraw = new JPanel();
             AppUI.setBoxLayout(wrpWithdraw, false);
             AppUI.setSize(wrpWithdraw, bwidth, headerHeight);
-            AppUI.setBackground(wrpWithdraw, AppUI.getColor1());
+            AppUI.setBackground(wrpWithdraw, AppUI.getColor3());
             AppUI.noOpaque(wrpWithdraw);
             
             wrpWithdraw.add(AppUI.vr(12));
@@ -608,7 +617,7 @@ public class AdvancedClient  {
             JPanel wrpTransfer = new JPanel();
             AppUI.setBoxLayout(wrpTransfer, false);
             AppUI.setSize(wrpTransfer, bwidth, headerHeight);
-            AppUI.setBackground(wrpTransfer, AppUI.getColor1());
+            AppUI.setBackground(wrpTransfer, AppUI.getColor3());
             AppUI.noOpaque(wrpTransfer);
             
             wrpTransfer.add(AppUI.vr(12));
@@ -758,7 +767,7 @@ public class AdvancedClient  {
                 
                 public void mouseExited(MouseEvent evt) {
                     JMenuItem jMenuItem = (JMenuItem) evt.getSource();
-                    jMenuItem.setBackground(AppUI.getColor1());
+                    jMenuItem.setBackground(AppUI.getColor3());
                     
                     ps.popupVisible = false;             
                     EventQueue.invokeLater(new Runnable() {
@@ -819,7 +828,7 @@ public class AdvancedClient  {
             AppUI.setFont(menuItem, 20);
             menuItem.setOpaque(true);
 
-            menuItem.setBackground(AppUI.getColor1());
+            menuItem.setBackground(AppUI.getColor3());
             menuItem.setBorder(BorderFactory.createEmptyBorder(0,0,0,0));
             menuItem.setUI(new MenuItemUI() {
                 public void paint (final Graphics g, final JComponent c) {
@@ -878,7 +887,7 @@ public class AdvancedClient  {
             */
             public void mouseEntered(MouseEvent e) {
                 ficon.setOpaque(true);
-                AppUI.setBackground(ficon, AppUI.getColor1());
+                AppUI.setBackground(ficon, AppUI.getColor3());
 
                 ficon.repaint();              
                 popupMenu.show(ficon, 0 - mWidth  + ficon.getWidth(), ficon.getHeight());
@@ -926,7 +935,8 @@ public class AdvancedClient  {
     
     
     public void initCorePanel() {
-        corePanel = new ImageJPanel("bglogo.png");
+        //corePanel = new ImageJPanel("bglogo.png");
+        corePanel = new JPanel();
         AppUI.setBoxLayout(corePanel, false);
         AppUI.setSize(corePanel, tw, th - headerHeight);
         AppUI.setBackground(corePanel, AppUI.getColor4());
