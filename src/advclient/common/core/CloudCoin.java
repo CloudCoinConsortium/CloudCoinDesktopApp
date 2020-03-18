@@ -189,33 +189,42 @@ public class CloudCoin {
                 setMissingANs();
                 setEd();
 
-		json = "{\"cloudcoin\":[{\"nn\":\"" + nn + "\",\"sn\":\"" + sn + "\",\"an\":[\"";
+		json = "{\"cloudcoin\":[{" + ls + "\t\t\"nn\":\"" + nn + "\", " 
+                        + ls + "\t\t\"sn\":\"" + sn + "\"," + ls + "\t\t\"an\":[" + ls + "\"";
 		for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
                     String an = ans[i];
 
                     json += an;
                     if (i != RAIDA.TOTAL_RAIDA_COUNT - 1) {
-			json += "\",\"";
+			json += "\",";
+                        if (((i + 1) % 5) == 0)
+                            json += ls;
+                        
+                        json += "\"";
                     }
 		}
 
 		if (includePans) {
-                        setMissingPANs();
-			json += "\"], \"pan\":[\"";
-			for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
-                            String pan = pans[i];
+                    setMissingPANs();
+                    json += "\"]," + ls + "\t\t\"pan\":[" + ls + "\"";
+                    for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+                        String pan = pans[i];
                             
-                            json += pan;
-                            if (i != RAIDA.TOTAL_RAIDA_COUNT - 1) {
-				json += "\",\"";
-                            }
-			}
+                        json += pan;
+                        if (i != RAIDA.TOTAL_RAIDA_COUNT - 1) {
+                            json += "\",";
+                            if (((i + 1) % 5) == 0)
+                                json += ls;
+                                
+                            json += "\"";
+                        }
+                    }
 		}
 
 		String pownString = getPownString();
                 String aoidString = getAoidString();
-		json += "\"], \"ed\": \"" + ed + "\", \"pown\": \"" + pownString + "\","
-                        + " \"aoid\": [" + aoidString + "] }]}";
+		json += "\"], " + ls + "\t\t\"ed\": \"" + ed + "\", " + ls + "\t\t\"pown\": \"" + pownString + "\"," + ls 
+                        + "\t\t\"aoid\": [" + aoidString + "] } " + ls + "]}";
 
 		return json;
 	}
