@@ -116,6 +116,9 @@ public class AppCore {
         if (!createDirectory(Config.DIR_BACKUPS))
             return false;
         
+        if (!createDirectory(Config.DIR_DOWNLOADS))
+            return false;
+
         if (!createDirectory(Config.DIR_EMAIL_TEMPLATES))
             return false;
         
@@ -174,6 +177,12 @@ public class AppCore {
 
    static public String getBackupDir() {
        File f = new File(rootPath, Config.DIR_BACKUPS);
+       
+       return f.toString();
+   }
+ 
+   static public String getDownloadsDir() {
+       File f = new File(rootPath, Config.DIR_DOWNLOADS);
        
        return f.toString();
    }

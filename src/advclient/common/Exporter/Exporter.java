@@ -56,11 +56,11 @@ public class Exporter extends Servant {
         });
     }
     
-    public void launch(int type, int[] values, String tag, String dir, boolean keepSrc, CallbackInterface icb) {
+    public void launch(int type, String[] values, String tag, String dir, boolean keepSrc, CallbackInterface icb) {
         this.cb = icb;
 
         final int ftype = type;
-        final int[] fvalues = values;
+        final String[] fvalues = values;
         final String ftag = tag;
         final String fdir = dir;
         final boolean fkeepSrc = keepSrc;
@@ -97,7 +97,7 @@ public class Exporter extends Servant {
         return rv;     
     }
     
-    public void doExport(int type, int[] values, int amount, String dir, boolean keepSrc, String tag) {
+    public void doExport(int type, String[] values, int amount, String dir, boolean keepSrc, String tag) {
         if (tag.equals(""))
             tag = Config.DEFAULT_TAG;
 
@@ -126,6 +126,22 @@ public class Exporter extends Servant {
         String fullBankPath = AppCore.getUserDir(Config.DIR_BANK, user);
 
         if (values != null) {
+            logger.debug(ltag, "Loading coins");
+            for (int i = 0; i < values.length; i++) {
+                CloudCoin cc;
+                try {
+                    cc = new CloudCoin(values[i]);
+                } catch (JSONException e) {
+                    logger.debug(ltag, "Faile to parse cloudcoin: " + values[i]);
+                    er.status = ExporterResult.STATUS_ERROR;
+                    if (cb != null)
+                        cb.callback(er);
+                    
+                    return;
+                }
+                coinsPicked.add(cc);
+            }
+            /*
             if (values.length != AppCore.getDenominations().length) {
                 logger.error(ltag, "Invalid params");
                 er.status = ExporterResult.STATUS_ERROR;
@@ -146,7 +162,7 @@ public class Exporter extends Servant {
 
                     return;
                 }
-            }
+            }*/
         } else {
             if (!pickCoinsAmountInDirs(fullBankPath, fullFrackedPath, amount)) {
                 logger.debug(ltag, "Not enough coins in the bank dir for amount " + amount);
@@ -212,7 +228,8 @@ public class Exporter extends Servant {
             logger.debug(ltag, "Deleting original files");
             deletePickedCoins();
             for (CloudCoin cc: coinsPicked) {
-                addCoinToReceipt(cc, "authentic", Config.DIR_EXPORT);
+                if (values == null)
+                    addCoinToReceipt(cc, "authentic", Config.DIR_EXPORT);
             }
         
             saveReceipt(user, coinsPicked.size(), 0, 0, 0, 0, 0);
@@ -305,6 +322,8 @@ public class Exporter extends Servant {
         String fileName;
         String data;
 
+        ls = System.getProperty("line.separator");
+        
         sb.append("{" + ls + "\t\"cloudcoin\": [");
         for (CloudCoin cc : coinsPicked) {
             if (!first)
@@ -428,6 +447,8 @@ public class Exporter extends Servant {
         int total = 0;
         String fileName;
 
+        ls = System.getProperty("line.separator");
+        
         sb.append("{" + ls + "\t\"cloudcoin\": [");
         for (CloudCoin cc : coinsPicked) {
             if (!first)

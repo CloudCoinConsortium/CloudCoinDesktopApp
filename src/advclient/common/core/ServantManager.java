@@ -396,13 +396,7 @@ public class ServantManager {
 	//r.launch(, new int[]{1,1}, new int[] {7050330, 7050331}, memo, cb);
         r.launch(sn, sns, dstFolder, amount, false, cb);
     }
-    
-    public void startReceiverServiceForChange(int sn, int sns[], 
-            String dstFolder, int amount, String memo, CallbackInterface cb) {
-	Receiver r = (Receiver) sr.getServant("Receiver");
-        r.launch(sn, sns, dstFolder, amount, true, cb);
-    }
-    
+
     public void startSenderServiceForChange(int sn, int[] values, String memo, CallbackInterface cb) {
         Sender s = (Sender) sr.getServant("Sender");
 	s.launch(sn, null, values, 0, memo, Config.CHANGE_SKY_DOMAIN, cb);
@@ -545,6 +539,15 @@ public class ServantManager {
         Exporter ex = (Exporter) sr.getServant("Exporter");
 	ex.launch(exportType, amount, tag, dir, keepSrc, cb);
     }
+    
+    public void startExporterService(int exportType, String[] values, String tag, String dir, CallbackInterface cb) {
+        if (sr.isRunning("Exporter"))
+            return;
+                
+        Exporter ex = (Exporter) sr.getServant("Exporter");
+	ex.launch(exportType, values, tag, dir, false, cb);
+    }
+    
     
     public void startSecureExporterService(int exportType, int amount, String tag, String dir, boolean keepSrc, CallbackInterface cb) {
         logger.debug(ltag, "Secure Exporter " + getActiveWallet().getName());

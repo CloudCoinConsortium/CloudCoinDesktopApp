@@ -54,7 +54,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.35";
+    String version = "2.1.36";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -382,7 +382,9 @@ public class AdvancedClient  {
     
     public boolean isWithdrawing() {
         if (ps.currentScreen == ProgramState.SCREEN_WITHDRAW ||
-                ps.currentScreen == ProgramState.SCREEN_CONFIRM_WITHDRAW)
+                ps.currentScreen == ProgramState.SCREEN_CONFIRM_WITHDRAW ||
+                ps.currentScreen == ProgramState.SCREEN_WITHDRAWING ||
+                ps.currentScreen == ProgramState.SCREEN_WITHDRAW_DONE)
             return true;
         
         return false;
@@ -1069,6 +1071,13 @@ public class AdvancedClient  {
             case ProgramState.SCREEN_CONFIRM_WITHDRAW:
                 showConfirmWithdrawScreen();
                 break;
+            case ProgramState.SCREEN_WITHDRAWING:
+                showWithdrawingScreen();
+                break;
+            case ProgramState.SCREEN_WITHDRAW_DONE:
+                showWithdrawDoneScreen();
+                break;
+
         }
         
         
@@ -1145,7 +1154,12 @@ public class AdvancedClient  {
         String stc = AppCore.formatNumber(totalCoinsProcessed);
         String tc = AppCore.formatNumber(totalCoins);
         
-        pbarText.setText("Transferred " + stc + " / " + tc + " CloudCoins");
+        String s = "Transferred";
+        if (isWithdrawing())
+            s = "Received";
+
+        pbarText.setText(s + " " + stc + " / " + tc + " CloudCoins");
+
         pbarText.repaint();
     }
     
@@ -1775,6 +1789,150 @@ public class AdvancedClient  {
         
         t.start();
         
+    }
+    
+    public void showWithdrawingScreen() {
+        JPanel subInnerCore = getModalJPanel("Receiving in Progress");
+        maybeShowError(subInnerCore);
+
+        JPanel ct = new JPanel();
+        AppUI.noOpaque(ct);
+        subInnerCore.add(ct);
+        
+        GridBagLayout gridbag = new GridBagLayout();
+        GridBagConstraints c = new GridBagConstraints();      
+        ct.setLayout(gridbag);
+        
+        String fwallet = ps.srcWallet.getName();
+
+
+        
+        int y = 0;
+        
+        // Info
+        JLabel x = new JLabel("<html><div style='width:480px;text-align:center'>From Wallet <b>" + fwallet + " </b></div></html>");
+        AppUI.setFont(x, 18);
+        c.anchor = GridBagConstraints.CENTER;
+        c.insets = new Insets(4, 0, 4, 0); 
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+        
+        y++;
+        
+        // Warning Label
+        x = new JLabel("<html><div style='width:480px;text-align:center'>Do not close the application until all CloudCoins are transferred!</div></html>");
+        AppUI.setCommonFont(x);
+        AppUI.setColor(x, AppUI.getErrorColor());
+        c.anchor = GridBagConstraints.CENTER;
+        c.insets = new Insets(20, 0, 4, 0); 
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+        
+        y++;
+        
+        pbarText = new JLabel("");
+        AppUI.setCommonFont(pbarText);
+        c.insets = new Insets(40, 20, 4, 0);
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+        gridbag.setConstraints(pbarText, c);
+        ct.add(pbarText);
+        
+        y++;
+        
+        // ProgressBar
+        pbar = new JProgressBar();
+        pbar.setStringPainted(true);
+        AppUI.setMargin(pbar, 0);
+        AppUI.setSize(pbar, (int) (tw / 2.6f) , 50);
+        pbar.setMinimum(0);
+        pbar.setMaximum(24);
+        pbar.setValue(0);
+        pbar.setUI(new FancyProgressBar());
+        AppUI.noOpaque(pbar);
+        
+        c.insets = new Insets(20, 20, 4, 0);
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+        gridbag.setConstraints(pbar, c);
+        ct.add(pbar);
+        
+        y++;
+
+        subInnerCore.add(AppUI.hr(120));
+        
+        Thread t = new Thread(new Runnable() {
+            public void run(){
+                pbar.setVisible(false);
+                if (!ps.isEchoFinished) {
+                    pbarText.setText("Checking RAIDA ...");
+                    pbarText.repaint();
+                }
+
+                try {
+                    Thread.sleep(200);
+                } catch (InterruptedException e) {}
+
+                while (!ps.isEchoFinished) {
+                    try {
+                        Thread.sleep(300);
+                    } catch (InterruptedException e) {}
+                }
+
+                if (!sm.isRAIDAOK()) {
+                    ps.errText = "<html><div style='width:520px;text-align:center'>RAIDA cannot be contacted. "
+                            + "This is usually caused by company routers blocking outgoing traffic. "
+                            + "Please Echo RAIDA and try again.</div></html>";
+                    ps.isEchoFinished = false;
+                    ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                    showScreen();
+                    return;
+                }
+
+                CloudCoin skyCC = null;
+                ps.coinIDinFix = null;
+                if (ps.srcWallet.isSkyWallet()) {
+                    ps.isCheckingSkyID = true;
+                    skyCC = ps.srcWallet.getIDCoin();
+                 
+                    pbarText.setText("Checking Your Source SkyWallet ID");
+                    pbarText.repaint();
+
+                    sm.startAuthenticatorService(skyCC, new AuthenticatorForSkyCoinCb());
+                    while (ps.isCheckingSkyID) {
+                        try {
+                            Thread.sleep(300);
+                        } catch (InterruptedException e) {}
+                    }
+                    
+                    if (AppCore.getErrorCount(skyCC) > Config.MAX_FAILED_RAIDAS_TO_SEND) {
+                        ps.errText = getSkyIDErrorIfRAIDAFailed();
+                        showScreen();
+                        return;
+                    } else if (AppCore.getPassedCount(skyCC) < Config.PASS_THRESHOLD) {
+                        ps.errText = getSkyIDError(ps.srcWallet.getName(), ps.srcWallet.getIDCoin().getPownString());
+                        showScreen();
+                        return;
+                    } else if (AppCore.getPassedCount(skyCC) != RAIDA.TOTAL_RAIDA_COUNT) {
+                        ps.currentScreen = ProgramState.SCREEN_WARN_FRACKED_TO_SEND;
+                        showScreen();
+                        return;
+                    }
+                } 
+                
+                
+
+                wl.debug(ltag, "Start receiver from " + ps.srcWallet.getIDCoin().sn);
+                sm.startReceiverService(ps.srcWallet.getIDCoin().sn, ps.srcWallet.getSNs(),
+                    "SkyWithdraw", ps.typedAmount, ps.typedMemo, new ReceiverCb());
+            }
+        });
+        
+        t.start();
     }
     
     public void showSendingScreen() {
@@ -2487,6 +2645,69 @@ public class AdvancedClient  {
         },  new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 
+                if (ps.srcWallet != null) {
+                    setActiveWallet(ps.srcWallet);
+                    ps.sendType = 0;
+                    ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
+                } else {
+                    ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                }
+                showScreen();
+            }
+        });
+  
+        //resetState();
+        
+        subInnerCore.add(bp);        
+    }
+    
+    public void showWithdrawDoneScreen() {
+        boolean isError = !ps.errText.equals("");
+        JPanel subInnerCore;
+        
+        if (isError) {
+            subInnerCore = getModalJPanel("Error");
+            AppUI.hr(subInnerCore, 32);
+            maybeShowError(subInnerCore);
+            resetState();
+            return;
+        }
+ 
+        ps.srcWallet.setNotUpdated();
+        if (ps.dstWallet != null)
+            ps.dstWallet.setNotUpdated();
+        
+        subInnerCore = getModalJPanel("Withdrawal Complete");
+        maybeShowError(subInnerCore);
+        
+        JPanel ct = new JPanel();
+        AppUI.noOpaque(ct);
+        subInnerCore.add(ct);
+        
+        GridBagLayout gridbag = new GridBagLayout();
+        GridBagConstraints c = new GridBagConstraints();      
+        ct.setLayout(gridbag);
+     
+        String name = ps.srcWallet.getName();      
+        JLabel x = new JLabel("<html><div style='width:400px; text-align:center'>"
+            + "<b>" + AppCore.formatNumber(ps.typedAmount) + " CC</b> have been exported</div></html>");
+               
+        AppUI.setCommonFont(x);
+ 
+        c.insets = new Insets(0, 0, 4, 0);
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = 0;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+        
+        JPanel bp = getTwoButtonPanelCustom("Next Withdrawal", "Done", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                resetState();
+                ps.currentScreen = ProgramState.SCREEN_WITHDRAW;
+                showScreen();
+            }
+        },  new ActionListener() {
+            public void actionPerformed(ActionEvent e) {               
                 if (ps.srcWallet != null) {
                     setActiveWallet(ps.srcWallet);
                     ps.sendType = 0;
@@ -3379,6 +3600,12 @@ public class AdvancedClient  {
              
         JPanel bp = getTwoButtonPanel(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+                if (ps.srcWallet.isSkyWallet()) {
+                    ps.currentScreen = ProgramState.SCREEN_WITHDRAWING;
+                    showScreen();
+                    return;
+                }
+        
                 ps.srcWallet.setPassword(ps.typedSrcPassword);         
                 sm.setActiveWalletObj(ps.srcWallet);               
                 if (ps.srcWallet.isEncrypted()) {
@@ -4670,10 +4897,7 @@ public class AdvancedClient  {
         AppUI.hr(rightPanel, 20);
         rightPanel.add(bp);   
     }
-    
-    public void showWithdrawDoneScreen() {
-        
-    }
+
     
     public void showWithdrawScreen() {
         showLeftScreen();
@@ -4720,7 +4944,7 @@ public class AdvancedClient  {
         c.gridy = y;     
  
         
-        final optRv rvFrom = setOptionsForWalletsCommon(false, false, false, null);
+        final optRv rvFrom = setOptionsForWalletsCommon(false, false, true, null);
         if (rvFrom.idxs.length == 0) {
             ps.errText = "No Wallets to Transfer From";
             maybeShowError(ct);
@@ -4882,27 +5106,6 @@ public class AdvancedClient  {
         oct.add(xct);
         
         y++;
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
 
         rightPanel.add(oct);
 
@@ -5024,13 +5227,7 @@ public class AdvancedClient  {
                     showScreen();
                     return;
                 }
-                    
-                if (ps.srcWallet.isSkyWallet()) {
-                    ps.errText = "Transfer from Sky Wallet to Local Folder is not supported";
-                    showScreen();
-                    return;
-                }
-                    
+
                 if (ps.typedMemo.isEmpty())
                     ps.typedMemo = "Export";
                     
@@ -9520,6 +9717,8 @@ public class AdvancedClient  {
             final Object fresult = result;
             if (isTransferring())
                 ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+            else if (isWithdrawing())
+                ps.currentScreen = ProgramState.SCREEN_WITHDRAW_DONE;
             else
                 ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
             
@@ -9601,7 +9800,7 @@ public class AdvancedClient  {
             Wallet w = sm.getActiveWallet();
             if (ps.statToBankValue != 0) {
                 Wallet wsrc = ps.srcWallet;
-                if (wsrc != null && wsrc.isSkyWallet()) {
+                if (wsrc != null && wsrc.isSkyWallet() && ps.cenvelopes != null) {
                     wl.debug(ltag, "Appending sky transactions");
                       
                     StringBuilder nsb = new StringBuilder();
@@ -9682,7 +9881,9 @@ public class AdvancedClient  {
                         ps.errText = "Operation Cancelled";
                         if (isTransferring())
                             ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
-                        else
+                        else if (isWithdrawing()) {
+                            ps.currentScreen = ProgramState.SCREEN_WITHDRAW_DONE;
+                        } else
                             ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
                         showScreen();
                     }
@@ -9874,6 +10075,8 @@ public class AdvancedClient  {
                         ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
                     } else if (isFixing()) {
                         ps.currentScreen = ProgramState.SCREEN_FIX_DONE;
+                    } else if (isWithdrawing()) {
+                        ps.currentScreen = ProgramState.SCREEN_WITHDRAW_DONE;
                     } else if (isBackupping()) {
                         ps.currentScreen = ProgramState.SCREEN_BACKUP_DONE;
                     } 
@@ -9967,7 +10170,9 @@ public class AdvancedClient  {
                         } else {
                             if (isTransferring())
                                 ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
-                            else
+                            else if (isWithdrawing()) {
+                                ps.currentScreen = ProgramState.SCREEN_WITHDRAW_DONE;
+                            } else
                                 ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
                         }
                         showScreen();
@@ -10024,7 +10229,10 @@ public class AdvancedClient  {
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {
                         ps.errText = "Operation Cancelled";
-                        ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                        if (isWithdrawing())
+                            ps.currentScreen = ProgramState.SCREEN_WITHDRAW_DONE;
+                        else
+                            ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
                         sm.resumeAll();
                         showScreen();
                     }
@@ -10222,7 +10430,11 @@ public class AdvancedClient  {
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {
                         ps.errText = "Operation Cancelled";
-                        ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                        if (isWithdrawing())
+                            ps.currentScreen = ProgramState.SCREEN_WITHDRAW_DONE;
+                        else
+                            ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+
                         sm.resumeAll();
                         showScreen();
                     }
@@ -10233,7 +10445,10 @@ public class AdvancedClient  {
             if (rr.status == ReceiverResult.STATUS_ERROR) {
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {
-                        ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                        if (isWithdrawing())
+                            ps.currentScreen = ProgramState.SCREEN_WITHDRAW_DONE;
+                        else
+                            ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
                         if (!rr.errText.isEmpty()) {
                             if (rr.errText.equals(Config.PICK_ERROR_MSG)) {
                                 ps.errText = getPickError(ps.srcWallet);
@@ -10251,10 +10466,18 @@ public class AdvancedClient  {
             } 
             
             if (rr.amount <= 0) {
-                ps.typedAmount = 0;
-                ps.errText = "Coins were not received. Please check the logs";
-                ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
-                showScreen();
+                EventQueue.invokeLater(new Runnable() {         
+                    public void run() {
+                        ps.typedAmount = 0;
+                        ps.errText = "Coins were not received. Please check the logs";
+                        if (isWithdrawing())
+                            ps.currentScreen = ProgramState.SCREEN_WITHDRAW_DONE;
+                        else
+                            ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+
+                        showScreen();
+                    }
+                });
                 return;
             }
 
@@ -10266,7 +10489,11 @@ public class AdvancedClient  {
             ps.rrAmount = rr.amount;
             
             wl.debug(ltag, "rramount " + rr.amount + " typed " + ps.typedAmount + " name=" + name);
-            sm.startGraderService(new GraderCb(), null, name);
+            if (!isWithdrawing())
+                sm.startGraderService(new GraderCb(), null, name);
+            else
+                sm.startExporterService(ps.exportType, rr.files, ps.typedMemo, ps.chosenFile, new ExporterCb());
+
 	}
     }
     

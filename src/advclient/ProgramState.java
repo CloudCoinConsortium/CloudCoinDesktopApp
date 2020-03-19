@@ -72,6 +72,8 @@ public class ProgramState {
     final public static int SCREEN_BILL_PAY_DONE = 54;
     final public static int SCREEN_WITHDRAW = 55;
     final public static int SCREEN_CONFIRM_WITHDRAW = 56;
+    final public static int SCREEN_WITHDRAWING = 57;
+    final public static int SCREEN_WITHDRAW_DONE = 58;
     
     
     final static int CB_STATE_INIT = 1;

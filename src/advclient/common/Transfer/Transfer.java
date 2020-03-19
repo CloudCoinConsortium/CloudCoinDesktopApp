@@ -97,7 +97,6 @@ public class Transfer extends Servant {
             logger.debug(ltag, "Got extra coin " + extraCoin.sn + " denomination: " + extraCoin.getDenomination());
         }
         
-        //setSenderRAIDA();
         CloudCoin idcc = getIDcc(fromsn);
         if (idcc == null) {
             logger.error(ltag, "NO ID Coin found for SN: " + fromsn);
@@ -394,7 +393,7 @@ public class Transfer extends Servant {
         
         int sns[] = showChange(method, tcc);
         if (sns == null) {
-            logger.error(tag, "Not enough coins to make change");
+            logger.error(ltag, "Not enough coins to make change");
             return false;
         }
 
