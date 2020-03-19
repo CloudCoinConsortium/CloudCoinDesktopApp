@@ -186,6 +186,8 @@ public class CloudCoin {
 	public String getJson(boolean includePans) {
 		String json;
 
+                ls = System.getProperty("line.separator");
+                
                 setMissingANs();
                 setEd();
 
@@ -221,9 +223,9 @@ public class CloudCoin {
                     }
 		}
 
-		String pownString = getPownString();
+		//String pownString = getPownString();
                 String aoidString = getAoidString();
-		json += "\"], " + ls + "\t\t\"ed\": \"" + ed + "\", " + ls + "\t\t\"pown\": \"" + pownString + "\"," + ls 
+		json += "\"], " + ls + "\t\t\"ed\": \"" + ed + "\", " + ls + "\t\t\"pown\": \"" + getPownString() + "\"," + ls 
                         + "\t\t\"aoid\": [" + aoidString + "] } " + ls + "]}";
 
 		return json;
@@ -232,6 +234,8 @@ public class CloudCoin {
 	public String getSimpleJson() {
 		String json;
 
+                ls = System.getProperty("line.separator");
+                
                 setMissingANs();
                 
 		json = "{" + ls + "\t\t\"nn\":\"" + nn + "\"," + ls + "\t\t\"sn\":\"" + sn + "\"," + ls + "\t\t\"an\":[\"";

@@ -5,7 +5,6 @@ public class Config {
     public static String DIR_ROOT = "CloudCoinWallet";
     public static String DIR_BANK = "Bank";
     public static String DIR_COUNTERFEIT = "Counterfeit";
-    public static String DIR_DANGEROUS = "Dangerous";
     public static String DIR_DEPOSIT = "Deposit";
     public static String DIR_DETECTED = "Detected";
     public static String DIR_EXPORT = "Export";
@@ -40,6 +39,7 @@ public class Config {
     public static String DIR_MAIN_LOGS = "Logs";
     public static String DIR_MAIN_TRASH = "Trash";
     public static String DIR_BACKUPS = "Backups";
+    public static String DIR_DOWNLOADS = "Downloads";
 
     public static String GLOBAL_CONFIG_FILENAME = "global.config";
     public static String MAIL_CONFIG_FILENAME = "mailsettings.ini";

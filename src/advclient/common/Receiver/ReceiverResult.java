@@ -25,6 +25,7 @@ public class ReceiverResult {
     
     public String errText;
 
+    public String[] files;
     
     public ReceiverResult() {
         amount = 0;
