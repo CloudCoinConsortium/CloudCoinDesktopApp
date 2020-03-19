@@ -322,6 +322,8 @@ public class Exporter extends Servant {
         String fileName;
         String data;
 
+        ls = System.getProperty("line.separator");
+        
         sb.append("{" + ls + "\t\"cloudcoin\": [");
         for (CloudCoin cc : coinsPicked) {
             if (!first)
