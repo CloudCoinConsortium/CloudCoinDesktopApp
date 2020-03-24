@@ -141,7 +141,6 @@ public class AdvancedClient  {
     }
    
     public void echoDone() {
-        System.out.println("done");
         ps.isEchoFinished = true;
     }
        
