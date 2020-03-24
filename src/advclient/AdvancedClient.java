@@ -58,7 +58,7 @@ import javax.swing.table.TableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.36";
+    String version = "2.1.37";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -141,6 +141,7 @@ public class AdvancedClient  {
     }
    
     public void echoDone() {
+        System.out.println("done");
         ps.isEchoFinished = true;
     }
        
@@ -1783,6 +1784,7 @@ public class AdvancedClient  {
                     }
 
                     if (AppCore.getPassedCount(skyCC) != RAIDA.TOTAL_RAIDA_COUNT) {
+                        ps.srcWallet = ps.dstWallet;
                         ps.currentScreen = ProgramState.SCREEN_WARN_FRACKED_TO_SEND;
                         showScreen();
                         return;
@@ -3491,7 +3493,8 @@ public class AdvancedClient  {
                         ps.isSkyDeposit = false;
                     }
                     showScreen();
-                } else if (ps.sendType == ProgramState.SEND_TYPE_REMOTE) {              
+                } else if (ps.sendType == ProgramState.SEND_TYPE_REMOTE) {    
+
                     DNSSn d = new DNSSn(ps.typedRemoteWallet, null, wl);
                     int sn = d.getSN();
                     if (sn < 0) {
@@ -3500,7 +3503,7 @@ public class AdvancedClient  {
                         showScreen();
                         return;
                     }
-                    
+
                     ps.foundSN = sn;
                     ps.isSkyDeposit = false;
                     ps.currentScreen = ProgramState.SCREEN_SENDING;
