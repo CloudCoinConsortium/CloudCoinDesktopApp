@@ -1775,9 +1775,15 @@ public class AdvancedClient  {
                         showScreen();
                         return;
                     }
+                    
+                    if (AppCore.getPassedCount(skyCC) < Config.PASS_THRESHOLD) {
+                        ps.errText = getSkyIDError(ps.dstWallet.getName(), ps.dstWallet.getIDCoin().getPownString());
+                        showScreen();
+                        return;
+                    }
 
                     if (AppCore.getPassedCount(skyCC) != RAIDA.TOTAL_RAIDA_COUNT) {
-                        ps.errText = getSkyIDError(ps.dstWallet.getName(), ps.dstWallet.getIDCoin().getPownString());
+                        ps.currentScreen = ProgramState.SCREEN_WARN_FRACKED_TO_SEND;
                         showScreen();
                         return;
                     }
