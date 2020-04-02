@@ -93,19 +93,6 @@ public class AppUI {
             GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(regFont);
             GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(boldFont);
             GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(semiBoldFont);
-
-            //AGIEEE
-            //montLight = Font.createFont(Font.TRUETYPE_FONT, cl.getResourceAsStream("resources/Montserrat-Light.ttf"));
-            //montMedium = Font.createFont(Font.TRUETYPE_FONT, cl.getResourceAsStream("resources/Montserrat-Medium.ttf"));
-            //ontReg = Font.createFont(Font.TRUETYPE_FONT, cl.getResourceAsStream("resources/Montserrat-Regular.ttf"));
-            
-            //GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(montReg);
-            //GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(montMedium);
-            //GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(montLight);
-            
-            
-            //osRegFont = Font.createFont(Font.TRUETYPE_FONT, cl.getResourceAsStream("resources/Montserrat-Medium.ttf"));
-            //osSemiBoldFont = Font.createFont(Font.TRUETYPE_FONT, cl.getResourceAsStream("resources/Montserrat-Semibold.ttf"));
             
             osRegFont = Font.createFont(Font.TRUETYPE_FONT, cl.getResourceAsStream("resources/OpenSans-Regular.ttf"));
             osSemiBoldFont = Font.createFont(Font.TRUETYPE_FONT, cl.getResourceAsStream("resources/OpenSans-Semibold.ttf"));

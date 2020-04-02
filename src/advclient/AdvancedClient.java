@@ -58,7 +58,7 @@ import javax.swing.table.TableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.37";
+    String version = "2.1.38";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -93,6 +93,8 @@ public class AdvancedClient  {
     
     JLabel trTitle;
     JPanel invPanel;
+    
+    Brand brand;
     
     public AdvancedClient() {
         initSystem();
@@ -135,6 +137,14 @@ public class AdvancedClient  {
             return;
         }
                
+        brand = new Brand(wl);
+        if (!brand.init()) {
+            resetState();
+            ps.errText = "Failed to init brand. Make sure config file exists: " + brand.getConfigPath();
+            return;
+        }
+        
+        
         AppCore.readConfig();
         AppCore.copyTemplatesFromJar();
         resetState();
