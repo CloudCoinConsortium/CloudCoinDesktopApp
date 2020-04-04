@@ -40,6 +40,7 @@ public class Config {
     public static String DIR_MAIN_TRASH = "Trash";
     public static String DIR_BACKUPS = "Backups";
     public static String DIR_DOWNLOADS = "Downloads";
+    public static String DIR_BRANDS = "Brands";
 
     public static String GLOBAL_CONFIG_FILENAME = "global.config";
     public static String MAIL_CONFIG_FILENAME = "mailsettings.ini";
@@ -202,5 +203,9 @@ public class Config {
 
     final public static String TAG_RANDOM = "random";
     
-    final public static String DEFAULT_BRAND_NAME = "brand";
+    final public static String DEFAULT_BRAND_NAME = "CloudCoin";
+    
+    final public static String BRAND_URL = "http://10.1.1.190:3000";
+    
+    final public static String BRAND_CONFIG_NAME = "config.ini";
 }

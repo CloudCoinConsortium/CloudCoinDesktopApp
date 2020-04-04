@@ -64,15 +64,13 @@ public class ServantManager {
     String ltag = "ServantManager";
     ServantRegistry sr;
     GLogger logger;
-    String home;
     String user;
     private Hashtable<String, Wallet> wallets;
     
     ArrayList<ShowEnvelopeCoins> secs;
     
-    public ServantManager(GLogger logger, String home) {
+    public ServantManager(GLogger logger) {
         this.logger = logger;
-        this.home = home;
         this.sr = new ServantRegistry();
         this.user = Config.DIR_DEFAULT_USER;
         this.wallets = new Hashtable<String, Wallet>();
@@ -115,27 +113,9 @@ public class ServantManager {
     public void changeServantUser(String servant, String wallet) {
         sr.changeServantUser(servant, wallet);
     }
-    
-    public String getHomeDir() {
-        return this.home;
-    }
-    
-    public boolean init() {
-        boolean rv; 
-        
+
+    public boolean init() {        
         AppCore.initPool();
-        
-        try {
-            rv = AppCore.initFolders(new File(home), logger);
-            if (!rv) {
-                logger.error(ltag, "Failed to create folders");
-                return false;
-            }
-        } catch (Exception e) {
-            logger.error(ltag, "Failed to init root dir " + home);
-            return false;
-        }   
-        
         initServants();
         
         return true;

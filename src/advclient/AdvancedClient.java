@@ -96,55 +96,139 @@ public class AdvancedClient  {
     
     Brand brand;
     
+    JLabel infoText;
+    
     public AdvancedClient() {
-        initSystem();
-                
-        AppUI.init(tw, th); 
+        wl = new WLogger();
+        AppCore.logger = wl;
         AppCore.logSystemInfo(version);
         
-        headerHeight = th / 10;
+        String home = System.getProperty("user.home");
+        resetState();
         
+        wl.debug(ltag, "Creating default brand without initialization");
+        brand = new Brand(Config.DEFAULT_BRAND_NAME, wl);
+        
+        initMainScreen();   
+        JLabel wText = new JLabel("Brand Initialization. Please wait...");
+        wText.setFont(wText.getFont().deriveFont(18f));
+        AppUI.setMargin(wText, 32);
+        AppUI.alignCenter(wText);
+        mainPanel.add(wText);
+        
+        infoText = new JLabel("");
+        infoText.setFont(infoText.getFont().deriveFont(18f));
+        AppUI.setMargin(infoText, 32);
+        AppUI.alignCenter(infoText);
+        mainPanel.add(infoText);
+        
+        boolean rv = AppCore.initFolders(new File(home));
+        if (!rv) {
+            wl.error(ltag, "Failed to create folders");
+            ps.errText = "Failed to init folders";
+        } else {  
+            Thread t = new Thread(new Runnable() {
+                public void run(){
+                    initBrand();
+                }
+            });
+            t.start();
+        }
+           
+        /*
+        if (!ps.errText.equals("")) {
+            wText.setVisible(false);
+            infoText.setText(ps.errText);
+            mainPanel.revalidate();
+            mainPanel.repaint();        
+            return;
+        }
+        */
+        
+    }
+    
+    public void initCore() {
+        initSystem();
+          
+        AppUI.init(tw, th); 
         initMainScreen();
-        
         if (!ps.errText.equals("")) {
             JLabel x = new JLabel(ps.errText);
             AppUI.setFont(x, 16);
-            AppUI.setMargin(x, 8);
+            AppUI.setMargin(x, 28);
             AppUI.alignCenter(x);
             mainPanel.add(x);
             return;
-        }
+        } 
         
+        
+        headerHeight = th / 10;
         initHeaderPanel();
         initCorePanel();
       
         mainPanel.add(headerPanel);
         mainPanel.add(corePanel);
     
+
         showScreen();
     }
 
-    public void initSystem() {
-        wl = new WLogger();
+    public void initBrand() {
+        wl.debug(ltag, "Init brand");
         
-        String home = System.getProperty("user.home");
-        //home += File.separator + "CloudCoinWallet";
+        String brandName = Config.DEFAULT_BRAND_NAME;
+        try {
+            String path = AdvancedClient.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+            //path = "/C:/Users/Alexander/Documents/NetBeansProjects/CloudCoinWallet/store/EthBold.Wallet.d_2_0.34.jar";
+            wl.debug(ltag, "Filename " + path);
+            File f = new File(path);
+            String fileName = f.getName();
+            if (fileName.endsWith(".jar")) {
+                String[] parts = fileName.split("\\.");
+                brandName = parts[0];
+                wl.debug(ltag, "Found brand " + brandName);
+
+            }
+        } catch(Exception e) {
+            wl.debug(ltag, e.toString());
+        }
+        
+        brand = new Brand(brandName, wl);
+        if (!brand.init(new CallbackInterface() {
+            public void callback(Object o) {
+                BrandResult br = (BrandResult) o;
+                System.out.println("callback "  + br.text);
+                EventQueue.invokeLater(new Runnable() {
+                    public void run(){
+                        
+                        if (br.text.equals("done")) {
+                            initCore();
+                            return;
+                        }
+                        
+                        String text = br.isError ? "ERROR: " + br.text : br.text;                     
+                        if (br.isError) {
+                            mainPanel.remove(0);
+                        }
+                        
+                        infoText.setText(text);
+                        infoText.repaint();
+                    }
+                });
+            }
             
-        sm = new ServantManager(wl, home);
-        if (!sm.init()) {
-            resetState();
-            ps.errText = "Failed to init program. Make sure you have correct folder permissions (" + home + ")";
-            return;
-        }
-               
-        brand = new Brand(wl);
-        if (!brand.init()) {
-            resetState();
-            ps.errText = "Failed to init brand. Make sure config file exists: " + brand.getConfigPath();
+        })) {
+            ps.errText = "Failed to init brand. Plese check the main.log file";
             return;
         }
         
-        
+            
+    } 
+    
+    public void initSystem() {
+        sm = new ServantManager(wl);
+        sm.init();
+
         AppCore.readConfig();
         AppCore.copyTemplatesFromJar();
         resetState();
@@ -332,9 +416,26 @@ public class AdvancedClient  {
        
         AppUI.setBoxLayout(mainPanel, true);
         AppUI.setSize(mainPanel, tw, th);
-        AppUI.setBackground(mainPanel, AppUI.getColor4());
-    
-        mainFrame = AppUI.getMainFrame(version);
+        AppUI.setBackground(mainPanel, brand.getBackgroundColor());
+        
+        if (mainFrame == null)
+            mainFrame = new JFrame();
+        
+        mainFrame.setTitle(brand.getTitle(version));
+        mainFrame.setLayout(new BorderLayout());
+        mainFrame.setSize(new Dimension(tw, th));
+        mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        mainFrame.setLocationRelativeTo(null);
+        mainFrame.setResizable(false);
+        mainFrame.setVisible(true);
+        
+        ClassLoader cl;            
+        cl = AppUI.class.getClassLoader();
+
+        mainFrame.setIconImage(
+            new ImageIcon(cl.getResource("resources/CloudCoinLogo.png")).getImage()
+        );
+
         mainFrame.setContentPane(mainPanel);
     }
     
@@ -8111,6 +8212,7 @@ public class AdvancedClient  {
     public static void main(String[] args) {
         System.setProperty("awt.useSystemAAFontSettings","on");
         System.setProperty("swing.aatext", "true");
+        
         /*
         try {
             UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");

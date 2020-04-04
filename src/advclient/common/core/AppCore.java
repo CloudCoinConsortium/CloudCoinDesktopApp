@@ -52,7 +52,7 @@ public class AppCore {
     static private String ltag = "AppCore";
 
     static private File rootPath;
-    static private GLogger logger;
+    public static GLogger logger;
 
     static private ExecutorService service;
     
@@ -78,49 +78,58 @@ public class AppCore {
         return true;
     }
 
-    static public void createDirectoryPath(String path) {
+    static public boolean createDirectoryPath(String path) {
         File idPathFile = new File(path);
         if (idPathFile.exists())
-            return;
+            return false;
         
         if (!idPathFile.mkdirs()) {
             logger.error(ltag, "Can not create directory " + path);
-            return;
+            return false;
         }
+        
+        return true;
     }
    
-    static public boolean initFolders(File path, GLogger logger) throws Exception {
-        rootPath = path;
-        AppCore.logger = logger;
+    static public boolean initFolders(File path) {
+        try {
+            rootPath = path;
 
-        if (!createDirectory(Config.DIR_ROOT))
-            return false;
+            if (!createDirectory(Config.DIR_ROOT))
+                return false;
         
-        rootPath = new File(path, Config.DIR_ROOT);
+            rootPath = new File(path, Config.DIR_ROOT);
 
-        if (!createDirectory(Config.DIR_TEMPLATES))
-            return false;
+            if (!createDirectory(Config.DIR_TEMPLATES))
+                return false;
         
-        if (!createDirectory(Config.DIR_ACCOUNTS))
-            return false;
+            if (!createDirectory(Config.DIR_ACCOUNTS))
+                return false;
         
-        if (!createDirectory(Config.DIR_ID))
-            return false;
+            if (!createDirectory(Config.DIR_ID))
+                return false;
         
-        if (!createDirectory(Config.DIR_MAIN_LOGS))
-            return false;
+            if (!createDirectory(Config.DIR_MAIN_LOGS))
+                return false;
         
-        if (!createDirectory(Config.DIR_MAIN_TRASH))
-            return false;
+            if (!createDirectory(Config.DIR_MAIN_TRASH))
+                return false;
         
-        if (!createDirectory(Config.DIR_BACKUPS))
-            return false;
+            if (!createDirectory(Config.DIR_BACKUPS))
+                return false;
         
-        if (!createDirectory(Config.DIR_DOWNLOADS))
-            return false;
+            if (!createDirectory(Config.DIR_DOWNLOADS))
+                return false;
 
-        if (!createDirectory(Config.DIR_EMAIL_TEMPLATES))
+            if (!createDirectory(Config.DIR_EMAIL_TEMPLATES))
+                return false;
+        
+            if (!createDirectory(Config.DIR_BRANDS))
+                return false;
+        } catch (Exception e) {
+            logger.error(ltag, "Exception " + e.toString());
             return false;
+        }
         
         return true;
     }
@@ -177,6 +186,12 @@ public class AppCore {
 
    static public String getBackupDir() {
        File f = new File(rootPath, Config.DIR_BACKUPS);
+       
+       return f.toString();
+   }
+   
+   static public String getBrandsDir() {
+       File f = new File(rootPath, Config.DIR_BRANDS);
        
        return f.toString();
    }

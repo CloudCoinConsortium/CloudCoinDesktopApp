@@ -390,28 +390,8 @@ public class AppUI {
         c.setForeground(color);
     }
     
-    public static JFrame getMainFrame(String version) {
-        JFrame frame = new JFrame();
-        
-        frame.setTitle("CloudCoin Wallet " + version);
-        frame.setLayout(new BorderLayout());
-        frame.setSize(new Dimension(tw, th));
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setLocationRelativeTo(null);
-        frame.setResizable(false);
-        frame.setVisible(true);
-        
-        ClassLoader cl;            
-        cl = AppUI.class.getClassLoader();
 
-        frame.setIconImage(
-            new ImageIcon(cl.getResource("resources/CloudCoinLogo.png")).getImage()
-        );
-        
-        return frame;
-    }
-   
-   public static JPanel createRoundedPanel(JPanel parent) {
+    public static JPanel createRoundedPanel(JPanel parent) {
          return createRoundedPanel(parent, AppUI.getColor5(), 60, 20);
     }
     
