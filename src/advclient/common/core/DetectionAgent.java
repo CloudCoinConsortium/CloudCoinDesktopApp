@@ -1,5 +1,6 @@
 package global.cloudcoin.ccbank.core;
 
+import java.io.ByteArrayOutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.io.InputStream;
@@ -15,6 +16,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import java.security.cert.X509Certificate;
+
 
 public class DetectionAgent {
 
@@ -32,6 +34,7 @@ public class DetectionAgent {
     
     HttpURLConnection urlConnection;
     
+    boolean binary;
 
     public DetectionAgent(int RAIDANumber, GLogger logger) {
 
@@ -43,6 +46,7 @@ public class DetectionAgent {
         this.ltag += "" + this.RAIDANumber;
 
         this.logger = logger;
+        this.binary = false;
 
         lastStatus = RAIDA.STATUS_OK;
 
@@ -54,6 +58,10 @@ public class DetectionAgent {
             return;
 
         urlConnection.disconnect();
+    }
+    
+    public void setBinary() {
+        this.binary = true;
     }
     
     public void setReadTimeout(int timeout) {
@@ -99,6 +107,51 @@ public class DetectionAgent {
 	return dms;
     }
 
+    
+    public byte[] doBinaryRequest(String url) {
+        String urlIn = fullURL + url;
+        URL cloudCoinGlobal;	
+	try {
+            cloudCoinGlobal = new URL(urlIn);           
+            urlConnection = (HttpURLConnection) cloudCoinGlobal.openConnection();
+            urlConnection.setConnectTimeout(connectionTimeout);
+            urlConnection.setReadTimeout(readTimeout);
+            urlConnection.setRequestProperty("User-Agent", "CloudCoin Wallet Client");
+
+            if (urlConnection.getResponseCode() != 200) {
+                logger.error(ltag, "Invalid response from server " + urlIn + " -> " + urlConnection.getResponseCode());
+                lastStatus = RAIDA.STATUS_FAILED;
+                return null;
+            }
+            
+            InputStream input = urlConnection.getInputStream(); 
+            int nRead;
+            byte[] data = new byte[16384];
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+
+
+            while ((nRead = input.read(data, 0, data.length)) != -1) {
+                buffer.write(data, 0, nRead);
+            }
+
+            input.close();
+            
+
+            logger.debug(ltag, "Downloaded url " + urlIn);
+            return buffer.toByteArray();
+            
+	} catch (MalformedURLException e) {
+            logger.error(ltag, "Failed to fetch. Malformed URL " + urlIn);
+            return null;
+	} catch (IOException e) {
+            logger.error(ltag, "Failed to fetch URL: " + e.getMessage());
+            return null;
+	} finally {
+            if (urlConnection != null)
+                urlConnection.disconnect();
+	}
+    }
+    
     public String doRequest(String url, String post) {
 	long tsBefore, tsAfter;
 	int c;
@@ -146,19 +199,24 @@ public class DetectionAgent {
                 return null;
             }
 
-            InputStream input = urlConnection.getInputStream();
-            while (((c = input.read()) != -1)) { 
-                sb.append((char) c);
+            
+            InputStream input = urlConnection.getInputStream(); 
+
+            while (((c = input.read()) != -1)) {
+                    sb.append((char) c);
             }
 
             input.close();
-            logger.debug(ltag, "Response: "+ sb.toString() + " url " + urlIn);
+            
+            if (!binary)
+                logger.debug(ltag, "Response: "+ sb.toString() + " url " + urlIn);
 
             tsAfter = System.currentTimeMillis();
             dms = tsAfter - tsBefore;
 
             lastStatus = RAIDA.STATUS_OK;
 
+            
             return sb.toString();
 	} catch (MalformedURLException e) {
             logger.error(ltag, "Failed to fetch. Malformed URL " + urlIn);

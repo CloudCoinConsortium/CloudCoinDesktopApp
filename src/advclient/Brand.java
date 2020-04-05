@@ -14,16 +14,21 @@ import global.cloudcoin.ccbank.core.RAIDA;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GraphicsEnvironment;
 import java.awt.Insets;
 import java.awt.RenderingHints;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import javax.swing.JComponent;
+import javax.swing.JLabel;
 import javax.swing.border.Border;
 
 /**
@@ -38,10 +43,11 @@ public class Brand {
 
     
     
-    String title;
-    String terms;
-    String versionOffset;
     
+//    String terms;
+    String title;
+    String versionOffset;
+/*    
     String logo;
     String logoText;
     String backgroundImage;
@@ -68,33 +74,69 @@ public class Brand {
     String lockIconActive;
     String cloudIcon;
     String cloudIconActive;
+    String coinsInventoryIcon;
+    
+    String templatePng;
+    String templateJpeg1;
+    String templateJpeg5;
+    String templateJpeg25;
+    String templateJpeg100;
+    String templateJpeg250;
     
     String mainFont;
     String mainFontSemiBold;
     String mainFontBold;
     String secondFont;
     String secondFontSemiBold;
-    
+*/    
     String supportEmail;
     String supportPage;
     String supportTime;
     String supportPhone;
     String supportPortal;
     
-           
+    String backgroundColor;  
+    String headerBackgroundColor;
+    String selectedWalletBorderColor;
+    String topMenuHoverColor;
     
-    Color backgroundColor;
     
+    Font _regFont, _semiBoldFont, _boldFont;
+    Font _osRegFont, _osSemiBoldFont;
+    
+    Map<String, dlResult> datamap;
+
     public Brand(String name, GLogger logger) {
         this.name = name;
         this.logger = logger;
         this.brandDir = AppCore.getBrandsDir() + File.separator + this.name;
+        this.datamap = new HashMap<String, dlResult>();
        
+        String[] vals = {
+            "terms","logo","logoText","backgroundImage","icon","depositIcon",
+            "withdrawIcon","transferIcon","depositIconHover","withdrawIconHover","transferIconHover",
+            "supportIcon","settingsIcon","coinsIcon","supportHtmlIcon","supportTimeIcon","supportPhoneIcon",
+            "supportEmailIcon","supportPortalIcon","walletIcon","walletIconActive","vaultIcon",
+            "vaultIconActive","lockIcon","lockIconActive","cloudIcon","cloudIconActive","coinsInventoryIcon",
+            "templatePng","templateJpeg1","templateJpeg5","templateJpeg25","templateJpeg100",
+            "templateJpeg250","mainFont","mainFontSemiBold","mainFontBold","secondFont","secondFontSemiBold"
+        };
+        
+        for (String s : vals) {
+            datamap.put(s, new dlResult());
+        }
+        
         setDefaultVariables();
     }
     
     public void setDefaultVariables() {
-        this.backgroundColor = new Color(200, 200, 200);
+        String defaultColor = "#f0f0f0";
+        
+        this.backgroundColor = defaultColor;
+        this.headerBackgroundColor = defaultColor;
+        this.selectedWalletBorderColor = defaultColor;
+        this.topMenuHoverColor = defaultColor;
+        
         this.title = "Wallet";
         this.versionOffset = "0.0.0";
     }
@@ -103,11 +145,15 @@ public class Brand {
         return this.brandDir + File.separator + Config.BRAND_CONFIG_NAME;
     }
     
+    public String getAssetPath(String file) {
+        return this.brandDir + File.separator + file;
+    }
+    
     public boolean downloadConfig() {
         String url = Config.BRAND_URL + "/" + name + "/config.ini";
         DetectionAgent daFake = new DetectionAgent(RAIDA.TOTAL_RAIDA_COUNT * 10000, logger);
         daFake.setExactFullUrl(url);
-        System.out.println(url);
+
         String result = daFake.doRequest("", null);
         if (result == null) {
             logger.error(ltag, "Failed to receive response from Brand Server");
@@ -115,6 +161,37 @@ public class Brand {
         }
 
         if (!AppCore.saveFile(getConfigPath(), result)) {
+            logger.error(ltag, "Failed to save config file");
+            return false;
+        }
+        
+        return true;
+    }
+    
+    public boolean checkFile(String file) {
+        String filename = this.brandDir + File.separator + file;
+        File f = new File(filename);
+        if (f.exists()) 
+            return true;
+        
+        return false;
+    }
+    
+    public boolean downloadFile(String file) {
+        String filename = this.brandDir + File.separator + file;
+
+        String url = Config.BRAND_URL + "/" + name + "/" + file;
+        DetectionAgent daFake = new DetectionAgent(RAIDA.TOTAL_RAIDA_COUNT * 10000, logger);
+        daFake.setExactFullUrl(url);
+
+
+        byte[] bytes = daFake.doBinaryRequest("");
+        if (bytes == null) {
+            logger.error(ltag, "Failed to receive response from Brand Server");
+            return false;
+        }
+
+        if (!AppCore.saveFileFromBytes(filename, bytes)) {
             logger.error(ltag, "Failed to save config file");
             return false;
         }
@@ -133,12 +210,11 @@ public class Brand {
             if (!AppCore.createDirectoryPath(this.brandDir))
                 return false;
         }
-        
+
         //try {             Thread.sleep(2000);        } catch (InterruptedException e) {}
-        
-        
+        //writeDefaultConfigIfNeeded();
+
         File configFile = new File(getConfigPath());
-        System.out.println("dddddddddd " +configFile.getAbsolutePath());
         if (!configFile.exists()) {
             logger.debug(ltag, "Downloading config file");
             br.text = "Downloading Config File";
@@ -146,6 +222,7 @@ public class Brand {
             if (!downloadConfig()) {
                 br.text = "Failed to download config file";
                 br.isError = true;
+                
                 cb.callback(br);
                 return false;
             }
@@ -162,24 +239,95 @@ public class Brand {
             return false;
         }
         
+        br.totalSteps = datamap.entrySet().size();
+        int i = 0;
+        for (Map.Entry<String,dlResult> entry : datamap.entrySet()) {
+            String key = entry.getKey();
+            dlResult dr = entry.getValue();          
+            if (dr.name == null) {
+                i++;
+                continue;
+            }
+            
+            br.step = i;
+            br.text = "Checking file " + dr.name;
+            cb.callback(br);
+            if (checkFile(dr.name)) {
+                i++;
+                continue;
+            }
+            
+
+            br.text = "Downloading file " + dr.name;
+            cb.callback(br);
+
+            downloadFile(dr.name);            
+            i++;
+        }
+        
+        br.text = "Starting program";
+        br.step = 0;
+        br.totalSteps = 0;
+        cb.callback(br);
+
+        initInternal();
+        
         
         br.text = "done";
+        cb.callback(br);
         return true;
     }
     
+    public void initInternal() {
+        initFonts();
+    }
+    
+    public Font getFont(String name) {
+        logger.debug(ltag, "Loading font " + name);
+        
+        Font defaultFont = new JLabel().getFont();
+        Font font;
+        String filename;
+        filename = this.datamap.get(name).name;
+        if (filename == null) {
+            logger.debug(ltag, "Font is not defined");
+            return defaultFont;
+        } else {
+            filename = getAssetPath(filename);
+            File f = new File(filename);
+            if (!f.exists()) {
+                logger.debug(ltag, "Font doesn't exist: " + filename);
+                return defaultFont;
+            } else {
+                try {
+                    font = Font.createFont(Font.TRUETYPE_FONT, f);
+                    System.out.println("f="+filename);
+                } catch (Exception e) {
+                    logger.debug(ltag, "Error loading font: " + e.toString());
+                    return defaultFont;
+                }
+            }
+        }
+        
+        return font;
+        
+    }
+    
+    public void initFonts() {
+        _semiBoldFont = getFont("mainFontSemiBold");
+        _boldFont = getFont("mainFontBold");
+        _regFont = getFont("mainFont");
+        _osRegFont = getFont("secondFont");
+        _osSemiBoldFont = getFont("secondFontSemiBold");
+    }
     
 
     public boolean readConfig() {
         String configFile = getConfigPath();
         File f = new File(configFile);
         if (!f.exists()) {
-            try {
-                f.createNewFile();
-                writeDefaultConfigIfNeeded();
-            } catch (IOException e) {
-                logger.error(ltag, "Failrf to write config: " + e.getMessage());
-                return false;
-            }
+            logger.error(ltag, "Failed to read config: " + configFile);
+            return false;
         }
 
         FileReader fr;
@@ -211,13 +359,13 @@ public class Brand {
         if (p != null)
             title = p;
         
-        p = getProperty(ms, "versionOffset");
+        p = getProperty(ms, "versionoffset");
         if (p != null)
             versionOffset = p;
         
         p = getProperty(ms, "terms");
         if (p != null)
-            terms = p;
+            datamap.get("terms").name = p;
         
         // Images
         ms = data.get("images");
@@ -228,107 +376,136 @@ public class Brand {
 
         p = getProperty(ms, "logo");
         if (p != null)
-            logo = p;
+            datamap.get("logo").name = p;
         
         p = getProperty(ms, "logotext");
         if (p != null)
-            logoText = p;
+            datamap.get("logoText").name = p;
         
         p = getProperty(ms, "backgroundimage");
         if (p != null)
-            backgroundImage = p;
+            datamap.get("backgroundImage").name = p;
         
         p = getProperty(ms, "icon");
         if (p != null)
-            icon = p;
+            datamap.get("icon").name = p;
         
         p = getProperty(ms, "depositicon");
         if (p != null)
-            depositIcon = p;
+            datamap.get("depositIcon").name = p;
         
         p = getProperty(ms, "withdrawicon");
         if (p != null)
-            withdrawIcon = p;
+            datamap.get("withdrawIcon").name = p;
         
         p = getProperty(ms, "transfericon");
         if (p != null)
-            transferIcon = p;
+            datamap.get("transferIcon").name = p;
         
         p = getProperty(ms, "depositiconhover");
         if (p != null)
-            depositIconHover = p;
+            datamap.get("depositIconHover").name = p;
         
         p = getProperty(ms, "transfericonhover");
         if (p != null)
-            transferIconHover = p;
+            datamap.get("transferIconHover").name = p;
        
         p = getProperty(ms, "withdrawiconhover");
         if (p != null)
-            withdrawIconHover = p;
+            datamap.get("withdrawIconHover").name = p;
         
         p = getProperty(ms, "supporticon");
         if (p != null)
-            supportIcon = p;
+            datamap.get("supportIcon").name = p;
         
         p = getProperty(ms, "settingsicon");
         if (p != null)
-            settingsIcon = p;
+            datamap.get("settingsIcon").name = p;
         
         p = getProperty(ms, "coinsicon");
         if (p != null)
-            coinsIcon = p;
+            datamap.get("coinsIcon").name = p;
         
         p = getProperty(ms, "supporthtmlicon");
         if (p != null)
-            supportHtmlIcon = p;
+            datamap.get("supportHtmlIcon").name = p;
         
         p = getProperty(ms, "supporttimeicon");
         if (p != null)
-            supportTimeIcon = p;
+            datamap.get("supportTimeIcon").name = p;
         
         p = getProperty(ms, "supportphoneicon");
         if (p != null)
-            supportPhoneIcon = p;
+            datamap.get("supportPhoneIcon").name = p;
         
         p = getProperty(ms, "supportemailicon");
         if (p != null)
-            supportEmailIcon = p;
+            datamap.get("supportEmailIcon").name = p;
         
         p = getProperty(ms, "supportportalicon");
         if (p != null)
-            supportPortalIcon = p;
+            datamap.get("supportPortalIcon").name = p;
         
         p = getProperty(ms, "walleticon");
         if (p != null)
-            walletIcon = p;
+            datamap.get("walletIcon").name = p;
         
         p = getProperty(ms, "walleticonactive");
         if (p != null)
-            walletIconActive = p;
+            datamap.get("walletIconActive").name = p;
         
         p = getProperty(ms, "vaulticon");
         if (p != null)
-            vaultIcon = p;
+            datamap.get("vaultIcon").name = p;
         
         p = getProperty(ms, "vaulticonactive");
         if (p != null)
-            vaultIconActive = p;
+            datamap.get("vaultIconActive").name = p;
         
         p = getProperty(ms, "lockicon");
         if (p != null)
-            lockIcon = p;
+            datamap.get("lockIcon").name = p;
         
         p = getProperty(ms, "lockiconactive");
         if (p != null)
-            lockIconActive = p;
+            datamap.get("lockIconActive").name = p;
         
         p = getProperty(ms, "cloudicon");
         if (p != null)
-            walletIcon = p;
+            datamap.get("cloudIcon").name = p;
         
         p = getProperty(ms, "cloudiconactive");
         if (p != null)
-            cloudIconActive = p;
+            datamap.get("cloudIconActive").name = p;
+        
+        p = getProperty(ms, "coinsinventoryicon");
+        if (p != null)
+            datamap.get("coinsInventoryIcon").name = p;
+        
+        p = getProperty(ms, "templatepng");
+        if (p != null)
+            datamap.get("templatePng").name = p;
+        
+        p = getProperty(ms, "templatejpeg1");
+        if (p != null)
+            datamap.get("templateJpeg1").name = p;
+        
+        p = getProperty(ms, "templatejpeg5");
+        if (p != null)
+            datamap.get("templateJpeg5").name = p;
+        
+        p = getProperty(ms, "templatejpeg25");
+        if (p != null)
+            datamap.get("templateJpeg25").name = p;
+        
+        p = getProperty(ms, "templatejpeg100");
+        if (p != null)
+            datamap.get("templateJpeg100").name = p;
+        
+        p = getProperty(ms, "templatejpeg250");
+        if (p != null)
+            datamap.get("templateJpeg250").name = p;
+        
         
         // Colors
         ms = data.get("colors");
@@ -341,6 +518,26 @@ public class Brand {
         if (p != null)
             backgroundColor = p;
         
+        p = getProperty(ms, "headerbackgroundcolor");
+        if (p != null)
+            headerBackgroundColor = p;
+        
+        p = getProperty(ms, "selectedwalletbordercolor");
+        if (p != null)
+            selectedWalletBorderColor = p;
+        
+        
+        p = getProperty(ms, "topmenuhovercolor");
+        if (p != null)
+            topMenuHoverColor = p;
+        
+        
+        
+        
+        
+        
+        
+        
         // Fonts
         ms = data.get("fonts");
         if (ms == null) {
@@ -350,23 +547,23 @@ public class Brand {
 
         p = getProperty(ms, "mainfont");
         if (p != null)
-            mainFont = p;
+            datamap.get("mainFont").name = p;
         
         p = getProperty(ms, "mainfontsemibold");
         if (p != null)
-            mainFontSemiBold = p;
+            datamap.get("mainFontSemiBold").name = p;
         
         p = getProperty(ms, "mainfontbold");
         if (p != null)
-            mainFontBold = p;
+            datamap.get("mainFontBold").name = p;
                 
         p = getProperty(ms, "secondfont");
         if (p != null)
-            secondFont = p;
+            datamap.get("secondFont").name = p;
                         
         p = getProperty(ms, "secondfontsemibold");
         if (p != null)
-            secondFontSemiBold = p;
+            datamap.get("secondFontSemiBold").name = p;
         
         // Support
         ms = data.get("support");
@@ -441,10 +638,54 @@ public class Brand {
         
     }
     
+    public Color colorFromHex(String colorStr) {
+        return new Color(
+            Integer.valueOf(colorStr.substring( 1, 3 ), 16 ),
+            Integer.valueOf(colorStr.substring( 3, 5 ), 16 ),
+            Integer.valueOf(colorStr.substring( 5, 7 ), 16 ) );
+    }
+    
+    
+    
+    public Font getMainFont() {
+        return this._regFont;
+    }
+    
+    public Font getMainSemiBoldFont() {
+        return this._semiBoldFont;
+    }
+    
+    public Font getMainBoldFont() {
+        return this._boldFont;
+    }
+    
+    public Font getSecondFont() {
+        return this._osRegFont;
+    }
+    
+    public Font getSecondSemiBoldFont() {
+        return this._osSemiBoldFont;
+    }
+    
     
     public Color getBackgroundColor() {
-        return this.backgroundColor;
+        return colorFromHex(this.backgroundColor);
     }
+    
+    public Color getHeaderBackgroundColor() {
+        return colorFromHex(this.headerBackgroundColor);
+    }
+    
+    public Color getSelectedWalletBorderColor() {
+        return colorFromHex(this.selectedWalletBorderColor);
+    }
+    
+    public Color getTopMenuHoverColor() {
+        return colorFromHex(this.topMenuHoverColor);
+    }
+    
+    
+    
     
     
     
@@ -453,107 +694,8 @@ public class Brand {
     }
     
     
-    public void writeDefaultConfigIfNeeded() {
-        String configFile = getConfigPath();
-        File f = new File(configFile);
-        if (f.exists()) 
-            return;
-              
-        String ls = System.getProperty("line.separator");
-        logger.debug(ltag, "Saving Brand Config " + configFile);
-        
-        StringBuilder sb = new StringBuilder();
-        sb.append("[general]");
-        sb.append(ls);
-        sb.append("name=CloudCoin");
-        sb.append(ls);
-        sb.append("title=CloudCoin Wallet");
-        sb.append(ls);
-        sb.append("versionoffset=0");
-        sb.append(ls);
-        sb.append("terms=TermsAndConditions.html");
-        sb.append(ls);
-        sb.append(ls);
-        sb.append("[images]");
-        sb.append(ls);
-        sb.append("logo=CloudCoinLogo.png");
-        sb.append(ls);
-        sb.append("logotext=CloudCoinText.png");
-        sb.append(ls);
-        sb.append("backgroundimage=bglogo.png");
-        sb.append(ls);
-        sb.append("icon=CloudCoinLogo.png");
-        sb.append(ls);
-        sb.append("depositicon=depositicon.png");
-        sb.append(ls);
-        sb.append("withdrawicon=depositicon.png");
-        sb.append(ls);
-        sb.append("transfericon=transfericon.png");
-        sb.append(ls);
-        sb.append("depositiconhover=depositiconlight.png");
-        sb.append(ls);
-        sb.append("withdrawiconhover=depositiconlight.png");
-        sb.append(ls);
-        sb.append("transfericonhover=transfericonlight.png");
-        sb.append(ls);
-        sb.append("supporticon=supporticon.png");
-        sb.append(ls);
-        sb.append("settingsicon=gears.png");
-        sb.append(ls);
-        sb.append("coinsicon=coinsicon.png");
-        sb.append(ls);
-        sb.append("supporthtmlicon=support0.png");
-        sb.append(ls);
-        sb.append("supporttimeicon=support1.png");
-        sb.append(ls);
-        sb.append("supportphoneicon=support2.png");
-        sb.append(ls);
-        sb.append("supportemailicon=support3.png");
-        sb.append(ls);
-        sb.append("supporteportalicon=support0.png");
-        sb.append(ls);
-        sb.append("walleticon=walleticon.png");
-        sb.append(ls);
-        sb.append("walleticonactive=walleticonlight.png");
-        sb.append(ls);
-        sb.append("vaulticon=vaulticon.png");
-        sb.append(ls);
-        sb.append("vaulticonactive=vaulticonlight.png");
-        sb.append(ls);
-        sb.append(ls);
-        sb.append("[colors]");
-        sb.append(ls);
-        sb.append("color1=#ffffff");
-        sb.append(ls);
-        sb.append(ls);
-        sb.append("[fonts]");
-        sb.append(ls);
-        sb.append("mainfont=Montserrat-Regular.otf");
-        sb.append(ls);
-        sb.append("mainfontsemibold=Montserrat-SemiBold.otf");
-        sb.append(ls);
-        sb.append("mainfontbold=Montserrat-Bold.otf");
-        sb.append(ls);
-        sb.append("secondfont=OpenSans-Regular.ttf");
-        sb.append(ls);
-        sb.append("secondfontsemibold=OpenSans-Semibold.ttf");
-        sb.append(ls);
-        sb.append(ls);
-        sb.append("[support]");
-        sb.append(ls);
-        sb.append("supportemail=support@cloudcoinmail.com");
-        sb.append(ls);
-        sb.append("supportpage=http://cloudcoinconsortium.com/use.html");
-        sb.append(ls);
-        sb.append("supporttime=9AM to 3AM California time (PST)");
-        sb.append(ls);
-        sb.append("supportphone=+1 (530) 762-1361");
-        sb.append(ls);
-        sb.append("supportportal=https://cloudcoinsupport.atlassian.net/servicedesk/customer/portals");
-        sb.append(ls);
-
-        
-
-        AppCore.saveFile(configFile, sb.toString());
+    class dlResult {
+        String name;
+        byte[] data;
     }
 }

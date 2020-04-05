@@ -100,13 +100,11 @@ public class AdvancedClient  {
     
     public AdvancedClient() {
         wl = new WLogger();
-        AppCore.logger = wl;
-        AppCore.logSystemInfo(version);
+
         
         String home = System.getProperty("user.home");
         resetState();
         
-        wl.debug(ltag, "Creating default brand without initialization");
         brand = new Brand(Config.DEFAULT_BRAND_NAME, wl);
         
         initMainScreen();   
@@ -122,7 +120,9 @@ public class AdvancedClient  {
         AppUI.alignCenter(infoText);
         mainPanel.add(infoText);
         
+        AppCore.logger = wl;
         boolean rv = AppCore.initFolders(new File(home));
+        AppCore.logSystemInfo(version);
         if (!rv) {
             wl.error(ltag, "Failed to create folders");
             ps.errText = "Failed to init folders";
@@ -150,7 +150,8 @@ public class AdvancedClient  {
     public void initCore() {
         initSystem();
           
-        AppUI.init(tw, th); 
+        System.out.println("initeddd");
+        AppUI.init(tw, th, brand); 
         initMainScreen();
         if (!ps.errText.equals("")) {
             JLabel x = new JLabel(ps.errText);
@@ -170,6 +171,7 @@ public class AdvancedClient  {
         mainPanel.add(corePanel);
     
 
+        System.out.println("initeddd2");
         showScreen();
     }
 
@@ -196,12 +198,14 @@ public class AdvancedClient  {
         brand = new Brand(brandName, wl);
         if (!brand.init(new CallbackInterface() {
             public void callback(Object o) {
+                
                 BrandResult br = (BrandResult) o;
-                System.out.println("callback "  + br.text);
-                EventQueue.invokeLater(new Runnable() {
-                    public void run(){
+                System.out.println("cb=" + br.step + " t="+br.text);
+               // EventQueue.invokeLater(new Runnable() {
+                 //   public void run(){
                         
                         if (br.text.equals("done")) {
+                            System.out.println("time " + br.step);
                             initCore();
                             return;
                         }
@@ -211,10 +215,15 @@ public class AdvancedClient  {
                             mainPanel.remove(0);
                         }
                         
+                        if (br.totalSteps != 0)
+                            text = "<html><div style='text-align:center; width: 860px'>" 
+                                    + text + "<br> " + br.step + " / " + br.totalSteps + "</div></html>";
+                        
+                        
                         infoText.setText(text);
                         infoText.repaint();
-                    }
-                });
+                   // }
+                //});
             }
             
         })) {
@@ -445,7 +454,7 @@ public class AdvancedClient  {
         headerPanel = new JPanel();
         AppUI.setBoxLayout(headerPanel, false);
         AppUI.setSize(headerPanel, tw, headerHeight);
-        AppUI.setBackground(headerPanel, AppUI.getColor0());
+        AppUI.setBackground(headerPanel, brand.getHeaderBackgroundColor());
         AppUI.alignLeft(headerPanel);
         AppUI.alignTop(headerPanel);
          
@@ -866,7 +875,7 @@ public class AdvancedClient  {
                 public void mouseEntered(MouseEvent evt) {
                     ps.popupVisible = true;
                     JMenuItem jMenuItem = (JMenuItem) evt.getSource();
-                    jMenuItem.setBackground(AppUI.getColor15());
+                    jMenuItem.setBackground(brand.getTopMenuHoverColor());
                 }
                 
                 public void mouseExited(MouseEvent evt) {
@@ -7844,7 +7853,7 @@ public class AdvancedClient  {
         } else {
             AppUI.setBoldFont(labelName, 14);
             AppUI.setColor(labelName, AppUI.getColor5());
-            wpanel.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, AppUI.getColor0()));
+            wpanel.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, brand.getSelectedWalletBorderColor()));
         }
 
         if (isCreatingWallet() && type == TYPE_ADD_BUTTON) {

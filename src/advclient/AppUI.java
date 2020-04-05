@@ -70,38 +70,14 @@ public class AppUI {
     
     static int tw, th;
     static double ratio;
+    static Brand brand;
     
-    //AGIEEE
-    //static Font montLight, montMedium, montReg;
-    static Font regFont, semiBoldFont, boldFont;
-    static Font osRegFont, osSemiBoldFont;
-    
-    public static void init(int tw, int th) {
+    public static void init(int tw, int th, Brand brand) {
         AppUI.tw = tw;
-        AppUI.th = th;
-        
+        AppUI.th = th;        
         AppUI.ratio = tw / th;
         
-        try {
-            ClassLoader cl;
-            
-            cl = AppUI.class.getClassLoader();
-            semiBoldFont = Font.createFont(Font.TRUETYPE_FONT, cl.getResourceAsStream("resources/Montserrat-SemiBold.otf"));
-            boldFont = Font.createFont(Font.TRUETYPE_FONT, cl.getResourceAsStream("resources/Montserrat-Bold.otf"));
-            regFont = Font.createFont(Font.TRUETYPE_FONT, cl.getResourceAsStream("resources/Montserrat-Regular.otf"));
-
-            GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(regFont);
-            GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(boldFont);
-            GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(semiBoldFont);
-            
-            osRegFont = Font.createFont(Font.TRUETYPE_FONT, cl.getResourceAsStream("resources/OpenSans-Regular.ttf"));
-            osSemiBoldFont = Font.createFont(Font.TRUETYPE_FONT, cl.getResourceAsStream("resources/OpenSans-Semibold.ttf"));
-            
-        } catch(Exception e){
-            System.out.println("Failed to load font: " + e.getMessage());
-        }
-        
-        
+        AppUI.brand = brand;
     }
     
     public static String getAgreementText() {
@@ -128,10 +104,7 @@ public class AppUI {
         c.setMaximumSize(new Dimension(w, h));
     }
     
-    public static Color getColor0() {
-        return new Color(0x1C1F28);
-    }
-    
+   
     public static Color getColor1() {
         return new Color(0x338FFF);
     }
@@ -187,11 +160,7 @@ public class AppUI {
     public static Color getColor14() {
         return new Color(0x7E8084);
     }
-    
-    public static Color getColor15() {
-        return new Color(0x224068);
-    }
-    
+
     public static Color getDisabledColor() {
         return new Color(0xCCCCCC);
     }
@@ -320,30 +289,30 @@ public class AppUI {
     
     
     public static void setTitleFont(Component c, int size) {
-        c.setFont(osRegFont.deriveFont(Font.PLAIN, size));
+        c.setFont(brand.getSecondFont().deriveFont(Font.PLAIN, size));
         c.setForeground(Color.WHITE);
     }
     
     public static void setTitleBoldFont(Component c, int size) {
-        c.setFont(boldFont.deriveFont(Font.BOLD, size));
+        c.setFont(brand.getMainBoldFont().deriveFont(Font.BOLD, size));
         c.setForeground(Color.WHITE);
     }
     
     public static void setTitleSemiBoldFont(Component c, int size) {
-        c.setFont(semiBoldFont.deriveFont(Font.PLAIN, size));
+        c.setFont(brand.getMainSemiBoldFont().deriveFont(Font.PLAIN, size));
         c.setForeground(Color.WHITE);
     }
     
     public static void setFont(Component c, int size) {
-        c.setFont(regFont.deriveFont(Font.PLAIN, size));
+        c.setFont(brand.getMainFont().deriveFont(Font.PLAIN, size));
     }
     
     public static void setSemiBoldFont(Component c, int size) {
-        c.setFont(semiBoldFont.deriveFont(Font.PLAIN, size));
+        c.setFont(brand.getMainSemiBoldFont().deriveFont(Font.PLAIN, size));
     }
     
     public static void setBoldFont(Component c, int size) {
-        c.setFont(boldFont.deriveFont(Font.PLAIN, size));
+        c.setFont(brand.getMainBoldFont().deriveFont(Font.PLAIN, size));
     }
     
     
@@ -358,15 +327,15 @@ public class AppUI {
     }
     
     public static void setCommonTableFont(Component c) {
-        c.setFont(osRegFont.deriveFont(Font.PLAIN, 14));
+        c.setFont(brand.getSecondFont().deriveFont(Font.PLAIN, 14));
     }
     
     public static void setCommonBoldTableFont(Component c) {
-        c.setFont(osSemiBoldFont.deriveFont(Font.PLAIN, 14));
+        c.setFont(brand.getSecondSemiBoldFont().deriveFont(Font.PLAIN, 14));
     }
     
     public static void setCommonTableFontSize(Component c, int size) {
-        c.setFont(osRegFont.deriveFont(Font.PLAIN, size));
+        c.setFont(brand.getSecondFont().deriveFont(Font.PLAIN, size));
     }
     
     
