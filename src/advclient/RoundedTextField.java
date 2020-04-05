@@ -86,7 +86,7 @@ public class RoundedTextField extends JPasswordField {
         g.setColor(getBackground());
         g.fillRoundRect(0, 0, getWidth()-1, getHeight()-1, 42, 42);
         if (!placeholder.equals("")) {
-            g.setColor(AppUI.getDisabledColor2());        
+            g.setColor(AppUI.brand.getSecondTextColor());        
             int width = g.getFontMetrics().stringWidth(placeholder);
             int cWidth = getWidth();
             int cHeight = getHeight();                      

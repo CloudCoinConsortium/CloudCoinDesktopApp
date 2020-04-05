@@ -150,7 +150,6 @@ public class AdvancedClient  {
     public void initCore() {
         initSystem();
           
-        System.out.println("initeddd");
         AppUI.init(tw, th, brand); 
         initMainScreen();
         if (!ps.errText.equals("")) {
@@ -171,7 +170,6 @@ public class AdvancedClient  {
         mainPanel.add(corePanel);
     
 
-        System.out.println("initeddd2");
         showScreen();
     }
 
@@ -200,12 +198,10 @@ public class AdvancedClient  {
             public void callback(Object o) {
                 
                 BrandResult br = (BrandResult) o;
-                System.out.println("cb=" + br.step + " t="+br.text);
                // EventQueue.invokeLater(new Runnable() {
                  //   public void run(){
                         
                         if (br.text.equals("done")) {
-                            System.out.println("time " + br.step);
                             initCore();
                             return;
                         }
@@ -615,7 +611,7 @@ public class AdvancedClient  {
         
         JLabel wlabel = new JLabel("wallet");
         AppUI.setTitleFont(wlabel, 20);
-        AppUI.setColor(wlabel, AppUI.getColor1());
+        AppUI.setColor(wlabel, brand.getTitleTextColor());
         c.insets = new Insets(6, 10, 0, 0);
         gridbag.setConstraints(wlabel, c);
         p.add(wlabel);
@@ -667,7 +663,7 @@ public class AdvancedClient  {
             JPanel wrpDeposit = new JPanel();
             AppUI.setBoxLayout(wrpDeposit, false);
             AppUI.setSize(wrpDeposit, bwidth, headerHeight);
-            AppUI.setBackground(wrpDeposit, AppUI.getColor1());
+            AppUI.setBackground(wrpDeposit, brand.getTopMenuHoverColor());
             AppUI.noOpaque(wrpDeposit);
             
             wrpDeposit.add(AppUI.vr(12));
@@ -698,7 +694,7 @@ public class AdvancedClient  {
             JPanel wrpWithdraw = new JPanel();
             AppUI.setBoxLayout(wrpWithdraw, false);
             AppUI.setSize(wrpWithdraw, bwidth, headerHeight);
-            AppUI.setBackground(wrpWithdraw, AppUI.getColor1());
+            AppUI.setBackground(wrpWithdraw, brand.getTopMenuHoverColor());
             AppUI.noOpaque(wrpWithdraw);
             
             wrpWithdraw.add(AppUI.vr(12));
@@ -730,7 +726,7 @@ public class AdvancedClient  {
             JPanel wrpTransfer = new JPanel();
             AppUI.setBoxLayout(wrpTransfer, false);
             AppUI.setSize(wrpTransfer, bwidth, headerHeight);
-            AppUI.setBackground(wrpTransfer, AppUI.getColor1());
+            AppUI.setBackground(wrpTransfer, brand.getTopMenuHoverColor());
             AppUI.noOpaque(wrpTransfer);
             
             wrpTransfer.add(AppUI.vr(12));
@@ -859,7 +855,7 @@ public class AdvancedClient  {
         final JPopupMenu popupMenu = new JPopupMenu() {
             @Override
             public void paintComponent(final Graphics g) {
-                g.setColor(AppUI.getColor1());
+                g.setColor(brand.getSettingsMenuBackgroundColor());
                 g.fillRect(0,0,getWidth(), getHeight());
             } 
         };
@@ -875,12 +871,12 @@ public class AdvancedClient  {
                 public void mouseEntered(MouseEvent evt) {
                     ps.popupVisible = true;
                     JMenuItem jMenuItem = (JMenuItem) evt.getSource();
-                    jMenuItem.setBackground(brand.getTopMenuHoverColor());
+                    jMenuItem.setBackground(brand.getSettingsMenuHoverColor());
                 }
                 
                 public void mouseExited(MouseEvent evt) {
                     JMenuItem jMenuItem = (JMenuItem) evt.getSource();
-                    jMenuItem.setBackground(AppUI.getColor1());
+                    jMenuItem.setBackground(brand.getSettingsMenuBackgroundColor());
                     
                     ps.popupVisible = false;             
                     EventQueue.invokeLater(new Runnable() {
@@ -941,7 +937,7 @@ public class AdvancedClient  {
             AppUI.setFont(menuItem, 20);
             menuItem.setOpaque(true);
 
-            menuItem.setBackground(AppUI.getColor1());
+            menuItem.setBackground(brand.getSettingsMenuBackgroundColor());
             menuItem.setBorder(BorderFactory.createEmptyBorder(0,0,0,0));
             menuItem.setUI(new MenuItemUI() {
                 public void paint (final Graphics g, final JComponent c) {
@@ -989,18 +985,9 @@ public class AdvancedClient  {
         });
 
         icon0.addMouseListener(new MouseAdapter() {
-            /*
-            public void mouseReleased(MouseEvent e) {
-                ficon.setOpaque(true);
-                AppUI.setBackground(ficon, AppUI.getColor1());
-
-                ficon.repaint();              
-                popupMenu.show(ficon, 0 - mWidth  + ficon.getWidth(), ficon.getHeight());
-            }
-            */
             public void mouseEntered(MouseEvent e) {
                 ficon.setOpaque(true);
-                AppUI.setBackground(ficon, AppUI.getColor1());
+                AppUI.setBackground(ficon, brand.getSettingsMenuBackgroundColor());
 
                 ficon.repaint();              
                 popupMenu.show(ficon, 0 - mWidth  + ficon.getWidth(), ficon.getHeight());
@@ -1051,7 +1038,7 @@ public class AdvancedClient  {
         corePanel = new ImageJPanel("bglogo.png");
         AppUI.setBoxLayout(corePanel, false);
         AppUI.setSize(corePanel, tw, th - headerHeight);
-        AppUI.setBackground(corePanel, AppUI.getColor4());
+        AppUI.setBackground(corePanel, brand.getBackgroundColor());
         AppUI.alignLeft(corePanel);
         AppUI.setMargin(corePanel, 20);
     }
@@ -1101,9 +1088,6 @@ public class AdvancedClient  {
                 break;
             case ProgramState.SCREEN_WALLET_CREATED:
                 showWalletCreatedScreen();
-                break;
-            case ProgramState.SCREEN_PREPARE_TO_ADD_WALLET:
-                showPrepareToAddWalletScreen();
                 break;
             case ProgramState.SCREEN_CREATE_SKY_WALLET:
                 showCreateSkyWalletScreen();
@@ -1275,7 +1259,7 @@ public class AdvancedClient  {
             JLabel err = AppUI.wrapDiv(ps.errText);
       
             AppUI.setFont(err, 16);
-            AppUI.setColor(err, AppUI.getErrorColor());
+            AppUI.setColor(err, brand.getErrorColor());
             AppUI.alignLeft(err);
             
             AppUI.hr(p, 2);
@@ -1477,7 +1461,7 @@ public class AdvancedClient  {
             
             x = new JLabel(AppCore.getRAIDAString(i));
             AppUI.setCommonTableFontSize(x, fontSize);
-            AppUI.setColor(x, AppUI.getColor13());
+            AppUI.setColor(x, brand.getThirdTextColor());
             c.gridwidth = 1;
             c.anchor = GridBagConstraints.WEST;
             c.insets = new Insets(0, 0, 2, 0); 
@@ -1490,11 +1474,11 @@ public class AdvancedClient  {
             if (statuses[i] == -1) {
                 status = "TIMED OUT";
                 isfailed = true;
-                AppUI.setColor(x, AppUI.getErrorColor());            
+                AppUI.setColor(x, brand.getErrorColor());            
             } else {
                 //status = "OK: " + statuses[i] + "ms";
                 status = AppCore.getMS(statuses[i]);
-                AppUI.setColor(x, AppUI.getColor13());
+                AppUI.setColor(x, brand.getThirdTextColor());
             }
             
             x.setText(status);
@@ -1514,7 +1498,7 @@ public class AdvancedClient  {
             
             x = new JLabel(AppCore.getRAIDAString(j));
             AppUI.setCommonTableFontSize(x, fontSize);
-            AppUI.setColor(x, AppUI.getColor13());
+            AppUI.setColor(x, brand.getThirdTextColor());
             c.gridwidth = 1;
             c.anchor = GridBagConstraints.WEST;
             c.insets = new Insets(0, 100, 2, 0); 
@@ -1527,10 +1511,10 @@ public class AdvancedClient  {
             if (statuses[j] == -1) {
                 status = "TIMED OUT";
                 isfailed = true;
-                AppUI.setColor(x, AppUI.getErrorColor());
+                AppUI.setColor(x, brand.getErrorColor());
             } else {
                 status = AppCore.getMS(statuses[j]);
-                AppUI.setColor(x, AppUI.getColor13());
+                AppUI.setColor(x, brand.getThirdTextColor());
             }
             
             x.setText(status);
@@ -1776,7 +1760,7 @@ public class AdvancedClient  {
         // Warning Label
         x = new JLabel("Do not close the application until all CloudCoins are transferred!");
         AppUI.setCommonFont(x);
-        AppUI.setColor(x, AppUI.getErrorColor());
+        AppUI.setColor(x, brand.getErrorColor());
         c.anchor = GridBagConstraints.CENTER;
         c.insets = new Insets(20, 0, 4, 0); 
         c.gridx = GridBagConstraints.RELATIVE;
@@ -1988,7 +1972,7 @@ public class AdvancedClient  {
         // Warning Label
         x = new JLabel("Do not close the application until all CloudCoins are received!");
         AppUI.setCommonFont(x);
-        AppUI.setColor(x, AppUI.getErrorColor());
+        AppUI.setColor(x, brand.getErrorColor());
         c.anchor = GridBagConstraints.CENTER;
         c.insets = new Insets(20, 0, 4, 0); 
         c.gridx = GridBagConstraints.RELATIVE;
@@ -2136,7 +2120,7 @@ public class AdvancedClient  {
         // Warning Label
         x = new JLabel("Do not close the application until all emails are sent!");
         AppUI.setCommonFont(x);
-        AppUI.setColor(x, AppUI.getErrorColor());
+        AppUI.setColor(x, brand.getErrorColor());
         c.anchor = GridBagConstraints.CENTER;
         c.insets = new Insets(20, 0, 4, 0); 
         c.gridx = GridBagConstraints.RELATIVE;
@@ -2334,7 +2318,7 @@ public class AdvancedClient  {
         
         JLabel x = new JLabel("Do not close the application until all CloudCoins are deposited!");
         AppUI.setCommonFont(x);
-        AppUI.setColor(x, AppUI.getErrorColor());
+        AppUI.setColor(x, brand.getErrorColor());
         c.anchor = GridBagConstraints.CENTER;
         c.insets = new Insets(10, 0, 4, 0); 
         c.gridx = GridBagConstraints.RELATIVE;
@@ -2520,7 +2504,7 @@ public class AdvancedClient  {
         });
         
         AppUI.getGBRow(subInnerCore, null, sl, y, gridbag);
-        AppUI.setColor(sl, AppUI.getColor2());
+        AppUI.setColor(sl, brand.getHyperlinkColor());
         AppUI.underLine(sl);
         y++;  
         
@@ -2574,7 +2558,7 @@ public class AdvancedClient  {
         });
          
         AppUI.getGBRow(subInnerCore, null, sl, y, gridbag);
-        AppUI.setColor(sl, AppUI.getColor2());
+        AppUI.setColor(sl, brand.getHyperlinkColor());
         AppUI.underLine(sl);
         y++;  
         
@@ -2585,7 +2569,7 @@ public class AdvancedClient  {
         
         fname = AppUI.getHyperLink("https://SecureSafe.com", "https://securesafe.com", 18);
         AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
-        AppUI.setColor(fname, AppUI.getColor2());
+        AppUI.setColor(fname, brand.getHyperlinkColor());
         AppUI.underLine(fname);
         y++;  
         
@@ -3733,7 +3717,7 @@ public class AdvancedClient  {
         JLabel linkLabel = AppUI.getHyperLink("www.protonmail.com", "www.protonmail.com", 16);
         //AppUI.setFont(l, 16);
         AppUI.getGBRow(subInnerCore, null, linkLabel, y, gridbag);
-        AppUI.setColor(linkLabel, AppUI.getColor2());
+        AppUI.setColor(linkLabel, brand.getHyperlinkColor());
         AppUI.underLine(linkLabel);
         y++;
        
@@ -3901,18 +3885,18 @@ public class AdvancedClient  {
         subInnerCore.setLayout(gridbag);
 
         MyCheckBox cb0 = new MyCheckBox("<html>I understand that if I lose my password<br>I will lose my coins and will need to recover them</html>");
-        cb0.setFont(16, AppUI.getColor5());  
+        cb0.setFont(16, brand.getMainTextColor());  
         AppUI.getGBRow(subInnerCore, null, cb0.getCheckBox(), y, gridbag);
         y++;     
         
         MyCheckBox cb1 = new MyCheckBox("<html>I understand that no one can recover my password if<br>I lose or forget it</html>");
-        cb1.setFont(16, AppUI.getColor5());  
+        cb1.setFont(16, brand.getMainTextColor());  
         AppUI.getGBRow(subInnerCore, null, cb1.getCheckBox(), y, gridbag);
         y++;   
         
         
         MyCheckBox cb2 = new MyCheckBox("<html>I have written down or otherwise stored<br>my password</html>");
-        cb2.setFont(16, AppUI.getColor5());  
+        cb2.setFont(16, brand.getMainTextColor());  
         AppUI.getGBRow(subInnerCore, null, cb2.getCheckBox(), y, gridbag);
         y++;  
 
@@ -4173,7 +4157,7 @@ public class AdvancedClient  {
         
 
         fname = new JLabel("From");
-        final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(AppUI.getColor6(), "Make Selection", rvFrom.options);
+        final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "Make Selection", rvFrom.options);
         AppUI.getGBRow(subInnerCore, fname, cboxfrom.getComboBox(), y, gridbag);
         y++;     
         
@@ -4360,7 +4344,7 @@ public class AdvancedClient  {
 
         
         fname = new JLabel("Withdraw From");
-        final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(AppUI.getColor6(), "Make Selection", rvFrom.options);
+        final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "Make Selection", rvFrom.options);
         AppUI.getGBRow(subInnerCore, fname, cboxfrom.getComboBox(), y, gridbag);
         y++;     
         
@@ -4416,7 +4400,7 @@ public class AdvancedClient  {
         y++;
             
         fname = new JLabel("Format");
-        final RoundedCornerComboBox boxformat = new RoundedCornerComboBox(AppUI.getColor6(), "Make Selection", new String[]{"Stack", "PNG", "JPEG"} );
+        final RoundedCornerComboBox boxformat = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "Make Selection", new String[]{"Stack", "PNG", "JPEG"} );
         AppUI.getGBRow(subInnerCore, fname, boxformat.getComboBox(), y, gridbag);
         boxformat.setDefaultIdx(1);
         y++;    
@@ -4601,7 +4585,7 @@ public class AdvancedClient  {
 
         
         fname = new JLabel("Transfer From");
-        final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(AppUI.getColor6(), "Make Selection", rvFrom.options);
+        final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "Make Selection", rvFrom.options);
         AppUI.getGBRow(subInnerCore, fname, cboxfrom.getComboBox(), y, gridbag);
         y++;     
         
@@ -4614,7 +4598,7 @@ public class AdvancedClient  {
         spText.setVisible(false);
         
         fname = new JLabel("Transfer To");
-        final RoundedCornerComboBox cboxto = new RoundedCornerComboBox(AppUI.getColor6(), "Make Selection", rvTo.options);
+        final RoundedCornerComboBox cboxto = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "Make Selection", rvTo.options);
         cboxto.addOption(AppUI.getRemoteUserOption());
         //cboxto.addOption(AppUI.getLocalFolderOption());
         AppUI.getGBRow(subInnerCore, fname, cboxto.getComboBox(), y, gridbag);
@@ -5088,12 +5072,12 @@ public class AdvancedClient  {
 
         options[j++] = "- FileSystem";
       
-        final RoundedCornerComboBox cbox = new RoundedCornerComboBox(AppUI.getColor6(), "Select Source", options);     
+        final RoundedCornerComboBox cbox = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "Select Source", options);     
         AppUI.getGBRow(subInnerCore, fname, cbox.getComboBox(), y, gridbag);
         y++;     
         
         final JLabel dto = new JLabel("Deposit To");
-        final RoundedCornerComboBox cboxto = new RoundedCornerComboBox(AppUI.getColor6(), "Select Destination", doptions);
+        final RoundedCornerComboBox cboxto = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "Select Destination", doptions);
         if (doptions.length == 1) 
             cboxto.setDefaultIdx(1);
         AppUI.getGBRow(subInnerCore, dto, cboxto.getComboBox(), y, gridbag);
@@ -5287,7 +5271,7 @@ public class AdvancedClient  {
         }
 
         fname = new JLabel("Deposit To");
-        final RoundedCornerComboBox cbox = new RoundedCornerComboBox(AppUI.getColor6(), "Select Destination", options);       
+        final RoundedCornerComboBox cbox = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "Select Destination", options);       
         AppUI.getGBRow(subInnerCore, fname, cbox.getComboBox(), y, gridbag);
         y++;     
         
@@ -5320,11 +5304,11 @@ public class AdvancedClient  {
         ddPanel.setLayout(new GridBagLayout());
         
         JLabel l = new JLabel("<html><div style='text-align:center; width:" + ddWidth  +"'><b>Drop files here or click<br>to select files</b></div></html>");
-        AppUI.setColor(l, AppUI.getColor13());
+        AppUI.setColor(l, brand.getThirdTextColor());
         AppUI.setBoldFont(l, 32);
         AppUI.noOpaque(ddPanel);
         AppUI.setHandCursor(ddPanel);
-        ddPanel.setBorder(new DashedBorder(40, AppUI.getColor13()));
+        ddPanel.setBorder(new DashedBorder(40, brand.getThirdTextColor()));
         ddPanel.add(l);
         
         AppUI.setSize(ddPanel, (int) ddWidth, 150);
@@ -5513,7 +5497,7 @@ public class AdvancedClient  {
             });
             
             AppUI.getGBRow(subInnerCore, sl, link, y, gridbag);
-            AppUI.setColor(link, AppUI.getColor2());
+            AppUI.setColor(link, brand.getHyperlinkColor());
             AppUI.underLine(link);
             y++;
  
@@ -5611,7 +5595,7 @@ public class AdvancedClient  {
         wr2.add(fname);
         fname = new JLabel("(Secure if you get a free encrypted email account at ProtonMail.com)");
         AppUI.setFont(fname, 14);
-        AppUI.setColor(fname, AppUI.getColor14());
+        AppUI.setColor(fname, brand.getSecondTextColor());
         wr2.add(fname);
         wr.add(wr2);
         
@@ -5655,8 +5639,6 @@ public class AdvancedClient  {
         
 
         AppUI.getGBRow(subInnerCore, null, wr, y, gridbag);
-  //      AppUI.setColor(vlink, AppUI.getColor2());
-    //    AppUI.underLine(vlink);
         y++;
  
         
@@ -5737,12 +5719,12 @@ public class AdvancedClient  {
         
         
         MyCheckBox cb0 = new MyCheckBox("I have read and understand the Warning");
-        cb0.setFont(16, AppUI.getColor5());  
+        cb0.setFont(16, brand.getMainTextColor());  
         AppUI.getGBRow(subInnerCore, null, cb0.getCheckBox(), y, gridbag);
         y++;     
         
         final MyCheckBox cb1 = new MyCheckBox("Create Backup of History and Log files");
-        cb1.setFont(16, AppUI.getColor5());  
+        cb1.setFont(16, brand.getMainTextColor());  
         AppUI.getGBRow(subInnerCore, null, cb1.getCheckBox(), y, gridbag);
         y++;   
 
@@ -5809,7 +5791,7 @@ public class AdvancedClient  {
         y++;     
         
         fname = new JLabel("From Wallet");
-        final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(AppUI.getColor6(), "Make Selection", rv.options);
+        final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "Make Selection", rv.options);
         cboxfrom.setDefault(null);
         AppUI.getGBRow(subInnerCore, fname, cboxfrom.getComboBox(), y, gridbag);
         cboxfrom.addOption(AppUI.getLocalFolderOption());
@@ -5917,7 +5899,7 @@ public class AdvancedClient  {
         
         
         fname = new JLabel("From Wallet");
-        final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(AppUI.getColor6(), "Make Selection", rv.options);
+        final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "Make Selection", rv.options);
         AppUI.getGBRow(subInnerCore, fname, cboxfrom.getComboBox(), y, gridbag);
         y++; 
         
@@ -6137,7 +6119,7 @@ public class AdvancedClient  {
         y++;
          
         fname = new JLabel("Wallet");
-        final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(AppUI.getColor6(), "Make Selection", rv.options);
+        final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "Make Selection", rv.options);
         cboxfrom.setDefault(null);
         AppUI.getGBRow(subInnerCore, fname, cboxfrom.getComboBox(), y, gridbag);
         y++; 
@@ -6280,7 +6262,7 @@ public class AdvancedClient  {
         y++; 
         
         fname = new JLabel("Wallet");
-        final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(AppUI.getColor6(), "Make Selection", rv.options);
+        final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "Make Selection", rv.options);
         AppUI.getGBRow(subInnerCore, fname, cboxfrom.getComboBox(), y, gridbag);
         y++; 
         
@@ -6419,7 +6401,7 @@ public class AdvancedClient  {
         AppUI.alignCenter(xtrTitle);
         AppUI.alignTop(xtrTitle);
         AppUI.setFont(xtrTitle, 30);
-        AppUI.setColor(xtrTitle, AppUI.getColor1());
+        AppUI.setColor(xtrTitle, brand.getTitleTextColor());
  
 
         rightPanel.add(xtrTitle);
@@ -6438,10 +6420,10 @@ public class AdvancedClient  {
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                 super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
                 
-                Color c = AppUI.getColor6();
-                Color fgc = AppUI.getColor5();
+                Color c = brand.getPanelBackgroundColor();
+                Color fgc = brand.getMainTextColor();
                 if (table.isPaintingForPrint()) {
-                    c = AppUI.getColor5();
+                    c = Color.WHITE;
                     fgc = Color.BLACK;
                 }
                             
@@ -6487,10 +6469,10 @@ public class AdvancedClient  {
                     else 
                         lbl.setHorizontalAlignment(SwingConstants.CENTER);
 
-                    lbl.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, AppUI.getColor10()));
+                    lbl.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, brand.getTableGridColor()));
                     lbl.setBorder(BorderFactory.createCompoundBorder(lbl.getBorder(), BorderFactory.createEmptyBorder(0, 6, 10, 0)));
 
-                    AppUI.setBackground(lbl, AppUI.getColor6());
+                    AppUI.setBackground(lbl, brand.getPanelBackgroundColor());
 
                     return lbl;
                 }
@@ -6592,10 +6574,10 @@ public class AdvancedClient  {
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                 super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
                 
-                Color c = AppUI.getColor6();
-                Color fgc = AppUI.getColor5();
+                Color c = brand.getPanelBackgroundColor();
+                Color fgc = brand.getMainTextColor();
                 if (table.isPaintingForPrint()) {
-                    c = AppUI.getColor5();
+                    c = Color.WHITE;
                     fgc = Color.BLACK;
                 }
                             
@@ -6660,7 +6642,7 @@ public class AdvancedClient  {
         if (trTitle != null) {
             String rec = "";
             if (!w.getEmail().isEmpty()) {
-                String colstr = "#" + Integer.toHexString(AppUI.getColor5().getRGB()).substring(2);
+                String colstr = "#" + Integer.toHexString(brand.getMainTextColor().getRGB()).substring(2);
                 rec = "<br><span style='font-size:0.4em; color: " + colstr + "'>Recovery Email: " + w.getEmail() + "</span>";
             }
             
@@ -6685,7 +6667,7 @@ public class AdvancedClient  {
             
             JLabel invLabel = new JLabel("Inventory:");
             AppUI.setSemiBoldFont(invLabel, 18);
-            AppUI.setColor(invLabel, AppUI.getColor5());
+            AppUI.setColor(invLabel, brand.getMainTextColor());
             AppUI.setMargin(invLabel, 0, 10, 0, 20);
             invPanel.add(invLabel); 
             
@@ -6744,12 +6726,12 @@ public class AdvancedClient  {
         AppUI.alignLeft(trTitle);
         AppUI.alignTop(trTitle);
         AppUI.setFont(trTitle, 30);
-        AppUI.setColor(trTitle, AppUI.getColor1());
+        AppUI.setColor(trTitle, brand.getTitleTextColor());
         hwrapper.add(trTitle);
         
         int[][] counters = w.getCounters(); 
         if (!isSky && counters != null && counters.length != 0) {
-            AppUI.setBackground(invPanel, AppUI.getColor7());
+            AppUI.setBackground(invPanel, brand.getInventoryBackgroundColor());
             AppUI.alignTop(invPanel);
             AppUI.setSize(invPanel, 520, 62);
             AppUI.setMargin(invPanel, 8, 8, 8, 20);
@@ -6764,7 +6746,7 @@ public class AdvancedClient  {
         JLabel thlabel = new JLabel("Transaction History");
         AppUI.alignLeft(thlabel);
         AppUI.setFont(thlabel, 22);
-        AppUI.setColor(thlabel, AppUI.getColor5());
+        AppUI.setColor(thlabel, brand.getMainTextColor());
         rightPanel.add(thlabel);
         
         rightPanel.add(AppUI.hr(22));
@@ -6849,10 +6831,10 @@ public class AdvancedClient  {
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                 super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 
-                Color c = AppUI.getColor6();
-                Color fgc = AppUI.getColor5();
+                Color c = brand.getPanelBackgroundColor();
+                Color fgc = brand.getMainTextColor();
                 if (table.isPaintingForPrint()) {
-                    c = AppUI.getColor5();
+                    c = Color.WHITE;
                     fgc = Color.BLACK;
                 }
                 
@@ -6872,9 +6854,9 @@ public class AdvancedClient  {
                         AppUI.underLine(lbl);
                     }
                 } if (column == 2) {                  
-                    AppUI.setColor(lbl, AppUI.getColor13());
+                    AppUI.setColor(lbl, brand.getThirdTextColor());
                 } else if (column == 3) {                   
-                    AppUI.setColor(lbl, AppUI.getColor12());
+                    AppUI.setColor(lbl, brand.getSecondTextColor());
                 } else {
                     AppUI.setColor(lbl, fgc);
                 }
@@ -7047,123 +7029,6 @@ public class AdvancedClient  {
 
     }
     
-    
-    public void showPrepareToAddWalletScreen() {
-        showLeftScreen();
-        
-        JPanel rightPanel = getRightPanel();
-        
-        // GridHolder Container
-        JPanel gct = new JPanel();
-        AppUI.noOpaque(gct);
-
-        
-        GridBagLayout gridbag = new GridBagLayout();
-        gct.setLayout(gridbag);  
-        JPanel ct = new JPanel();
-        AppUI.setBoxLayout(ct, true);
-        AppUI.noOpaque(ct);
-        
-        gct.add(ct);
-        
-        // Add local wallet button
-        JPanel subInnerCore = AppUI.createRoundedPanel(ct, AppUI.getColor11(), 20, 40);
-        AppUI.setSize(subInnerCore, (int) (tw/3), (int) (th/5));
-        AppUI.setHandCursor(subInnerCore);
-        
-        // Title
-        AppUI.hr(subInnerCore, 10);
-        JLabel jt = new JLabel("Add Local Wallet");
-        AppUI.setBoldFont(jt, 32);
-        AppUI.alignCenter(jt);
-        subInnerCore.add(jt);
-        
-        AppUI.hr(subInnerCore, 40);
-        
-        jt = new JLabel("Wallet folder will be created on");
-        AppUI.setFont(jt, 18);
-        AppUI.alignCenter(jt);
-        subInnerCore.add(jt);
-        
-        jt = new JLabel("your computer or connected device");
-        AppUI.setFont(jt, 18);
-        AppUI.alignCenter(jt);
-        subInnerCore.add(jt);
-        
-        MouseAdapter ma = new MouseAdapter() {
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                ps.currentScreen = ProgramState.SCREEN_CREATE_WALLET;
-                showScreen();
-            }   
-            
-            public void mouseEntered(MouseEvent e) {
-                JPanel p = (JPanel) e.getSource();
-                p = (JPanel) p.getParent();
-                AppUI.roundCorners(p, AppUI.getColor5(), 40);
-            }
-            
-            public void mouseExited(MouseEvent e) {
-                JPanel p = (JPanel) e.getSource();
-                p = (JPanel) p.getParent();
-                AppUI.roundCorners(p, AppUI.getColor11(), 40);
-            }
-        };
-            
-        subInnerCore.addMouseListener(ma);
-              
-        // Space between buttons
-        AppUI.hr(ct, 30);
-
-        // Sky wallet button
-        subInnerCore = AppUI.createRoundedPanel(ct, AppUI.getColor11(), 20, 40);
-        AppUI.setSize(subInnerCore, (int) (tw/3), (int) (th/5));
-        AppUI.setHandCursor(subInnerCore);
-        
-        // Title
-        AppUI.hr(subInnerCore, 10);
-        jt = new JLabel("Add Sky Wallet");
-        AppUI.setBoldFont(jt, 32);
-        AppUI.alignCenter(jt);
-        subInnerCore.add(jt);
-        
-        AppUI.hr(subInnerCore, 40);
-        
-        jt = new JLabel("Sky Wallet will be created");
-        AppUI.setFont(jt, 18);
-        AppUI.alignCenter(jt);
-        subInnerCore.add(jt);
-        
-        jt = new JLabel("on the Trusted Server");
-        AppUI.setFont(jt, 18);
-        AppUI.alignCenter(jt);
-        subInnerCore.add(jt);
-            
-        ma = new MouseAdapter() {
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                ps.currentScreen = ProgramState.SCREEN_CREATE_SKY_WALLET;
-                showScreen();
-            }   
-            
-            public void mouseEntered(MouseEvent e) {
-                JPanel p = (JPanel) e.getSource();
-                p = (JPanel) p.getParent();
-                AppUI.roundCorners(p, AppUI.getColor5(), 40);
-            }
-            
-            public void mouseExited(MouseEvent e) {
-                JPanel p = (JPanel) e.getSource();
-                p = (JPanel) p.getParent();
-                AppUI.roundCorners(p, AppUI.getColor11(), 40);
-            }
-        };
-            
-        subInnerCore.addMouseListener(ma);
- 
-        rightPanel.add(gct);
-    }
-    
     public void showCheckingSkyIDScreen() {
         JPanel subInnerCore = getPanel("Checking your Sky Wallet ID Coin...");
 
@@ -7263,7 +7128,7 @@ public class AdvancedClient  {
         };
    
         fname1 = new JLabel("DNS Name or IP Address of Trusted Server");
-        final RoundedCornerComboBox cbox = new RoundedCornerComboBox(AppUI.getColor6(), "Select Server", options);
+        final RoundedCornerComboBox cbox = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "Select Server", options);
         cbox.setDefault(null);
         AppUI.getGBRow(subInnerCore, fname1, cbox.getComboBox(), y, gridbag);
         y++; 
@@ -7324,7 +7189,7 @@ public class AdvancedClient  {
         });
          
         AppUI.getGBRow(subInnerCore, fname4, sl, y, gridbag);
-        AppUI.setColor(sl, AppUI.getColor2());
+        AppUI.setColor(sl, brand.getHyperlinkColor());
         AppUI.underLine(sl);
         y++;
         
@@ -7714,7 +7579,7 @@ public class AdvancedClient  {
     }
     
     public JPanel getRightPanel() {
-        return getRightPanel(AppUI.getColor6());
+        return getRightPanel(brand.getPanelBackgroundColor());
     }
     
     public JPanel getRightPanel(Color color) {        
@@ -7825,7 +7690,7 @@ public class AdvancedClient  {
         }
         
         
-        final Color color = isDisabled ? AppUI.getColor6() : AppUI.getColor3();
+        final Color color = isDisabled ? brand.getInactiveWalletBackgroundColor() : brand.getActiveWalletBackgroundColor();
         
         final JPanel wpanel = new JPanel();
         AppUI.setSize(wpanel, 200, 110);
@@ -7848,11 +7713,11 @@ public class AdvancedClient  {
     
         JLabel labelName = new JLabel(name);        
         if (isDisabled) {
-            AppUI.setColor(labelName, AppUI.getDisabledColor2());
+            AppUI.setColor(labelName, brand.getSecondTextColor());
             AppUI.setFont(labelName, 14);
         } else {
             AppUI.setBoldFont(labelName, 14);
-            AppUI.setColor(labelName, AppUI.getColor5());
+            AppUI.setColor(labelName, brand.getMainTextColor());
             wpanel.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, brand.getSelectedWalletBorderColor()));
         }
 
@@ -7895,9 +7760,9 @@ public class AdvancedClient  {
             y++;
          
             // Amount (empty)
-            JLabel jxl = new JLabel("111");
+            JLabel jxl = new JLabel("");
             AppUI.setSemiBoldFont(jxl, 16);
-            AppUI.setColor(jxl, AppUI.getColor1());
+            AppUI.setColor(jxl, brand.getTitleTextColor());
             AppUI.alignCenter(jxl);
             AppUI.noOpaque(jxl);
 
@@ -7927,14 +7792,11 @@ public class AdvancedClient  {
                 public void mouseEntered(MouseEvent e) {
                     if (!fisDisabled)
                         return;
-                    
-                  //  AppUI.setBackground(wpanel, AppUI.getColor1());
-                 //   AppUI.roundCorners(faddBtn, AppUI.getColor5(), 20);
+
                 }
             
                 public void mouseExited(MouseEvent e) {                  
-                   // AppUI.setBackground(wpanel, color);
-                  //  AppUI.roundCorners(faddBtn, color, 20);
+
                 }
             };
             
@@ -7978,7 +7840,6 @@ public class AdvancedClient  {
                 @Override
                 public void mouseReleased(MouseEvent e) {
                     ps.currentWallet = null;
-                    //ps.currentScreen = ProgramState.SCREEN_PREPARE_TO_ADD_WALLET;
                     if (ftype == TYPE_ADD_BUTTON) {
                         resetState();
                         ps.currentScreen = ProgramState.SCREEN_CREATE_WALLET;
@@ -7990,13 +7851,11 @@ public class AdvancedClient  {
                 }  
                 
                 public void mouseEntered(MouseEvent e) {
-                //    AppUI.roundCorners(faddBtn, AppUI.getColor5(), 20);
+
                 }
             
                 public void mouseExited(MouseEvent e) {
-                //    Color color = fisDisabled ? AppUI.getColor3() : AppUI.getColor4();
-                    
-                //    AppUI.roundCorners(faddBtn, color, 20);
+
                 }
             };
          
@@ -8013,7 +7872,7 @@ public class AdvancedClient  {
 
         // Agreement Panel        
         JPanel agreementPanel = new JPanel();
-        AppUI.setBackground(agreementPanel, AppUI.getColor6());
+        AppUI.setBackground(agreementPanel, brand.getPanelBackgroundColor());
           
         GridBagLayout gridbag = new GridBagLayout();  
         agreementPanel.setLayout(gridbag);
@@ -8034,7 +7893,7 @@ public class AdvancedClient  {
         JLabel text = new JLabel("Terms and Conditions");
         AppUI.alignLeft(text);
         AppUI.setFont(text, 30);
-        AppUI.setColor(text, AppUI.getColor1());
+        AppUI.setColor(text, brand.getHyperlinkColor());
         gridbag.setConstraints(text, c);
         agreementPanel.add(text);
 
@@ -8047,7 +7906,7 @@ public class AdvancedClient  {
         // Text
         text = new JLabel("<html><div style='padding-right: 20px; width: 640px; line-height: 450% '>" + aText + "</div></html>");
         AppUI.setFont(text, 18);
-        AppUI.setColor(text, AppUI.getColor5());
+        AppUI.setColor(text, brand.getMainTextColor());
 
         
         JPanel wrapperAgreement = new JPanel();
@@ -8060,7 +7919,7 @@ public class AdvancedClient  {
         
         // Checkbox
         MyCheckBox cb = new MyCheckBox("I have read and agree with the Terms and Conditions");
-        cb.setFont(18, AppUI.getColor5());
+        cb.setFont(18, brand.getMainTextColor());
         AppUI.alignLeft(cb.getCheckBox());
         wrapperAgreement.add(cb.getCheckBox());
         
@@ -8151,8 +8010,8 @@ public class AdvancedClient  {
             
             @Override 
             protected void configureScrollBarColors(){
-                this.trackColor = AppUI.getColor7();
-                this.thumbColor = AppUI.getColor2();
+                this.trackColor = brand.getScrollbarTrackColor();
+                this.thumbColor = brand.getScrollbarThumbColor();
             }
         });
         
@@ -8200,7 +8059,7 @@ public class AdvancedClient  {
             JLabel text = new JLabel(title);
             AppUI.alignLeft(text);
             AppUI.setFont(text, 30);
-            AppUI.setColor(text, AppUI.getColor1());
+            AppUI.setColor(text, brand.getTitleTextColor());
             rightPanel.add(text);
             rightPanel.add(AppUI.hr(22));
         }
@@ -8258,7 +8117,7 @@ public class AdvancedClient  {
       
         }
 
-        UIManager.put("ScrollBar.background", new ColorUIResource(AppUI.getColor6()));
+        //UIManager.put("ScrollBar.background", new ColorUIResource(AppUI.getColor6()));
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 new AdvancedClient();

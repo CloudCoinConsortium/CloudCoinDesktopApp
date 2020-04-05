@@ -50,7 +50,7 @@ public class DashedBorder implements Border {
         // final BasicStroke dashed = new BasicStroke(3.0f, BasicStroke.CAP_SQUARE, 
         //        BasicStroke.JOIN_ROUND, 1.0f, dash1, 0.0f);
         
-        g2.setColor(AppUI.getColor3());
+        g2.setColor(AppUI.brand.getDropfilesBackgroundColor());
         g2.fillRoundRect(x, y, width, height, radius, radius);
         
         g2.setColor(this.color);

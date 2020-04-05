@@ -103,76 +103,7 @@ public class AppUI {
         c.setMinimumSize(new Dimension(w, h));
         c.setMaximumSize(new Dimension(w, h));
     }
-    
-   
-    public static Color getColor1() {
-        return new Color(0x338FFF);
-    }
-    
-    public static Color getColor2() {
-        return new Color(0x338FFF);
-    }
-    
-    public static Color getColor3() {
-        //return new Color(0xBFFFFFFF, true);
-        return new Color(0x303441);
-    }
-    
-    public static Color getColor4() {
-        return new Color(0x2C303D);
-    }
-    
-    public static Color getColor5() {
-        return new Color(0xD4D4D4);
-        //return Color.WHITE;
-    }
-    public static Color getColor6() {
-        return new Color(0x1F222B);
-    }
-    public static Color getColor7() {
-        return new Color(0x14161E);
-    }
-    
-    public static Color getColor8() {
-        return new Color(0x1B1E26);
-    }
-    
-    public static Color getColor9() {
-         return new Color(0x65676B);
-    }
-    
-    public static Color getColor10() {
-        return new Color(0x43485A);
-    }
-    
-    public static Color getColor11() {
-        return new Color(0x4C5266);
-    }
-    
-    public static Color getColor12() {
-        return new Color(0xEB788B);
-    }
-       
-    public static Color getColor13() {
-        return new Color(0x62A459);
-    }
-    
-    public static Color getColor14() {
-        return new Color(0x7E8084);
-    }
 
-    public static Color getDisabledColor() {
-        return new Color(0xCCCCCC);
-    }
-    
-    public static Color getDisabledColor2() {
-        return new Color(0x999999);
-    }
-    
-    public static Color getErrorColor() {
-        return Color.RED;
-    }
-    
     public static Color blendColors(Color c0, Color c1) {  
         double r0 = (double) c0.getRed() / 255.0;
         double g0 = (double) c0.getGreen()  / 255.0;
@@ -319,7 +250,7 @@ public class AppUI {
     
     public static void setCommonFont(Component c) {
         AppUI.setFont(c, 16);
-        AppUI.setColor(c, AppUI.getColor5());
+        AppUI.setColor(c, brand.getMainTextColor());
     }
     
     public static void setCommonBoldFont(Component c) {
@@ -360,10 +291,6 @@ public class AppUI {
     }
     
 
-    public static JPanel createRoundedPanel(JPanel parent) {
-         return createRoundedPanel(parent, AppUI.getColor5(), 60, 20);
-    }
-    
     public static JPanel createRoundedPanel(JPanel parent, Color color, int sideMargin) {
         return createRoundedPanel(parent, color, sideMargin, 20);
     }
@@ -478,11 +405,11 @@ public class AppUI {
         table.setIntercellSpacing(new Dimension(0, 1));
         table.setFocusable(false);
         table.setRowSelectionAllowed(false);
-        table.setGridColor(AppUI.getColor10());
+        table.setGridColor(brand.getTableGridColor());
         
         
         JTableHeader header = table.getTableHeader();  
-        AppUI.setColor(header, AppUI.getColor11());
+        AppUI.setColor(header, brand.getTableHeaderTextColor());
         AppUI.noOpaque(header);
         AppUI.setCommonTableFont(table);
         AppUI.setSemiBoldFont(header, 14);
@@ -504,10 +431,10 @@ public class AppUI {
                     else
                         lbl.setHorizontalAlignment(SwingConstants.RIGHT);
 
-                    lbl.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, AppUI.getColor10()));
+                    lbl.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, brand.getTableGridColor()));
                     lbl.setBorder(BorderFactory.createCompoundBorder(lbl.getBorder(), BorderFactory.createEmptyBorder(0, 6, 10, 0)));
 
-                    AppUI.setBackground(lbl, AppUI.getColor6());
+                    AppUI.setBackground(lbl, brand.getPanelBackgroundColor());
 
                     return lbl;
                 }
@@ -547,8 +474,8 @@ public class AppUI {
  
             @Override 
             protected void configureScrollBarColors(){
-                this.trackColor = AppUI.getColor7();
-                this.thumbColor = AppUI.getColor2();
+                this.trackColor = brand.getScrollbarTrackColor();
+                this.thumbColor = brand.getScrollbarThumbColor();
             }
         });
         
@@ -571,7 +498,7 @@ public class AppUI {
         else
             AppUI.setFont(l, fontSize);
         
-        AppUI.setColor(l, AppUI.getColor2());
+        AppUI.setColor(l, brand.getHyperlinkColor());
         AppUI.underLine(l);
         AppUI.setHandCursor(l);
         l.addMouseListener(new MouseAdapter() {
@@ -657,7 +584,7 @@ public class AppUI {
         c.gridwidth = 2;
         
         if (!name0.isEmpty()) {
-            MyButton cb0 = new MyButton(name0, AppUI.getColor3());
+            MyButton cb0 = new MyButton(name0, brand.getSecondaryButtonColor());
             cb0.addListener(al0);
    
             gridbag.setConstraints(cb0.getButton(), c);
@@ -689,7 +616,7 @@ public class AppUI {
     
         JPanel hyp = new JPanel();
         AppUI.setSize(hyp, 48, 1);
-        AppUI.setBackground(hyp, AppUI.getColor9());
+        AppUI.setBackground(hyp, brand.getSecondTextColor());
         
         JLabel l1 = new JLabel(denomination + "'s");
         AppUI.alignCenter(l1);
@@ -697,11 +624,11 @@ public class AppUI {
         AppUI.setFont(l0, 14);
         AppUI.setFont(l1, 14);      
         if (count > 0) {
-            AppUI.setColor(l0, AppUI.getColor5());
-            AppUI.setColor(l1, AppUI.getColor5());
+            AppUI.setColor(l0, brand.getMainTextColor());
+            AppUI.setColor(l1, brand.getMainTextColor());
         } else {
-            AppUI.setColor(l0, AppUI.getColor9());
-            AppUI.setColor(l1, AppUI.getColor9());
+            AppUI.setColor(l0, brand.getSecondTextColor());
+            AppUI.setColor(l1, brand.getSecondTextColor());
         }
         
         AppUI.setMargin(l0, 0, 0, 0, 0);

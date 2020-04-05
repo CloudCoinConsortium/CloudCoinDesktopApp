@@ -99,7 +99,30 @@ public class Brand {
     String headerBackgroundColor;
     String selectedWalletBorderColor;
     String topMenuHoverColor;
-    
+    String mainTextColor;
+    String secondTextColor;
+    String thirdTextColor;
+    String tableHeaderTextColor;
+    String tableGridColor;
+    String dropdownHoverColor;
+    String inputBackgroundColor;
+    String scrollbarTrackColor;
+    String scrollbarThumbColor;
+    String inventoryBackgroundColor;
+    String errorColor;
+    String panelBackgroundColor;
+    String inactiveWalletBackgroundColor;
+    String activeWalletBackgroundColor;
+    String progressbarBackgroundColor;
+    String progressbarColor;
+    String primaryButtonColor;
+    String secondaryButtonColor;
+    String dropfilesBackgroundColor;
+    String disabledButtonColor;
+    String hyperlinkColor;
+    String settingsMenuHoverColor;
+    String settingsMenuBackgroundColor;
+    String titleTextColor;
     
     Font _regFont, _semiBoldFont, _boldFont;
     Font _osRegFont, _osSemiBoldFont;
@@ -136,6 +159,30 @@ public class Brand {
         this.headerBackgroundColor = defaultColor;
         this.selectedWalletBorderColor = defaultColor;
         this.topMenuHoverColor = defaultColor;
+        this.mainTextColor = "#000000";
+        this.secondTextColor = "#000000";
+        this.thirdTextColor = "#000000";
+        this.tableHeaderTextColor = "#000000";
+        this.tableGridColor = defaultColor;
+        this.dropdownHoverColor = defaultColor;
+        this.inputBackgroundColor = defaultColor;
+        this.scrollbarTrackColor = defaultColor;
+        this.scrollbarThumbColor = "#000000";
+        this.inventoryBackgroundColor = defaultColor;
+        this.errorColor = "#000000";
+        this.inactiveWalletBackgroundColor = defaultColor;
+        this.activeWalletBackgroundColor = defaultColor;
+        this.panelBackgroundColor = defaultColor;
+        this.progressbarBackgroundColor = defaultColor;
+        this.progressbarColor = "#000000";
+        this.primaryButtonColor = defaultColor;
+        this.secondaryButtonColor = defaultColor;
+        this.disabledButtonColor = defaultColor;
+        this.dropfilesBackgroundColor = defaultColor;
+        this.hyperlinkColor = "#000000";
+        this.titleTextColor = "#000000";
+        this.settingsMenuBackgroundColor = defaultColor;
+        this.settingsMenuHoverColor = defaultColor;
         
         this.title = "Wallet";
         this.versionOffset = "0.0.0";
@@ -301,7 +348,6 @@ public class Brand {
             } else {
                 try {
                     font = Font.createFont(Font.TRUETYPE_FONT, f);
-                    System.out.println("f="+filename);
                 } catch (Exception e) {
                     logger.debug(ltag, "Error loading font: " + e.toString());
                     return defaultFont;
@@ -531,10 +577,101 @@ public class Brand {
         if (p != null)
             topMenuHoverColor = p;
         
+        p = getProperty(ms, "maintextcolor");
+        if (p != null)
+            mainTextColor = p;
         
+        p = getProperty(ms, "secondtextcolor");
+        if (p != null)
+            secondTextColor = p;
         
+        p = getProperty(ms, "thirdtextcolor");
+        if (p != null)
+            thirdTextColor = p;
         
+        p = getProperty(ms, "tableheadertextcolor");
+        if (p != null)
+            tableHeaderTextColor = p;
         
+        p = getProperty(ms, "tablegridcolor");
+        if (p != null)
+            tableGridColor = p;
+        
+        p = getProperty(ms, "dropdownhovercolor");
+        if (p != null)
+            dropdownHoverColor = p;
+        
+        p = getProperty(ms, "inputbackgroundcolor");
+        if (p != null)
+            inputBackgroundColor = p;
+        
+        p = getProperty(ms, "scrollbartrackcolor");
+        if (p != null)
+            scrollbarTrackColor = p;
+        
+        p = getProperty(ms, "scrollbarthumbcolor");
+        if (p != null)
+            scrollbarThumbColor = p;
+        
+        p = getProperty(ms, "inventorybackgroundcolor");
+        if (p != null)
+            inventoryBackgroundColor = p;
+        
+        p = getProperty(ms, "errorcolor");
+        if (p != null)
+            errorColor = p;
+        
+        p = getProperty(ms, "panelbackgroundcolor");
+        if (p != null)
+            panelBackgroundColor = p;
+        
+        p = getProperty(ms, "inactivewalletbackgroundcolor");
+        if (p != null)
+            inactiveWalletBackgroundColor = p;
+        
+        p = getProperty(ms, "activewalletbackgroundcolor");
+        if (p != null)
+            activeWalletBackgroundColor = p;
+        
+        p = getProperty(ms, "progressbarbackgroundcolor");
+        if (p != null)
+            progressbarBackgroundColor = p;
+        
+        p = getProperty(ms, "progressbarcolor");
+        if (p != null)
+            progressbarColor = p;
+        
+        p = getProperty(ms, "primarybuttoncolor");
+        if (p != null)
+            primaryButtonColor = p;
+        
+        p = getProperty(ms, "secondarybuttoncolor");
+        if (p != null)
+            secondaryButtonColor = p;
+        
+        p = getProperty(ms, "disabledbuttoncolor");
+        if (p != null)
+            disabledButtonColor = p;
+
+        p = getProperty(ms, "dropfilesbackgroundcolor");
+        if (p != null)
+            dropfilesBackgroundColor = p;
+        
+        p = getProperty(ms, "hyperlinkcolor");
+        if (p != null)
+            hyperlinkColor = p;
+        
+        p = getProperty(ms, "settingsmenubackgroundcolor");
+        if (p != null)
+            settingsMenuBackgroundColor = p;
+        
+        p = getProperty(ms, "settingsmenuhovercolor");
+        if (p != null)
+            settingsMenuHoverColor = p;
+        
+        p = getProperty(ms, "titletextcolor");
+        if (p != null)
+            titleTextColor = p;
         
         
         
@@ -683,6 +820,105 @@ public class Brand {
     public Color getTopMenuHoverColor() {
         return colorFromHex(this.topMenuHoverColor);
     }
+    
+    public Color getMainTextColor() {
+        return colorFromHex(this.mainTextColor);
+    }
+    
+    public Color getSecondTextColor() {
+        return colorFromHex(this.secondTextColor);
+    }
+    
+    public Color getThirdTextColor() {
+        return colorFromHex(this.thirdTextColor);
+    }
+    
+    public Color getTableHeaderTextColor() {
+        return colorFromHex(this.tableHeaderTextColor);
+    }
+    
+    public Color getTableGridColor() {
+        return colorFromHex(this.tableGridColor);
+    }
+    
+    public Color getDropdownHoverColor() {
+        return colorFromHex(this.dropdownHoverColor);
+    }
+    
+    public Color getInputBackgroundColor() {
+        return colorFromHex(this.inputBackgroundColor);
+    }
+    
+    public Color getScrollbarTrackColor() {
+        return colorFromHex(this.scrollbarTrackColor);
+    }
+    
+    public Color getScrollbarThumbColor() {
+        return colorFromHex(this.scrollbarThumbColor);
+    }
+    
+    public Color getInventoryBackgroundColor() {
+        return colorFromHex(this.inventoryBackgroundColor);
+    }
+    
+    public Color getErrorColor() {
+        return colorFromHex(this.errorColor);
+    }
+    
+    public Color getPanelBackgroundColor() {
+        return colorFromHex(this.panelBackgroundColor);
+    }
+    
+    public Color getInactiveWalletBackgroundColor() {
+        return colorFromHex(this.inactiveWalletBackgroundColor);
+    }
+    
+    public Color getActiveWalletBackgroundColor() {
+        return colorFromHex(this.activeWalletBackgroundColor);
+    }
+    
+    public Color getProgressbarBackgroundColor() {
+        return colorFromHex(this.progressbarBackgroundColor);
+    }
+    
+    public Color getProgressbarColor() {
+        return colorFromHex(this.progressbarColor);
+    }
+    
+    public Color getPrimaryButtonColor() {
+        return colorFromHex(this.primaryButtonColor);
+    }
+    
+    public Color getSecondaryButtonColor() {
+        return colorFromHex(this.secondaryButtonColor);
+    }
+    
+    public Color getDisabledButtonColor() {
+        return colorFromHex(this.disabledButtonColor);
+    }
+    
+    public Color getDropfilesBackgroundColor() {
+        return colorFromHex(this.dropfilesBackgroundColor);
+    }
+    
+    public Color getHyperlinkColor() {
+        return colorFromHex(this.hyperlinkColor);
+    }
+    
+    public Color getSettingsMenuHoverColor() {
+        return colorFromHex(this.settingsMenuHoverColor);
+    }
+    
+    public Color getSettingsMenuBackgroundColor() {
+        return colorFromHex(this.settingsMenuBackgroundColor);
+    }
+    
+    public Color getTitleTextColor() {
+        return colorFromHex(this.titleTextColor);
+    }
+    
+    
+    
     
     
     

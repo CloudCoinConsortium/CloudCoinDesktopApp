@@ -103,18 +103,18 @@ public class RoundedCornerComboBox {
     
     
     public JPanel makeUI() { 
-        background = AppUI.blendColors(AppUI.getColor8(), outerBgColor);
+        background = AppUI.blendColors(AppUI.brand.getInputBackgroundColor(), outerBgColor);
         foreground = background;
 
-        background = AppUI.getColor8();
-        UIManager.put("ComboBox.selectionForeground", AppUI.getColor5());
+        background = AppUI.brand.getInputBackgroundColor();
+        UIManager.put("ComboBox.selectionForeground", AppUI.brand.getMainTextColor());
         UIManager.put("ComboBox.selectionBackground", background);
         
         combo1 = new JComboBox<>();
         AppUI.setSize(combo1, (int) AppUI.getBoxWidth(), (int) AppUI.getBoxHeight());  
         AppUI.setFont(combo1, 18);
         AppUI.setBackground(combo1, background);
-        AppUI.setColor(combo1, AppUI.getDisabledColor());
+
         combo1.setBorder(new RoundedCornerBorder(this.outerBgColor));
         combo1.setUI(new ColorArrowUI(background));
         
@@ -173,10 +173,10 @@ class MyComboBoxModel extends DefaultComboBoxModel {
     @Override
     public void setSelectedItem(Object anObject) {
         if (!placeholder.equals(anObject)) {
-            AppUI.setColor(combo1, AppUI.getColor5());
+            AppUI.setColor(combo1, AppUI.brand.getMainTextColor());
             super.setSelectedItem(anObject);
         } else if (selectionAllowed) {
-            AppUI.setColor(combo1, AppUI.getDisabledColor2());
+            AppUI.setColor(combo1, AppUI.brand.getSecondTextColor());
             selectionAllowed = false;
             super.setSelectedItem(anObject);
         }
@@ -420,13 +420,13 @@ class ComboBoxRenderer extends JPanel implements ListCellRenderer {
         if (value != null)
             text.setText(value.toString());
         if (index == 0) {
-            text.setForeground(AppUI.getDisabledColor2());
+            text.setForeground(AppUI.brand.getSecondTextColor());
         } else if (index > -1) {
-            text.setForeground(AppUI.getColor5());
+            text.setForeground(AppUI.brand.getMainTextColor());
         }
             
         if (isSelected) {
-            text.setBackground(AppUI.getColor9());
+            text.setBackground(AppUI.brand.getDropdownHoverColor());
         } else {
             text.setBackground(color);
         }

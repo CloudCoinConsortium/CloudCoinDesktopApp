@@ -43,7 +43,7 @@ public class FancyProgressBar extends BasicProgressBarUI {
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
         int iStrokWidth = 1;
-        g2d.setColor(AppUI.getColor4());
+        g2d.setColor(AppUI.brand.getProgressbarBackgroundColor());
 
         int width = progressBar.getWidth();
         int height = progressBar.getHeight();
@@ -60,7 +60,7 @@ public class FancyProgressBar extends BasicProgressBarUI {
 
         width = (int) Math.round(width * dProgress);
 
-        g2d.setColor(AppUI.getColor2());
+        g2d.setColor(AppUI.brand.getProgressbarColor());
         RoundRectangle2D fill = new RoundRectangle2D.Double(0, 0, width, height - 1, 20, 20);
 
         g2d.fill(fill);

@@ -30,7 +30,7 @@ public class MyButton {
     boolean lastActionAdded;
     
     public MyButton(String text) {
-        this.color = AppUI.getColor2();
+        this.color = AppUI.brand.getPrimaryButtonColor();
         core = makeUI(text);
         this.lastActionAdded = false;
         if (!text.toLowerCase().equals("continue") && !text.toLowerCase().equals("confirm"))
@@ -65,7 +65,7 @@ public class MyButton {
     public void disable() {
         button.setEnabled(false);
         RoundedBorder rb = (RoundedBorder) button.getBorder();
-        rb.setColor(AppUI.getDisabledColor());
+        rb.setColor(AppUI.brand.getDisabledButtonColor());
         button.repaint();
         button.revalidate();
     }
