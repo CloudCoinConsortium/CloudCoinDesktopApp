@@ -146,7 +146,8 @@ public class Brand {
             "vaultIconActive","lockIcon","lockIconActive","cloudIcon","cloudIconActive","coinsInventoryIcon",
             "templatePng","templateJpeg1","templateJpeg5","templateJpeg25","templateJpeg100",
             "templateJpeg250","mainFont","mainFontSemiBold","mainFontBold","secondFont","secondFontSemiBold",
-            "dropdownArrow", "arrowLeft", "arrowRight", "toggleyes", "toggleno", "lookingGlass", "eye"
+            "dropdownArrow", "arrowLeft", "arrowRight", "toggleyes", "toggleno", "lookingGlass", "eye",
+            "emailIcon", "emailIconActive"
         };
         
         for (String s : vals) {
@@ -624,6 +625,17 @@ public class Brand {
         p = getProperty(ms, "cloudiconactive");
         if (p != null)
             datamap.get("cloudIconActive").name = p;
+        
+        p = getProperty(ms, "emailicon");
+        if (p != null)
+            datamap.get("emailIcon").name = p;
+        
+        p = getProperty(ms, "emailiconactive");
+        if (p != null)
+            datamap.get("emailIconActive").name = p;
+        
+        
+        
         
         p = getProperty(ms, "coinsinventoryicon");
         if (p != null)
@@ -1169,6 +1181,31 @@ public class Brand {
     public URL getImgVaultIcon() {
         return getAssetPathByName("vaultIcon");
     }
+    
+    public URL getImgLockIcon() {
+        return getAssetPathByName("lockIcon");
+    }
+    
+    public URL getImgLockIconActive() {
+        return getAssetPathByName("lockIconActive");
+    }
+    
+    public URL getImgEmailIcon() {
+        return getAssetPathByName("emailIcon");
+    }
+    
+    public URL getImgEmailIconActive() {
+        return getAssetPathByName("emailIconActive");
+    }
+    
+    public URL getImgCloudIcon() {
+        return getAssetPathByName("cloudIcon");
+    }
+    
+    public URL getImgCloudIconActive() {
+        return getAssetPathByName("cloudIconActive");
+    }
+    
     
     public String getTerms() {
         return getAssetPathByNameText("terms");
