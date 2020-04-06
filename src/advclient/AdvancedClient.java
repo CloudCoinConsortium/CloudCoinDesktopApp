@@ -37,6 +37,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
 import java.awt.print.PrinterException;
 import java.io.File;
 import java.io.IOException;
@@ -7733,14 +7734,16 @@ public class AdvancedClient  {
         final boolean fisDisabled = isDisabled;      
         if (wallet != null) {
             URL u = wallet.isSkyWallet() ? brand.getImgWalletSkyIcon() : brand.getImgWalletLocalIcon();
+            BufferedImage bufimage = new BufferedImage(29, 29, BufferedImage.TYPE_INT_ARGB);
             JLabel icon;
             JLabel iconMail, iconLock, iconCloud;
+            JLabel dummyIcon;
             try {
                 Image img;
             
                 img = ImageIO.read(u);
                 icon = new JLabel(new ImageIcon(img));
-                
+                dummyIcon = new JLabel(new ImageIcon(bufimage));
                 if (isDisabled) {
                     img = ImageIO.read(brand.getImgEmailIcon());
                     iconMail = new JLabel(new ImageIcon(img));
@@ -7765,18 +7768,23 @@ public class AdvancedClient  {
             
                    
             GridBagConstraints c = new GridBagConstraints();          
-            c.anchor = GridBagConstraints.CENTER;
+            c.anchor = GridBagConstraints.WEST;
             c.insets = new Insets(4, 18, 0, 0); 
-            c.gridx = GridBagConstraints.RELATIVE;
+            c.gridx = 0;
             c.gridy = y;   
+            c.weightx = 0;
             c.gridheight = 2;
             gridbag.setConstraints(icon, c);
-            
+
             wpanel.add(icon);
-            c.insets = new Insets(10, 20, 0, 0);
+            
+            
+            
+            c.insets = new Insets(10, 16, 0, 0);
             c.gridx = GridBagConstraints.RELATIVE;
             c.weightx = 1;
-            c.anchor = GridBagConstraints.NORTHWEST;
+            c.gridwidth = 2;
+            c.anchor = GridBagConstraints.WEST;
             c.gridheight = 1;
             gridbag.setConstraints(labelName, c);
             wpanel.add(labelName);
@@ -7787,13 +7795,14 @@ public class AdvancedClient  {
             JLabel jxl = new JLabel("");
             AppUI.setSemiBoldFont(jxl, 16);
             AppUI.setColor(jxl, brand.getTitleTextColor());
-            AppUI.alignCenter(jxl);
+            AppUI.alignLeft(jxl);
             AppUI.noOpaque(jxl);
 
-            c.insets = new Insets(12, 20, 0, 0); 
+            c.insets = new Insets(12, 16, 0, 0); 
             c.gridx = GridBagConstraints.RELATIVE;
             c.gridy = y; 
             c.weightx = 1;
+            c.gridwidth = 2;
             c.anchor = GridBagConstraints.NORTHWEST;
             gridbag.setConstraints(jxl, c);
             wpanel.add(jxl);
@@ -7801,28 +7810,37 @@ public class AdvancedClient  {
             y++;
             
             // Icons
+            JPanel jpwr = new JPanel();
+            AppUI.setBoxLayout(jpwr, false);
+            
             JPanel jp = new JPanel();
             
             
-            AppUI.setBoxLayout(jp, false);
+            //AppUI.setBoxLayout(jp, false);
             AppUI.setMargin(jp, 0);
             AppUI.noOpaque(jp);
-            AppUI.alignLeft(jp);
+            //AppUI.alignLeft(jp);
+            //AppUI.setSize(jp, 60, 29);
             c.anchor = GridBagConstraints.WEST;
             c.insets = new Insets(4, 18, 0, 0); 
-            c.gridx = GridBagConstraints.RELATIVE;
+            c.gridx = 0;
             c.gridy = y;   
-            c.gridwidth = 1;
+            c.gridwidth = 2;
+            c.gridheight = 1;
             gridbag.setConstraints(jp, c);
             if (wallet.isSkyWallet()) { 
                 jp.add(iconCloud);
+                //jp.add(dummyIcon);
             } else if (!wallet.getEmail().isEmpty()) {
                 jp.add(iconMail);
+                //jp.add(dummyIcon);
+            } else {
+                jp.add(dummyIcon);
             }
             wpanel.add(jp);
 
             jp = new JPanel();
-            AppUI.setBoxLayout(jp, false);
+            //AppUI.setBoxLayout(jp, false);
             AppUI.setMargin(jp, 0);
             AppUI.noOpaque(jp);
             AppUI.alignLeft(jp);
@@ -7832,8 +7850,12 @@ public class AdvancedClient  {
             c.gridy = y;   
             c.gridwidth = 1;
             gridbag.setConstraints(jp, c);
-            if (wallet.isEncrypted())
+            if (wallet.isEncrypted()){
                 jp.add(iconLock);
+                //jp.add(dummyIcon);
+            } else  {
+                jp.add(dummyIcon);
+            }
             wpanel.add(jp);
             
             
@@ -7851,11 +7873,12 @@ public class AdvancedClient  {
             final Wallet fwallet = wallet;
             MouseAdapter ma = new MouseAdapter() {
                 @Override
-                public void mouseReleased(MouseEvent e) {                 
+                public void mouseReleased(MouseEvent e) {  
                     setActiveWallet(fwallet);
                     ps.sendType = 0;
                     ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
                     fwallet.setNotUpdated();
+
                     showScreen();
                 }   
                 

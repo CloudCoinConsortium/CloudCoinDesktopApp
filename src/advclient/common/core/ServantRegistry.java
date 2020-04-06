@@ -77,10 +77,12 @@ public class ServantRegistry {
             if (!s.isUserBound()) 
                 continue;
 
-            if (isRunning(k))
-                s.cancel();
             
-            while (isRunning(k)) {
+            if (isRunning(k)) {
+                s.cancel();
+            }
+
+            while (isRunning(k) && !k.equals("ShowEnvelopeCoins")) {
                 try {
                     Thread.sleep(500);
                 } catch (InterruptedException e) {
