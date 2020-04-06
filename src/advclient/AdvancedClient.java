@@ -312,6 +312,7 @@ public class AdvancedClient  {
     }
 
     
+    
     public String getPickError(Wallet w) {
         String errText = ""
                 + "Cannot make change<br><br>This version of software does not support making change<br>"
@@ -8596,10 +8597,15 @@ public class AdvancedClient  {
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {
                         ps.currentScreen = ProgramState.SCREEN_BACKUP_DONE;
-                        if (!er.errText.isEmpty())
-                            ps.errText = er.errText;
-                        else
+                        if (!er.errText.isEmpty()) {
+                            if (er.errText.equals(Config.PICK_ERROR_MSG)) {
+                                ps.errText = "<html><div>Failed to collect all coins from folders. If the wallet is encrypted "
+                                        + "make sure that all coins are in the Vault folder and there are no coins the Bank folder</div></html>";
+                            } else
+                                ps.errText = er.errText;
+                        } else {
                             ps.errText = "Failed to backup coins";
+                        }
                         
                         showScreen();
                     }
