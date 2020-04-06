@@ -36,21 +36,32 @@ public class ImageJPanel extends JPanel {
   // can vary depending on the use case of the panel.
   public ImageJPanel(FlowLayout fl, String res)  {
       super(fl);
-      init(res);
+      initFromString(res);
   }
   
   public ImageJPanel(BorderLayout bl, String res)  {
       super(bl);
-      init("resources/" + res);
+      initFromString("resources/" + res);
   }
   
   public ImageJPanel(String res)  {
       super();
-      init("resources/" + res);
+      initFromString("resources/" + res);
   }
   
-  public void init(String res) {
+  public ImageJPanel(URL u) {
+      super();
+      
+      initFromURL(u);
+  }
+  
+  public void initFromString(String res) {
       URL u = getClass().getClassLoader().getResource(res);
+      
+      initFromURL(u);
+  }
+  
+  public void initFromURL(URL u) {
 
       try {
         backgroundImage = ImageIO.read(u);

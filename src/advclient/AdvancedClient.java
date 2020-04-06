@@ -42,6 +42,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.*;
 import javax.imageio.ImageIO;
 import javax.swing.event.PopupMenuEvent;
@@ -235,7 +236,10 @@ public class AdvancedClient  {
         sm.init();
 
         AppCore.readConfig();
-        AppCore.copyTemplatesFromJar();
+        //AppCore.copyTemplatesFromJar();
+        
+        brand.copyTemplates();
+        
         resetState();
     }
    
@@ -438,7 +442,7 @@ public class AdvancedClient  {
         cl = AppUI.class.getClassLoader();
 
         mainFrame.setIconImage(
-            new ImageIcon(cl.getResource("resources/CloudCoinLogo.png")).getImage()
+            new ImageIcon(brand.getImgIcon()).getImage()
         );
 
         mainFrame.setContentPane(mainPanel);
@@ -556,42 +560,42 @@ public class AdvancedClient  {
         try {
             Image img;
                    
-            img = ImageIO.read(getClass().getClassLoader().getResource("resources/gears.png"));
+            img = ImageIO.read(brand.getImgSettingsIcon());
             icon0 = new JLabel(new ImageIcon(img));            
             ii = new ImageIcon(img);
             
-            img = ImageIO.read(getClass().getClassLoader().getResource("resources/supporticon.png"));
+            img = ImageIO.read(brand.getImgSupportIcon());
             icon1 = new JLabel(new ImageIcon(img));
 
-            img = ImageIO.read(getClass().getClassLoader().getResource("resources/CloudCoinText.png"));
+            img = ImageIO.read(brand.getImgLogoText());
             icon2 = new JLabel(new ImageIcon(img));
             
-            img = ImageIO.read(getClass().getClassLoader().getResource("resources/CloudCoinLogo.png"));
+            img = ImageIO.read(brand.getImgLogo());
             icon3 = new JLabel(new ImageIcon(img));
             
-            img = ImageIO.read(getClass().getClassLoader().getResource("resources/depositicon.png"));
+            img = ImageIO.read(brand.getImgDepositIcon());
             depositIi = new ImageIcon(img);
             depositIcon = new JLabel(new ImageIcon(img));
             
-            img = ImageIO.read(getClass().getClassLoader().getResource("resources/withdrawicon.png"));
+            img = ImageIO.read(brand.getImgWithdrawIcon());
             withdrawIi = new ImageIcon(img);
             withdrawIcon = new JLabel(new ImageIcon(img));
             
             
-            img = ImageIO.read(getClass().getClassLoader().getResource("resources/transfericon.png"));
+            img = ImageIO.read(brand.getImgTransferIcon());
             transferIi = new ImageIcon(img);
             transferIcon = new JLabel(new ImageIcon(img));
             
-            img = ImageIO.read(getClass().getClassLoader().getResource("resources/coinsicon.png"));
+            img = ImageIO.read(brand.getImgCoinsIcon());
             coinsIcon = new JLabel(new ImageIcon(img));
             
-            img = ImageIO.read(getClass().getClassLoader().getResource("resources/depositiconlight.png"));
+            img = ImageIO.read(brand.getImgDepositIconHover());
             depositIiLight = new ImageIcon(img);
                       
-            img = ImageIO.read(getClass().getClassLoader().getResource("resources/transfericonlight.png"));
+            img = ImageIO.read(brand.getImgTransferIconHover());
             transferIiLight = new ImageIcon(img);
             
-            img = ImageIO.read(getClass().getClassLoader().getResource("resources/withdrawiconlight.png"));
+            img = ImageIO.read(brand.getImgWithdrawIconHover());
             withdrawIiLight = new ImageIcon(img);
             
         } catch (Exception ex) {
@@ -1035,7 +1039,7 @@ public class AdvancedClient  {
     
     
     public void initCorePanel() {
-        corePanel = new ImageJPanel("bglogo.png");
+        corePanel = new ImageJPanel(brand.getImgBackgroundImage());
         AppUI.setBoxLayout(corePanel, false);
         AppUI.setSize(corePanel, tw, th - headerHeight);
         AppUI.setBackground(corePanel, brand.getBackgroundColor());
@@ -5527,19 +5531,19 @@ public class AdvancedClient  {
         Image img;
         JLabel i0, i1, i2, i3, i4;
         try {     
-            img = ImageIO.read(getClass().getClassLoader().getResource("resources/support0.png"));
+            img = ImageIO.read(brand.getImgSupportHtmlIcon());
             i0 = new JLabel(new ImageIcon(img));
 
-            img = ImageIO.read(getClass().getClassLoader().getResource("resources/support1.png"));
+            img = ImageIO.read(brand.getImgSupportTimeIcon());
             i1 = new JLabel(new ImageIcon(img));
             
-            img = ImageIO.read(getClass().getClassLoader().getResource("resources/support2.png"));
+            img = ImageIO.read(brand.getImgSupportPhoneIcon());
             i2 = new JLabel(new ImageIcon(img));
             
-            img = ImageIO.read(getClass().getClassLoader().getResource("resources/support3.png"));
+            img = ImageIO.read(brand.getImgSupportEmailIcon());
             i3 = new JLabel(new ImageIcon(img)); 
             
-            img = ImageIO.read(getClass().getClassLoader().getResource("resources/support0.png"));
+            img = ImageIO.read(brand.getImgSupportPortalIcon());
             i4 = new JLabel(new ImageIcon(img)); 
             
         } catch (Exception ex) {              
@@ -5549,7 +5553,7 @@ public class AdvancedClient  {
         
         JPanel wr;
         
-        String urlName = "http://cloudcoinconsortium.com/use.html";
+        String urlName = brand.getSupportPage();
         JLabel link = AppUI.getHyperLink(urlName, urlName, 0);
         
         wr = new JPanel();
@@ -5564,7 +5568,7 @@ public class AdvancedClient  {
         AppUI.noOpaque(wr);
         wr.add(i1);
         wr.add(AppUI.vr(10));
-        fname = new JLabel("9AM to 3AM California time (PST)");
+        fname = new JLabel(brand.getSupportTime());
         AppUI.setCommonFont(fname);
         wr.add(fname);
         AppUI.getGBRow(subInnerCore, null, wr, y, gridbag);
@@ -5575,7 +5579,7 @@ public class AdvancedClient  {
         AppUI.noOpaque(wr);
         wr.add(i2);
         wr.add(AppUI.vr(10));
-        fname = new JLabel("Tel: +1 (530) 762-1361");
+        fname = new JLabel("Tel: " + brand.getSupportPhone());
         AppUI.setCommonFont(fname);
         wr.add(fname);
         AppUI.getGBRow(subInnerCore, null, wr, y, gridbag);
@@ -5590,7 +5594,7 @@ public class AdvancedClient  {
         JPanel wr2 = new JPanel();
         AppUI.noOpaque(wr2);
         AppUI.setBoxLayout(wr2, true);
-        fname = new JLabel("Email: support@cloudcoinmail.com");
+        fname = new JLabel("Email: " + brand.getSupportEmail());
         AppUI.setCommonFont(fname);
         wr2.add(fname);
         fname = new JLabel("(Secure if you get a free encrypted email account at ProtonMail.com)");
@@ -5624,22 +5628,21 @@ public class AdvancedClient  {
         
         
         
-        // Support Portal
-        JLabel sp = new JLabel("Support Portal");
-        urlName = "https://cloudcoinsupport.atlassian.net/servicedesk/customer/portals";
-        link = AppUI.getHyperLink(urlName, urlName, 14);
-        AppUI.setCommonFont(sp);
-        wr = new JPanel();
-        AppUI.noOpaque(wr);
-        wr.add(i4);
-        wr.add(AppUI.vr(10));
-        wr.add(sp);
-        wr.add(link);     
-        
-        
-
-        AppUI.getGBRow(subInnerCore, null, wr, y, gridbag);
-        y++;
+        if (brand.getSupportPortal() != null) {
+            // Support Portal
+            JLabel sp = new JLabel("Support Portal");
+            urlName = brand.getSupportPortal();
+            link = AppUI.getHyperLink(urlName, urlName, 14);
+            AppUI.setCommonFont(sp);
+            wr = new JPanel();
+            AppUI.noOpaque(wr);
+            wr.add(i4);
+            wr.add(AppUI.vr(10));
+            wr.add(sp);
+            wr.add(link);     
+            AppUI.getGBRow(subInnerCore, null, wr, y, gridbag);
+            y++;
+        }
  
         
         
@@ -6658,7 +6661,7 @@ public class AdvancedClient  {
             invPanel.removeAll();
             
             try {     
-                Image img = ImageIO.read(getClass().getClassLoader().getResource("resources/coinsinventory.png"));
+                Image img = ImageIO.read(brand.getImgCoinsInventoryIcon());
                 JLabel icon = new JLabel(new ImageIcon(img));
                 AppUI.setMargin(icon, 0, 0, 0, 0);               
                 invPanel.add(icon);               
@@ -6816,10 +6819,10 @@ public class AdvancedClient  {
       
         final JLabel iconLeft, iconRight;
         try {     
-                Image img = ImageIO.read(getClass().getClassLoader().getResource("resources/arrowleft.png"));
+                Image img = ImageIO.read(brand.getImgArrowLeftIcon());
                 iconLeft = new JLabel(new ImageIcon(img));
                 
-                img = ImageIO.read(getClass().getClassLoader().getResource("resources/arrowright.png"));
+                img = ImageIO.read(brand.getImgArrowRightIcon());
                 iconRight = new JLabel(new ImageIcon(img));     
         } catch (Exception ex) {              
             return;
@@ -7728,12 +7731,12 @@ public class AdvancedClient  {
         
         final boolean fisDisabled = isDisabled;      
         if (wallet != null) {
-            String iconName = wallet.isSkyWallet() ? "walleticon.png" : "walleticonlight.png";
+            URL u = wallet.isSkyWallet() ? brand.getImgWalletSkyIcon() : brand.getImgWalletLocalIcon();
             JLabel icon;
             try {
                 Image img;
             
-                img = ImageIO.read(getClass().getClassLoader().getResource("resources/" + iconName));
+                img = ImageIO.read(u);
                 icon = new JLabel(new ImageIcon(img));
             } catch (Exception ex) {
                 return null;
@@ -7802,12 +7805,12 @@ public class AdvancedClient  {
             
             wpanel.addMouseListener(ma);
         } else {
-            String iconName = (type == TYPE_ADD_BUTTON) ? "walleticon.png" : "vaulticon.png";
+            URL u = (type == TYPE_ADD_BUTTON) ? brand.getImgWalletSkyIcon() : brand.getImgVaultIcon();
             JLabel icon;
             try {
                 Image img;
             
-                img = ImageIO.read(getClass().getClassLoader().getResource("resources/" + iconName));
+                img = ImageIO.read(u);
                 icon = new JLabel(new ImageIcon(img));
             } catch (Exception ex) {
                 return null;
@@ -7900,7 +7903,7 @@ public class AdvancedClient  {
         
         y++;
  
-        String aText = AppUI.getAgreementText();
+        String aText = brand.getTerms();
         aText = aText.replaceAll("<span class=\"instructions\">.+</span>", "");
         
         // Text

@@ -111,7 +111,7 @@ public class MyTextField  {
             try {
                 BufferedImage img;
             
-                img = ImageIO.read(getClass().getClassLoader().getResource("resources/eye.png"));   
+                img = ImageIO.read(AppUI.brand.getImgEye());   
                 AppUI.invertImage(img);
                 imgEye = new ImageIcon(img);
             } catch (Exception ex) {
@@ -133,7 +133,7 @@ public class MyTextField  {
             try {
                 BufferedImage img;
             
-                img = ImageIO.read(getClass().getClassLoader().getResource("resources/lg0.png"));   
+                img = ImageIO.read(AppUI.brand.getImgLookingGlass());   
                 AppUI.invertImage(img);
                 imgEye = new ImageIcon(img);
             } catch (Exception ex) {

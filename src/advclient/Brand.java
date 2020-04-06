@@ -24,6 +24,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -139,10 +142,11 @@ public class Brand {
             "terms","logo","logoText","backgroundImage","icon","depositIcon",
             "withdrawIcon","transferIcon","depositIconHover","withdrawIconHover","transferIconHover",
             "supportIcon","settingsIcon","coinsIcon","supportHtmlIcon","supportTimeIcon","supportPhoneIcon",
-            "supportEmailIcon","supportPortalIcon","walletIcon","walletIconActive","vaultIcon",
+            "supportEmailIcon","supportPortalIcon","walletLocalIcon","walletSkyIcon","vaultIcon",
             "vaultIconActive","lockIcon","lockIconActive","cloudIcon","cloudIconActive","coinsInventoryIcon",
             "templatePng","templateJpeg1","templateJpeg5","templateJpeg25","templateJpeg100",
-            "templateJpeg250","mainFont","mainFontSemiBold","mainFontBold","secondFont","secondFontSemiBold"
+            "templateJpeg250","mainFont","mainFontSemiBold","mainFontBold","secondFont","secondFontSemiBold",
+            "dropdownArrow", "arrowLeft", "arrowRight", "toggleyes", "toggleno", "lookingGlass", "eye"
         };
         
         for (String s : vals) {
@@ -194,6 +198,103 @@ public class Brand {
     
     public String getAssetPath(String file) {
         return this.brandDir + File.separator + file;
+    }
+    
+    public void copyTemplate(String name, String dst) {
+        dlResult dl = datamap.get(name);
+        if (dl == null) {
+            logger.debug(ltag, "Template " + name + " is missing");
+            return;
+        }
+        
+        if (dl.name == null) {
+            logger.debug(ltag, "Template " + name + " wasn't downloaded");
+            return;
+        }
+        
+        String path = getAssetPath(dl.name);
+        File f = new File(path);
+        if (!f.exists()) {
+            logger.debug(ltag, "Template " + name + " doesn't exist");
+            return;
+        }
+        
+        File fd = new File(dst);
+        if (fd.exists()) {
+            return;
+        }
+        
+        logger.debug(ltag, "Copying " + path + " to " + dst);
+        AppCore.copyFile(path, dst);
+    }
+    
+    public void copyTemplates() {
+        String templateDir;
+
+
+	templateDir = AppCore.getRootPath() + File.separator + Config.DIR_TEMPLATES;
+        
+        copyTemplate("templateJpeg1", templateDir + File.separator + "jpeg1.jpg");
+        copyTemplate("templateJpeg5", templateDir + File.separator + "jpeg5.jpg");
+        copyTemplate("templateJpeg25", templateDir + File.separator + "jpeg25.jpg");
+        copyTemplate("templateJpeg100", templateDir + File.separator + "jpeg100.jpg");
+        copyTemplate("templateJpeg250", templateDir + File.separator + "jpeg250.jpg");
+        copyTemplate("templatePng", templateDir + File.separator + Config.PNG_TEMPLATE_NAME);
+   
+    }
+    
+    public String getAssetPathByNameText(String name) {
+        dlResult dl = datamap.get(name);
+        if (dl == null) {
+            return "";
+        }
+
+        if (dl.name == null) {
+            return "";
+        }
+        
+        String path = getAssetPath(dl.name);
+        File f = new File(path);
+        if (!f.exists()) {
+            return "";
+        }
+        
+        String text = AppCore.loadFile(path);
+        if (text == null)
+            return "";
+
+        return text;
+    }
+        
+        
+        
+    
+    public URL getAssetPathByName(String name) {
+        String fallbackResuource = "resources/clear.gif";
+        dlResult dl = datamap.get(name);
+        if (dl == null) {
+            return getClass().getClassLoader().getResource(fallbackResuource);
+        }
+        
+        if (dl.name == null) {
+            return getClass().getClassLoader().getResource(fallbackResuource);
+        }
+        
+        String path = getAssetPath(dl.name);
+        File f = new File(path);
+        if (!f.exists()) {
+            return getClass().getClassLoader().getResource(fallbackResuource);
+        }
+        
+        URL url;
+        URI uri = f.toURI();
+        try {
+           url = uri.toURL();
+        } catch (MalformedURLException e) {
+            return getClass().getClassLoader().getResource(fallbackResuource);
+        }
+
+        return url;
     }
     
     public boolean downloadConfig() {
@@ -492,13 +593,13 @@ public class Brand {
         if (p != null)
             datamap.get("supportPortalIcon").name = p;
         
-        p = getProperty(ms, "walleticon");
+        p = getProperty(ms, "walletskyicon");
         if (p != null)
-            datamap.get("walletIcon").name = p;
+            datamap.get("walletSkyIcon").name = p;
         
-        p = getProperty(ms, "walleticonactive");
+        p = getProperty(ms, "walletlocalicon");
         if (p != null)
-            datamap.get("walletIconActive").name = p;
+            datamap.get("walletLocalIcon").name = p;
         
         p = getProperty(ms, "vaulticon");
         if (p != null)
@@ -552,6 +653,35 @@ public class Brand {
         if (p != null)
             datamap.get("templateJpeg250").name = p;
         
+        
+        p = getProperty(ms, "dropdownarrow");
+        if (p != null)
+            datamap.get("dropdownArrow").name = p;
+        
+        p = getProperty(ms, "arrowleft");
+        if (p != null)
+            datamap.get("arrowLeft").name = p;
+        
+        p = getProperty(ms, "arrowright");
+        if (p != null)
+            datamap.get("arrowRight").name = p;
+        
+        p = getProperty(ms, "toggleyes");
+        if (p != null)
+            datamap.get("toggleyes").name = p;
+        
+        p = getProperty(ms, "toggleno");
+        if (p != null)
+            datamap.get("toggleno").name = p;
+        
+        p = getProperty(ms, "lookingglass");
+        if (p != null)
+            datamap.get("lookingGlass").name = p;
+        
+        p = getProperty(ms, "eye");
+        if (p != null)
+            datamap.get("eye").name = p;
+
         
         // Colors
         ms = data.get("colors");
@@ -924,6 +1054,153 @@ public class Brand {
     
     
     
+    
+    public URL getImgIcon() {
+        return getAssetPathByName("icon");
+    }
+    
+    public URL getImgDropdownArrow() {
+        return getAssetPathByName("dropdownArrow");
+    }
+    
+    public URL getImgLookingGlass() {
+        return getAssetPathByName("lookingGlass");
+    }
+    
+    public URL getImgEye() {
+        return getAssetPathByName("eye");
+    }
+    
+    public URL getImgToggleYes() {
+        return getAssetPathByName("toggleyes");
+    }
+    
+    public URL getImgToggleNo() {
+        return getAssetPathByName("toggleno");
+    }
+    
+    public URL getImgSettingsIcon() {
+        return getAssetPathByName("settingsIcon");
+    }
+    
+    public URL getImgSupportIcon() {
+        return getAssetPathByName("supportIcon");
+    }
+    
+    public URL getImgLogo() {
+        return getAssetPathByName("logo");
+    }
+    
+    public URL getImgLogoText() {
+        return getAssetPathByName("logoText");
+    }
+    
+    public URL getImgDepositIcon() {
+        return getAssetPathByName("depositIcon");
+    }
+    
+    public URL getImgDepositIconHover() {
+        return getAssetPathByName("depositIconHover");
+    }
+    
+    public URL getImgWithdrawIcon() {
+        return getAssetPathByName("withdrawIcon");
+    }
+    
+    public URL getImgWithdrawIconHover() {
+        return getAssetPathByName("withdrawIconHover");
+    }
+    
+    public URL getImgTransferIcon() {
+        return getAssetPathByName("transferIcon");
+    }
+    
+    public URL getImgTransferIconHover() {
+        return getAssetPathByName("transferIconHover");
+    }
+    public URL getImgCoinsIcon() {
+        return getAssetPathByName("coinsIcon");
+    }
+    
+    public URL getImgBackgroundImage() {
+        return getAssetPathByName("backgroundImage");
+    }
+    
+    public URL getImgSupportHtmlIcon() {
+        return getAssetPathByName("supportHtmlIcon");
+    }
+    
+    public URL getImgSupportTimeIcon() {
+        return getAssetPathByName("supportTimeIcon");
+    }
+    
+    public URL getImgSupportPhoneIcon() {
+        return getAssetPathByName("supportPhoneIcon");
+    }
+    
+    public URL getImgSupportEmailIcon() {
+        return getAssetPathByName("supportEmailIcon");
+    }
+    
+    public URL getImgSupportPortalIcon() {
+        return getAssetPathByName("supportPortalIcon");
+    }
+
+    public URL getImgCoinsInventoryIcon() {
+        return getAssetPathByName("coinsInventoryIcon");
+    }
+
+    public URL getImgArrowLeftIcon() {
+        return getAssetPathByName("arrowLeft");
+    }
+    
+    public URL getImgArrowRightIcon() {
+        return getAssetPathByName("arrowRight");
+    }
+    
+    public URL getImgWalletLocalIcon() {
+        return getAssetPathByName("walletLocalIcon");
+    }
+    
+    public URL getImgWalletSkyIcon() {
+        return getAssetPathByName("walletSkyIcon");
+    }
+    
+    public URL getImgVaultIcon() {
+        return getAssetPathByName("vaultIcon");
+    }
+    
+    public String getTerms() {
+        return getAssetPathByNameText("terms");
+    }
+    
+    
+    
+    
+    
+    
+    
+    public String getSupportEmail() {
+        return this.supportEmail;
+    }
+    
+    public String getSupportPage() {
+        return this.supportPage;
+    }
+    
+    public String getSupportTime() {
+        return this.supportTime;
+    }
+    
+    public String getSupportPhone() {
+        return this.supportPhone;
+    }
+    
+    public String getSupportPortal() {
+        return this.supportPortal;
+    }
+    
+
     
     public String getTitle(String version) {
         return this.title + " " + this.getResultingVersion(version);

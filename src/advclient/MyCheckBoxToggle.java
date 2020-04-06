@@ -60,10 +60,10 @@ public class MyCheckBoxToggle {
         try {
             Image img;
             
-            img = ImageIO.read(getClass().getClassLoader().getResource("resources/toggleno.png"));
+            img = ImageIO.read(AppUI.brand.getImgToggleNo());
             imgUnchecked = new ImageIcon(img);
             
-            img = ImageIO.read(getClass().getClassLoader().getResource("resources/toggleyes.png"));
+            img = ImageIO.read(AppUI.brand.getImgToggleYes());
             imgChecked = new ImageIcon(img);
         } catch (Exception ex) {
 

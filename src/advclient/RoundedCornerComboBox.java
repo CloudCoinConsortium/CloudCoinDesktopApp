@@ -383,7 +383,7 @@ class ColorArrowUI extends BasicComboBoxUI {
 
         //button.setBounds(100,100,100,100);
         try {
-            BufferedImage img = ImageIO.read(getClass().getClassLoader().getResource("resources/arrow.png"));
+            BufferedImage img = ImageIO.read(AppUI.brand.getImgDropdownArrow());
             AppUI.invertImage(img);
             button.setIcon(new ImageIcon(img));
             button.setForeground(background);
