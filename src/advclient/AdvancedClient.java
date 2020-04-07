@@ -1051,6 +1051,7 @@ public class AdvancedClient  {
  
     
     public void resetState() {
+        ProgramState oldps = ps;
         ps = new ProgramState();
         if (sm == null) 
             return;
@@ -1058,7 +1059,11 @@ public class AdvancedClient  {
         if (sm.getWallets().length != 0) {
             setActiveWallet(sm.getWallets()[0]);
             ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
-        }         
+        }        
+        
+        if (oldps != null)
+            ps.isEchoFinished = oldps.isEchoFinished;
+        
     }
     
     public void showScreen() {
