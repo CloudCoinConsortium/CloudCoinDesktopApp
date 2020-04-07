@@ -8,6 +8,7 @@ import java.io.PrintWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
 
 
 public abstract class GLogger implements GLoggerInterface {
@@ -15,6 +16,11 @@ public abstract class GLogger implements GLoggerInterface {
     PrintWriter channel;
     String fileName;
 
+    protected Map<String, PrintWriter> channels;
+    protected Map<String, String> fileNames;
+    
+    //protected String[] channelKeys;
+    
     public void info(String tag, String message) {
         onLog(GLoggerInterface.GL_INFO, tag, message);
     }
@@ -31,10 +37,11 @@ public abstract class GLogger implements GLoggerInterface {
         onLog(GLoggerInterface.GL_ERROR, tag, message);
     }
 
-    public boolean openCommonFile(String file) {
+    public PrintWriter openCommonFile(String file) {
         File f = new File(file);
         BufferedWriter br;
         FileWriter fr;
+        PrintWriter c;
         
         if (f.exists()) {
             double bytes = f.length();
@@ -44,22 +51,47 @@ public abstract class GLogger implements GLoggerInterface {
             f = new File(file);
         }
 
-        fileName = file;
         try {
             fr = new FileWriter(file, true);
             br = new BufferedWriter(fr, Config.LOG_BUFFER_SIZE);
-            channel = new PrintWriter(br);
+            c = new PrintWriter(br);
         } catch (IOException e) {
-            return false;
+            return null;
         }
 
-        return true;
+        return c;
     }
 
-    public synchronized void logCommon(String text) {
-        if (channel == null) {
-            if (!openCommonFile(AppCore.getLogDir() +  File.separator + Config.MAIN_LOG_FILENAME))
-                return;
+    public synchronized void logCommon(String key, String text) {
+        PrintWriter curChannel = null;
+        
+        if (channels.containsKey(key)) {
+            PrintWriter subChannel = channels.get(key);
+            if (subChannel == null) {
+                String fname = AppCore.getLogDir() +  File.separator + key + File.separator + key + ".log";                    
+                subChannel = openCommonFile(fname);
+                if (subChannel != null) {
+                    channels.put(key, subChannel);
+                    fileNames.put(key, fname);
+                    curChannel = subChannel;
+                }          
+            } else {
+                curChannel = channels.get(key);
+            }     
+        }
+
+        if (curChannel == null) {
+            if (channel == null) {
+                String fname = AppCore.getLogDir() +  File.separator + Config.MAIN_LOG_FILENAME;
+                curChannel = openCommonFile(fname);
+                if (curChannel == null)
+                    return;
+             
+                fileName = fname;
+                channel = curChannel;
+            } else {
+                curChannel = channel;
+            }
         }
 
         DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
@@ -68,11 +100,29 @@ public abstract class GLogger implements GLoggerInterface {
 
         text = dateText + " " + text;
 
-        channel.println(text);
-        channel.flush();
+        curChannel.println(text);
+        curChannel.flush();
     }
 
     public void killMe() {
+        for (Map.Entry<String,PrintWriter> entry : channels.entrySet()) {
+            String key = entry.getKey();
+            PrintWriter sc = entry.getValue();
+            
+            if (sc == null)
+                continue;
+            
+            sc.close();
+            
+            String path = fileNames.get(key);
+            if (path == null)
+                continue;
+            
+            File f = new File(path);
+            if (f.exists())
+                f.delete();    
+        }
+
         if (channel == null)
             return;
         

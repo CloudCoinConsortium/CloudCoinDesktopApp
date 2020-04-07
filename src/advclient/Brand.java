@@ -44,54 +44,9 @@ public class Brand {
     GLogger logger;
     String brandDir;
 
-    
-    
-    
-//    String terms;
     String title;
     String versionOffset;
-/*    
-    String logo;
-    String logoText;
-    String backgroundImage;
-    String icon;
-    String depositIcon;
-    String withdrawIcon;
-    String transferIcon;
-    String depositIconHover;
-    String withdrawIconHover;
-    String transferIconHover;
-    String supportIcon;
-    String settingsIcon;
-    String coinsIcon;
-    String supportHtmlIcon;
-    String supportTimeIcon;
-    String supportPhoneIcon;
-    String supportEmailIcon;
-    String supportPortalIcon;
-    String walletIcon;
-    String walletIconActive;
-    String vaultIcon;
-    String vaultIconActive;
-    String lockIcon;
-    String lockIconActive;
-    String cloudIcon;
-    String cloudIconActive;
-    String coinsInventoryIcon;
-    
-    String templatePng;
-    String templateJpeg1;
-    String templateJpeg5;
-    String templateJpeg25;
-    String templateJpeg100;
-    String templateJpeg250;
-    
-    String mainFont;
-    String mainFontSemiBold;
-    String mainFontBold;
-    String secondFont;
-    String secondFontSemiBold;
-*/    
+
     String supportEmail;
     String supportPage;
     String supportTime;
