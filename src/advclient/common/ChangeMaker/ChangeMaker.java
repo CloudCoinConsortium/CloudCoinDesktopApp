@@ -166,6 +166,7 @@ public class ChangeMaker extends Servant {
 
                     if (ccs[k].sn == rsn) {
                         ccs[k].ans[i] = ran;
+                        ccs[k].setDetectStatus(i, CloudCoin.STATUS_PASS);
                         found = true;
                         break;
                     }
@@ -177,6 +178,8 @@ public class ChangeMaker extends Servant {
                             found = true;
                             ccs[k] = new CloudCoin(rnn, rsn);
                             ccs[k].ans[i] = ran;
+                            ccs[k].setDetectStatus(i, CloudCoin.STATUS_PASS);
+                            
                             break;
                         }
                     }
@@ -190,22 +193,35 @@ public class ChangeMaker extends Servant {
         }
 
         logger.debug(ltag, "Error count: " + cntErr);
+        /*
         if (cntErr >= RAIDA.TOTAL_RAIDA_COUNT - Config.PASS_THRESHOLD) {
             logger.error(ltag, "Too many errors: " + cntErr);
             cr.errText = "Failed to get change. Too many errors from RAIDA: " + cntErr;
             cr.status = ChangeMakerResult.STATUS_ERROR;
             return;    
         }
-        
-        String dir = AppCore.getUserDir(Config.DIR_SUSPECT, user);
+        */
+        //String dir = AppCore.getUserDir(Config.DIR_SUSPECT, user);
+        String dir = AppCore.getUserDir(Config.DIR_DETECTED, user);
         String file;
+        boolean isError = false;
         for (int i = 0; i < ccs.length; i++) {
             if (ccs[i] == null)
                 continue;
 
-            file = dir + File.separator + ccs[i].getFileName();
-            logger.info(ltag, "Saving coin " + file);
-            if (!AppCore.saveFile(file, ccs[i].getJson(false))) {
+            ccs[i].setPansToAns();
+            ccs[i].setPownStringFromDetectStatus();
+            file = dir + File.separator + ccs[i].getFileName();  
+            
+            logger.info(ltag, "Saving coin " + file + " p=" + ccs[i].getPownString());
+            
+            if (!ccs[i].isSentFixable()) {
+                logger.error(ltag, "Too many errors for coin: " + ccs[i].sn + ". Will skip it");
+                isError = true;
+                continue;
+            }
+
+            if (!AppCore.saveFile(file, ccs[i].getJson())) {
                 logger.error(ltag, "Failed to move coin to Import: " + ccs[i].getFileName());
                 continue;
             }
@@ -214,6 +230,14 @@ public class ChangeMaker extends Servant {
         }
 
         AppCore.moveToFolderNoTs(cc.originalFile, Config.DIR_SENT, user, true);
+        
+        if (isError) {
+            logger.error(ltag, "Error occured during making change");
+            cr.errText = "Failed to get change. Too many errors from RAIDA servers";
+            cr.status = ChangeMakerResult.STATUS_ERROR;
+            return;    
+        }
+        
 
         addCoinToReceipt(cc, "authentic", "Sent to Public Change");
         saveReceipt(user, 1, 0, 0, 0, 0, 0);

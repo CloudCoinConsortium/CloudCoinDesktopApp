@@ -60,7 +60,7 @@ import javax.swing.table.TableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.38";
+    String version = "2.1.39";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -1891,6 +1891,7 @@ public class AdvancedClient  {
                     }
                 }
 
+                /*
                 if (ps.dstWallet != null && ps.dstWallet.isSkyWallet()) {
                     ps.isCheckingSkyID = true;
                     skyCC = ps.dstWallet.getIDCoin();
@@ -1926,7 +1927,7 @@ public class AdvancedClient  {
                         }         
                     }
                 }
-
+                */
                 
                 
                 String dstName =  (ps.foundSN == 0) ? ps.dstWallet.getName() : "" + ps.foundSN;

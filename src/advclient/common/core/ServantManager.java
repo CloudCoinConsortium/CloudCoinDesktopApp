@@ -830,10 +830,16 @@ public class ServantManager {
                 if (cmr.status == ChangeMakerResult.STATUS_FINISHED) {
                 
                     w.appendTransaction("Sent to Public Change", cc.getDenomination() * -1, cmr.receiptId);
-                    mcr.text = "Authenticating Coins from Public Change";
+                    //mcr.text = "Authenticating Coins from Public Change";
+                    //if (cb != null)
+                    //    cb.callback(mcr);
+                    mcr.text = "Grading Coins from Public Change";
                     if (cb != null)
                         cb.callback(mcr);
+                    
+                    startGraderService(new eGraderCb(cb, w), null, w.getName());
             
+                    /*
                     startAuthenticatorService(new CallbackInterface() {
                         public void callback(Object result) {
                             logger.debug(ltag, "Authenticator for Change finished");
@@ -866,6 +872,7 @@ public class ServantManager {
                             }
                         }
                     });
+                    */
                 }
                 
             }
