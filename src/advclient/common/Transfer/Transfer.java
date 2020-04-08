@@ -348,13 +348,14 @@ public class Transfer extends Servant {
 
         boolean failed = false;
         for (CloudCoin tcc : ccs) {
-            //tcc.setPownStringFromDetectStatus();
+            tcc.setPownStringFromDetectStatus();
             
-            int cnt = AppCore.getPassedCount(tcc);
+            //int cnt = AppCore.getPassedCount(tcc);
             
             logger.info(ltag, "cc " + tcc.sn + " " + tcc.getPownString());
             
-            if (cnt < Config.PASS_THRESHOLD) {
+            //if (cnt < Config.PASS_THRESHOLD) {
+            if (!cc.isSentFixable()) {
                 logger.error(ltag, "Coin " + tcc.sn + " was not transferred. PassCount: " + tcc.sn);
                 failed = true;
             }

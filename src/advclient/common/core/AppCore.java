@@ -1114,6 +1114,20 @@ public class AppCore {
         return sidx + " " + countries[idx];
 
     }
+    
+    public static int getCounterfeitCount(CloudCoin cc) {
+        int c = 0;
+
+        for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+            if (cc.getDetectStatus(i) == CloudCoin.STATUS_FAIL)
+                c++;
+        }
+        
+        cc.setPownStringFromDetectStatus();
+        logger.debug(ltag, "Counterfeit count " + c + " cc " + cc.sn + " pown=" + cc.getPownString());
+        
+        return c;
+    }
 
     public static int getErrorCount(CloudCoin cc) {
         int error = 0;

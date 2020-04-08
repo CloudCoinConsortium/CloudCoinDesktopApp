@@ -374,14 +374,17 @@ public class Sender extends Servant {
             String ccFile = cc.originalFile;
             passed = failed = 0;
             for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+                System.out.println("st="+i+ " st="+cc.getDetectStatus(i));
                 if (cc.getDetectStatus(i) == CloudCoin.STATUS_PASS)
                     passed++;
                 else if (cc.getDetectStatus(i) == CloudCoin.STATUS_FAIL)
                     failed++;
             }
+            
+            cc.setPownStringFromDetectStatus();
 
-            logger.info(ltag, "Doing " + cc.originalFile + " pass="+passed + " f="+failed);
-            if (passed >= Config.PASS_THRESHOLD) {
+            logger.info(ltag, "Doing " + cc.originalFile + " pass="+passed + " f="+failed + " pown=" + cc.getPownString());
+            if (cc.isSentFixable()) {
                 logger.info(ltag, "Moving to Sent: " + cc.sn);
                 globalResult.amount += cc.getDenomination();
                 addCoinToReceipt(cc, "authentic", "Remote Wallet " + remoteWalletName);

@@ -103,6 +103,22 @@ public class AdvancedClient  {
     public AdvancedClient() {
         wl = new WLogger();
 
+        /*
+        CloudCoin cc = new CloudCoin(1, 20);
+        for (int i = 0; i <25; i++)
+            cc.setDetectStatus(i, CloudCoin.STATUS_PASS);
+        
+        int[] r = {10, 11, 12, 13, 24};
+        for (int i = 0; i < r.length; i++)
+            cc.setDetectStatus(r[i], CloudCoin.STATUS_FAIL);
+
+        cc.setPownStringFromDetectStatus();
+        
+        System.out.println("x="+cc.getPownString() + " res="+cc.isSentFixableRows() + " cols="+cc.isSentFixableColumns());
+        
+        System.exit(1);
+        */
+        
         
         String home = System.getProperty("user.home");
         resetState();
@@ -195,7 +211,6 @@ public class AdvancedClient  {
             wl.debug(ltag, e.toString());
         }
         
-        brandName = "EthBold";
         brand = new Brand(brandName, wl);
         if (!brand.init(new CallbackInterface() {
             public void callback(Object o) {
@@ -1868,9 +1883,11 @@ public class AdvancedClient  {
                         showScreen();
                         return;
                     } else if (AppCore.getPassedCount(skyCC) != RAIDA.TOTAL_RAIDA_COUNT) {
-                        ps.currentScreen = ProgramState.SCREEN_WARN_FRACKED_TO_SEND;
-                        showScreen();
-                        return;
+                        if (AppCore.getCounterfeitCount(skyCC) > 0) {
+                            ps.currentScreen = ProgramState.SCREEN_WARN_FRACKED_TO_SEND;
+                            showScreen();
+                            return;
+                        }
                     }
                 }
 
@@ -1901,10 +1918,12 @@ public class AdvancedClient  {
                     }
 
                     if (AppCore.getPassedCount(skyCC) != RAIDA.TOTAL_RAIDA_COUNT) {
-                        ps.srcWallet = ps.dstWallet;
-                        ps.currentScreen = ProgramState.SCREEN_WARN_FRACKED_TO_SEND;
-                        showScreen();
-                        return;
+                        if (AppCore.getCounterfeitCount(skyCC) > 0) {
+                            ps.srcWallet = ps.dstWallet;
+                            ps.currentScreen = ProgramState.SCREEN_WARN_FRACKED_TO_SEND;
+                            showScreen();
+                            return;
+                        }         
                     }
                 }
 
@@ -2080,9 +2099,11 @@ public class AdvancedClient  {
                         showScreen();
                         return;
                     } else if (AppCore.getPassedCount(skyCC) != RAIDA.TOTAL_RAIDA_COUNT) {
-                        ps.currentScreen = ProgramState.SCREEN_WARN_FRACKED_TO_SEND;
-                        showScreen();
-                        return;
+                        if (AppCore.getCounterfeitCount(skyCC) > 0) {
+                            ps.currentScreen = ProgramState.SCREEN_WARN_FRACKED_TO_SEND;
+                            showScreen();
+                            return;
+                        }
                     }
                 }
                 
@@ -2204,9 +2225,11 @@ public class AdvancedClient  {
                         showScreen();
                         return;
                     } else if (AppCore.getPassedCount(skyCC) != RAIDA.TOTAL_RAIDA_COUNT) {
-                        ps.currentScreen = ProgramState.SCREEN_WARN_FRACKED_TO_SEND;
-                        showScreen();
-                        return;
+                        if (AppCore.getCounterfeitCount(skyCC) > 0) {
+                            ps.currentScreen = ProgramState.SCREEN_WARN_FRACKED_TO_SEND;
+                            showScreen();
+                            return;
+                        }
                     }
                 }
                 
