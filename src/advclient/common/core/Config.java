@@ -205,7 +205,8 @@ public class Config {
     
     final public static String DEFAULT_BRAND_NAME = "CloudCoin";
     
-    final public static String BRAND_URL = "http://10.1.1.190:3000";
+    //final public static String BRAND_URL = "http://10.1.1.190:3000";
+    final public static String BRAND_URL = "https://raida.tech";
     
-    final public static String BRAND_CONFIG_NAME = "config.ini";
+    final public static String BRAND_CONFIG_NAME = "config.ini.txt";
 }

@@ -18,8 +18,10 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GraphicsEnvironment;
+import java.awt.Image;
 import java.awt.Insets;
 import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -254,7 +256,7 @@ public class Brand {
     }
     
     public boolean downloadConfig() {
-        String url = Config.BRAND_URL + "/" + name + "/config.ini";
+        String url = Config.BRAND_URL + "/" + name + "/" + Config.BRAND_CONFIG_NAME;
         DetectionAgent daFake = new DetectionAgent(RAIDA.TOTAL_RAIDA_COUNT * 10000, logger);
         daFake.setExactFullUrl(url);
 
@@ -870,6 +872,45 @@ public class Brand {
         
         return "" + omajor + "." + ominor + "." + obuildNumber;
         
+    }
+    
+    
+    public Image getScaledImage(Image img, int maxWidth, int maxHeight) {
+        BufferedImage bimg = (BufferedImage) img;
+        Image resultImage = (Image) bimg;
+        int height = bimg.getHeight();
+        int width = bimg.getWidth();
+        
+        
+        double ratio = (double) width / (double) height;
+        
+        if (height > maxHeight) {
+            height = maxHeight;
+            width = (int) (height * ratio);
+            if (width > maxWidth) {
+                width = maxWidth;
+                height = (int) (width / ratio);
+            }
+        } else if (width > maxWidth) {
+            width = maxWidth;
+            height = (int) (width / ratio);
+            if (height > maxHeight) {
+                height = maxHeight;
+                width = (int) (height / ratio);
+            }
+        }
+    
+        resultImage = resultImage.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+
+        return resultImage;
+    }
+
+    public Image scaleLogo(Image img) {
+        return getScaledImage(img, 54, 54);
+    }
+    
+    public Image scaleLogoText(Image img) {
+        return getScaledImage(img, 135, 23);
     }
     
     public Color colorFromHex(String colorStr) {

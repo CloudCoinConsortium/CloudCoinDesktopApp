@@ -195,6 +195,7 @@ public class AdvancedClient  {
             wl.debug(ltag, e.toString());
         }
         
+        brandName = "EthBold";
         brand = new Brand(brandName, wl);
         if (!brand.init(new CallbackInterface() {
             public void callback(Object o) {
@@ -570,9 +571,11 @@ public class AdvancedClient  {
             icon1 = new JLabel(new ImageIcon(img));
 
             img = ImageIO.read(brand.getImgLogoText());
+            img = brand.scaleLogoText(img);
             icon2 = new JLabel(new ImageIcon(img));
             
             img = ImageIO.read(brand.getImgLogo());
+            img = brand.scaleLogo(img);
             icon3 = new JLabel(new ImageIcon(img));
             
             img = ImageIO.read(brand.getImgDepositIcon());
