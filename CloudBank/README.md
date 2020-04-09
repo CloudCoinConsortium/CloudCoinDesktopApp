@@ -47,48 +47,53 @@ SAMPLE RESPONSE IF NO COINS WERE SENT:
 	"version": "yyyy/MM/dd HH:mm:ss"
 }
 ```
-## Receive Command
+
+SAMPLE RESPONSE IF MISSING PARAMETERS:
+```json
+{
+	"status": "dud",
+	"message": "The parameters $missing was not included or not valid.",
+	"time": "yyyy/MM/dd HH:mm:ss",
+	"version": "yyyy/MM/dd HH:mm:ss"
+}
+```
+
+## Receive Memo Command
 This is a command used to check and see if payment was received so that goods and services can be provided. The program will recognize the 
 payment based on its memo/tag. 
 
 SAMPLE RECEIVE COMMAND
-```ini
-[command]
-user=jim
-password=ee9df0b377ec434088bcc08b41ae8aaa
-command=receive
-
-[receive]
-to_wallet=general
-amount_expected=349
-skywallet=sean.cloudcoin.global
-meme=iiujiieu7er
+```http
+https://localhost/commands/receive_memo?user=jim&password=ee9df0b377ec434088bcc08b41ae8aaa&local_wallet=general&local_wallet_password=a7dc8be5e03548fc8378486b12f3c6a7&from_skywallet=sean.cloudcoin.global&memo=for%20purchase%20of%20dollars
 ```
 
-SAMPLE RESPONSE IF ALL WAS RECEIVED
-```ini
-[response]
-memo=iiujiieu7er
-TotalReceived=250
-status=all received
-message=All coins were received
+SAMPLE RESPONSE IF COINS WERE RECEIVED
+```json
+{
+	"status": "received",
+	"message": "250 coins were received from sean.cloudcoin.global using memo for purchase of dollars",
+	"time": "yyyy/MM/dd HH:mm:ss",
+	"version": "yyyy/MM/dd HH:mm:ss"
+}
 ```
 SAMPLE RESPONSE IF SOME WAS RECEIVED
-```ini
-[response]
-memo=iiujiieu7er
-TotalReceived=349
-status=all received
-message=Some coins were received
+```json
+{
+	"status": "received",
+	"message": "250 coins were received from sean.cloudcoin.global using memo for purchase of dollars",
+	"time": "yyyy/MM/dd HH:mm:ss",
+	"version": "yyyy/MM/dd HH:mm:ss"
+}
 ```
 
-SAMPLE RESPONSE IF NONE WAS RECEIVED
-```ini
-[response]
-memo=iiujiieu7er
-TotalReceived=0
-status=none received
-message=No coins were received
+SAMPLE RESPONSE PARAMETERS WERE MISSING OR NOT VALID
+```json
+{
+	"status": "dud",
+	"message": "The parameters $missing was not included or not valid.",
+	"time": "yyyy/MM/dd HH:mm:ss",
+	"version": "yyyy/MM/dd HH:mm:ss"
+}
 ```
 
 ## Optimize Change
