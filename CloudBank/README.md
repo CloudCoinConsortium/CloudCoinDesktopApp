@@ -83,7 +83,7 @@ status=all received
 message=All coins were received
 ```
 SAMPLE RESPONSE IF SOME WAS RECEIVED
-```int
+```ini
 [response]
 memo=iiujiieu7er
 TotalReceived=349
@@ -92,7 +92,7 @@ message=Some coins were received
 ```
 
 SAMPLE RESPONSE IF NONE WAS RECEIVED
-```int
+```ini
 [response]
 memo=iiujiieu7er
 TotalReceived=0
@@ -102,16 +102,20 @@ message=No coins were received
 
 ## Optimize Change
 
-The optimize change algorith is run after a "Send" command completes. It must ensure that there is enough change so that the next send command will not be delayed. 
+The optimize change algorith is run after a "Send" command completes. It must ensure that there is enough change so that the next send command will not be delayed. It could be that the user is able to decide which wallets with have changed optimized on. It could be a setting. 
 
 This can run one time durning the CloudCoin Wallet Startup. Then one time after each send command. 
 
 It will check to see that there are: 
+```
 5 ones.
-4 fives. 
-3 twentyfives.
-2 hundreds.
 
+4 fives. 
+
+3 twentyfives.
+
+2 hundreds.
+```
 If a local wallet does not have this change, it will use the "change" service on the RAIDA to break the largest note. 
 
 
