@@ -33,6 +33,7 @@ wallet_password=a7dc8be5e03548fc8378486b12f3c6a7
 SAMPLE RESPONSE IF ALL IS GOOD
 
 ```ini
+[response]
 memo=88773243
 status=AllSent
 TotalSend=250
@@ -40,6 +41,7 @@ message=All coins send to sean.cloudcoin.global
 ```
 SAMPLE RESPONSE IF ONLY SOME COINS WERE SENT:
 ```ini
+[response]
 memo=88773243
 TotalSend=SomeSent
 status=Some
@@ -47,6 +49,7 @@ message=Some coins send to sean.cloudcoin.global
 ```
 SAMPLE RESPONSE IF NO COINS WERE SENT:
 ```ini
+[response]
 memo=88773243
 TotalSend=0
 status=NoneSent
@@ -66,18 +69,53 @@ command=receive
 
 [receive]
 to_wallet=general
-amount_expected:
+amount_expected=349
 skywallet=sean.cloudcoin.global
 meme=iiujiieu7er
 ```
 
-#SAMPLE RESPONSE IF ALL WAS RECEIVED
+SAMPLE RESPONSE IF ALL WAS RECEIVED
 ```int
-
+[response]
 memo=iiujiieu7er
 TotalReceived=250
-status=S
-message=Some coins send to sean.cloudcoin.global
+status=all received
+message=All coins were received
+```
+SAMPLE RESPONSE IF SOME WAS RECEIVED
+```int
+[response]
+memo=iiujiieu7er
+TotalReceived=349
+status=all received
+message=Some coins were received
+```
+
+SAMPLE RESPONSE IF NONE WAS RECEIVED
+```int
+[response]
+memo=iiujiieu7er
+TotalReceived=0
+status=none received
+message=No coins were received
+```
+
+## Optimize Change
+
+The optimize change algorith is run after a "Send" command completes. It must ensure that there is enough change so that the next send command will not be delayed. 
+
+This can run one time durning the CloudCoin Wallet Startup. Then one time after each send command. 
+
+It will check to see that there are: 
+5 ones.
+4 fives. 
+3 twentyfives.
+2 hundreds.
+
+If a local wallet does not have this change, it will use the "change" service on the RAIDA to break the largest note. 
+
+
+
 
 
 
