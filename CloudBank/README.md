@@ -24,7 +24,7 @@ SAMPLE RESPONSE IF ALL IS GOOD
 ```json
 {
 	"status": "all_sent",
-	"message": "250 coins send to sean.cloudcoin.global using memo 88773243",
+	"message": "250 coins were sent to sean.cloudcoin.global using memo 88773243",
 	"time": "yyyy/MM/dd HH:mm:ss",
 	"version": "yyyy/MM/dd HH:mm:ss"
 }
@@ -33,7 +33,7 @@ SAMPLE RESPONSE IF ONLY SOME COINS WERE SENT:
 ```json
 {
 	"status": "some_sent",
-	"message": "150 coins send to sean.cloudcoin.global using memo 88773243",
+	"message": "150 coins were sent to sean.cloudcoin.global using memo 88773243",
 	"time": "yyyy/MM/dd HH:mm:ss",
 	"version": "yyyy/MM/dd HH:mm:ss"
 }
@@ -42,7 +42,7 @@ SAMPLE RESPONSE IF NO COINS WERE SENT:
 ```json
 {
 	"status": "fail",
-	"message": "0 coins send to sean.cloudcoin.global using memo 88773243",
+	"message": "0 coins were sent to sean.cloudcoin.global using memo 88773243",
 	"time": "yyyy/MM/dd HH:mm:ss",
 	"version": "yyyy/MM/dd HH:mm:ss"
 }
