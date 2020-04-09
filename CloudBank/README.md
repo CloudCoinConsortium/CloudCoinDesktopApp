@@ -75,7 +75,7 @@ meme=iiujiieu7er
 ```
 
 SAMPLE RESPONSE IF ALL WAS RECEIVED
-```int
+```ini
 [response]
 memo=iiujiieu7er
 TotalReceived=250
