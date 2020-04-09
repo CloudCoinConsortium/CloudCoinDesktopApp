@@ -1259,6 +1259,48 @@ public class AppCore {
         int[] vsns;
         
         logger.debug(ltag, "Getting overlapped sns");
+        HashMap<Integer, CloudCoin> hm = new HashMap<Integer, CloudCoin>();
+        for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+            for (int j = 0; j < sns[i].length; j++) {
+                int sn = sns[i][j];
+                CloudCoin cc;
+                
+                if (!hm.containsKey(sn)) {
+                    cc = new CloudCoin(Config.DEFAULT_NN, sn);
+                    cc.setDetectStatus(i, CloudCoin.STATUS_PASS);
+                    hm.put(sn, cc);                 
+                    continue;
+                }
+                
+                cc = hm.get(sn);
+                cc.setDetectStatus(i, CloudCoin.STATUS_PASS);
+            }
+        }
+        
+        int valid = 0;
+        ArrayList<CloudCoin> coins = new ArrayList<CloudCoin>();
+        Iterator it = hm.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry) it.next();
+            CloudCoin cc = (CloudCoin) pair.getValue();            
+            cc.setPownStringFromDetectStatus();
+            
+            if (!cc.isSentFixable()) {
+                logger.debug(ltag, "Skipping coin: " + cc.sn + " p=" + cc.getPownString());
+                continue;
+            }
+            
+            coins.add(cc);           
+        }
+        
+        int[] rsns = new int[coins.size()];
+        for (int i = 0; i < coins.size(); i++)
+            rsns[i] = coins.get(i).sn;
+        
+
+        return rsns;
+        
+        /*
         HashMap<Integer, Integer> hm = new HashMap<Integer, Integer>();
 
         for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
@@ -1315,6 +1357,7 @@ public class AppCore {
         }
         
         return rsns;
+                */
     }  
     
     public static int getChangeMethod(int denomination) {
