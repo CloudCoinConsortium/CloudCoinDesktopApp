@@ -331,32 +331,41 @@ public class CloudCoin {
     }
 
     public void generatePans(String email) {
-	String component;
-	String p0, p1;
-
 	for (int i = 0; i < ans.length; i++) {
-            pans[i] = generatePan().toLowerCase();
-
-            if (!email.equals("")) {
-		component = "" + sn + "" + i + email;
-		component = AppCore.getMD5(component);
-		if (component == null)
-                    continue;
-
-		p0 = pans[i].substring(0, 24);
-		p1 = component.substring(0, 8).toLowerCase();
-
-		pans[i] = p0 + p1;
-            }
+            pans[i] = generatePan(i, email);
     	}
+    }
+    
+    public String generatePan(int idx, String email) {
+        String pan = AppCore.generateHex().toLowerCase();
+        String component;
+	String p0, p1;
+        
+        if (email == null)
+            return pan;
+        
+        if (email.equals(""))
+            return pan;
+        
+        component = "" + sn + "" + idx + email;
+	component = AppCore.getMD5(component);
+	if (component == null)
+            return pan;
+
+	p0 = pan.substring(0, 24);
+	p1 = component.substring(0, 8).toLowerCase();
+        
+        pan = p0 + p1;
+        
+        return pan;
     }
 
     private String generatePan() {
         return AppCore.generateHex();
     }
         
-    public void createAn(int idx) {
-        ans[idx] = generatePan().toLowerCase();
+    public void createAn(int idx, String email) {
+        ans[idx] = generatePan(idx, email);
     }
         
     public int getDenomination() {  

@@ -288,12 +288,12 @@ public class ServantManager {
         return !sr.isRunning("Echoer");
     }
     
-    public void startFrackFixerService(CallbackInterface cb, boolean needExtensive) {
+    public void startFrackFixerService(CallbackInterface cb, boolean needExtensive, String email) {
         if (sr.isRunning("FrackFixer"))
             return;
         
         FrackFixer ff = (FrackFixer) sr.getServant("FrackFixer");
-	ff.launch(cb, needExtensive);
+	ff.launch(cb, needExtensive, email);
     }
     
     public void startUnpackerService(CallbackInterface cb) {
@@ -910,7 +910,7 @@ public class ServantManager {
             if (cb != null)
                 cb.callback(mcr);
             
-            startFrackFixerService(new eFrackFixerCb(cb, w), false);
+            startFrackFixerService(new eFrackFixerCb(cb, w), false, w.getEmail());
         }
     }
     

@@ -1439,7 +1439,7 @@ public class AdvancedClient  {
                 } catch (InterruptedException e) {}
 
                 sm.setActiveWalletObj(ps.srcWallet);                
-                sm.startFrackFixerService(new FrackFixerOnPurposeCb(), ps.needExtensiveFixing);
+                sm.startFrackFixerService(new FrackFixerOnPurposeCb(), ps.needExtensiveFixing, ps.srcWallet.getEmail());
             }
         });
         
@@ -4084,7 +4084,6 @@ public class AdvancedClient  {
                         if (scresult.status != ShowEnvelopeCoinsResult.STATUS_FINISHED)
                             return;
                         
-                        wl.debug(ltag, "ShowEnvelopeCoins done");
                         w.setSNs(scresult.coins);
                         w.setEnvelopes(scresult.envelopes);
                                 
@@ -4096,8 +4095,6 @@ public class AdvancedClient  {
                         w.setCounters(counters);
                         walletSetTotal(w, totalCnt);
                         setTotalCoins();
-                        
-                        wl.debug(ltag, "ShowEnvelopeCoins return");
                     }
                 });
             } else {              
@@ -8491,7 +8488,7 @@ public class AdvancedClient  {
                 }
             });
 
-            sm.startFrackFixerService(new FrackFixerCb(), false);           
+            sm.startFrackFixerService(new FrackFixerCb(), false, w.getEmail());           
 	}
     }
 

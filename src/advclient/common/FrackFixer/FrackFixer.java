@@ -27,7 +27,7 @@ public class FrackFixer extends Servant {
         super("FrackFixer", rootDir, logger);
     }
 
-    public void launch(CallbackInterface icb, boolean needExtensive) {
+    public void launch(CallbackInterface icb, boolean needExtensive, String email) {
         this.cb = icb;
 
         fr = new FrackFixerResult();
@@ -46,7 +46,7 @@ public class FrackFixer extends Servant {
             @Override
             public void run() {
                 logger.info(ltag, "RUN (Detached) FrackFixer");
-                doFrackFix(needExtensive);
+                doFrackFix(needExtensive, email);
                 
                 raida.setReadTimeout(Config.READ_TIMEOUT);
             }
@@ -66,7 +66,7 @@ public class FrackFixer extends Servant {
 
     }
 
-    public boolean initNeighbours() {
+    public boolean initNeighbours(int protocol) {
         int sideSize;
 
         sideSize= (int) Math.sqrt(RAIDA.TOTAL_RAIDA_COUNT);
@@ -92,7 +92,7 @@ public class FrackFixer extends Servant {
 
             trustedTriads[i] = new int[4][];
             
-            if (Config.FIX_PROTOCOL_VERSION == 4) {
+            if (protocol == 4) {
                 trustedTriads[i][0] = new int[] { trustedServers[i][0], trustedServers[i][1], trustedServers[i][3], trustedServers[i][7] };
                 trustedTriads[i][1] = new int[] { trustedServers[i][1], trustedServers[i][2], trustedServers[i][4], trustedServers[i][5] };
                 trustedTriads[i][2] = new int[] { trustedServers[i][3], trustedServers[i][5], trustedServers[i][6], trustedServers[i][2] };
@@ -150,10 +150,9 @@ public class FrackFixer extends Servant {
         }   
     }
     
-    public void doFrackFix(boolean needExtensive) {
-        System.out.println("x="+needExtensive);
-        System.exit(1);
-        if (!initNeighbours()) {
+    public void doFrackFix(boolean needExtensive, String email) {
+        int protocol = needExtensive ? 3 : 4;
+        if (!initNeighbours(protocol)) {
             fr.status = FrackFixerResult.STATUS_ERROR;
             if (cb != null)
                 cb.callback(fr);
@@ -254,23 +253,25 @@ public class FrackFixer extends Servant {
                 
                 if (ccactive.size() == maxCoins) {
                     logger.info(ltag, "Doing fix. maxCoins " + maxCoins);
-                    doRealFix(i, ccactive);
+                    doRealFix(i, ccactive, needExtensive, email);
                     ccactive.clear();
-                                        
-                    nfr = new FrackFixerResult();
-                    fr.totalRAIDAProcessed = 0;
-                    fr.totalFilesProcessed += maxCoins;
-                    fr.totalCoinsProcessed = curValProcessed;
+                                
+                    if (!needExtensive) {
+                        nfr = new FrackFixerResult();
+                        fr.totalRAIDAProcessed = 0;
+                        fr.totalFilesProcessed += maxCoins;
+                        fr.totalCoinsProcessed = curValProcessed;
 
-                    copyFromMainFr(nfr);
-                    if (cb != null)
-                        cb.callback(nfr);   
+                        copyFromMainFr(nfr);
+                        if (cb != null)
+                            cb.callback(nfr);   
+                    }
                 }
             }
 
             if (ccactive.size() > 0) {
                 logger.info(ltag, "Doing rest fix.  " + ccactive.size());
-                doRealFix(i, ccactive);            
+                doRealFix(i, ccactive, needExtensive, email);            
                 ccactive.clear();  
             }         
         }
@@ -309,23 +310,25 @@ public class FrackFixer extends Servant {
                 
                 if (ccactive.size() == maxCoins) {
                     logger.info(ltag, "Doing fix. maxCoins " + maxCoins);
-                    doRealFix(i, ccactive);
+                    doRealFix(i, ccactive, needExtensive, email);
                     ccactive.clear();
-                                        
-                    nfr = new FrackFixerResult();
-                    fr.totalRAIDAProcessed = 0;
-                    fr.totalFilesProcessed += maxCoins;
-                    fr.totalCoinsProcessed = curValProcessed;
+                     
+                    if (!needExtensive) {
+                        nfr = new FrackFixerResult();
+                        fr.totalRAIDAProcessed = 0;
+                        fr.totalFilesProcessed += maxCoins;
+                        fr.totalCoinsProcessed = curValProcessed;
 
-                    copyFromMainFr(nfr);
-                    if (cb != null)
-                        cb.callback(nfr);   
+                        copyFromMainFr(nfr);
+                        if (cb != null)
+                            cb.callback(nfr);   
+                    }
                 }
             }
 
             if (ccactive.size() > 0) {
                 logger.info(ltag, "Doing rest fix.  " + ccactive.size());
-                doRealFix(i, ccactive);            
+                doRealFix(i, ccactive, needExtensive, email);            
                 ccactive.clear();
             }         
         }
@@ -341,22 +344,175 @@ public class FrackFixer extends Servant {
             cb.callback(nfr);
     }
 
-    private void doRealFix(int raidaIdx, ArrayList<CloudCoin> ccs) {
+    private void doRealFix(int raidaIdx, ArrayList<CloudCoin> ccs, boolean needExtensive, String email) {
         int corner;
-
-        logger.debug(ltag, "Fixing " + ccs.size() + " coins on the RAIDA" + raidaIdx);
+  
+        logger.debug(ltag, "Fixing " + ccs.size() + " coins on the RAIDA" + raidaIdx + " needExtensive " + needExtensive);
+        if (needExtensive) {
+            FrackFixerResult nfr = new FrackFixerResult();
+            logger.debug(ltag, "Doing Fix");
+            for (CloudCoin cc : ccs) {
+                fr.totalRAIDAProcessed = 0;
+                for (corner = 0; corner < 4; corner++) {
+                    logger.debug(ltag, "corner=" + corner);
+                    if (fixCoinInCorner(raidaIdx, corner, cc, email)) {
+                        logger.debug(ltag, "Fixed successfully: " + cc.sn);
+                        syncCoin(raidaIdx, cc);
+                        break;
+                    }
+                }                
+                fr.totalFilesProcessed++;
+                fr.totalCoinsProcessed += cc.getDenomination();
+                copyFromMainFr(nfr);
+                if (cb != null)
+                    cb.callback(nfr);                
+            }
+            return;
+        }
+        
+        logger.debug(ltag, "Doing multi-fix");
         for (corner = 0; corner < 4; corner++) {
             logger.debug(ltag, "corner=" + corner);
 
-            if (fixCoinsInCorner(raidaIdx, corner, ccs)) {
+            if (fixCoinsInCorner(raidaIdx, corner, ccs, email)) {
                 logger.debug(ltag, "Fixed successfully");
                 syncCoins(raidaIdx, ccs);
                 break;
             }
         }
     }
+    
+     public boolean fixCoinInCorner(int raidaIdx, int corner, CloudCoin cc, String email) {
+        int[] triad;
+        int[] raidaFix;
+        int neighIdx;
 
-    public boolean fixCoinsInCorner(int raidaIdx, int corner, ArrayList<CloudCoin> ccs) {
+        String[] results;
+        String[] requests;
+        GetTicketResponse[] gtr;
+
+        if (raida.isFailed(raidaIdx)) {
+            logger.error(ltag, "RAIDA " + raidaIdx + " is failed. Skipping it");
+            return false;
+        }
+
+        raidaFix = new int[1];
+        raidaFix[0] = raidaIdx;
+
+        requests = new String[triadSize];
+        triad = trustedTriads[raidaIdx][corner];
+        for (int i = 0; i < triadSize; i++) {
+            neighIdx = triad[i];
+
+            logger.debug(ltag, "Checking neighbour: " + neighIdx);
+            if (raida.isFailed(neighIdx)) {
+                logger.error(ltag, "Neighbour " + neighIdx + " is unavailable. Skipping it");
+                return false;
+            }
+
+            if (!cc.ans[neighIdx].equals(cc.pans[neighIdx])) {
+                logger.error(ltag, "AN&PAN mismatch. The coin can't be fixed: " + i);
+                return false;
+            }
+
+            requests[i] = "get_ticket?nn=" + cc.nn + "&sn=" + cc.sn + "&an=" + cc.ans[neighIdx] +
+                    "&pan=" + cc.pans[neighIdx] + "&denomination=" + cc.getDenomination();
+        }
+
+        results = raida.query(requests, null, new CallbackInterface() {
+            final GLogger gl = logger;
+            final CallbackInterface myCb = cb;
+
+            @Override
+            public void callback(Object result) {
+                fr.totalRAIDAProcessed += 2;
+                if (myCb != null) {
+                    FrackFixerResult nfr = new FrackFixerResult();
+                    copyFromMainFr(nfr);
+                    myCb.callback(nfr);
+                }
+            }
+        }, triad);
+        
+        if (results == null) {
+            logger.error(ltag, "Failed to get tickets. Setting triad to failed");
+            for (int i = 0; i < triadSize; i++)
+                raida.setFailed(triad[i]);
+
+            return false;
+        }
+        
+        if (results.length != triadSize) {
+            logger.error(ltag, "Invalid response size: " + results.length);
+            for (int i = 0; i < triadSize; i++)
+                raida.setFailed(triad[i]);
+
+            return false;
+        }
+
+        requests = new String[1];
+        requests[0] = "fix?";
+
+        gtr = new GetTicketResponse[triadSize];
+        for (int i = 0; i < results.length; i++) {
+            logger.info(ltag, "res=" + results[i]);
+
+            gtr[i] = (GetTicketResponse) parseResponse(results[i], GetTicketResponse.class);
+            if (gtr[i] == null) {
+                logger.error(ltag, "Failed to parse response from: " + triad[i]);
+                raida.setFailed(triad[i]);
+                return false;
+            }
+
+            if (!gtr[i].status.equals("ticket")) {
+                logger.error(ltag, "Failed to get ticket from RAIDA" + triad[i]);
+                raida.setFailed(triad[i]);
+                return false;
+            }
+
+            if (gtr[i].message == null || gtr[i].message.length() != 44) {
+                logger.error(ltag, "Invalid ticket from RAIDA" + triad[i]);
+                raida.setFailed(triad[i]);
+                return false;
+            }
+
+            if (i != 0)
+                requests[0] += "&";
+
+            requests[0] += "fromserver" + (i + 1) + "=" + triad[i] + "&message" + (i + 1) + "=" + gtr[i].message;
+        }
+
+        cc.createAn(raidaIdx, email);
+        requests[0] += "&pan=" + cc.ans[raidaIdx];
+
+        logger.debug(ltag, "Doing actual fix on RAIDA" + raidaIdx);
+        results = raida.query(requests, null, null, raidaFix);
+        if (results == null) {
+            logger.error(ltag, "Failed to fix on RAIDA" + raidaIdx);
+            raida.setFailed(raidaIdx);
+            return false;
+        }
+
+        FixResponse fresp = (FixResponse) parseResponse(results[0], FixResponse.class);
+        if (fresp == null) {
+            logger.error(ltag, "Failed to parse fix response" + raidaIdx);
+            raida.setFailed(raidaIdx);
+            return false;
+        }
+
+        if (!fresp.status.equals("success")) {
+            logger.error(ltag, "Failed to fix on RAIDA" + raidaIdx + ": " + fresp.message);
+            raida.setFailed(raidaIdx);
+            return false;
+        }
+
+        
+        logger.debug(ltag, "Fixed on RAIDA" + raidaIdx);
+
+        return true;
+    }
+
+    public boolean fixCoinsInCorner(int raidaIdx, int corner, ArrayList<CloudCoin> ccs, String email) {
         int[] triad;
         int[] raidaFix;
         int neighIdx;
@@ -532,9 +688,8 @@ public class FrackFixer extends Servant {
         }
 
         for (CloudCoin cc : ccs) {
-            cc.createAn(raidaIdx);
+            cc.createAn(raidaIdx, email);
             posts[0] += "&pans[]=" + cc.ans[raidaIdx];
-            //posts[0] += "&pans[]=" + cc.ans[raidaIdx];
         }
              
         posts[0] += "&nn=" + nn;
@@ -602,6 +757,7 @@ public class FrackFixer extends Servant {
         cc.setDetectStatus(raidaIdx, CloudCoin.STATUS_PASS);
         cc.setPownStringFromDetectStatus();
         cc.calcExpirationDate();
+        cc.setPansToAns();
 
         String tmpFile = cc.originalFile + ".tmp";
         logger.debug(ltag, "Saving file: " + tmpFile + " pown " + cc.getPownString());
