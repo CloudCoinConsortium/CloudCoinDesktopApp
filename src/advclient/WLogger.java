@@ -9,6 +9,7 @@ import global.cloudcoin.ccbank.core.GLogger;
 import global.cloudcoin.ccbank.core.GLoggerInterface;
 import java.io.PrintWriter;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -68,6 +69,42 @@ public class WLogger extends GLogger implements GLoggerInterface {
                 tidx = matcher.group(1);
             }
         }
+        
+        StackTraceElement[] es = Thread.currentThread().getStackTrace();
+        boolean found = false;
+        for (int i = 0; i < es.length; i++) {
+                String className = es[i].getClassName();
+                for (Map.Entry<String,PrintWriter> entry : channels.entrySet()) {
+                    String key = entry.getKey();
+                    String rex = ".+\\." + key + "\\..+";                    
+                    if (className.matches(rex)) {
+                        tidx = key;
+                        break;
+                    }
+                }
+
+                if (found)
+                    break;
+        }
+        
+        if (tag.startsWith(":")) {
+            String[] parts = tag.split(":");
+            if (parts.length > 2) {
+                for (Map.Entry<String,PrintWriter> entry : channels.entrySet()) {
+                    String key = entry.getKey();
+                    String rex = ".+\\." + key + "\\..+";                    
+                    if (parts[1].matches(rex)) {
+                        tag = parts[2];
+                        tidx = key;
+                        break;
+                    }
+                }
+            }
+            
+        }
+        
+        
+        //System.out.println("tidx="+tidx+ " t="+tag+ " m="+message);
         
         logCommon(tidx, tag + " " + levelStr + " " + message);
     }

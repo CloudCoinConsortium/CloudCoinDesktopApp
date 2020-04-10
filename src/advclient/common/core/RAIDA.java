@@ -23,6 +23,7 @@ public class RAIDA {
 	final static int STATUS_OK = 1;
 	final static int STATUS_FAILED = 2;
 
+        String packageName;
 	public RAIDA(GLogger logger) {
 		agents = new DetectionAgent[TOTAL_RAIDA_COUNT];
                 latencies = new int[TOTAL_RAIDA_COUNT];
@@ -33,6 +34,8 @@ public class RAIDA {
 		}
 
 		this.logger = logger;
+                
+                packageName = getClass().getPackage().getName() + ".RAIDA";
 	}
 
 	private int[] getAllRAIDAs() {
@@ -87,15 +90,15 @@ public class RAIDA {
 		String[] data;
 
 		data = new String[TOTAL_RAIDA_COUNT];
-		for (int i = 0; i < TOTAL_RAIDA_COUNT; i++) {
-			data[i] = agents[i].getFullURL();
-		}
+        	for (int i = 0; i < TOTAL_RAIDA_COUNT; i++) {
+                   	data[i] = agents[i].getFullURL();
+            }
 
-		return data;
+            return data;
 	}
 
 	public boolean isFailed(int idx) {
-		return agents[idx].getStatus() == RAIDA.STATUS_FAILED;
+            return agents[idx].getStatus() == RAIDA.STATUS_FAILED;
 	}
 
 	public void setFailed(int idx) {
@@ -153,18 +156,33 @@ public class RAIDA {
 				posts[i] = null;
 			}
 		}
+                
+                StackTraceElement[] es = Thread.currentThread().getStackTrace();
+                String callerClass = "";
+                for (int i = 0; i < es.length; i++) {
+                    String className = es[i].getClassName();
+                    
+                    if (className.equals(packageName) || className.equals("java.lang.Thread"))
+                        continue;
 
+                    callerClass = className;
+
+                    break;
+                }
+
+                
 		for (int i = 0; i < raidalistSize; i++) {
 			final int rIdxFinal = rlist[i];
 			final int iFinal = i;
 			final String request = requests[i];
 			final String post = posts[i];
 			final CallbackInterface myCb = cb;
+                        final String fcallerClass = callerClass;
 
 			Future f = service.submit(new Runnable() {
 				public void run() {
                                     String url = "/service/" + request;
-                                    results[iFinal] = agents[rIdxFinal].doRequest(url, post);
+                                    results[iFinal] = agents[rIdxFinal].doRequest(url, post, fcallerClass);
                                     if (myCb != null)
 					myCb.callback(null);
 				}

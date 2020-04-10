@@ -78,9 +78,7 @@ public class Echoer extends Servant {
 
         int cntErr = 0;
         int i;
-
-
-        
+     
         requests = new String[RAIDA.TOTAL_RAIDA_COUNT];
         for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++)
             requests[i] = "echo";

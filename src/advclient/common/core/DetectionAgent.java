@@ -153,6 +153,10 @@ public class DetectionAgent {
     }
     
     public String doRequest(String url, String post) {
+        return doRequest(url, post, "");
+    }
+    
+    public String doRequest(String url, String post, String callerClass) {
 	long tsBefore, tsAfter;
 	int c;
 	String data;
@@ -168,7 +172,13 @@ public class DetectionAgent {
         String urlIn = fullURL + url;
 	String method = (post == null) ? "GET" : "POST";
 
-	logger.debug(ltag, method + " url " + urlIn);
+        String lltag = ltag;
+        if (callerClass != null) {
+            if (!callerClass.isEmpty()) 
+                lltag = ":" + callerClass + ":" + ltag;
+        }
+
+	logger.debug(lltag, method + " url " + urlIn);
 
 	tsBefore = System.currentTimeMillis();
 
@@ -183,7 +193,7 @@ public class DetectionAgent {
             urlConnection.setRequestProperty("User-Agent", "CloudCoin Wallet Client");
 
             if (post != null) {
-                logger.debug(ltag, AppCore.maskStr("pans\\[\\]=", post));
+                logger.debug(lltag, AppCore.maskStr("pans\\[\\]=", post));
 
                 byte[] postDataBytes = post.getBytes("UTF-8");
 
@@ -210,7 +220,7 @@ public class DetectionAgent {
             input.close();
             
             if (!binary)
-                logger.debug(ltag, "Response: "+ sb.toString() + " url " + urlIn);
+                logger.debug(lltag, "Response: "+ sb.toString() + " url " + urlIn);
 
             tsAfter = System.currentTimeMillis();
             dms = tsAfter - tsBefore;
@@ -220,11 +230,11 @@ public class DetectionAgent {
             
             return sb.toString();
 	} catch (MalformedURLException e) {
-            logger.error(ltag, "Failed to fetch. Malformed URL " + urlIn);
+            logger.error(lltag, "Failed to fetch. Malformed URL " + urlIn);
             lastStatus = RAIDA.STATUS_FAILED;
             return null;
 	} catch (IOException e) {
-            logger.error(ltag, "Failed to fetch URL: " + e.getMessage());
+            logger.error(lltag, "Failed to fetch URL: " + e.getMessage());
             lastStatus = RAIDA.STATUS_FAILED;
             return null;
 	} finally {
