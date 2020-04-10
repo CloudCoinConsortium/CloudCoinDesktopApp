@@ -523,7 +523,7 @@ public class Sender extends Servant {
 
                 ccs.get(j).setDetectStatus(i, status);
                 
-                logger.info(ltag, "raida" + i + " v=" + ar[i][j].status + " m="+ar[i][j].message);
+                //logger.info(ltag, "raida" + i + " v=" + ar[i][j].status + " m="+ar[i][j].message);
             }
         }
 

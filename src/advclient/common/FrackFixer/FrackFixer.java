@@ -27,7 +27,7 @@ public class FrackFixer extends Servant {
         super("FrackFixer", rootDir, logger);
     }
 
-    public void launch(CallbackInterface icb) {
+    public void launch(CallbackInterface icb, boolean needExtensive) {
         this.cb = icb;
 
         fr = new FrackFixerResult();
@@ -46,7 +46,7 @@ public class FrackFixer extends Servant {
             @Override
             public void run() {
                 logger.info(ltag, "RUN (Detached) FrackFixer");
-                doFrackFix();
+                doFrackFix(needExtensive);
                 
                 raida.setReadTimeout(Config.READ_TIMEOUT);
             }
@@ -150,7 +150,9 @@ public class FrackFixer extends Servant {
         }   
     }
     
-    public void doFrackFix() {
+    public void doFrackFix(boolean needExtensive) {
+        System.out.println("x="+needExtensive);
+        System.exit(1);
         if (!initNeighbours()) {
             fr.status = FrackFixerResult.STATUS_ERROR;
             if (cb != null)
@@ -327,39 +329,9 @@ public class FrackFixer extends Servant {
                 ccactive.clear();
             }         
         }
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+      
         logger.debug(ltag, "Time to move coins");
-        doMove(ccall);
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+        doMove(ccall);  
 
         nfr = new FrackFixerResult();
         fr.failed = AppCore.getFilesCount(Config.DIR_FRACKED, user);

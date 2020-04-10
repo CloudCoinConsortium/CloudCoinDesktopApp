@@ -394,8 +394,8 @@ public class Receiver extends Servant {
                     }
                 }
     
-                logger.info(ltag, " sn=" + rsn + " nn=" + rnn + " an=" + ran);
-                logger.info(ltag, "raida" + i + " v=" + rrs[i][j].status + " m="+rrs[i][j].message);
+                //logger.info(ltag, " sn=" + rsn + " nn=" + rnn + " an=" + ran);
+                //logger.info(ltag, "raida" + i + " v=" + rrs[i][j].status + " m="+rrs[i][j].message);
             }
         }
 

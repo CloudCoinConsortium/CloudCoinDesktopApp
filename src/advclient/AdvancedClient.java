@@ -1439,7 +1439,7 @@ public class AdvancedClient  {
                 } catch (InterruptedException e) {}
 
                 sm.setActiveWalletObj(ps.srcWallet);                
-                sm.startFrackFixerService(new FrackFixerOnPurposeCb());
+                sm.startFrackFixerService(new FrackFixerOnPurposeCb(), ps.needExtensiveFixing);
             }
         });
         
@@ -5947,6 +5947,14 @@ public class AdvancedClient  {
         
         passwordSrc.getTextField().setVisible(false);
         spText.setVisible(false);
+        
+        JLabel fname0 = new JLabel("Intensive fixing");
+        final MyCheckBoxToggle cb1 = new MyCheckBoxToggle();
+        cb1.setSelected(false);
+        AppUI.getGBRow(subInnerCore, fname0, cb1.getCheckBox(), y, gridbag);
+        y++;
+        
+        
 
         cboxfrom.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -5990,6 +5998,7 @@ public class AdvancedClient  {
 
                 if (srcWallet == null)
                     return;
+                
                 if (srcWallet.isEncrypted()) {
                     if (passwordSrc.getText().isEmpty()) {
                         ps.errText = "Password is empty";
@@ -6015,6 +6024,11 @@ public class AdvancedClient  {
                     srcWallet.setPassword(ps.typedPassword);
                 }
                
+                if (cb1.isChecked()) 
+                    ps.needExtensiveFixing = true;
+                else
+                    ps.needExtensiveFixing = false;
+                
                 ps.srcWallet = srcWallet;             
                 ps.currentScreen = ProgramState.SCREEN_FIXING_FRACKED;
                 showScreen();
@@ -7183,7 +7197,7 @@ public class AdvancedClient  {
         tf1.setFilepickerListener(new MouseAdapter() {
             @Override
             public void mouseReleased(MouseEvent e) {
-                 if (!cb1.isChecked()) {
+                if (!cb1.isChecked()) {
                     Wallet w = sm.getFirstFullNonSkyWallet();
                     if (w != null) {
                         String dir = AppCore.getUserDir(Config.DIR_BANK, w.getName());
@@ -8477,7 +8491,7 @@ public class AdvancedClient  {
                 }
             });
 
-            sm.startFrackFixerService(new FrackFixerCb());           
+            sm.startFrackFixerService(new FrackFixerCb(), false);           
 	}
     }
 

@@ -178,6 +178,8 @@ public class ProgramState {
 
     int exportType;
     
+    boolean needExtensiveFixing;
+    
     public ProgramState() {
         currentScreen = SCREEN_AGREEMENT;
         cwalletRecoveryRequested = cwalletPasswordRequested = false;
@@ -257,6 +259,8 @@ public class ProgramState {
         finishedMc = false;
 
         exportType = 0;
+        
+        needExtensiveFixing = false;
     }
  
     public String toString() {

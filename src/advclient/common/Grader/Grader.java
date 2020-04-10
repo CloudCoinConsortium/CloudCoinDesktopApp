@@ -132,7 +132,7 @@ public class Grader extends Servant {
         String ccFile;
 
         String dst = "";
-        if (passed >= Config.PASS_THRESHOLD) {
+        if (cc.isSentFixable()) {
             if (counterfeit != 0) {
                 logger.debug(ltag, "Coin " + cc.sn + " is fracked");
 

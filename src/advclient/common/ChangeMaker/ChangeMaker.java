@@ -226,7 +226,7 @@ public class ChangeMaker extends Servant {
                 continue;
             }
    
-            logger.info(ltag, "cc="+ccs[i].sn + " v=" + ccs[i].getJson(false));
+            //logger.info(ltag, "cc="+ccs[i].sn + " v=" + ccs[i].getJson(false));
         }
 
         AppCore.moveToFolderNoTs(cc.originalFile, Config.DIR_SENT, user, true);

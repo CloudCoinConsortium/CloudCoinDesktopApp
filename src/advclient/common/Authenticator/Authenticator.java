@@ -210,7 +210,7 @@ public class Authenticator extends Servant {
                 }
 
                 ccs.get(j).setDetectStatus(i, status);
-                logger.info(ltag, "raida" + i + " v=" + ar[i][j].status + " m="+ar[i][j].message + " j= " + j + " st=" + status);
+                //logger.info(ltag, "raida" + i + " v=" + ar[i][j].status + " m="+ar[i][j].message + " j= " + j + " st=" + status);
             }
         }
 
