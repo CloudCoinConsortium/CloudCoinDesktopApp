@@ -46,6 +46,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.*;
 import javax.imageio.ImageIO;
+import javax.swing.border.EmptyBorder;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -593,7 +594,10 @@ public class AdvancedClient  {
             img = brand.scaleLogo(img);
             icon3 = new JLabel(new ImageIcon(img));
             
-            img = ImageIO.read(brand.getImgDepositIcon());
+            img = ImageIO.read(brand.getImgCoinsIcon());
+            coinsIcon = new JLabel(new ImageIcon(img));
+            
+        /*    img = ImageIO.read(brand.getImgDepositIcon());
             depositIi = new ImageIcon(img);
             depositIcon = new JLabel(new ImageIcon(img));
             
@@ -605,9 +609,7 @@ public class AdvancedClient  {
             img = ImageIO.read(brand.getImgTransferIcon());
             transferIi = new ImageIcon(img);
             transferIcon = new JLabel(new ImageIcon(img));
-            
-            img = ImageIO.read(brand.getImgCoinsIcon());
-            coinsIcon = new JLabel(new ImageIcon(img));
+
             
             img = ImageIO.read(brand.getImgDepositIconHover());
             depositIiLight = new ImageIcon(img);
@@ -617,7 +619,7 @@ public class AdvancedClient  {
             
             img = ImageIO.read(brand.getImgWithdrawIconHover());
             withdrawIiLight = new ImageIcon(img);
-            
+        */    
         } catch (Exception ex) {
             wl.error(ltag, "Failed to open file: " + ex.getMessage());
             return;
@@ -661,6 +663,7 @@ public class AdvancedClient  {
         } else {
             int bwidth = 158;
             // Coins
+            
             wrp.add(coinsIcon);
             wrp.add(AppUI.vr(16));
             
@@ -682,7 +685,7 @@ public class AdvancedClient  {
             c.anchor = GridBagConstraints.NORTH;
             gridbag.setConstraints(wrp, c);
             p.add(wrp);
-                        
+            /*        
             // Deposit
             JPanel wrpDeposit = new JPanel();
             AppUI.setBoxLayout(wrpDeposit, false);
@@ -855,9 +858,10 @@ public class AdvancedClient  {
             wrpDeposit.addMouseListener(ma0);
             wrpTransfer.addMouseListener(ma1);
             wrpWithdraw.addMouseListener(ma2);
+            */
         }
 
-        c.insets = new Insets(0, 32, 0, 0);
+        c.insets = new Insets(0, 482, 0, 0);
         c.gridwidth = 1;
         c.weightx = 0;
         c.fill = GridBagConstraints.NORTH;
@@ -6777,25 +6781,318 @@ public class AdvancedClient  {
         AppUI.setColor(trTitle, brand.getTitleTextColor());
         hwrapper.add(trTitle);
         
+        // holder for three buttons
+        JPanel bpanel = new JPanel();
+        
+        int invPanelWidth = 520;
         int[][] counters = w.getCounters(); 
         if (!isSky && counters != null && counters.length != 0) {
             AppUI.setBackground(invPanel, brand.getInventoryBackgroundColor());
             AppUI.alignTop(invPanel);
-            AppUI.setSize(invPanel, 520, 62);
-            AppUI.setMargin(invPanel, 8, 8, 8, 20);
-            
+            AppUI.setSize(invPanel, invPanelWidth, 62);
+            AppUI.setMargin(invPanel, 8, 8, 8, 20);           
             hwrapper.add(invPanel);
+        } else {
+            hwrapper.add(bpanel);
         }
+        
+        
+        
+        
 
         
         rightPanel.add(hwrapper);
         rightPanel.add(AppUI.hr(22));
         
+        
+        
+        /* buttons */
+        JPanel bwrapper = new JPanel();
+        AppUI.setBoxLayout(bwrapper, false);
+        AppUI.alignLeft(bwrapper);
+        AppUI.setMargin(bwrapper, 0);
+        AppUI.noOpaque(bwrapper);
+    
+        int layerHeight = 48;
         JLabel thlabel = new JLabel("Transaction History");
         AppUI.alignLeft(thlabel);
         AppUI.setFont(thlabel, 22);
         AppUI.setColor(thlabel, brand.getMainTextColor());
-        rightPanel.add(thlabel);
+        AppUI.setSize(thlabel, 260, layerHeight);
+        bwrapper.add(thlabel);
+        
+        
+        AppUI.noOpaque(bpanel);
+        //AppUI.setBackground(bpanel, Color.yellow);
+        AppUI.setBoxLayout(bpanel, false);
+        
+        AppUI.alignLeft(bpanel);
+        AppUI.alignTop(bpanel);
+        bpanel.setAlignmentY(Component.CENTER_ALIGNMENT);
+        if (!isSky) {
+            AppUI.setSize(bpanel, 620, layerHeight);  
+        } else {
+            AppUI.setSize(bpanel, 520, layerHeight); 
+            bpanel.setAlignmentY(Component.TOP_ALIGNMENT);
+        }
+        AppUI.setMargin(bpanel, 0, 0, 0, 0);
+
+        
+        // Padding
+        JPanel paddingPanel = new JPanel();
+        AppUI.setSize(paddingPanel, 106, layerHeight);
+        AppUI.noOpaque(paddingPanel);
+        bpanel.add(paddingPanel);
+        
+        final JLabel depositIcon, transferIcon, withdrawIcon, coinsIcon;
+        final ImageIcon depositIi, transferIi, withdrawIi, depositIiLight, transferIiLight, withdrawIiLight;
+        ImageIcon ii;
+        try {
+            Image img;
+
+            img = brand.scaleMainMenuIcon(ImageIO.read(brand.getImgDepositIcon()));
+            depositIi = new ImageIcon(img);
+            depositIcon = new JLabel(new ImageIcon(img));
+            
+            img = brand.scaleMainMenuIcon(ImageIO.read(brand.getImgWithdrawIcon()));
+            withdrawIi = new ImageIcon(img);
+            withdrawIcon = new JLabel(new ImageIcon(img));
+                      
+            img = brand.scaleMainMenuIcon(ImageIO.read(brand.getImgTransferIcon()));
+            transferIi = new ImageIcon(img);
+            transferIcon = new JLabel(new ImageIcon(img));
+            
+            img = brand.scaleMainMenuIcon(ImageIO.read(brand.getImgDepositIconHover()));
+            depositIiLight = new ImageIcon(img);
+                      
+            img = brand.scaleMainMenuIcon(ImageIO.read(brand.getImgTransferIconHover()));
+            transferIiLight = new ImageIcon(img);
+            
+            img = brand.scaleMainMenuIcon(ImageIO.read(brand.getImgWithdrawIconHover()));
+            withdrawIiLight = new ImageIcon(img);
+            
+        } catch (Exception ex) {
+            wl.error(ltag, "Failed to open file: " + ex.getMessage());
+            return;
+        }
+        
+        GridBagLayout gridbag = new GridBagLayout();
+        JPanel wrp = new JPanel();
+        
+        //AppUI.alignBottom(wrp);
+        //AppUI.setBackground(wrp, Color.RED);
+        AppUI.noOpaque(wrp);
+        wrp.setLayout(gridbag);
+        AppUI.setMargin(wrp, 0);
+        AppUI.setBoxLayout(wrp, false);
+
+        
+        int fsize = 18;
+        //AppUI.setSize(wrp, 296, headerHeight);
+        //AppUI.noOpaque(wrp);
+        bpanel.add(wrp);
+ 
+        int bwidth = 138;
+        GridBagConstraints c = new GridBagConstraints();
+        c.insets = new Insets(0, 2, 0, 0);
+        c.anchor = GridBagConstraints.NORTH;
+        gridbag.setConstraints(wrp, c);
+                        
+        // Deposit
+        JPanel wrpDeposit = new JPanel();
+        AppUI.setBoxLayout(wrpDeposit, false);
+        AppUI.setSize(wrpDeposit, bwidth, headerHeight);
+        AppUI.setBackground(wrpDeposit, brand.getTopMenuHoverColor());
+        AppUI.noOpaque(wrpDeposit);
+            
+        wrpDeposit.add(AppUI.vr(12));         
+        wrpDeposit.add(depositIcon);             
+        AppUI.setHandCursor(wrpDeposit);
+        depositIcon.setIcon(depositIi);                            
+        wrpDeposit.add(AppUI.vr(6));
+            
+        JLabel titleText = new JLabel("Deposit");
+        AppUI.setTitleFont(titleText, fsize);
+        wrpDeposit.add(titleText);
+            
+        c.insets = new Insets(0, 2, 0, 0);
+        c.anchor = GridBagConstraints.NORTH;
+        gridbag.setConstraints(wrpDeposit, c);
+        wrp.add(wrpDeposit);
+   
+        // Withdraw
+        JPanel wrpWithdraw = new JPanel();
+        AppUI.setBoxLayout(wrpWithdraw, false);
+        AppUI.setSize(wrpWithdraw, bwidth, headerHeight);
+        AppUI.setBackground(wrpWithdraw, brand.getTopMenuHoverColor());
+        AppUI.noOpaque(wrpWithdraw);            
+        wrpWithdraw.add(AppUI.vr(12));
+            
+        wrpWithdraw.add(withdrawIcon);           
+        AppUI.setHandCursor(wrpWithdraw);
+        withdrawIcon.setIcon(withdrawIi);                            
+        wrpWithdraw.add(AppUI.vr(6));
+            
+        titleText = new JLabel("Withdraw");
+        AppUI.setTitleFont(titleText, fsize);
+        wrpWithdraw.add(titleText);
+            
+        c.insets = new Insets(0, 2, 0, 0);
+        c.anchor = GridBagConstraints.NORTH;
+        gridbag.setConstraints(wrpWithdraw, c);
+        wrp.add(wrpWithdraw);
+            
+        // Transfer
+        JPanel wrpTransfer = new JPanel();
+        AppUI.setBoxLayout(wrpTransfer, false);
+        AppUI.setSize(wrpTransfer, bwidth, headerHeight);
+        AppUI.setBackground(wrpTransfer, brand.getTopMenuHoverColor());
+        AppUI.noOpaque(wrpTransfer);
+            
+        wrpTransfer.add(AppUI.vr(12));            
+        AppUI.setHandCursor(wrpTransfer);
+        transferIcon.setIcon(transferIi);                    
+        wrpTransfer.add(transferIcon);
+        wrpTransfer.add(AppUI.vr(12));
+            
+        titleText = new JLabel("Transfer");
+        AppUI.setTitleFont(titleText, fsize);
+        wrpTransfer.add(titleText);
+            
+        c.insets = new Insets(0, 2, 0, 0);
+        c.anchor = GridBagConstraints.NORTH;
+        gridbag.setConstraints(wrpTransfer, c);
+        wrp.add(wrpTransfer);
+            
+        MouseAdapter ma0 = new MouseAdapter() {
+            public void mouseReleased(MouseEvent e) {
+                resetState();
+                //ps.currentScreen = ProgramState.SCREEN_PREDEPOSIT;
+                ps.isSkyDeposit = false;
+                ps.currentScreen = ProgramState.SCREEN_DEPOSIT;
+                showScreen();
+            }
+            public void mouseEntered(MouseEvent e) {
+                JPanel p = (JPanel) e.getSource();
+                AppUI.opaque(p);
+                depositIcon.setIcon(depositIiLight);
+                p.revalidate();
+                p.repaint();
+            }
+                
+            public void mouseExited(MouseEvent e) {                  
+                JPanel p = (JPanel) e.getSource();            
+                if (!isDepositing()) {
+                    AppUI.noOpaque(p);
+                    depositIcon.setIcon(depositIi);
+                    p.revalidate();
+                    p.repaint();
+                }                    
+            }
+        };
+            
+        MouseAdapter ma1 = new MouseAdapter() {
+            public void mouseReleased(MouseEvent e) {
+                resetState();
+                ps.currentScreen = ProgramState.SCREEN_TRANSFER;
+                showScreen();
+            }
+                
+            public void mouseEntered(MouseEvent e) {             
+                JPanel p = (JPanel) e.getSource();
+                AppUI.opaque(p);
+                transferIcon.setIcon(transferIiLight);
+                p.revalidate();
+                p.repaint();
+            }
+        
+            public void mouseExited(MouseEvent e) {                   
+                JPanel p = (JPanel) e.getSource();
+                if (!isTransferring()) {
+                    AppUI.noOpaque(p);
+                    transferIcon.setIcon(transferIi);
+                    p.revalidate();
+                    p.repaint();
+                }
+            }
+        };
+            
+        MouseAdapter ma2 = new MouseAdapter() {
+            public void mouseReleased(MouseEvent e) {
+                resetState();
+                ps.currentScreen = ProgramState.SCREEN_WITHDRAW;
+                showScreen();
+            }
+                
+            public void mouseEntered(MouseEvent e) {             
+                JPanel p = (JPanel) e.getSource();
+                AppUI.opaque(p);
+                withdrawIcon.setIcon(withdrawIiLight);
+                p.revalidate();
+                p.repaint();
+            }
+            
+            public void mouseExited(MouseEvent e) {                   
+                JPanel p = (JPanel) e.getSource();
+                if (!isWithdrawing()) {
+                    AppUI.noOpaque(p);
+                    withdrawIcon.setIcon(withdrawIi);
+                    p.revalidate();
+                    p.repaint();
+                }
+            }
+        };
+
+        wrpDeposit.addMouseListener(ma0);
+        wrpTransfer.addMouseListener(ma1);
+        wrpWithdraw.addMouseListener(ma2);
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        if (!isSky)
+            bwrapper.add(bpanel);
+        //rightPanel.add(bpanel);
+        
+        
+        
+        
+        
+        
+        
+
+        rightPanel.add(bwrapper);
+
+        //rightPanel.add(thlabel);
+        
+        
+        
+        
         
         rightPanel.add(AppUI.hr(22));
               
@@ -7035,7 +7332,7 @@ public class AdvancedClient  {
         AppUI.noOpaque(subInnerCore);
         rightPanel.add(subInnerCore);
         
-        GridBagLayout gridbag = new GridBagLayout();
+        gridbag = new GridBagLayout();
         subInnerCore.setLayout(gridbag);
         
         int y = 0;

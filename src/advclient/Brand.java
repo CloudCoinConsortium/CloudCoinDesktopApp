@@ -913,6 +913,11 @@ public class Brand {
         return getScaledImage(img, 135, 23);
     }
     
+    public Image scaleMainMenuIcon(Image img) {
+        return getScaledImage(img, 45, 28);
+    }
+    
+    
     public Color colorFromHex(String colorStr) {
         return new Color(
             Integer.valueOf(colorStr.substring( 1, 3 ), 16 ),
