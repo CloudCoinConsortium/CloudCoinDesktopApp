@@ -400,7 +400,7 @@ public class AppUI {
             }
         }
  
-        table.setRowHeight(table.getRowHeight() + 35);
+        table.setRowHeight(table.getRowHeight() + 32);
         table.setDefaultRenderer(String.class, r);
         table.setIntercellSpacing(new Dimension(0, 1));
         table.setFocusable(false);
@@ -443,7 +443,7 @@ public class AppUI {
         
         //This is the wallet table size 
         JScrollPane scrollPane = new JScrollPane(table);
-        AppUI.setSize(scrollPane, 880, 310);
+        AppUI.setSize(scrollPane, 880, 294);
         scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(10, 0));
         scrollPane.getVerticalScrollBar().setUI(new BasicScrollBarUI() {       
             @Override
