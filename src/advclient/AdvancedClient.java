@@ -61,7 +61,7 @@ import javax.swing.table.TableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "2.1.39";
+    String version = "3.0.1";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -103,23 +103,6 @@ public class AdvancedClient  {
     
     public AdvancedClient() {
         wl = new WLogger();
-
-        /*
-        CloudCoin cc = new CloudCoin(1, 20);
-        for (int i = 0; i <25; i++)
-            cc.setDetectStatus(i, CloudCoin.STATUS_PASS);
-        
-        int[] r = {10, 11, 12, 13, 24};
-        for (int i = 0; i < r.length; i++)
-            cc.setDetectStatus(r[i], CloudCoin.STATUS_FAIL);
-
-        cc.setPownStringFromDetectStatus();
-        
-        System.out.println("x="+cc.getPownString() + " res="+cc.isSentFixableRows() + " cols="+cc.isSentFixableColumns());
-        
-        System.exit(1);
-        */
-        
         
         String home = System.getProperty("user.home");
         resetState();
@@ -153,17 +136,6 @@ public class AdvancedClient  {
             });
             t.start();
         }
-           
-        /*
-        if (!ps.errText.equals("")) {
-            wText.setVisible(false);
-            infoText.setText(ps.errText);
-            mainPanel.revalidate();
-            mainPanel.repaint();        
-            return;
-        }
-        */
-        
     }
     
     public void initCore() {
@@ -198,7 +170,6 @@ public class AdvancedClient  {
         String brandName = Config.DEFAULT_BRAND_NAME;
         try {
             String path = AdvancedClient.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-            //path = "/C:/Users/Alexander/Documents/NetBeansProjects/CloudCoinWallet/store/EthBold.Wallet.d_2_0.34.jar";
             wl.debug(ltag, "Filename " + path);
             File f = new File(path);
             String fileName = f.getName();
@@ -245,8 +216,7 @@ public class AdvancedClient  {
             ps.errText = "Failed to init brand. Plese check the main.log file";
             return;
         }
-        
-            
+                   
     } 
     
     public void initSystem() {
