@@ -168,7 +168,8 @@ public class ServantManager {
         String coinExt = ".stack";
         
         for (int i = 0; i < idCoins.length; i++) {
-            if (!idCoins[i].endsWith(coinExt)) {
+            //if (!idCoins[i].endsWith(coinExt)) {
+            if (!AppCore.hasCoinExtension(new File(idCoins[i]))) {
                 logger.info(ltag, "Skipping non-stack file in the ID folder: " + idCoins[i]);
                 continue;
             }
@@ -182,6 +183,8 @@ public class ServantManager {
             }
             
             int dots = 0;
+            if (idCoins[i].endsWith(".png"))
+                coinExt = ".png";
             
             String wname = idCoins[i].substring(0, idCoins[i].length() - coinExt.length());
             for (int y = 0; y < wname.length(); y++) {
@@ -189,6 +192,7 @@ public class ServantManager {
                     dots++;
             }
 
+            System.out.println("dt="+dots);
             if (dots < 2)
                 wname += "." + Config.DDNS_DOMAIN;
 

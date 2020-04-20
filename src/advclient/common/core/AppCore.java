@@ -1669,6 +1669,66 @@ public class AppCore {
         return total;
     }
     
+    
+    public static String extractStackFromPNG(String fileName) {
+        byte[] bytes = AppCore.loadFileToBytes(fileName);
+        if (bytes == null) {
+            logger.error(ltag, "Failed to load file " + fileName);
+            return null;
+        }
+
+        int idx = AppCore.basicPngChecks(bytes);
+        if (idx == -1) {
+            logger.error(ltag, "PNG is corrupted");
+            return null;
+        }
+
+        int i = 0;
+        long length;
+                        
+        while (true) {
+            length = AppCore.getUint32(bytes, idx + 4 + i);
+            if (length == 0) {
+                i += 12;
+                if (i > bytes.length) {
+                    logger.error(ltag, "CloudCoin was not found");
+                    return null;
+                }
+            }
+                       
+            StringBuilder sb = new StringBuilder();
+            sb.append(Character.toChars(bytes[idx + 4 + i + 4]));
+            sb.append(Character.toChars(bytes[idx + 4 + i + 5]));
+            sb.append(Character.toChars(bytes[idx + 4 + i + 6]));
+            sb.append(Character.toChars(bytes[idx + 4 + i + 7]));
+            String signature = sb.toString();
+
+            logger.debug(ltag, "sig " + signature);
+            if (signature.equals("cLDc")) {
+                long crcSig = AppCore.getUint32(bytes, idx + 4 + i + 8 + (int) length);
+                long calcCrc = AppCore.crc32(bytes, idx + 4 + i + 4, (int)(length + 4));
+
+                if (crcSig != calcCrc) {
+                    logger.error(ltag, "Invalid CRC32");
+                    return null;
+                }
+
+                break;
+            }
+
+            i += length + 12;
+            if (i > bytes.length) {
+                logger.error(ltag, "CloudCoin was not found");
+                return null;
+            }
+        }
+        
+        byte[] nbytes =  Arrays.copyOfRange(bytes, idx + 4 + i + 8, idx + 4 + i + 8 + (int)length);
+        String sdata = new String(nbytes);
+        
+        return sdata;
+    }
+    
     public static int basicPngChecks(byte[] bytes) {    
         if (bytes[0] != 0x89 && bytes[1] != 0x50 && bytes[2] != 0x4e && bytes[3] != 0x45 
                 && bytes[4] != 0x0d && bytes[5] != 0x0a && bytes[6] != 0x1a && bytes[7] != 0x0a) {

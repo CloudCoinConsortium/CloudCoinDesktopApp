@@ -29,16 +29,16 @@ public class ShowCoins extends Servant {
         result = new ShowCoinsResult();
         result.counters = new int[Config.IDX_FOLDER_LAST][5];
         ccs = new ArrayList<CloudCoin>();
-        //launchThread(new Runnable() {
-          //  @Override
-            //public void run() {
+        launchThread(new Runnable() {
+            @Override
+            public void run() {
                 logger.info(ltag, "RUN ShowCoins");
                 doShowCoins();
 
                 if (cb != null)
                     cb.callback(result);
-            //}
-        //});
+            }
+        });
     }
 
     public void doShowCoins() {

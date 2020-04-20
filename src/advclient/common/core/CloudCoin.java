@@ -43,8 +43,12 @@ public class CloudCoin {
     }
 
     public CloudCoin(String fileName) throws JSONException {
-        String data = AppCore.loadFile(fileName);
-
+        String data;
+        if (fileName.endsWith(".png")) {
+            data = AppCore.extractStackFromPNG(fileName);
+        }  else {
+            data = AppCore.loadFile(fileName);
+        }
         if (data == null)
             throw(new JSONException("Failed to open file"));
 
