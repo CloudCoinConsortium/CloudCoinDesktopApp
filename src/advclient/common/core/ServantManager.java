@@ -192,7 +192,6 @@ public class ServantManager {
                     dots++;
             }
 
-            System.out.println("dt="+dots);
             if (dots < 2)
                 wname += "." + Config.DDNS_DOMAIN;
 
@@ -386,9 +385,9 @@ public class ServantManager {
 	s.launch(sn, null, values, 0, memo, Config.CHANGE_SKY_DOMAIN, cb);
     }
     
-    public void startChangeMakerService(int method, CloudCoin cc, CallbackInterface cb) {
+    public void startChangeMakerService(int method, String email, CloudCoin cc, CallbackInterface cb) {
         ChangeMaker cm = (ChangeMaker) sr.getServant("ChangeMaker");
-        cm.launch(method, cc, cb);
+        cm.launch(method, cc, email, cb);
     }
     
     public void startTransferService(int fromsn, int tosn, int sns[], int amount, String tag, CallbackInterface cb) {
@@ -620,7 +619,7 @@ public class ServantManager {
         return 0;
     }
     
-    public boolean makeChange(Wallet w, int amount, int skySN, CallbackInterface cb) {
+    public boolean makeChange(Wallet w, int amount, CallbackInterface cb) {
         int min5sn, min25sn, min100sn, min250sn;
         int b250, b100, b25, b5, b1;
         
@@ -630,7 +629,7 @@ public class ServantManager {
       
         int sns[] = w.getSNs();
         
-        logger.debug(ltag, "Making change for " + w.getName() + " amount: " + amount + " skySN: " + skySN);
+        logger.debug(ltag, "Making change for " + w.getName() + " amount: " + amount);
         
         if (w.isSkyWallet()) {
             mcr.errText = "Can't make change in SkyWallet";
@@ -695,37 +694,6 @@ public class ServantManager {
             }
         }
         
-        /*
-        int[] ds = { min5sn, min25sn, min100sn, min250sn };
-        int idx;
-        if (amount < 5)
-            idx = 0;
-        else if (amount < 25)
-            idx = 1;
-        else if (amount < 100)
-            idx = 2;
-        else 
-            idx = 3;
-               
-        logger.debug(ltag, "idx = " + idx + " ds " + Arrays.toString(ds));
-        
-        int sn = 0;
-        while (idx >= 0) {   
-            for (int i = idx; i < ds.length; i++) {
-                if (ds[i] != 0) {
-                    sn = ds[i];
-                    break;
-                }
-            }
-            
-            logger.debug(ltag, "idx " + idx + " sn = " + sn);
-            if (sn != 0)
-                break;
-            
-            idx--;
-        }
-        */
-        
         if (sn == 0) {
             mcr.errText = "Failed to find a coin to make change";
             if (cb != null)
@@ -774,15 +742,15 @@ public class ServantManager {
             }
             
             Vaulter v = (Vaulter) sr.getServant("Vaulter");
-            v.unvault(password, 0, cc, new eVaulterChangeCb(cc, w, skySN, cb));
+            v.unvault(password, 0, cc, new eVaulterChangeCb(cc, w, cb));
             
             return true;
         }
      
-        return sendToChange(cc, w, skySN, cb);
+        return sendToChange(cc, w, cb);
     }
     
-    public boolean sendToChange(CloudCoin cc, Wallet w, int skySN, CallbackInterface cb) {
+    public boolean sendToChange(CloudCoin cc, Wallet w, CallbackInterface cb) {
         makeChangeResult mcr = new makeChangeResult();
         mcr.status = 1;
         mcr.text = "Making change for coin " + cc.sn;
@@ -799,7 +767,7 @@ public class ServantManager {
         }
 
         logger.debug(ltag, "Method chosen: " + method);
-        startChangeMakerService(method, cc, new CallbackInterface() {
+        startChangeMakerService(method, w.getEmail(), cc, new CallbackInterface() {
             public void callback(Object o) {
                 final ChangeMakerResult cmr = (ChangeMakerResult) o;
 
@@ -826,7 +794,12 @@ public class ServantManager {
                         mcr.errText = "Failed to make Change. Please check the main.log file";
                     mcr.status = 0;
                     if (cb != null) {
-                        cb.callback(mcr);
+                        cb.callback(mcr);                      
+                        if (w.isEncrypted()) {
+                            logger.debug(ltag, "Encrypting again");
+                            startVaulterService(null, w.getPassword());
+                        }
+                        
                     }
                     return;
                 }
@@ -1043,14 +1016,12 @@ public class ServantManager {
     class eVaulterChangeCb implements CallbackInterface {
         CallbackInterface mcb;
         CloudCoin cc;
-        int skySN;
         Wallet w;
         
         
-        public eVaulterChangeCb(CloudCoin cc, Wallet w, int skySN, CallbackInterface mcb) {
+        public eVaulterChangeCb(CloudCoin cc, Wallet w, CallbackInterface mcb) {
             this.mcb = mcb;
             this.cc = cc;
-            this.skySN = skySN;
             this.w = w;
         }
                  
@@ -1078,7 +1049,7 @@ public class ServantManager {
                     this.mcb.callback(mcr);
                     return;
                 }
-                sendToChange(ncc, w, skySN, mcb);
+                sendToChange(ncc, w, mcb);
             }
         }    
     }

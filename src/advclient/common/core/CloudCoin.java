@@ -367,6 +367,11 @@ public class CloudCoin {
     private String generatePan() {
         return AppCore.generateHex();
     }
+    
+    public void createAns(String email) {
+        for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++)
+            createAn(i, email);
+    }
         
     public void createAn(int idx, String email) {
         ans[idx] = generatePan(idx, email);

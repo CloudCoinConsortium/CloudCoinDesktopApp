@@ -141,6 +141,24 @@ public class AdvancedClient  {
     public void initCore() {
         initSystem();
           
+        
+        CloudCoin cc = new CloudCoin(1, 10);
+        for (int i =0; i<25; i++) {
+            cc.setDetectStatus(i, CloudCoin.STATUS_PASS);
+        }
+        /*
+        cc.setDetectStatus(4, CloudCoin.STATUS_UNTRIED);
+        cc.setDetectStatus(11, CloudCoin.STATUS_FAIL);
+        cc.setDetectStatus(16, CloudCoin.STATUS_FAIL);
+        cc.setDetectStatus(17, CloudCoin.STATUS_UNTRIED);
+        cc.setDetectStatus(18, CloudCoin.STATUS_FAIL);
+        cc.setDetectStatus(20, CloudCoin.STATUS_UNTRIED);
+        
+        cc.setPownStringFromDetectStatus();
+        System.out.println("cc="+cc.getPownString() + " cc=" +cc.isSentFixable() + " x="+cc.isSentFixableColumns() + " y=" + cc.isSentFixableRows());
+        System.exit(1);
+        */
+        
         AppUI.init(tw, th, brand); 
         initMainScreen();
         if (!ps.errText.equals("")) {
@@ -1620,7 +1638,8 @@ public class AdvancedClient  {
             showScreen();
             return;
         }
-            
+          
+        /*
         final int skySN = getSkyWalletSN();
         if (skySN == 0) {
             ps.errText = "Transaction cannot be completed. You must have the exact denominations of CloudCoin notes or use the Change Maker.  You must have at least one Sky Wallet created to access the Change Maker";
@@ -1634,6 +1653,7 @@ public class AdvancedClient  {
             showScreen();
             return;
         }
+        */
 
         Thread t = new Thread(new Runnable() {
             public void run() {
@@ -1667,7 +1687,7 @@ public class AdvancedClient  {
                 //ps.srcWallet.setSNs(sss);
                 //ps.typedAmount = 21;
                 sm.setActiveWalletObj(ps.srcWallet);
-                boolean rv = sm.makeChange(ps.srcWallet, ps.typedAmount, skySN, new CallbackInterface() {
+                boolean rv = sm.makeChange(ps.srcWallet, ps.typedAmount, new CallbackInterface() {
                     public void callback(Object o) {
                         makeChangeResult mcr = (makeChangeResult) o;
                         

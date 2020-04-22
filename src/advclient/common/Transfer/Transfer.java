@@ -80,7 +80,7 @@ public class Transfer extends Servant {
 
         CloudCoin extraCoin = null;
         if (!pickCoinsAmountFromArray(sns, amount)) {
-            logger.debug(ltag, "Not enough coins in the cloudfor amount " + amount);
+            logger.debug(ltag, "Not enough coins in the cloud for amount " + amount);
             
             coinsPicked = new ArrayList<CloudCoin>();
             extraCoin = pickCoinsAmountFromArrayWithExtra(sns, amount);

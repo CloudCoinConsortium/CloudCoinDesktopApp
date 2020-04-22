@@ -395,11 +395,11 @@ public class Sender extends Servant {
                     logger.info(ltag, "Moving to Counterfeit: " + cc.sn);
                     addCoinToReceipt(cc, "counterfeit", Config.DIR_COUNTERFEIT);
                     c++;
-                    AppCore.moveToFolder(cc.originalFile, Config.DIR_COUNTERFEIT, user);
+                    AppCore.moveToFolderNoTs(cc.originalFile, Config.DIR_COUNTERFEIT, user, true);
                 } else {
                     logger.info(ltag, "Moving to Lost: " + cc.sn);
                     addCoinToReceipt(cc, "error", Config.DIR_LOST);
-                    AppCore.moveToFolder(cc.originalFile, Config.DIR_LOST, user);
+                    AppCore.moveToFolderNoTs(cc.originalFile, Config.DIR_LOST, user, true);
                     e++;
                 }
             }
