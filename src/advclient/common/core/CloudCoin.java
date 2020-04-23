@@ -30,6 +30,7 @@ public class CloudCoin {
     final public static int STATUS_FAIL = 2;
     final public static int STATUS_ERROR = 3;
     final public static int STATUS_UNTRIED = 4;
+    final public static int STATUS_NORESPONSE = 5;
         
     String ls = System.getProperty("line.separator");
 
@@ -301,6 +302,9 @@ public class CloudCoin {
 		case STATUS_UNTRIED:
                     s += "u";
                     break;
+                case STATUS_NORESPONSE:
+                    s += "n";
+                    break;
 		default:
                     s += "e";
             }
@@ -326,6 +330,9 @@ public class CloudCoin {
                     break;
 		case 'p':
                     detectStatus[i] = STATUS_PASS;
+                    break;
+                case 'n':
+                    detectStatus[i] = STATUS_NORESPONSE;
                     break;
 		default:
                     detectStatus[i] = STATUS_UNTRIED;
@@ -472,4 +479,15 @@ public class CloudCoin {
         return _isSentFixable(rotatedStatuses);
     }
 
+    public void setNoResponseForEmpty() {
+        for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++)
+            if (this.getDetectStatus(i) == CloudCoin.STATUS_UNTRIED)
+                this.setDetectStatus(i, CloudCoin.STATUS_NORESPONSE);
+    }
+    
+    public void setPownString(String pownstring) {
+        this.pownString = pownstring;
+        this.setDetectStatusFromPownString();
+    }
+    
 }

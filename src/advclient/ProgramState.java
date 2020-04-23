@@ -164,8 +164,6 @@ public class ProgramState {
     
     boolean needInitWallets;
     
-    boolean needExtra;
-    
     int rrAmount;
     
     int failedFiles;
@@ -247,8 +245,6 @@ public class ProgramState {
         coinIDinFix = null;
         
         needInitWallets = false;
-        
-        needExtra = false;
         
         rrAmount = 0;
         

@@ -85,9 +85,9 @@ public class ChangeMaker extends Servant {
             return;
         }
 
-        for (int i =0; i < sns.length; i++) {
-            System.out.println("xsn="+sns[i]);
-        }
+        //for (int i =0; i < sns.length; i++) {
+        //    System.out.println("xsn="+sns[i]);
+       // }
         
         
         //System.exit(1);
@@ -98,9 +98,9 @@ public class ChangeMaker extends Servant {
             chccs[i] = ccx;
             logger.info(ltag, "sn "+ sns[i] + " d="+ccx.getDenomination());
             
-            System.out.println("coin=" + sns[i] + " pans:");
-            for (int x=0;x<25;x++)
-                System.out.println("->" + chccs[i].ans[x]);
+            //System.out.println("coin=" + sns[i] + " pans:");
+            //for (int x=0;x<25;x++)
+            //    System.out.println("->" + chccs[i].ans[x]);
         }
 
         requests = new String[RAIDA.TOTAL_RAIDA_COUNT];
@@ -143,9 +143,10 @@ public class ChangeMaker extends Servant {
 
         for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
             logger.info(ltag, "RAIDA " + i + ": " + results[i].trim());
-            System.out.println("r=" + i + " res=" + results[i].trim());
+            //System.out.println("r=" + i + " res=" + results[i].trim());
             if (results[i] == null) {
                 logger.error(ltag, "Failed to get result. RAIDA " + i);
+                setCoinsStatus(chccs, i, CloudCoin.STATUS_ERROR);
                 cntErr++;
                 continue;
             }
@@ -154,6 +155,7 @@ public class ChangeMaker extends Servant {
             crs[i] = (ChangeResponse) parseResponse(results[i].trim(), ChangeResponse.class);
             if (crs[i] == null) {
                 logger.error(ltag, "Failed to parse response");
+                setCoinsStatus(chccs, i, CloudCoin.STATUS_NORESPONSE);
                 cntErr++;
                 continue;
             }
@@ -181,7 +183,7 @@ public class ChangeMaker extends Servant {
                 continue;
             }
 
-            System.out.println("PASS " + i);
+            //System.out.println("PASS " + i);
             setCoinsStatus(chccs, i, CloudCoin.STATUS_PASS);
 
             /*

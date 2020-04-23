@@ -487,7 +487,7 @@ public class Sender extends Servant {
             if (results[i] != null) {
                 if (results[i].equals("")) {
                     logger.error(ltag, "Skipped raida" + i);
-                    setCoinStatus(ccs, i, CloudCoin.STATUS_UNTRIED);
+                    setCoinStatus(ccs, i, CloudCoin.STATUS_NORESPONSE);
                     continue;
                 }
             }

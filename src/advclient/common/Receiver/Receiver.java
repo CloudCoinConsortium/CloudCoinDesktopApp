@@ -74,6 +74,7 @@ public class Receiver extends Servant {
         rResult.errText = globalResult.errText;
         rResult.receiptId = globalResult.receiptId;
         rResult.needExtra = globalResult.needExtra;
+        rResult.step = globalResult.step;
     }
 
     public void doReceive(int sn, int[] sns, String fdstFolder, int amount, boolean needReceipt) {
@@ -125,6 +126,62 @@ public class Receiver extends Servant {
             return;
         }
         
+        if (extraCoin != null) {
+            logger.debug(ltag, "Need change");
+            int[] csns = breakInBank(extraCoin, idcc, new CallbackInterface() {
+                final GLogger gl = logger;
+                final CallbackInterface myCb = cb;
+
+                @Override
+                public void callback(Object result) {
+                    globalResult.step = 0;
+                    globalResult.totalRAIDAProcessed++;
+                    if (myCb != null) {
+                        ReceiverResult trlocal = new ReceiverResult();
+                        copyFromGlobalResult(trlocal);
+                        myCb.callback(trlocal);
+                    }
+                }
+            });
+            
+            if (csns == null) {
+                rr = new ReceiverResult();
+                globalResult.status = ReceiverResult.STATUS_ERROR;
+                globalResult.errText = "Failed to break coin in Bank";
+                copyFromGlobalResult(rr);
+                if (cb != null)
+                    cb.callback(rr);
+                
+                return; 
+                
+            }
+            
+            int[] nsns = new int[sns.length + csns.length];
+            for (int j = 0; j < sns.length; j++) {
+                logger.debug(ltag, "Existing coins " + sns[j]);
+                nsns[j] = sns[j];              
+            }
+            
+            for (int j = 0; j < csns.length; j++) {
+                logger.debug(ltag, "Coins from Break " + csns[j]);
+                nsns[j + sns.length] = csns[j];
+            }
+
+            coinsPicked = new ArrayList<CloudCoin>();
+            if (!pickCoinsAmountFromArray(nsns, amount)) {
+                rr = new ReceiverResult();
+                globalResult.status = ReceiverResult.STATUS_ERROR;
+                globalResult.errText = "Failed to collect coins after breaking change";
+                copyFromGlobalResult(rr);
+                if (cb != null)
+                    cb.callback(rr);
+                
+                return;  
+            }
+        }
+
+        globalResult.step = 1;
+        globalResult.totalRAIDAProcessed = 0;
         
         ArrayList<CloudCoin> ccs;
         ccs = new ArrayList<CloudCoin>();
@@ -217,7 +274,7 @@ public class Receiver extends Servant {
             }
         }
 
-        
+        /*
         if (extraCoin != null) {
             int remained = amount - curValProcessed;
             logger.debug(ltag, "Changing coin " + extraCoin.sn + " alreadyProcessed=" + curValProcessed + " needed=" + amount);
@@ -232,6 +289,7 @@ public class Receiver extends Servant {
                 return;
             }
         }
+        */
  
         globalResult.status = ReceiverResult.STATUS_FINISHED;
         
@@ -415,6 +473,7 @@ public class Receiver extends Servant {
                 continue;
             }
 
+            //sccs[i].setNoResponseForEmpty();
             sccs[i].setPownStringFromDetectStatus();
             file = dir + File.separator + sccs[i].getFileName();
             logger.info(ltag, "Saving coin " + file);

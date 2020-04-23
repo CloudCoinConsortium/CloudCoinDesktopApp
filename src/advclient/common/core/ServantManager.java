@@ -185,6 +185,8 @@ public class ServantManager {
             int dots = 0;
             if (idCoins[i].endsWith(".png"))
                 coinExt = ".png";
+            else
+                coinExt = ".stack";
             
             String wname = idCoins[i].substring(0, idCoins[i].length() - coinExt.length());
             for (int y = 0; y < wname.length(); y++) {
@@ -195,6 +197,7 @@ public class ServantManager {
             if (dots < 2)
                 wname += "." + Config.DDNS_DOMAIN;
 
+            
             initCloudWallet(cc, wname);
         }     
     }

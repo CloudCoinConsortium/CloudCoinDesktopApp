@@ -90,15 +90,23 @@ public class WLogger extends GLogger implements GLoggerInterface {
         if (tag.startsWith(":")) {
             String[] parts = tag.split(":");
             if (parts.length > 2) {
+                boolean done = false;
                 for (Map.Entry<String,PrintWriter> entry : channels.entrySet()) {
                     String key = entry.getKey();
                     String rex = ".+\\." + key + "\\..+";                    
                     if (parts[1].matches(rex)) {
                         tag = parts[2];
                         tidx = key;
+                        done = true;
                         break;
                     }
                 }
+                
+                if (!done) {
+                    tag = parts[2];
+                    tidx = tag;
+                }
+                    
             }
             
         }

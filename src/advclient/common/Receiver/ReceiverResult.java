@@ -11,6 +11,8 @@ public class ReceiverResult {
     
     public boolean needExtra;
     
+    public int step;
+    
     public static int STATUS_PROCESSING = 1;
     public static int STATUS_FINISHED = 2;
     public static int STATUS_ERROR = 3;
@@ -32,5 +34,6 @@ public class ReceiverResult {
         memo = "Receive";
         status = STATUS_PROCESSING;
         needExtra = false;
+        step = 0;
     }
 }

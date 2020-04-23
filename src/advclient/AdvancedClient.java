@@ -61,7 +61,7 @@ import javax.swing.table.TableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "3.0.1";
+    String version = "3.0.2";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -141,20 +141,10 @@ public class AdvancedClient  {
     public void initCore() {
         initSystem();
           
-        
-        CloudCoin cc = new CloudCoin(1, 10);
-        for (int i =0; i<25; i++) {
-            cc.setDetectStatus(i, CloudCoin.STATUS_PASS);
-        }
         /*
-        cc.setDetectStatus(4, CloudCoin.STATUS_UNTRIED);
-        cc.setDetectStatus(11, CloudCoin.STATUS_FAIL);
-        cc.setDetectStatus(16, CloudCoin.STATUS_FAIL);
-        cc.setDetectStatus(17, CloudCoin.STATUS_UNTRIED);
-        cc.setDetectStatus(18, CloudCoin.STATUS_FAIL);
-        cc.setDetectStatus(20, CloudCoin.STATUS_UNTRIED);
-        
-        cc.setPownStringFromDetectStatus();
+        CloudCoin cc = new CloudCoin(1, 10);
+        cc.setPownString("ppppnppppppfppppfefpnpppp");
+
         System.out.println("cc="+cc.getPownString() + " cc=" +cc.isSentFixable() + " x="+cc.isSentFixableColumns() + " y=" + cc.isSentFixableRows());
         System.exit(1);
         */
@@ -1344,7 +1334,7 @@ public class AdvancedClient  {
         pbarText.repaint();
     }
     */
-    private void setRAIDATransferProgressCoins(int raidaProcessed, int totalCoinsProcessed, int totalCoins) {
+    private void setRAIDATransferProgressCoins(int raidaProcessed, int totalCoinsProcessed, int totalCoins, int step) {
         pbar.setVisible(true);
         pbar.setValue(raidaProcessed);
         
@@ -1355,7 +1345,11 @@ public class AdvancedClient  {
         if (isWithdrawing())
             s = "Received";
         
-        pbarText.setText(s + " " + stc + " / " + tc + " CloudCoins");
+        if (step == 0) {
+            pbarText.setText("Breaking Coin");
+        } else {
+            pbarText.setText(s + " " + stc + " / " + tc + " CloudCoins");
+        }
         pbarText.repaint();
     }
     
@@ -2706,15 +2700,9 @@ public class AdvancedClient  {
         }
         
         String name = ps.srcWallet.getName();  
-        if (ps.needExtra) {
-            String total = AppCore.formatNumber(ps.statToBankValue + ps.statFailedValue + ps.statLostValue);
-            fname = AppUI.wrapDiv("You wanted <b>" + AppCore.formatNumber(ps.typedAmount) + " CC</b> but you got <b>" + total + " CC</b>"
-                    + " because you did not have perfect change. "
-                    + "The coins have been transferred to <b>" + to + "</b> from <b>" + name + "</b>");
-        } else {
-            fname = AppUI.wrapDiv("<b>" + AppCore.formatNumber(ps.typedAmount) 
+        fname = AppUI.wrapDiv("<b>" + AppCore.formatNumber(ps.typedAmount) 
                 + " CC</b> have been transferred to <b>" + to + "</b> from <b>" + name + "</b>");     
-        }
+
         AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
         y++;     
                    
@@ -4389,6 +4377,7 @@ public class AdvancedClient  {
         if (ps.currentWallet.isEncrypted()) {
             AppUI.getGBRow(subInnerCore, spText, passwordSrc.getTextField(), y, gridbag);
             y++; 
+            passwordSrc.requestFocus(); 
         }
 
            
@@ -4426,6 +4415,9 @@ public class AdvancedClient  {
             amount.setData("" + ps.typedAmount);
         AppUI.getGBRow(subInnerCore, fname, amount.getTextField(), y, gridbag);
         y++;
+        
+        if (!ps.currentWallet.isEncrypted())
+            amount.requestFocus(); 
         
         
         fname = new JLabel("Memo (Note)");
@@ -4637,6 +4629,7 @@ public class AdvancedClient  {
         if (ps.currentWallet.isEncrypted()) {
             AppUI.getGBRow(subInnerCore, spText, passwordSrc.getTextField(), y, gridbag);
             y++; 
+            passwordSrc.requestFocus();
         }
         
         //passwordSrc.getTextField().setVisible(false);
@@ -4706,6 +4699,9 @@ public class AdvancedClient  {
             amount.setData("" + ps.typedAmount);
         AppUI.getGBRow(subInnerCore, fname, amount.getTextField(), y, gridbag);
         y++;
+        
+        if (!ps.currentWallet.isEncrypted()) 
+            amount.requestFocus();
         
         
         fname = new JLabel("Memo (Note)");
@@ -5098,6 +5094,7 @@ public class AdvancedClient  {
             AppUI.getGBRow(subInnerCore, fname, password.getTextField(), y, gridbag);
             y++;
        
+            password.requestFocus(); 
             //password.getTextField().setVisible(false);
             //pText.setVisible(false);
         }
@@ -5106,6 +5103,9 @@ public class AdvancedClient  {
         final MyTextField memo = new MyTextField("Optional", false);
         if (!ps.typedMemo.isEmpty())
             memo.setData(ps.typedMemo);
+        
+        if (!ps.currentWallet.isEncrypted())
+            memo.requestFocus(); 
         
         AppUI.getGBRow(subInnerCore, fname, memo.getTextField(), y, gridbag);
         y++; 
@@ -6479,8 +6479,11 @@ public class AdvancedClient  {
                 rec = "<br><span style='font-size:0.4em; color: " + colstr + "'>Recovery Email: " + w.getEmail() + "</span>";
             }
             
-            String titleText = "<html>" + w.getName() + " : " 
-                + AppCore.formatNumber(w.getTotal()) + "<span style='font-size:0.8em'><sup>cc</sup></span>" + rec + "</html>";
+            String totalString = "Counting";
+            if (w.isUpdated())
+                totalString = AppCore.formatNumber(w.getTotal()) + "<span style='font-size:0.8em'><sup>cc</sup></span>";
+            
+            String titleText = "<html>" + w.getName() + " : " +  totalString + "" + rec + "</html>";
             trTitle.setText(titleText);
             trTitle.validate();
             trTitle.repaint();
@@ -6857,7 +6860,12 @@ public class AdvancedClient  {
             Hashtable<String, String[]> envelopes = sm.getActiveWallet().getEnvelopes();
             thlabel.setText("Skywallet Contents ");
             if (envelopes == null || envelopes.size() == 0) {
-                thlabel.setText("No Coins");
+                if (w.isUpdated()) {
+                    thlabel.setText("No Coins");
+                } else {
+                    thlabel.setText("");
+                }
+                
                 return;
             }
  
@@ -8267,7 +8275,7 @@ public class AdvancedClient  {
         System.setProperty("user.language","en-US");
         
         try {
-           
+           /*
            boolean isSet = false;
            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
                 if ("Windows".equals(info.getName())) {
@@ -8282,6 +8290,8 @@ public class AdvancedClient  {
            }   
            if (!isSet)
                 UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+           */
+           UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (ClassNotFoundException ex) {
           
         } catch (InstantiationException ex) {
@@ -8901,7 +8911,7 @@ public class AdvancedClient  {
             
             wl.debug(ltag, "Sender finished: " + sr.status);
             if (sr.status == SenderResult.STATUS_PROCESSING) {
-                setRAIDATransferProgressCoins(sr.totalRAIDAProcessed, sr.totalCoinsProcessed, sr.totalCoins);
+                setRAIDATransferProgressCoins(sr.totalRAIDAProcessed, sr.totalCoinsProcessed, sr.totalCoins, 1);
                 return;
             }
             
@@ -9104,7 +9114,7 @@ public class AdvancedClient  {
             
             wl.debug(ltag, "Receiver finished: " + rr.status);
             if (rr.status == ReceiverResult.STATUS_PROCESSING) {
-                setRAIDATransferProgressCoins(rr.totalRAIDAProcessed, rr.totalCoinsProcessed, rr.totalCoins);
+                setRAIDATransferProgressCoins(rr.totalRAIDAProcessed, rr.totalCoinsProcessed, rr.totalCoins, rr.step);
                 return;
             }
 
@@ -9176,7 +9186,7 @@ public class AdvancedClient  {
             if (ps.srcWallet != null)
                 name = ps.srcWallet.getName();
             
-            ps.needExtra = rr.needExtra;
+
             ps.rrAmount = rr.amount;
 
             wl.debug(ltag, "rramount " + rr.amount + " typed " + ps.typedAmount + " name=" + name);
@@ -9193,9 +9203,10 @@ public class AdvancedClient  {
        public void callback(Object result) {
             final TransferResult tr = (TransferResult) result;
 
+            System.out.println("step="+tr.step + " tr="+tr.totalRAIDAProcessed + " x="+tr.totalCoinsProcessed);
             wl.debug(ltag, "Transfer finished: " + tr.status);
             if (tr.status == TransferResult.STATUS_PROCESSING) {
-                setRAIDATransferProgressCoins(tr.totalRAIDAProcessed, tr.totalCoinsProcessed, tr.totalCoins);
+                setRAIDATransferProgressCoins(tr.totalRAIDAProcessed, tr.totalCoinsProcessed, tr.totalCoins, tr.step);
                 return;
             }
 

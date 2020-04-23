@@ -63,6 +63,7 @@ public class Transfer extends Servant {
         trResult.status = globalResult.status;
         trResult.amount = globalResult.amount;
         trResult.errText = globalResult.errText;
+        trResult.step = globalResult.step;
     }
     
     public void doTransfer(int fromsn, int tosn, int sns[], String tag, int amount) {
@@ -107,8 +108,66 @@ public class Transfer extends Servant {
                 cb.callback(tr);
             return;
         }
+
+        if (extraCoin != null) {
+            logger.debug(ltag, "Need change");
+            int[] csns = breakInBank(extraCoin, idcc, new CallbackInterface() {
+                final GLogger gl = logger;
+                final CallbackInterface myCb = cb;
+
+                @Override
+                public void callback(Object result) {
+                    globalResult.step = 0;
+                    globalResult.totalRAIDAProcessed++;
+                    if (myCb != null) {
+                        TransferResult trlocal = new TransferResult();
+                        copyFromGlobalResult(trlocal);
+                        myCb.callback(trlocal);
+                    }
+                }
+            });
+            
+            if (csns == null) {
+                tr = new TransferResult();
+                globalResult.status = TransferResult.STATUS_ERROR;
+                globalResult.errText = "Failed to break coin in Bank";
+                copyFromGlobalResult(tr);
+                if (cb != null)
+                    cb.callback(tr);
+                
+                return; 
+                
+            }
+            
+            int[] nsns = new int[sns.length + csns.length];
+            for (int j = 0; j < sns.length; j++) {
+                logger.debug(ltag, "Existing coins " + sns[j]);
+                nsns[j] = sns[j];
+                
+            }
+            
+            for (int j = 0; j < csns.length; j++) {
+                logger.debug(ltag, "Coins from Break " + csns[j]);
+                nsns[j + sns.length] = csns[j];
+            }
+            
+            coinsPicked = new ArrayList<CloudCoin>();
+            if (!pickCoinsAmountFromArray(nsns, amount)) {
+                tr = new TransferResult();
+                globalResult.status = TransferResult.STATUS_ERROR;
+                globalResult.errText = "Failed to collect coins after breaking change";
+                copyFromGlobalResult(tr);
+                if (cb != null)
+                    cb.callback(tr);
+                
+                return;  
+            }
+        }
         
+        globalResult.step = 1;
+        globalResult.totalRAIDAProcessed = 0;
         
+             
         ArrayList<CloudCoin> ccs;
         ccs = new ArrayList<CloudCoin>();
         
@@ -133,16 +192,6 @@ public class Transfer extends Servant {
         
         
         logger.info(ltag, "total files "+ globalResult.totalFiles);
-        
-        /*
-        for (CloudCoin cc : coinsPicked) {
-            globalResult.totalCoins += cc.getDenomination();
-        }
-        
-        if (extraCoin != null)
-            globalResult.totalCoins += extraCoin.getDenomination();
-        */
-        
         globalResult.totalCoins = amount;
         
         int curValProcessed = 0;      
@@ -204,6 +253,7 @@ public class Transfer extends Servant {
             }
         } 
     
+        /*
         if (extraCoin != null) {
             int remained = amount - curValProcessed;
             logger.debug(ltag, "Changing coin " + extraCoin.sn + " alreadyProcessed=" + curValProcessed + " needed=" + amount);
@@ -218,6 +268,7 @@ public class Transfer extends Servant {
                 return;
             }
         }
+        */
         
         globalResult.status = TransferResult.STATUS_FINISHED;
         copyFromGlobalResult(tr);
@@ -348,6 +399,7 @@ public class Transfer extends Servant {
 
         boolean failed = false;
         for (CloudCoin tcc : ccs) {
+            tcc.setNoResponseForEmpty();
             tcc.setPownStringFromDetectStatus();
             
             //int cnt = AppCore.getPassedCount(tcc);

@@ -1574,4 +1574,142 @@ public class Servant {
         
         return sns;
     }
+    
+    public int[] breakInBank(CloudCoin tcc, CloudCoin idcc, CallbackInterface cb)  {       
+        String[] results;
+        CommonResponse errorResponse;
+        String[] requests;
+        StringBuilder[] sbs;
+        String[] posts;
+        int i;
+        CloudCoin[] sccs;
+
+        logger.debug(ltag, "Breaking coin " + tcc.sn + ". ID coin " + idcc.sn);
+        
+        int method = AppCore.getChangeMethod(tcc.getDenomination());
+        if (method == 0) {
+            logger.error(ltag, "Can't find suitable method");
+            return null;
+        }
+   
+        logger.debug(ltag, "Method chosen: " + method);
+        
+        int sns[] = showChange(method, tcc);
+        if (sns == null) {
+            logger.error(ltag, "Not enough coins to make change");
+            return null;
+        }
+
+        for (i = 0; i < sns.length; i++) {
+            CloudCoin ccx = new CloudCoin(1, sns[i]);
+            logger.info(ltag, "sn "+ sns[i] + " d="+ccx.getDenomination());
+        }
+
+        for (i = 0; i < sns.length; i++) {
+            CloudCoin xcc = new CloudCoin(Config.DEFAULT_NN, sns[i]);
+            logger.debug(ltag, "Picked for change: " + xcc.sn + " " + xcc.getDenomination());            
+        }
+
+        sbs = new StringBuilder[RAIDA.TOTAL_RAIDA_COUNT];
+        requests = new String[RAIDA.TOTAL_RAIDA_COUNT];
+
+        for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+            //idcc.ans[i] = "fa08fa80ba6dba05165eb670b0f3beb0";
+            sbs[i] = new StringBuilder();
+            sbs[i].append("break_in_bank?");
+            sbs[i].append("id_nn=");
+            sbs[i].append(idcc.nn);
+            sbs[i].append("&id_sn=");
+            sbs[i].append(idcc.sn);
+            sbs[i].append("&id_an=");
+            sbs[i].append(idcc.ans[i]);
+            sbs[i].append("&id_dn=");
+            sbs[i].append(idcc.getDenomination());
+            sbs[i].append("&nn=");
+            sbs[i].append(tcc.nn);
+            sbs[i].append("&sn=");
+            sbs[i].append(tcc.sn);
+            sbs[i].append("&dn=");
+            sbs[i].append(tcc.getDenomination());            
+            sbs[i].append("&change_server=");
+            sbs[i].append(Config.PUBLIC_CHANGE_MAKER_ID);
+
+            for (int j = 0; j < sns.length; j++) {
+                sbs[i].append("&csn[]=");
+                sbs[i].append(sns[j]);
+            }
+
+            requests[i] = sbs[i].toString();
+        }
+        
+        results = raida.query(requests, null, cb);      
+        if (results == null) {
+            logger.error(ltag, "Failed to query Break in Bank");
+            return null;
+        }
+        
+        CloudCoin fakeCC = new CloudCoin(Config.DEFAULT_NN, 1);
+        for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+            logger.info(ltag, "i="+i+ " r="+results[i]);
+            if (results[i] != null) {
+                if (results[i].equals("")) {
+                    fakeCC.setDetectStatus(i, CloudCoin.STATUS_NORESPONSE);
+                    logger.error(ltag, "Skipped raida" + i);
+                    continue;
+                }
+            }
+            
+            if (results[i] == null) {
+                fakeCC.setDetectStatus(i, CloudCoin.STATUS_NORESPONSE);
+                logger.error(ltag, "Skipped raida due to empty response " + i);
+                continue;
+            }
+
+            CommonResponse o = (CommonResponse) parseResponse(results[i], CommonResponse.class);
+            if (o == null) {
+                errorResponse = (CommonResponse) parseResponse(results[i], CommonResponse.class);
+                fakeCC.setDetectStatus(i, CloudCoin.STATUS_ERROR);
+                if (errorResponse == null) {
+                    logger.error(ltag, "Failed to get error");
+                    continue;
+                }
+
+                logger.error(ltag, "Failed to auth coin. Status: " + errorResponse.status);
+                continue;
+            }
+            
+            if (o.status.equals("success")) {
+                logger.debug(ltag, "Change from RAIDA " + i + " OK");
+                fakeCC.setDetectStatus(i, CloudCoin.STATUS_PASS);
+                continue;
+            } else if (o.status.equals(Config.REQUEST_STATUS_FAIL)) {
+                logger.error(ltag, "Failed status from raida " + i + " status: " + o.status);
+                fakeCC.setDetectStatus(i, CloudCoin.STATUS_FAIL);
+                continue;
+            } else {
+                logger.error(ltag, "Invalid status from raida " + i + " status: " + o.status);
+                fakeCC.setDetectStatus(i, CloudCoin.STATUS_ERROR);
+                continue;
+            }
+        }
+
+        fakeCC.setPownStringFromDetectStatus();
+        logger.debug(ltag, "Change: " + fakeCC.getPownString());
+        System.out.println("Change: " + fakeCC.getPownString());
+        
+        if (fakeCC.isSentFixable()) {
+            logger.debug(ltag, "Break completed successfully");
+            return sns;
+        }
+        
+        
+        logger.info(ltag, "Break failed");
+        System.out.println("failed");
+        //for (i = 0; i < sns.length; i++) { coinsPicked.add(new CloudCoin(Config.DEFAULT_NN, sns[i]));     }  return true;
+        //return false;
+        
+        return null;
+        //return null;
+    }
+    
 }

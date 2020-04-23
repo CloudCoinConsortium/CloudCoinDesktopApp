@@ -114,6 +114,7 @@ public class Grader extends Servant {
         for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
             switch (cc.getDetectStatus(i)) {
                 case CloudCoin.STATUS_ERROR:
+                case CloudCoin.STATUS_NORESPONSE:
                     error++;
                     break;
                 case CloudCoin.STATUS_FAIL:
