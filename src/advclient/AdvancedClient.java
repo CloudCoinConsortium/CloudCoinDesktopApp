@@ -7714,11 +7714,21 @@ public class AdvancedClient  {
 
         // List wallets
         wallets = sm.getWallets();
+        int activeWalletIdx = -1;
         for (int i = 0; i < wallets.length; i++) {
-        //    if (wallets[i].isSkyWallet())
-        //        continue;
-            
-           
+            if (this.isActiveWallet(wallets[i])) {
+                activeWalletIdx = i;
+                wpanel.add(getWallet(wallets[i], 0));
+                wpanel.add(AppUI.hr(10));
+                break;
+            }
+                
+        }
+        
+        for (int i = 0; i < wallets.length; i++) {
+            if (i == activeWalletIdx)
+                continue;
+
             wpanel.add(getWallet(wallets[i], 0));
             wpanel.add(AppUI.hr(10));
         }
