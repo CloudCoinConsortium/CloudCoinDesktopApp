@@ -430,22 +430,25 @@ public class CloudCoin {
     }
     
         
-    public boolean isSentFixableRows() {
-        return _isSentFixable(detectStatus);
-    }
+    
     
     public boolean isSentFixable() {
-        return isSentFixableRows() && isSentFixableColumns();
+        return isSentFixableRows(false) && isSentFixableColumns(false);
     }
     
-    private boolean _isSentFixable(int[] statuses) {
+    public boolean canbeRecoveredFromLost() {
+        return isSentFixableRows(true) && isSentFixableColumns(true);
+    }
+    
+    
+    private boolean _isSentFixable(int[] statuses, boolean includeNs) {
         int badRows, goodRows;
         boolean seenGoodRows = false;
         
         badRows = 0;
         goodRows = 0;
         for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
-            if (statuses[i] == CloudCoin.STATUS_PASS) {
+            if (statuses[i] == CloudCoin.STATUS_PASS || (includeNs && statuses[i] == CloudCoin.STATUS_NORESPONSE)) {
                 goodRows++;
                 badRows = 0;
                 if (goodRows == sideSize + 1)
@@ -463,8 +466,12 @@ public class CloudCoin {
         
         return false;
     }
+    
+    public boolean isSentFixableRows(boolean includeNs) {
+        return _isSentFixable(detectStatus, includeNs);
+    }
 
-    public boolean isSentFixableColumns() {
+    public boolean isSentFixableColumns(boolean includeNs) {
         if (sideSize * sideSize != RAIDA.TOTAL_RAIDA_COUNT)
             return false;
         
@@ -476,7 +483,7 @@ public class CloudCoin {
             rotatedStatuses[i] = getDetectStatus(idx);           
         }
         
-        return _isSentFixable(rotatedStatuses);
+        return _isSentFixable(rotatedStatuses, includeNs);
     }
 
     public void setNoResponseForEmpty() {

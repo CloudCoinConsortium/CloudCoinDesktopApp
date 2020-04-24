@@ -144,8 +144,11 @@ public class AdvancedClient  {
         /*
         CloudCoin cc = new CloudCoin(1, 10);
         cc.setPownString("ppppnppppppfppppfefpnpppp");
+        //cc.setPownString("pppppppppppfppppfefpnpppp");
 
-        System.out.println("cc="+cc.getPownString() + " cc=" +cc.isSentFixable() + " x="+cc.isSentFixableColumns() + " y=" + cc.isSentFixableRows());
+        
+        System.out.println("cc="+cc.getPownString() + " cc=" +cc.isSentFixable() + " x="+cc.isSentFixableColumns(false) + " y=" + cc.isSentFixableRows(false));
+        System.out.println("lost=" + cc.canbeRecoveredFromLost());
         System.exit(1);
         */
         

@@ -108,13 +108,16 @@ public class Grader extends Servant {
 
     public void gradeCC(CloudCoin cc, String fsource) {
         String dstFolder;
-        int untried, counterfeit, passed, error;
+        int untried, counterfeit, passed, error, noresponse;
 
-        untried = counterfeit = passed = error = 0;
+        untried = counterfeit = passed = error = noresponse = 0;
+        logger.debug(ltag, "cc="+cc.sn+ " u="+untried+ " c=" + counterfeit + " passed="+passed+ " e="+error + " n="+ noresponse);
         for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
             switch (cc.getDetectStatus(i)) {
-                case CloudCoin.STATUS_ERROR:
                 case CloudCoin.STATUS_NORESPONSE:
+                    noresponse++;
+                    break;
+                case CloudCoin.STATUS_ERROR:
                     error++;
                     break;
                 case CloudCoin.STATUS_FAIL:
@@ -160,7 +163,7 @@ public class Grader extends Servant {
 
             ccFile = AppCore.getUserDir(dstFolder, user) + File.separator + cc.getFileName();
         } else {
-            if (passed + counterfeit > Config.PASS_THRESHOLD) {
+            if (!cc.canbeRecoveredFromLost()) {
                 logger.debug(ltag, "Coin " + cc.sn + " is counterfeit");
 
                 gr.totalCounterfeit++;
