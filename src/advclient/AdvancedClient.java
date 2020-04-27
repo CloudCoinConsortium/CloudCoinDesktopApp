@@ -25,6 +25,7 @@ import global.cloudcoin.ccbank.core.CallbackInterface;
 import global.cloudcoin.ccbank.core.CloudCoin;
 import global.cloudcoin.ccbank.core.Config;
 import global.cloudcoin.ccbank.core.DNSSn;
+import global.cloudcoin.ccbank.core.MyHttpServer;
 import global.cloudcoin.ccbank.core.RAIDA;
 import global.cloudcoin.ccbank.core.Wallet;
 import javax.swing.*;
@@ -100,6 +101,8 @@ public class AdvancedClient  {
     Brand brand;
     
     JLabel infoText;
+    
+    MyHttpServer httpServer;
     
     public AdvancedClient() {
         wl = new WLogger();
@@ -239,9 +242,27 @@ public class AdvancedClient  {
         
         brand.copyTemplates();
         
+        startHttpServer();
+        
         resetState();
     }
    
+    public void startHttpServer() {
+        if (!Config.CLOUDBANK_ENABLED) {
+            wl.debug(ltag, "CloudBank Server is not enabled");
+            return;
+        }
+        
+        if (httpServer != null)
+            httpServer.stopServer();
+        
+        httpServer = new MyHttpServer(Config.CLOUDBANK_PORT, Config.CLOUDBANK_PASSWORD, wl);
+        if (!httpServer.startServer()) {
+            wl.error(ltag, "HTTP server failed to start. Will continue anyway");
+        }
+    }
+    
+    
     public void echoDone() {
         ps.isEchoFinished = true;
     }
@@ -869,7 +890,8 @@ public class AdvancedClient  {
         };
  
         String[] items = {"Backup", "List serials", "Clear History", "Fix Fracked", 
-            "Delete Wallet", "Show Folders", "Echo RAIDA", "Settings", "Sent Coins", "Export Keys", "Bill Pay"};
+            "Delete Wallet", "Show Folders", "Echo RAIDA", "Settings", "Sent Coins", 
+            "Export Keys", "Bill Pay", "Cloud Bank"};
         for (int i = 0; i < items.length; i++) {
             JMenuItem menuItem = new JMenuItem(items[i]);
             menuItem.setActionCommand("" + i);
@@ -933,7 +955,9 @@ public class AdvancedClient  {
                         ps.currentScreen = ProgramState.SCREEN_SHOW_BACKUP_KEYS;
                     } else if (action.equals("10")) {
                         ps.currentScreen = ProgramState.SCREEN_SHOW_BILL_PAY;
-                     }
+                    } else if (action.equals("11")) {
+                        ps.currentScreen = ProgramState.SCREEN_CLOUDBANK;
+                    }
 
                     showScreen();
                 }
@@ -1250,6 +1274,9 @@ public class AdvancedClient  {
                 break;
             case ProgramState.SCREEN_WITHDRAW_DONE:
                 showWithdrawDoneScreen();
+                break;
+            case ProgramState.SCREEN_CLOUDBANK:
+                showCloudbankScreen();
                 break;
         }
         
@@ -2870,6 +2897,236 @@ public class AdvancedClient  {
     }
     
     
+    public void preCloudbank() {
+        if (Config.CLOUDBANK_ACCOUNT.isEmpty())
+            Config.CLOUDBANK_ACCOUNT = AppCore.generateHex();
+        
+        if (Config.CLOUDBANK_PASSWORD.isEmpty())
+            Config.CLOUDBANK_PASSWORD = AppCore.generateHex();
+    }
+    
+    public void showCloudbankScreen() {
+        int y = 0;
+        JLabel fname;
+        MyTextField walletName = null;
+        
+        preCloudbank();
+        
+        JPanel subInnerCore = getPanel("CloudBank Server");                
+        GridBagLayout gridbag = new GridBagLayout();
+        subInnerCore.setLayout(gridbag);
+        
+        final optRv rvLocal = setOptionsForWalletsCommon(false, false, false, null);
+        if (rvLocal.idxs.length == 0) {
+            fname = AppUI.wrapDiv("You don't have Local Wallets");
+            AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
+            y++;
+            AppUI.GBPad(subInnerCore, y, gridbag);  
+            return;
+        }
+        
+        final optRv rvSky = setOptionsForWalletsSky();
+        if (rvSky.idxs.length == 0) {
+            fname = AppUI.wrapDiv("You don't have Sky Wallets");
+            AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
+            y++;
+            AppUI.GBPad(subInnerCore, y, gridbag);  
+            return;
+        }
+
+        fname = new JLabel("Server Enabled");
+        final MyCheckBoxToggle cb1 = new MyCheckBoxToggle();
+        cb1.setSelected(Config.CLOUDBANK_ENABLED);
+        AppUI.getGBRow(subInnerCore, fname, cb1.getCheckBox(), y, gridbag);
+        y++;
+                
+        fname = new JLabel("Server Port");
+        final MyTextField serverPort = new MyTextField("Server Port", false);         
+        AppUI.getGBRow(subInnerCore, fname, serverPort.getTextField(), y, gridbag);
+        serverPort.setData(Integer.toString(Config.CLOUDBANK_PORT));
+        y++;     
+        
+        fname = new JLabel("Account");
+        final MyTextField account = new MyTextField("Account", false);         
+        AppUI.getGBRow(subInnerCore, fname, account.getTextField(), y, gridbag);
+        account.setData(Config.CLOUDBANK_ACCOUNT);
+        y++;     
+        
+        fname = new JLabel("Password");
+        final MyTextField password = new MyTextField("Password");
+        AppUI.getGBRow(subInnerCore, fname, password.getTextField(), y, gridbag);
+        password.setData(Config.CLOUDBANK_PASSWORD);
+        y++;
+        
+        
+        
+        
+        fname = new JLabel("Local Wallet");
+        final RoundedCornerComboBox cboxlocal = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "Make Selection", rvLocal.options);
+        AppUI.getGBRow(subInnerCore, fname, cboxlocal.getComboBox(), y, gridbag);
+        y++;    
+        
+        final JLabel spText = new JLabel("Wallet Password");
+        final MyTextField passwordSrc = new MyTextField("Wallet Password", true);
+        AppUI.getGBRow(subInnerCore, spText, passwordSrc.getTextField(), y, gridbag);
+        y++; 
+        
+        passwordSrc.getTextField().setVisible(false);
+        spText.setVisible(false);
+        
+        
+        fname = new JLabel("Sky Wallet");
+        final RoundedCornerComboBox cboxsky = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "Make Selection", rvSky.options);
+        AppUI.getGBRow(subInnerCore, fname, cboxsky.getComboBox(), y, gridbag);
+        y++; 
+        
+        for (int i = 0; i < wallets.length; i++) {
+            String name = wallets[i].getName();
+            if (name.equals(Config.CLOUDBANK_LWALLET)) {
+                for (int j = 0; j < rvLocal.idxs.length; j++) {
+                    if (rvLocal.idxs[j] == i) {
+                        cboxlocal.setDefaultIdx(j + 1);
+                    }
+                }
+            } else if (name.equals(Config.CLOUDBANK_RWALLET)) {
+                for (int j = 0; j < rvSky.idxs.length; j++) {
+                    if (rvSky.idxs[j] == i) {
+                        cboxsky.setDefaultIdx(j + 1);
+                    }
+                }       
+            }
+        }
+        
+        cboxlocal.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                int srcIdx = cboxlocal.getSelectedIndex() - 1;
+                if (srcIdx < 0 || srcIdx >= wallets.length) 
+                    return;
+                
+                srcIdx = rvLocal.idxs[srcIdx];
+                Wallet srcWallet = wallets[srcIdx];
+                if (srcWallet == null)
+                    return;
+
+                if (srcWallet.isEncrypted()) {                 
+                    passwordSrc.getTextField().setVisible(true);
+                    spText.setVisible(true);
+                } else {
+                    passwordSrc.getTextField().setVisible(false);
+                    spText.setVisible(false);
+                }
+            }
+        });
+        
+
+        AppUI.GBPad(subInnerCore, y, gridbag);        
+        y++;
+            
+        AppUI.getTwoButtonPanel(subInnerCore, "Test Connection", "Save", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                showScreen();
+            }
+        }, new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                boolean cbEnabled = cb1.isChecked();
+                
+                String cbAccount = account.getText();
+                String cbPassword = password.getText();
+                int cbPort;
+                try {
+                    cbPort = Integer.parseInt(serverPort.getText());
+                } catch (NumberFormatException er) {
+                    ps.errText = "Invalid Server Port";
+                    showScreen();
+                    return;
+                }
+                
+                if (cbPort < 0 || cbPort > 65535) {
+                    ps.errText = "Server Port must be within range 1..65535";
+                    showScreen();
+                    return;
+                }
+                
+                if (cbAccount.isEmpty()) {
+                    ps.errText = "Account can't be empty";
+                    showScreen();
+                    return;
+                }
+                
+                if (cbPassword.isEmpty()) {
+                    ps.errText = "Password can't be empty";
+                    showScreen();
+                    return;
+                }
+
+                int lIdx = cboxlocal.getSelectedIndex() - 1;
+                if (lIdx < 0 || lIdx >= rvLocal.idxs.length) {                    
+                    ps.errText = "Please select Local Wallet";
+                    showScreen();
+                    return;
+                }
+                
+                int rIdx = cboxsky.getSelectedIndex() - 1;
+                if (rIdx < 0 || rIdx >= rvSky.idxs.length) {                    
+                    ps.errText = "Please select Sky Wallet";
+                    showScreen();
+                    return;
+                }
+
+                lIdx = rvLocal.idxs[lIdx];
+                rIdx = rvSky.idxs[rIdx];
+                Wallet lWallet = wallets[lIdx];
+                Wallet rWallet = wallets[rIdx];
+                String walletPassword = "";
+                
+                if (lWallet.isEncrypted()) {
+                    if (passwordSrc.getText().isEmpty()) {
+                        ps.errText = "Password is empty";
+                        showScreen();
+                        return;
+                    }
+                    
+                    String wHash = lWallet.getPasswordHash();
+                    String providedHash = AppCore.getMD5(passwordSrc.getText());
+                    if (wHash == null) {
+                        ps.errText = "Local Wallet is corrupted";
+                        showScreen();
+                        return;
+                    }
+                    
+                    if (!wHash.equals(providedHash)) {
+                        ps.errText = "Local Wallet Password is incorrect";
+                        showScreen();
+                        return;
+                    } 
+                    
+                    walletPassword = passwordSrc.getText();
+                }
+                
+                Config.CLOUDBANK_ENABLED = cbEnabled;
+                Config.CLOUDBANK_PORT = cbPort;
+                Config.CLOUDBANK_ACCOUNT = cbAccount;
+                Config.CLOUDBANK_PASSWORD = cbPassword;
+                Config.CLOUDBANK_LWALLET = lWallet.getName();
+                Config.CLOUDBANK_LWALLET_PASSWORD = walletPassword;
+                Config.CLOUDBANK_RWALLET = rWallet.getName();
+                
+                if (AppCore.writeConfig() == false) {
+                    ps.errText = "Failed to write config file";
+                    showScreen();
+                    return;
+                }
+
+                startHttpServer();
+                ps.currentScreen = ProgramState.SCREEN_SETTINGS_SAVED;
+                showScreen();
+                
+            }
+        }, y, gridbag);
+       
+        
+    }
     
     public void showSettingsScreen() {
         int y = 0;
@@ -5739,8 +5996,6 @@ public class AdvancedClient  {
         AppUI.getGBRow(subInnerCore, fname0, cb1.getCheckBox(), y, gridbag);
         y++;
         
-        
-
         cboxfrom.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 int srcIdx = cboxfrom.getSelectedIndex() - 1;              
@@ -5854,6 +6109,37 @@ public class AdvancedClient  {
         return rv;
     }
 
+    public optRv setOptionsForWalletsSky() {
+        optRv rv = new optRv();
+        
+        int cnt = 0;
+        for (int i = 0; i < wallets.length; i++) {
+            if (!wallets[i].isSkyWallet())
+                continue;
+            
+            cnt++;
+        }
+              
+        rv.options = new String[cnt];
+        rv.idxs = new int[cnt];
+        
+        if (cnt == 0)
+            return rv;
+        
+        int j = 0;
+        for (int i = 0; i < wallets.length; i++) {
+            if (!wallets[i].isSkyWallet())
+                continue;
+            
+            int wTotal = wallets[i].getTotal();
+            rv.options[j] = wallets[i].getName() + " - " + AppCore.formatNumber(wTotal) + " CC";
+            rv.idxs[j] = i;
+            j++;
+            cnt++;
+        }
+         
+        return rv;
+    }
     
     public optRv setOptionsForWalletsCommon(boolean checkFracked, boolean needEmpty, boolean includeSky, String name) {
         optRv rv = new optRv();
@@ -8288,7 +8574,6 @@ public class AdvancedClient  {
         System.setProperty("user.language","en-US");
         
         try {
-           /*
            boolean isSet = false;
            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
                 if ("Windows".equals(info.getName())) {
@@ -8303,8 +8588,8 @@ public class AdvancedClient  {
            }   
            if (!isSet)
                 UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
-           */
-           UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+           
+           //UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (ClassNotFoundException ex) {
           
         } catch (InstantiationException ex) {

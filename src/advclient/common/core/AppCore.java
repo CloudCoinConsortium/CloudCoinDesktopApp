@@ -1161,6 +1161,7 @@ public class AppCore {
         return rootPath + File.separator + Config.MAIL_CONFIG_FILENAME;
     }
     
+    
     public static void readConfig() {
         String globalConfigFilename = rootPath + File.separator + Config.GLOBAL_CONFIG_FILENAME;
         
@@ -1174,6 +1175,7 @@ public class AppCore {
         
         String os;
         int oi;
+        boolean ob;
         try {
             JSONObject o = new JSONObject(data);
                     
@@ -1225,6 +1227,50 @@ public class AppCore {
                 logger.debug(ltag, "DDNSSN Server: " + os);
                 Config.DDNSSN_SERVER = os;
             }
+            
+            os = o.optString("cloudbank_lwallet");
+            if (os != null) {
+                logger.debug(ltag, "CloudBank Local Wallet: " + os);
+                Config.CLOUDBANK_LWALLET = os;
+            }
+            
+            os = o.optString("cloudbank_lwallet_password");
+            if (os != null) {
+                logger.debug(ltag, "CloudBank Local Wallet Password: " + os);
+                Config.CLOUDBANK_LWALLET_PASSWORD = os;
+            }
+            
+            os = o.optString("cloudbank_rwallet");
+            if (os != null) {
+                logger.debug(ltag, "CloudBank Sky Wallet: " + os);
+                Config.CLOUDBANK_RWALLET = os;
+            }
+            
+            ob = o.optBoolean("cloudbank_enabled");
+            if (ob != false) {
+                logger.debug(ltag, "CloudBank Enabled: " + ob);
+                Config.CLOUDBANK_ENABLED = ob;
+            }
+            
+            oi = o.optInt("cloudbank_port");
+            if (oi != -1) {
+                logger.debug(ltag, "CloudBank Enabled: " + oi);
+                Config.CLOUDBANK_PORT = oi;
+            }
+            
+            os = o.optString("cloudbank_account");
+            if (os != null) {
+                logger.debug(ltag, "CloudBank Account: " + os);
+                Config.CLOUDBANK_ACCOUNT = os;
+            }
+            
+            os = o.optString("cloudbank_password");
+            if (os != null) {
+                logger.debug(ltag, "CloudBank Password: " + os);
+                Config.CLOUDBANK_PASSWORD = os;
+            }
+            
+            
         } catch (JSONException e) {
             logger.error(ltag, "Failed to parse config file: " + e.getMessage());
             return;
@@ -1246,6 +1292,13 @@ public class AppCore {
                 + "\"max_coins\": " + Config.DEFAULT_MAX_COINS_MULTIDETECT + ", "
                 + "\"export_dir\": \"" + edir + "\", "
                 + "\"deposit_dir\": \"" + ddir + "\", "
+                + "\"cloudbank_enabled\": " + Config.CLOUDBANK_ENABLED +  ", "
+                + "\"cloudbank_lwallet\": \"" + Config.CLOUDBANK_LWALLET +  "\", "
+                + "\"cloudbank_lwallet_password\": \"" + Config.CLOUDBANK_LWALLET_PASSWORD +  "\", "
+                + "\"cloudbank_rwallet\": \"" + Config.CLOUDBANK_RWALLET +  "\", "
+                + "\"cloudbank_port\": " + Config.CLOUDBANK_PORT +  ", "
+                + "\"cloudbank_account\": \"" + Config.CLOUDBANK_ACCOUNT +  "\", "
+                + "\"cloudbank_password\": \"" + Config.CLOUDBANK_PASSWORD +  "\", "
                 + "\"ddnssn_server\": \"" + Config.DDNSSN_SERVER + "\""
                 + "}";
         

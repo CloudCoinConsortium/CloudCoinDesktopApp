@@ -75,6 +75,7 @@ public class ProgramState {
     final public static int SCREEN_WITHDRAWING = 57;
     final public static int SCREEN_WITHDRAW_DONE = 58;
     final public static int SCREEN_INIT_BRAND = 59;
+    final public static int SCREEN_CLOUDBANK = 60;
     
     
     final static int CB_STATE_INIT = 1;

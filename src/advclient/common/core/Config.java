@@ -209,4 +209,15 @@ public class Config {
     final public static String BRAND_URL = "https://raida.tech";
     
     final public static String BRAND_CONFIG_NAME = "config.ini.txt";
+    
+    
+    public static int CLOUDBANK_PORT = 8080;
+    public static boolean CLOUDBANK_ENABLED = false;
+    public static String CLOUDBANK_LWALLET = "";
+    public static String CLOUDBANK_LWALLET_PASSWORD = "";
+    public static String CLOUDBANK_RWALLET = "";
+    public static String CLOUDBANK_ACCOUNT = "";
+    public static String CLOUDBANK_PASSWORD = "";
+    
+    
 }
