@@ -22,6 +22,7 @@ import global.cloudcoin.ccbank.Unpacker.UnpackerResult;
 import global.cloudcoin.ccbank.Vaulter.VaulterResult;
 import global.cloudcoin.ccbank.core.AppCore;
 import global.cloudcoin.ccbank.core.CallbackInterface;
+import global.cloudcoin.ccbank.core.CloudBank;
 import global.cloudcoin.ccbank.core.CloudCoin;
 import global.cloudcoin.ccbank.core.Config;
 import global.cloudcoin.ccbank.core.DNSSn;
@@ -62,7 +63,7 @@ import javax.swing.table.TableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    String version = "3.0.2";
+    public static String version = "3.0.2";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -89,6 +90,8 @@ public class AdvancedClient  {
     
     JProgressBar pbar;
     JLabel pbarText;
+    
+    CloudBank cloudbank;
     
     JFrame mainFrame;
        
@@ -248,15 +251,18 @@ public class AdvancedClient  {
     }
    
     public void startHttpServer() {
+        if (httpServer != null) 
+            httpServer.stopServer();
+        
         if (!Config.CLOUDBANK_ENABLED) {
             wl.debug(ltag, "CloudBank Server is not enabled");
             return;
         }
         
-        if (httpServer != null)
-            httpServer.stopServer();
+        if (cloudbank == null)
+            cloudbank = new CloudBank(wl, sm);
         
-        httpServer = new MyHttpServer(Config.CLOUDBANK_PORT, Config.CLOUDBANK_PASSWORD, wl);
+        httpServer = new MyHttpServer(Config.CLOUDBANK_PORT, Config.CLOUDBANK_PASSWORD, cloudbank, wl);
         if (!httpServer.startServer()) {
             wl.error(ltag, "HTTP server failed to start. Will continue anyway");
         }
@@ -2969,6 +2975,7 @@ public class AdvancedClient  {
         final JLabel spText = new JLabel("Wallet Password");
         final MyTextField passwordSrc = new MyTextField("Wallet Password", true);
         AppUI.getGBRow(subInnerCore, spText, passwordSrc.getTextField(), y, gridbag);
+        passwordSrc.setData(Config.CLOUDBANK_LWALLET_PASSWORD);
         y++; 
         
         passwordSrc.getTextField().setVisible(false);
@@ -2980,24 +2987,8 @@ public class AdvancedClient  {
         AppUI.getGBRow(subInnerCore, fname, cboxsky.getComboBox(), y, gridbag);
         y++; 
         
-        for (int i = 0; i < wallets.length; i++) {
-            String name = wallets[i].getName();
-            if (name.equals(Config.CLOUDBANK_LWALLET)) {
-                for (int j = 0; j < rvLocal.idxs.length; j++) {
-                    if (rvLocal.idxs[j] == i) {
-                        cboxlocal.setDefaultIdx(j + 1);
-                    }
-                }
-            } else if (name.equals(Config.CLOUDBANK_RWALLET)) {
-                for (int j = 0; j < rvSky.idxs.length; j++) {
-                    if (rvSky.idxs[j] == i) {
-                        cboxsky.setDefaultIdx(j + 1);
-                    }
-                }       
-            }
-        }
         
-        cboxlocal.addActionListener(new ActionListener() {
+                cboxlocal.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 int srcIdx = cboxlocal.getSelectedIndex() - 1;
                 if (srcIdx < 0 || srcIdx >= wallets.length) 
@@ -3017,6 +3008,25 @@ public class AdvancedClient  {
                 }
             }
         });
+        
+        for (int i = 0; i < wallets.length; i++) {
+            String name = wallets[i].getName();
+            if (name.equals(Config.CLOUDBANK_LWALLET)) {
+                for (int j = 0; j < rvLocal.idxs.length; j++) {
+                    if (rvLocal.idxs[j] == i) {
+                        cboxlocal.setDefaultIdx(j + 1);
+                    }
+                }
+            } else if (name.equals(Config.CLOUDBANK_RWALLET)) {
+                for (int j = 0; j < rvSky.idxs.length; j++) {
+                    if (rvSky.idxs[j] == i) {
+                        cboxsky.setDefaultIdx(j + 1);
+                    }
+                }       
+            }
+        }
+        
+
         
 
         AppUI.GBPad(subInnerCore, y, gridbag);        
@@ -3117,6 +3127,11 @@ public class AdvancedClient  {
                     showScreen();
                     return;
                 }
+
+                
+                cloudbank = new CloudBank(wl, sm);
+                cloudbank.init();
+
 
                 startHttpServer();
                 ps.currentScreen = ProgramState.SCREEN_SETTINGS_SAVED;

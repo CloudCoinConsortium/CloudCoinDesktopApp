@@ -5,6 +5,8 @@
  */
 package global.cloudcoin.ccbank.core;
 
+import advclient.AdvancedClient;
+import advclient.AppUI;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpsConfigurator;
@@ -18,6 +20,7 @@ import java.net.UnknownHostException;
 import org.json.JSONException;
 
 import com.sun.net.httpserver.HttpsServer;
+import global.cloudcoin.ccbank.ServantManager.ServantManager;
 import java.awt.RenderingHints.Key;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -30,6 +33,9 @@ import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -52,62 +58,50 @@ public class MyHttpServer {
     String password;
     String certFile;
     String keyFile;
+    HttpsServer httpsServer;
+    CloudBank cloudbank;
     
-    public MyHttpServer(int port, String password, GLogger logger) {
+    public MyHttpServer(int port, String password, CloudBank cloudbank, GLogger logger) {
         this.logger = logger;
         this.port = port;
         this.password = password;
         this.certFile = AppCore.getRootPath() + File.separator + "mycert.crt";
         this.keyFile = AppCore.getRootPath() + File.separator + "mykey.jks";
+        this.cloudbank = cloudbank;
         //ks.store( new FileOutputStream( "NewClientKeyStore" ), "MyPass".toCharArray() );
     }
     
     
     private boolean initKeystore() {
-        System.out.println("xxx1");
         File f = new File(this.keyFile);
         if (f.exists()) {
             logger.debug(ltag, "No need to init keystore");
             return true;
         }
-        System.out.println("xxx2");
+
         logger.debug(ltag, "Initializing keystore");
         
         try {
-            System.out.println("xxx3");
             KeyStore ks = KeyStore.getInstance("JKS");
-        
-            System.out.println("xxx4");
             ks.load(null, null);
             ks.store(new FileOutputStream(this.keyFile), this.password.toCharArray());
-            
-            System.out.println("xxx5");
-            //KeyPairGenerator gen = KeyPairGenerator.getInstance("RSA");
+
             CertAndKeyGen gen = new CertAndKeyGen("RSA","SHA1WithRSA");
-            //gen.initialize(1024, SecureRandom.getInstance("SHA1PRNG"));
             gen.generate(1024);
-            //KeyPair keyPair = gen.generateKeyPair();
-           
-            
-            System.out.println("xxx6");
+
             PrivateKey key = gen.getPrivateKey();
             X509Certificate cert = gen.getSelfCertificate(new X500Name("CN=ROOT"), (long)365*24*3600);
             
-            System.out.println("xxx7");
             X509Certificate[] chain = new X509Certificate[1];
             chain[0] = cert;
             ks.setKeyEntry("mykey", key, password.toCharArray(), chain);  
             
-            System.out.println("xxx8");
             gen = new CertAndKeyGen("RSA","SHA1WithRSA");
             gen.generate(1024);
-     System.out.println("xxx9");
-            
+
             cert = gen.getSelfCertificate(new X500Name("CN=SINGLE_CERTIFICATE"), (long)365*24*3600);
             ks.setCertificateEntry("single_cert", cert);            
-            System.out.println("xxx10");
             ks.store(new FileOutputStream(this.keyFile), this.password.toCharArray());
-            System.out.println("xxx11");
         } catch (Exception e) {
             logger.error(ltag, "Failed to init keys: " + e.getMessage());
             return false;
@@ -123,25 +117,20 @@ public class MyHttpServer {
             logger.error(ltag, "Failed");
             return false;
         }
-        System.out.println("xxx12");
+
         try {
             //InetSocketAddress address = new InetSocketAddress(InetAddress.getLocalHost(), port);
-            InetSocketAddress address = new InetSocketAddress("10.1.1.249", port);
-            System.out.println("xxx13");
-            HttpsServer httpsServer = HttpsServer.create(address, 0);
-            System.out.println("xxx14");
+            //InetSocketAddress address = new InetSocketAddress("10.1.1.249", port);
+            InetSocketAddress address = new InetSocketAddress("0.0.0.0", port);
+            httpsServer = HttpsServer.create(address, 0);
             SSLContext sslContext = SSLContext.getInstance("TLS");
-            System.out.println("xxx15");
             KeyStore ks = KeyStore.getInstance("JKS");
             ks.load(new FileInputStream(this.keyFile), this.password.toCharArray());
-            System.out.println("xxx16");
             KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
-            System.out.println("xxx17");
             kmf.init(ks, this.password.toCharArray());
 
             TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
             tmf.init(ks);
-            System.out.println("xxx18");
             sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
             httpsServer.setHttpsConfigurator(new HttpsConfigurator(sslContext) {
                 public void configure(HttpsParameters params) {
@@ -162,14 +151,14 @@ public class MyHttpServer {
                     }
                 }
             });
-            
+           
             ThreadPoolExecutor executor = new ThreadPoolExecutor(100, 200, 60, TimeUnit.SECONDS,  new ArrayBlockingQueue<Runnable>(10));
             
-            httpsServer.createContext("/", new MyHandler());
+            httpsServer.createContext("/", new MyHandler(cloudbank, logger));
             httpsServer.setExecutor(executor);
             httpsServer.start();
         
-            logger.debug(ltag, "Server is listening on https:/" + address.toString() + ":" + port);
+            logger.debug(ltag, "Server is listening on https:/" + address.toString());
         } catch (UnknownHostException e) {
             logger.error(ltag, "Failed to get address: " + e.getMessage());
             return false;
@@ -185,6 +174,8 @@ public class MyHttpServer {
     
     public boolean stopServer() {
         logger.debug(ltag, "Stopping server");
+        if (httpsServer != null)
+            httpsServer.stop(1);
         
         return true;
     }
@@ -192,16 +183,129 @@ public class MyHttpServer {
 }
 
 class MyHandler implements HttpHandler {
-    @Override
-    public void handle(HttpExchange t) throws IOException {
-        System.out.println("HHHH");
-        String response = "This is the response";
-        HttpsExchange httpsExchange = (HttpsExchange) t;
-        t.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
-        t.sendResponseHeaders(200, response.getBytes().length);
-            
-        OutputStream os = t.getResponseBody();
-        os.write(response.getBytes());
-        os.close();
+    public String ltag = "HTTPHandler";
+    GLogger logger;
+    CloudBank cloudbank;
+    boolean completed, isError;
+    String message;
+    
+    public MyHandler(CloudBank cloudbank, GLogger logger) {
+        this.logger = logger;
+        this.cloudbank = cloudbank;
+        this.completed = false;
     }
+    @Override
+    public synchronized void handle(HttpExchange t) throws IOException {
+        String method = t.getRequestMethod();
+        String uri = t.getRequestURI().toString();
+        Map vars = new HashMap<String,String>();
+        String route = t.getRequestURI().getPath();
+        
+        isError = false;
+        message = "";
+        
+        logger.debug(ltag, method + " " + uri);
+        if (!route.startsWith("/service/")) {
+            sendError(t, "Invalid service requested");
+            return;
+        }
+
+        if (method.equals("GET")) {
+            String[] params = uri.split("\\?");
+            route = params[0].substring(9);
+            if (params.length > 1) {
+                String[] kv = params[1].split("&");
+                for (int i = 0; i < kv.length; i++) {
+                    String[] parts = kv[i].split("=");
+                    if (parts.length != 2) {
+                        logger.debug(ltag, "Invalid parameter pair. Idx " + i);
+                        sendError(t, "Invalid parameters in HTTP query");
+                        return;
+                    }
+                    
+                    vars.put(parts[0], parts[1]);
+                }
+            }
+            
+            cloudbank.startCloudbankService(route, vars, new CallbackInterface() {
+                public void callback(Object o) {
+                    CloudbankResult cr = (CloudbankResult) o;
+                
+                    if (cr.status == CloudbankResult.STATUS_ERROR) {
+                        isError = true;                        
+                    }
+                    
+                    System.out.println("Completed " + cr.status);
+                    message = cr.message;
+                    completed = true;
+                }
+            });
+            /*
+            Iterator it = vars.entrySet().iterator();
+            while (it.hasNext()) {
+                Map.Entry pair = (Map.Entry)it.next();
+                System.out.println("-> " + pair.getKey() + " = " + pair.getValue());
+            }
+            */
+        }
+        
+        int iterations = 0;
+        while (!completed) {
+            //System.out.println("sleep");
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {}
+            iterations++;
+            if (iterations > Config.CLOUDBANK_MAX_ITERATIONS) {
+                sendError(t, "timeout");
+                return;
+            }
+                
+        }
+        completed = false;
+        if (isError)
+            sendError(t, message);
+        else 
+            sendResult(t, message);
+    }
+    
+    private void sendError(HttpExchange httpExchange, String message) {
+        sendResponse(httpExchange, 200, "error", message);
+    }
+    
+    private void sendResult(HttpExchange httpExchange, String message) {
+        sendResponse(httpExchange, 200, "pass", message);
+    }
+    
+    private void sendResponse(HttpExchange httpExchange, int code, String status, String message) {
+        OutputStream outputStream = httpExchange.getResponseBody();
+        String dateStr = AppCore.getDate("" + (System.currentTimeMillis() /1000));
+        StringBuilder sb = new StringBuilder();
+        
+        sb.append("{\"server\":\"");
+        sb.append(AppUI.brand.getTitle(null));
+        sb.append("\", \"status\":\"");
+        sb.append(status);
+        sb.append("\", \"message\":\"");
+        sb.append(message);
+        sb.append("\", \"time\":\"");
+        sb.append(dateStr);
+        sb.append("\", \"version\": \"");
+        sb.append(AppUI.brand.getResultingVersion(AdvancedClient.version));
+        sb.append("\"}");
+        
+        String response = sb.toString();
+        
+        try {
+            httpExchange.sendResponseHeaders(code, response.length());
+            outputStream.write(response.getBytes());
+            outputStream.flush();
+            outputStream.close();
+        } catch (IOException e) {
+            logger.error(ltag, "Failed to send response: " + e.getMessage());
+            return;
+        }
+    }
+    
+    
 }

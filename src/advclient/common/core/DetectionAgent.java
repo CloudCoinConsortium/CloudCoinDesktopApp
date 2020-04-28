@@ -205,7 +205,7 @@ public class DetectionAgent {
 
 
             if (urlConnection.getResponseCode() != 200) {
-                logger.error(ltag, "Invalid response from server " + urlIn + " -> " + urlConnection.getResponseCode());
+                logger.error(lltag, "Invalid response from server " + urlIn + " -> " + urlConnection.getResponseCode());
                 lastStatus = RAIDA.STATUS_FAILED;
                 return null;
             }

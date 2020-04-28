@@ -41,6 +41,7 @@ public class Config {
     public static String DIR_BACKUPS = "Backups";
     public static String DIR_DOWNLOADS = "Downloads";
     public static String DIR_BRANDS = "Brands";
+    public static String DIR_CLOUDBANK = "CloudBank";
 
     public static String GLOBAL_CONFIG_FILENAME = "global.config";
     public static String MAIL_CONFIG_FILENAME = "mailsettings.ini";
@@ -219,5 +220,5 @@ public class Config {
     public static String CLOUDBANK_ACCOUNT = "";
     public static String CLOUDBANK_PASSWORD = "";
     
-    
+    public static int CLOUDBANK_MAX_ITERATIONS = 50;
 }

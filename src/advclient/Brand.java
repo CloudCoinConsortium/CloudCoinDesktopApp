@@ -92,6 +92,7 @@ public class Brand {
     public Brand(String name, GLogger logger) {
         this.name = name;
         this.logger = logger;
+
         this.brandDir = AppCore.getBrandsDir() + File.separator + this.name;
         this.datamap = new HashMap<String, dlResult>();
        
@@ -842,7 +843,7 @@ public class Brand {
         return property;
     }
     
-    private String getResultingVersion(String version) {
+    public String getResultingVersion(String version) {
         String[] oparts = version.split("\\.");     
         String[] parts = this.versionOffset.split("\\.");
         if (parts.length != 3) {
@@ -1241,6 +1242,9 @@ public class Brand {
 
     
     public String getTitle(String version) {
+        if (version == null)
+            return this.title;
+        
         return this.title + " " + this.getResultingVersion(version);
     }
     

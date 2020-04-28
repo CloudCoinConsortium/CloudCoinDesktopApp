@@ -38,6 +38,7 @@ import global.cloudcoin.ccbank.Vaulter.VaulterResult;
 import global.cloudcoin.ccbank.core.AppCore;
 import global.cloudcoin.ccbank.core.CallbackInterface;
 import global.cloudcoin.ccbank.core.CloudCoin;
+import global.cloudcoin.ccbank.core.CloudbankResult;
 import global.cloudcoin.ccbank.core.Config;
 import global.cloudcoin.ccbank.core.DNSSn;
 import global.cloudcoin.ccbank.core.GLogger;
@@ -48,11 +49,14 @@ import global.cloudcoin.ccbank.core.Wallet;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.TreeMap;
 import org.json.JSONException;
 
@@ -398,6 +402,8 @@ public class ServantManager {
         Transfer tr = (Transfer) sr.getServant("Transfer");
         tr.launch(fromsn, tosn, sns, amount, tag, cb);
     }
+    
+    
     
     public int getRemoteSn(String dstWallet) {
         int sn;

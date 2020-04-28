@@ -54,8 +54,6 @@ import javax.swing.JTextArea;
 import javax.swing.SpinnerModel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import javax.swing.plaf.basic.BasicScrollBarUI;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
@@ -70,7 +68,7 @@ public class AppUI {
     
     static int tw, th;
     static double ratio;
-    static Brand brand;
+    public static Brand brand;
     
     public static void init(int tw, int th, Brand brand) {
         AppUI.tw = tw;
