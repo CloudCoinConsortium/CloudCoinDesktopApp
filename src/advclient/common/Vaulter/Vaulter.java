@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.util.ArrayList;
 
-import global.cloudcoin.ccbank.ChangeMaker.ChangeMakerResult;
 import global.cloudcoin.ccbank.core.AppCore;
 import global.cloudcoin.ccbank.core.CallbackInterface;
 import global.cloudcoin.ccbank.core.CloudCoin;

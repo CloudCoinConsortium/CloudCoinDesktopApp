@@ -69,8 +69,14 @@ public class AppCore {
             return true;
         
         logger.info(ltag, "Creating " + idPath);
-        if (!idPathFile.mkdirs()) {
-            logger.error(ltag, "Can not create directory " + dirName);
+        try {
+            if (!idPathFile.mkdirs()) {
+                System.out.println("FAILED");
+                logger.error(ltag, "Can not create directory " + dirName);
+                return false;
+            }
+        } catch (SecurityException e) {
+            logger.error(ltag, "Failed to create dir: " + e.getMessage());
             return false;
         }
 

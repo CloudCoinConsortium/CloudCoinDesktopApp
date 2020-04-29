@@ -6,6 +6,7 @@ public class CloudbankResult {
     
     public int status;
 
+    public String arefWallet;
 
 
     public String message;

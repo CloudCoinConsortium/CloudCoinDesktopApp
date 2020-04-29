@@ -220,5 +220,5 @@ public class Config {
     public static String CLOUDBANK_ACCOUNT = "";
     public static String CLOUDBANK_PASSWORD = "";
     
-    public static int CLOUDBANK_MAX_ITERATIONS = 50;
+    public static int CLOUDBANK_MAX_ITERATIONS = 150;
 }

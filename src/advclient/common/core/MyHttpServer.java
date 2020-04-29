@@ -119,10 +119,11 @@ public class MyHttpServer {
         }
 
         try {
-            //InetSocketAddress address = new InetSocketAddress(InetAddress.getLocalHost(), port);
-            //InetSocketAddress address = new InetSocketAddress("10.1.1.249", port);
             InetSocketAddress address = new InetSocketAddress("0.0.0.0", port);
-            httpsServer = HttpsServer.create(address, 0);
+            
+            // Backlog 1 is crucial. No concurrency yet
+            httpsServer = HttpsServer.create(address, 1);
+            
             SSLContext sslContext = SSLContext.getInstance("TLS");
             KeyStore ks = KeyStore.getInstance("JKS");
             ks.load(new FileInputStream(this.keyFile), this.password.toCharArray());
@@ -188,6 +189,7 @@ class MyHandler implements HttpHandler {
     CloudBank cloudbank;
     boolean completed, isError;
     String message;
+    Wallet tmpWallet;
     
     public MyHandler(CloudBank cloudbank, GLogger logger) {
         this.logger = logger;
@@ -227,6 +229,7 @@ class MyHandler implements HttpHandler {
                 }
             }
             
+            tmpWallet = cloudbank.sm.getActiveWallet();
             cloudbank.startCloudbankService(route, vars, new CallbackInterface() {
                 public void callback(Object o) {
                     CloudbankResult cr = (CloudbankResult) o;
@@ -257,11 +260,15 @@ class MyHandler implements HttpHandler {
             } catch (InterruptedException e) {}
             iterations++;
             if (iterations > Config.CLOUDBANK_MAX_ITERATIONS) {
+                setWalletIfNessecary();
                 sendError(t, "timeout");
                 return;
             }
                 
         }
+        
+        setWalletIfNessecary();
+        
         completed = false;
         if (isError)
             sendError(t, message);
@@ -307,5 +314,14 @@ class MyHandler implements HttpHandler {
         }
     }
     
-    
+    public void setWalletIfNessecary() {
+        if (tmpWallet == null)
+            return;
+        
+        Wallet w = cloudbank.sm.getActiveWallet();
+        if (w.getName().equals(tmpWallet.getName())) {
+            logger.debug(ltag, "Setting wallet back to " + tmpWallet.getName());
+            cloudbank.sm.setActiveWalletObj(tmpWallet);
+        }
+    }
 }

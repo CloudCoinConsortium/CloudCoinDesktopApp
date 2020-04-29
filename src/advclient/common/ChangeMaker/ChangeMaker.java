@@ -142,7 +142,7 @@ public class ChangeMaker extends Servant {
         CloudCoin[] ccs = new CloudCoin[sns.length];
 
         for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
-            logger.info(ltag, "RAIDA " + i + ": " + results[i].trim());
+            logger.info(ltag, "parsing " + i);
             //System.out.println("r=" + i + " res=" + results[i].trim());
             if (results[i] == null) {
                 logger.error(ltag, "Failed to get result. RAIDA " + i);
@@ -150,8 +150,10 @@ public class ChangeMaker extends Servant {
                 cntErr++;
                 continue;
             }
+            
+            logger.info(ltag, "RAIDA " + i + ": " + results[i].trim());
 
-            logger.info(ltag, "parsing " + i);
+
             crs[i] = (ChangeResponse) parseResponse(results[i].trim(), ChangeResponse.class);
             if (crs[i] == null) {
                 logger.error(ltag, "Failed to parse response");

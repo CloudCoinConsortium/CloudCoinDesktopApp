@@ -1,5 +1,6 @@
 package global.cloudcoin.ccbank.core;
 
+import advclient.common.core.Validator;
 import global.cloudcoin.ccbank.Exporter.ExporterResult;
 import global.cloudcoin.ccbank.ServantManager.ServantManager;
 import global.cloudcoin.ccbank.ServantManager.ServantManager.makeChangeResult;
@@ -11,6 +12,7 @@ public class CloudBank {
     public String ltag = "CloudBank";
     GLogger logger;
     ServantManager sm;
+    Wallet tmpWallet;
     
     public CloudBank(GLogger logger, ServantManager sm) {
         this.logger = logger;
@@ -25,8 +27,7 @@ public class CloudBank {
         String dir = getAccountDir();
         logger.debug(ltag, "Initializing CloudBank: " + dir);
 
-        System.out.println("dir=" +dir);
-        AppCore.createDirectory(dir);        
+        AppCore.createDirectoryPath(dir);        
     }
     
     public void startCloudbankService(String service, Map params, CallbackInterface cb) {
@@ -75,7 +76,9 @@ public class CloudBank {
                 cb.callback(cr);
                 return;
             }
-                        
+                     
+            logger.debug(ltag, "Setting password " + password);
+            System.out.println("setting password " + password);
             lw.setPassword(password);
         }
         
@@ -101,6 +104,15 @@ public class CloudBank {
         
         return cr;
     }
+    
+    public CloudbankResult getCrSuccess(String text) {
+        CloudbankResult cr = new CloudbankResult();
+        cr.status = CloudbankResult.STATUS_OK;
+        cr.message = text.replaceAll("\"", "\\\\\"").replaceAll("\n", "").replaceAll("\r", "").replaceAll("\t", "");
+        
+        return cr;
+    }
+    
 
     public CloudbankResult withdrawOneStack(Map params, Wallet lw, Wallet rw, CallbackInterface cb) {
         Wallet wallet = null;
@@ -117,7 +129,7 @@ public class CloudBank {
             return getCrError("Invalid amount");
         }
         
-        logger.debug(ltag, "Requested: " + amount + " lw: " + lw.getTotal() + " rw: " + rw.getTotal());
+        logger.debug(ltag, "Requested: " + amount + "CC, lw: " + lw.getTotal() + "CC, rw: " + rw.getTotal() + "CC");
         
         if (lw.getTotal() >= amount) {
             logger.debug(ltag, "Choosing local wallet: " + lw.getName());
@@ -146,22 +158,32 @@ public class CloudBank {
             tag = new String(decodedBytes);
         }
         
+        if (!Validator.memo(tag)) {
+            logger.error(ltag, "Invalid tag");
+            return getCrError("Invalid memo");
+        }
+        
         String dir = getAccountDir();
         System.out.println("dir="+dir);
         logger.debug(ltag, "Exporting to " + dir);
-        
-        final Wallet fwallet = wallet;
-        final int famount = amount;
-        final String ftag = tag;
-        final boolean keepSrc = true;
-        sm.changeServantUser("Exporter", wallet.getName());
-        
-         
-        sm.startExporterService(Config.TYPE_STACK, amount, tag, dir, keepSrc, new ExporterCb(wallet, amount, tag, false, cb));
+
+        logger.debug(ltag, "Setting wallet to  " + wallet.getName());
+        sm.setActiveWalletObj(wallet);
+
+        final CallbackInterface fcb = cb;
+        CallbackInterface cbi = new CallbackInterface() {
+            public void callback(Object o) {
+                logger.debug(ltag, "Ready to return result");
+                
+                System.out.println("cb");
+                fcb.callback(o);
+            }
+        };
+
         if (wallet.isEncrypted()) {
-            sm.startSecureExporterService(Config.TYPE_STACK, amount, tag, dir, false, new ExporterCb(wallet, amount, tag, true, cb));
+            sm.startSecureExporterService(Config.TYPE_STACK, amount, tag, dir, false, new ExporterCb(wallet, amount, tag, false, cbi));
         } else {
-            sm.startExporterService(Config.TYPE_STACK, amount, tag, dir, false, new ExporterCb(wallet, amount, tag, true, cb));
+            sm.startExporterService(Config.TYPE_STACK, amount, tag, dir, false, new ExporterCb(wallet, amount, tag, false, cbi));
         }
         
         System.out.println("ret null");
@@ -217,9 +239,37 @@ public class CloudBank {
                             }                                    
                         }
                     });                           
-                }                   
+                    
+                    return;
+                } 
+                
+                cb.callback(getCrError("Failed to export Coins"));
+                return;
+                
             }
 
+            if (er.status == ExporterResult.STATUS_FINISHED) {
+                logger.debug(ltag, "We are finally done");
+                
+                String filename = er.exportedFileNames.get(0);
+                
+                logger.debug(ltag, "Exported = " + filename);
+                String stack = AppCore.loadFile(filename);
+                if (stack == null) {
+                    logger.error(ltag, "Failed to load exported file");
+                    cb.callback(getCrError("Failed to load exported stack"));
+                    return;
+                }
+                
+                wallet.appendTransaction(tag, er.totalExported * -1, er.receiptId);
+                wallet.setNotUpdated();
+                
+                AppCore.deleteFile(filename);
+                System.out.println("Stack=" + stack);
+                cb.callback(getCrSuccess(stack));
+                
+                
+            }
             System.out.println("exp=" + er.status);
                 
         }

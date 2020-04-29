@@ -109,7 +109,7 @@ public class AdvancedClient  {
     
     public AdvancedClient() {
         wl = new WLogger();
-        
+
         String home = System.getProperty("user.home");
         resetState();
         
@@ -259,8 +259,10 @@ public class AdvancedClient  {
             return;
         }
         
-        if (cloudbank == null)
+        if (cloudbank == null) {
             cloudbank = new CloudBank(wl, sm);
+            cloudbank.init();
+        }
         
         httpServer = new MyHttpServer(Config.CLOUDBANK_PORT, Config.CLOUDBANK_PASSWORD, cloudbank, wl);
         if (!httpServer.startServer()) {
