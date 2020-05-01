@@ -301,8 +301,7 @@ public class AdvancedClient  {
     public void walletSetTotal(Wallet w, int total) {
         JLabel cntLabel = (JLabel) w.getuiRef();
              
-        wl.debug(ltag, "Set Total: " + w.getName() + " total = " + total);
-        
+        //wl.debug(ltag, "Set Total: " + w.getName() + " total = " + total);        
         w.setTotal(total);
         w.setUpdated();
         String strCnt = AppCore.formatNumber(total);

@@ -107,6 +107,7 @@ public class Authenticator extends Servant {
         for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
             requests[i] = "multi_detect";
             sbs[i] = new StringBuilder();
+            sbs[i].append("b=t");
         }
 
         for (CloudCoin cc : ccs) {
@@ -116,10 +117,10 @@ public class Authenticator extends Servant {
                 cc.setPansToAns();
 
             for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
-                if (!first)
-                    sbs[i].append("&");
+                //if (!first)
+                //    sbs[i].append("&");
 
-                sbs[i].append("nns[]=");
+                sbs[i].append("&nns[]=");
                 sbs[i].append(cc.nn);
 
                 sbs[i].append("&sns[]=");
@@ -164,7 +165,9 @@ public class Authenticator extends Servant {
 
         CommonResponse errorResponse;
         AuthenticatorResponse[][] ar;
-        Object[] o;
+        //Object[] o;
+        Object o;
+        
 
         ar = new AuthenticatorResponse[RAIDA.TOTAL_RAIDA_COUNT][];
         for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
@@ -183,8 +186,9 @@ public class Authenticator extends Servant {
                 setCoinStatus(ccs, i, CloudCoin.STATUS_NORESPONSE);
                 continue;
             }
-
-            o = parseArrayResponse(results[i], AuthenticatorResponse.class);
+  
+            //o = parseArrayResponse(results[i], AuthenticatorResponse.class);
+            o = parseResponse(results[i], AuthenticatorResponse.class);
             if (o == null) {
                 errorResponse = (CommonResponse) parseResponse(results[i], CommonResponse.class);
                 setCoinStatus(ccs, i, CloudCoin.STATUS_ERROR);
@@ -196,7 +200,47 @@ public class Authenticator extends Servant {
                 logger.error(ltag, "Failed to auth coin. Status: " + errorResponse.status);
                 continue;
             }
+            
+            AuthenticatorResponse ars = (AuthenticatorResponse) o;           
+            logger.debug(ltag, "raida" + i + " status: " + ars.status);
+            if (ars.status.equals("allpass")) {
+                logger.debug(ltag, "allpass");
+                setCoinStatus(ccs, i, CloudCoin.STATUS_PASS);
+                continue;
+            } else if (ars.status.equals("allfail")) {
+                logger.debug(ltag, "allfail");
+                setCoinStatus(ccs, i, CloudCoin.STATUS_FAIL);
+                continue;
+            } else if (ars.status.equals("mixed")) {
+                logger.debug(ltag, "mixed " + ars.message);
+                String[] rss = ars.message.split(",");
+                if (rss.length != ccs.size()) {
+                    logger.error(ltag, "Invalid length returned: " + rss.length + ", expected: " + ccs.size());
+                    setCoinStatus(ccs, i, CloudCoin.STATUS_ERROR);
+                    continue;
+                }
+                
+                for (int j = 0; j < rss.length; j++) {
+                    String strStatus = rss[j];
+                    int status;
+                    if (strStatus.equals(Config.REQUEST_STATUS_PASS)) {
+                        status = CloudCoin.STATUS_PASS;
+                    } else if (strStatus.equals(Config.REQUEST_STATUS_FAIL)) {
+                        status = CloudCoin.STATUS_FAIL;
+                    } else {
+                        status = CloudCoin.STATUS_ERROR;
+                        logger.error(ltag, "Unknown coin status from RAIDA" + i + ": " + strStatus);
+                    }
+                    
+                    ccs.get(j).setDetectStatus(i, status);
+                }
+            } else {
+                logger.error(ltag, "Invalid status: " + ars.status);
+                setCoinStatus(ccs, i, CloudCoin.STATUS_ERROR);
+                continue;
+            }
 
+            /*
             for (int j = 0; j < o.length; j++) {
                 String strStatus;
                 int status;
@@ -218,6 +262,7 @@ public class Authenticator extends Servant {
                 ccs.get(j).setDetectStatus(i, status);
                 //logger.info(ltag, "raida" + i + " v=" + ar[i][j].status + " m="+ar[i][j].message + " j= " + j + " st=" + status);
             }
+            */
         }
 
         return true;
