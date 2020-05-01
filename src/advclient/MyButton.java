@@ -78,9 +78,9 @@ public class MyButton {
         button.revalidate();
     }
     
-    
     private JPanel makeUI(String text) {
         button = new JButton(text);
+        button.putClientProperty("ref", this);
     
         final String ftext = text;
         UICallBack cb = new UICallBack() {

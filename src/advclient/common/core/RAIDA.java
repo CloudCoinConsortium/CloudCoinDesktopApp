@@ -11,7 +11,6 @@ import java.util.concurrent.TimeoutException;
 public class RAIDA {
         static String ltag = "RAIDA";
 	public static int TOTAL_RAIDA_COUNT = 25;
-        static int TOTAL_RAIDA_CNT;
 
 	public DetectionAgent[] agents;
         

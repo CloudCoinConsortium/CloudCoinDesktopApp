@@ -115,7 +115,7 @@ public class DNSSn {
                
         String rq = "/ddns.php?sn=" + cc.sn + "&username=" + name + "&ticket=" + message + "&raidanumber=" + raidaNum;
 
-        DetectionAgent daFake = new DetectionAgent(RAIDA.TOTAL_RAIDA_CNT * 10000, logger);
+        DetectionAgent daFake = new DetectionAgent(RAIDA.TOTAL_RAIDA_COUNT * 10000, logger);
         daFake.setExactFullUrl("https://" + Config.DDNSSN_SERVER + "/service/ddns");
         String result = daFake.doRequest(rq, null);
         if (result == null) {
@@ -143,7 +143,7 @@ public class DNSSn {
         int raidaNum = Config.RAIDANUM_TO_QUERY_BY_DEFAULT;
         String rq = "/ddns_delete.php?sn=" + cc.sn + "&username=" + name + "&ticket=" + message + "&raidanumber=" + raidaNum;
 
-        DetectionAgent daFake = new DetectionAgent(RAIDA.TOTAL_RAIDA_CNT * 10000, logger);
+        DetectionAgent daFake = new DetectionAgent(RAIDA.TOTAL_RAIDA_COUNT * 10000, logger);
         daFake.setExactFullUrl("https://" + Config.DDNSSN_SERVER + "/service/ddns");
         String result = daFake.doRequest(rq, null);
         if (result == null) {

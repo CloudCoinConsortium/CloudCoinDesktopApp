@@ -24,8 +24,10 @@ import global.cloudcoin.ccbank.core.AppCore;
 import global.cloudcoin.ccbank.core.CallbackInterface;
 import global.cloudcoin.ccbank.core.CloudBank;
 import global.cloudcoin.ccbank.core.CloudCoin;
+import global.cloudcoin.ccbank.core.CommonResponse;
 import global.cloudcoin.ccbank.core.Config;
 import global.cloudcoin.ccbank.core.DNSSn;
+import global.cloudcoin.ccbank.core.DetectionAgent;
 import global.cloudcoin.ccbank.core.MyHttpServer;
 import global.cloudcoin.ccbank.core.RAIDA;
 import global.cloudcoin.ccbank.core.Wallet;
@@ -86,7 +88,7 @@ public class AdvancedClient  {
     WLogger wl;
     
     Wallet[] wallets; 
-    MyButton continueButton;
+    MyButton continueButton, cancelButton;
     
     JProgressBar pbar;
     JLabel pbarText;
@@ -106,6 +108,8 @@ public class AdvancedClient  {
     JLabel infoText;
     
     MyHttpServer httpServer;
+    
+    JLabel mainTitleText;
     
     public AdvancedClient() {
         wl = new WLogger();
@@ -2965,10 +2969,7 @@ public class AdvancedClient  {
         AppUI.getGBRow(subInnerCore, fname, password.getTextField(), y, gridbag);
         password.setData(Config.CLOUDBANK_PASSWORD);
         y++;
-        
-        
-        
-        
+
         fname = new JLabel("Local Wallet");
         final RoundedCornerComboBox cboxlocal = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "Make Selection", rvLocal.options);
         AppUI.getGBRow(subInnerCore, fname, cboxlocal.getComboBox(), y, gridbag);
@@ -2990,7 +2991,7 @@ public class AdvancedClient  {
         y++; 
         
         
-                cboxlocal.addActionListener(new ActionListener() {
+        cboxlocal.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 int srcIdx = cboxlocal.getSelectedIndex() - 1;
                 if (srcIdx < 0 || srcIdx >= wallets.length) 
@@ -3036,8 +3037,65 @@ public class AdvancedClient  {
             
         AppUI.getTwoButtonPanel(subInnerCore, "Test Connection", "Save", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
-                showScreen();
+                int cbPort;
+                try {
+                    cbPort = Integer.parseInt(serverPort.getText());
+                } catch (NumberFormatException er) {
+                    ps.errText = "Invalid Server Port";
+                    showScreen();
+                    return;
+                }
+                
+                if (cbPort < 0 || cbPort > 65535) {
+                    ps.errText = "Server Port must be within range 1..65535";
+                    showScreen();
+                    return;
+                }
+                
+
+                JButton jb = (JButton) e.getSource();
+                MyButton mb = (MyButton) jb.getClientProperty("ref");
+                
+                EventQueue.invokeLater(new Runnable() {         
+                    public void run() {
+                        mainTitleText.setText("Checking Connection. Please wait");
+                        mb.disable();
+                    }
+                });
+
+                Thread t = new Thread(new Runnable() {
+                    public void run(){
+                        DetectionAgent daFake = new DetectionAgent(RAIDA.TOTAL_RAIDA_COUNT * 10000, wl);
+                        daFake.setExactFullUrl(Config.CLOUDBANK_TEST_CONNECTION_URL + "?port=" + cbPort);
+                        String result = daFake.doRequest("", null);                       
+                        mainTitleText.setText("CloudBank Server");
+                        mb.enable();
+                        if (result == null) {
+                            ps.errText = "Failed to receive response from Server";
+                            showScreen();
+                            return;
+                        }
+                        
+                        CommonResponse cr = (CommonResponse) sm.getSR().getServant("Echoer").parseResponse(result, CommonResponse.class);
+                        if (cr == null) {
+                            ps.errText = "Incorrect response from Server";
+                            showScreen();
+                            return;
+                        }
+                        
+                        if (!cr.status.equals("success")) {
+                            ps.errText = "FAILED. " + cr.message;
+                            showScreen();
+                            return;
+                        }
+
+                        mainTitleText.setText("Connection Tested Successfully");
+                    }
+                });
+                
+                t.start();
+                
+                
             }
         }, new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -7879,106 +7937,7 @@ public class AdvancedClient  {
 
     }
     
-    public JPanel getTwoButtonPanel(ActionListener al) {
-        JPanel bp = new JPanel();
-     //   AppUI.setBoxLayout(bp, false);
-        AppUI.noOpaque(bp);
-       
-        bp.setLayout(new GridBagLayout());
-        
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.anchor = GridBagConstraints.SOUTH;
-        gbc.weightx = 1;
-        gbc.weighty = 1;
-        
-        MyButton cb = new MyButton("Cancel");
-        cb.addListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
-                showScreen();
-            }
-        });
-        
-        bp.add(cb.getButton(), gbc);           
-        AppUI.vr(bp, 26);
 
-        cb = new MyButton("Continue");
-        cb.addListener(al);
-        bp.add(cb.getButton(), gbc);
-        
-        continueButton = cb;
-        
-        return bp;
-    }
-    
-    public JPanel getTwoButtonPanelCustom(String name0, String name1, ActionListener al0, ActionListener al1) {
-        JPanel bp = new JPanel();
-        AppUI.noOpaque(bp);
-       
-        bp.setLayout(new GridBagLayout());
-        
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.anchor = GridBagConstraints.SOUTH;
-        gbc.weighty = 1;
-        gbc.weightx = 1;
-        
-        MyButton cb = new MyButton(name0);
-        cb.addListener(al0);
-        
-        bp.add(cb.getButton(), gbc);           
-        AppUI.vr(bp, 26);
-
-        cb = new MyButton(name1);
-        cb.addListener(al1);
-        bp.add(cb.getButton(), gbc);
-        
-        continueButton = cb;
-        
-        return bp;
-    }
-
-    public JPanel getOneButtonPanelCustom(String name0, ActionListener al0) {
-        JPanel bp = new JPanel();
-        AppUI.noOpaque(bp);
-        
-        bp.setLayout(new GridBagLayout());
-        
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.anchor = GridBagConstraints.SOUTH;
-        gbc.weighty = 1;
-
-        MyButton cb = new MyButton(name0);
-        cb.addListener(al0);
-        
-        bp.add(cb.getButton(), gbc);           
-        //AppUI.vr(bp, 26);
-        
-        return bp;
-    }
-    
-    public JPanel getOneButtonPanel() {
-        JPanel bp = new JPanel();
-        AppUI.noOpaque(bp);
-        
-        bp.setLayout(new GridBagLayout());
-        
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.anchor = GridBagConstraints.SOUTH;
-        gbc.weighty = 1;
-
-        MyButton cb = new MyButton("Continue");
-        cb.addListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
-                showScreen();
-            }
-        });
-        
-        bp.add(cb.getButton(), gbc);           
-        //AppUI.vr(bp, 26);
-        
-        return bp;
-    }
     
     public JPanel getRightPanel() {
         return getRightPanel(brand.getPanelBackgroundColor());
@@ -8562,6 +8521,8 @@ public class AdvancedClient  {
             AppUI.setColor(text, brand.getTitleTextColor());
             rightPanel.add(text);
             rightPanel.add(AppUI.hr(22));
+            
+            mainTitleText = text;
         }
 
         maybeShowError(rightPanel);
