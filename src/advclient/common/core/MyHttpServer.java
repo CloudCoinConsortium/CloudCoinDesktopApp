@@ -189,6 +189,7 @@ class MyHandler implements HttpHandler {
     CloudBank cloudbank;
     boolean completed, isError;
     String message;
+    int rstatus;
     Wallet tmpWallet;
     
     public MyHandler(CloudBank cloudbank, GLogger logger) {
@@ -240,6 +241,7 @@ class MyHandler implements HttpHandler {
                     
                     System.out.println("Completed " + cr.status);
                     message = cr.message;
+                    rstatus = cr.status;
                     completed = true;
                 }
             });
@@ -272,8 +274,11 @@ class MyHandler implements HttpHandler {
         completed = false;
         if (isError)
             sendError(t, message);
-        else 
+        else if (rstatus == CloudbankResult.STATUS_OK) {
             sendResult(t, message);
+        } else {
+            sendResponse(t, 200, "ready", message);
+        }
     }
     
     private void sendError(HttpExchange httpExchange, String message) {

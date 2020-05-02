@@ -30,6 +30,7 @@ public class CloudBank {
         AppCore.createDirectoryPath(dir);        
     }
     
+        
     public void startCloudbankService(String service, Map params, CallbackInterface cb) {
         logger.debug(ltag, "Starting CloudBank service " + service);
         CloudbankResult cr;
@@ -43,47 +44,51 @@ public class CloudBank {
             return;
         }
         
-        String pk = (String) params.get("pk");
-        String account = (String) params.get("account");
-        if (pk == null || account == null) {
-            cr = getCrError("Account and pk required");
-            cb.callback(cr);
-            return;
-        }
-        
-        if (!account.equals(Config.CLOUDBANK_ACCOUNT) || !pk.equals(Config.CLOUDBANK_PASSWORD)) {
-            cr = getCrError("Auth Failed");
-            cb.callback(cr);
-            return;
-        }
-        
-        if (lw.isEncrypted()) {
-            wHash = lw.getPasswordHash();
-            if (wHash == null) {
-                cr = getCrError("Local Wallet is corrupted");
+        if (!service.equals("echo")) {
+            String pk = (String) params.get("pk");
+            String account = (String) params.get("account");
+            if (pk == null || account == null) {
+                cr = getCrError("Account and pk required");
                 cb.callback(cr);
                 return;
             }
-            
-            String password = Config.CLOUDBANK_LWALLET_PASSWORD;
-            String ek = (String) params.get("ek");
-            if (ek != null)
-                password = ek;
-            
-            String providedHash = AppCore.getMD5(password);
-            if (!wHash.equals(providedHash)) {
-                cr = getCrError("Incorrect Password for Local Wallet");
+        
+            if (!account.equals(Config.CLOUDBANK_ACCOUNT) || !pk.equals(Config.CLOUDBANK_PASSWORD)) {
+                cr = getCrError("Auth Failed");
                 cb.callback(cr);
                 return;
             }
+        
+            if (lw.isEncrypted()) {
+                wHash = lw.getPasswordHash();
+                if (wHash == null) {
+                    cr = getCrError("Local Wallet is corrupted");
+                    cb.callback(cr);
+                    return;
+                }
+            
+                String password = Config.CLOUDBANK_LWALLET_PASSWORD;
+                String ek = (String) params.get("ek");
+                if (ek != null)
+                    password = ek;
+            
+                String providedHash = AppCore.getMD5(password);
+                if (!wHash.equals(providedHash)) {
+                    cr = getCrError("Incorrect Password for Local Wallet");
+                    cb.callback(cr);
+                    return;
+                }
                      
-            logger.debug(ltag, "Setting password " + password);
-            System.out.println("setting password " + password);
-            lw.setPassword(password);
+                logger.debug(ltag, "Setting password " + password);
+                System.out.println("setting password " + password);
+                lw.setPassword(password);
+            }
         }
         
         if (service.equals("withdraw_one_stack")) {
             cr = withdrawOneStack(params, lw, rw, cb);
+        } else if (service.equals("echo")) {
+            cr = echo();
         } else {
             cr = getCrError("Invalid service");
         }
@@ -112,7 +117,13 @@ public class CloudBank {
         
         return cr;
     }
-    
+
+    public CloudbankResult echo() {
+        CloudbankResult cr = new CloudbankResult();
+        cr.status = CloudbankResult.STATUS_OK_CUSTOM;
+        cr.message = "Server is ready";
+        return cr;
+    }
 
     public CloudbankResult withdrawOneStack(Map params, Wallet lw, Wallet rw, CallbackInterface cb) {
         Wallet wallet = null;
@@ -137,7 +148,7 @@ public class CloudBank {
         } else if (rw.getTotal() >= amount) {
             logger.debug(ltag, "Choosing sky wallet: " + rw.getName());
             //wallet = rw;
-            return getCrError("Insufficient funds");
+            return getCrError("Insufficient funds in Local Wallet");
         } else {
             logger.debug(ltag, "Insufficient funds");
             return getCrError("Insufficient funds in Local Wallet");
@@ -164,7 +175,6 @@ public class CloudBank {
         }
         
         String dir = getAccountDir();
-        System.out.println("dir="+dir);
         logger.debug(ltag, "Exporting to " + dir);
 
         logger.debug(ltag, "Setting wallet to  " + wallet.getName());
@@ -174,8 +184,7 @@ public class CloudBank {
         CallbackInterface cbi = new CallbackInterface() {
             public void callback(Object o) {
                 logger.debug(ltag, "Ready to return result");
-                
-                System.out.println("cb");
+
                 fcb.callback(o);
             }
         };
@@ -186,7 +195,6 @@ public class CloudBank {
             sm.startExporterService(Config.TYPE_STACK, amount, tag, dir, false, new ExporterCb(wallet, amount, tag, false, cbi));
         }
         
-        System.out.println("ret null");
         return null;
     }
 
@@ -218,7 +226,6 @@ public class CloudBank {
                         return;
                     }
                     logger.debug(ltag, "Pick error. Will make Change"); 
-                    System.out.println("ready for change");
                     sm.makeChange(wallet, amount, new CallbackInterface() {
                         public void callback(Object o) {
                             makeChangeResult mcr = (makeChangeResult) o;                               
@@ -265,12 +272,9 @@ public class CloudBank {
                 wallet.setNotUpdated();
                 
                 AppCore.deleteFile(filename);
-                System.out.println("Stack=" + stack);
-                cb.callback(getCrSuccess(stack));
-                
+                cb.callback(getCrSuccess(stack));                
                 
             }
-            System.out.println("exp=" + er.status);
                 
         }
     

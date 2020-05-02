@@ -90,10 +90,10 @@ public class Brand {
     Map<String, dlResult> datamap;
 
     public Brand(String name, GLogger logger) {
-        this.name = name;
+        
         this.logger = logger;
 
-        this.brandDir = AppCore.getBrandsDir() + File.separator + this.name;
+        this.setBrand(name);
         this.datamap = new HashMap<String, dlResult>();
        
         String[] vals = {
@@ -113,6 +113,11 @@ public class Brand {
         }
         
         setDefaultVariables();
+    }
+    
+    public void setBrand(String name) {
+        this.name = name;
+        this.brandDir = AppCore.getBrandsDir() + File.separator + this.name;
     }
     
     public void setDefaultVariables() {
@@ -312,7 +317,9 @@ public class Brand {
         br.step = 0;
         br.totalSteps = 0;
         br.isError = false;
-        File brandDir = new File(this.brandDir);
+        File brandDir;
+        
+        brandDir = new File(this.brandDir);
         if (!brandDir.exists()) {
             if (!AppCore.createDirectoryPath(this.brandDir))
                 return false;
@@ -327,11 +334,37 @@ public class Brand {
             br.text = "Downloading Config File";
             cb.callback(br);
             if (!downloadConfig()) {
-                br.text = "Failed to download config file";
-                br.isError = true;
+                logger.debug(ltag, "Failed to download config");
+                if (!this.name.equals(Config.DEFAULT_BRAND_NAME)) {
+                    logger.debug(ltag, "Switching to Default Brand");
+                    this.setBrand(Config.DEFAULT_BRAND_NAME);
+                    brandDir = new File(this.brandDir);
+                    if (!brandDir.exists()) {
+                        if (!AppCore.createDirectoryPath(this.brandDir))
+                            return false;
+                    }
+                    
+                    configFile = new File(getConfigPath());
+                    if (!configFile.exists()) {
+                        br.text = "Downloading Default Config File";
+                        cb.callback(br);
+                                        
+                        if (!downloadConfig()) {
+                            logger.debug(ltag, "Failed to download config");
+                            br.text = "Failed to download default config file";
+                            br.isError = true;
                 
-                cb.callback(br);
-                return false;
+                            cb.callback(br);
+                            return false;
+                        }
+                    }
+                } else {
+                    br.text = "Failed to download config file";
+                    br.isError = true;
+                
+                    cb.callback(br);
+                    return false;
+                }
             }
         }
 

@@ -65,7 +65,7 @@ import javax.swing.table.TableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "3.0.2";
+    public static String version = "3.0.3";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -6907,7 +6907,8 @@ public class AdvancedClient  {
 
     
     public void showTransactionsScreen() {      
-        invPanel = new JPanel();         
+        invPanel = new JPanel();    
+        //AppUI.noOpaque(invPanel);
         trTitle = new JLabel("");
         //Wallet w = sm.getActiveWallet();  
         Wallet w = ps.currentWallet;
@@ -6932,27 +6933,29 @@ public class AdvancedClient  {
         // holder for three buttons
         JPanel bpanel = new JPanel();
         
-        int invPanelWidth = 520;
+
+        JPanel wrp = new JPanel();
+        AppUI.alignTop(wrp);
+        hwrapper.add(wrp);
+        
         int[][] counters = w.getCounters(); 
-        if (!isSky && counters != null && counters.length != 0) {
+        if (counters != null && counters.length != 0) {
             AppUI.setBackground(invPanel, brand.getInventoryBackgroundColor());
-            AppUI.alignTop(invPanel);
-            AppUI.setSize(invPanel, invPanelWidth, 62);
-            AppUI.setMargin(invPanel, 8, 8, 8, 20);           
-            hwrapper.add(invPanel);
-        } else {
-            hwrapper.add(bpanel);
-        }
-        
-        
-        
+            //AppUI.alignBottom(invPanel);
+            AppUI.setSize(invPanel, 520, 62);
+            AppUI.setMargin(invPanel, 0, 0, 0, 0);  
+            //AppUI.setSize(invPanel, 520, 42);
+            
+            //hwrapper.add(invPanel);
+
+        } //else {
+           // hwrapper.add(bpanel);
+        //}
         
 
-        
         rightPanel.add(hwrapper);
         rightPanel.add(AppUI.hr(22));
-        
-        
+                
         
         /* buttons */
         JPanel bwrapper = new JPanel();
@@ -6977,12 +6980,12 @@ public class AdvancedClient  {
         AppUI.alignLeft(bpanel);
         AppUI.alignTop(bpanel);
         bpanel.setAlignmentY(Component.CENTER_ALIGNMENT);
-        if (!isSky) {
+        //if (!isSky) {
             AppUI.setSize(bpanel, 620, layerHeight);  
-        } else {
-            AppUI.setSize(bpanel, 520, layerHeight); 
-            bpanel.setAlignmentY(Component.TOP_ALIGNMENT);
-        }
+        //} else {
+        //    AppUI.setSize(bpanel, 520, layerHeight); 
+        //    bpanel.setAlignmentY(Component.TOP_ALIGNMENT);
+        //}
         AppUI.setMargin(bpanel, 0, 0, 0, 0);
 
         
@@ -7025,7 +7028,7 @@ public class AdvancedClient  {
         }
         
         GridBagLayout gridbag = new GridBagLayout();
-        JPanel wrp = new JPanel();
+        
         
         //AppUI.alignBottom(wrp);
         //AppUI.setBackground(wrp, Color.RED);
@@ -7036,7 +7039,9 @@ public class AdvancedClient  {
 
         
         int fsize = 18;
-        bpanel.add(wrp);
+        //bpanel.add(wrp);
+        if (counters != null && counters.length != 0) 
+            bpanel.add(invPanel);
  
         int bwidth = 138;
         GridBagConstraints c = new GridBagConstraints();
@@ -7047,32 +7052,32 @@ public class AdvancedClient  {
         JLabel titleText;
         JPanel wrpDeposit = new JPanel();
         if (!isSky) {
-        // Deposit
-        AppUI.setBoxLayout(wrpDeposit, false);
-        AppUI.setSize(wrpDeposit, bwidth, headerHeight);
-        AppUI.setBackground(wrpDeposit, brand.getTopMenuHoverColor());
-        AppUI.noOpaque(wrpDeposit);
+            // Deposit
+            AppUI.setBoxLayout(wrpDeposit, false);
+            AppUI.setSize(wrpDeposit, bwidth, 56);
+            AppUI.setBackground(wrpDeposit, brand.getTopMenuHoverColor());
+            AppUI.noOpaque(wrpDeposit);
             
-        wrpDeposit.add(AppUI.vr(12));         
-        wrpDeposit.add(depositIcon);             
-        AppUI.setHandCursor(wrpDeposit);
-        depositIcon.setIcon(depositIi);                            
-        wrpDeposit.add(AppUI.vr(6));
+            wrpDeposit.add(AppUI.vr(12));         
+            wrpDeposit.add(depositIcon);             
+            AppUI.setHandCursor(wrpDeposit);
+            depositIcon.setIcon(depositIi);                            
+            wrpDeposit.add(AppUI.vr(6));
             
-        titleText = new JLabel("Deposit");
-        AppUI.setTitleFont(titleText, fsize);
-        wrpDeposit.add(titleText);
+            titleText = new JLabel("Deposit");
+            AppUI.setTitleFont(titleText, fsize);
+            wrpDeposit.add(titleText);
             
-        c.insets = new Insets(0, 2, 0, 0);
-        c.anchor = GridBagConstraints.NORTH;
-        gridbag.setConstraints(wrpDeposit, c);
-        wrp.add(wrpDeposit);
+            c.insets = new Insets(0, 2, 0, 0);
+            c.anchor = GridBagConstraints.NORTH;
+            gridbag.setConstraints(wrpDeposit, c);
+            wrp.add(wrpDeposit);
         }
    
         // Withdraw
         JPanel wrpWithdraw = new JPanel();
         AppUI.setBoxLayout(wrpWithdraw, false);
-        AppUI.setSize(wrpWithdraw, bwidth, headerHeight);
+        AppUI.setSize(wrpWithdraw, bwidth, 56);
         AppUI.setBackground(wrpWithdraw, brand.getTopMenuHoverColor());
         AppUI.noOpaque(wrpWithdraw);            
         wrpWithdraw.add(AppUI.vr(12));
@@ -7094,7 +7099,7 @@ public class AdvancedClient  {
         // Transfer
         JPanel wrpTransfer = new JPanel();
         AppUI.setBoxLayout(wrpTransfer, false);
-        AppUI.setSize(wrpTransfer, bwidth, headerHeight);
+        AppUI.setSize(wrpTransfer, bwidth, 56);
         AppUI.setBackground(wrpTransfer, brand.getTopMenuHoverColor());
         AppUI.noOpaque(wrpTransfer);
             
@@ -7197,10 +7202,7 @@ public class AdvancedClient  {
         wrpTransfer.addMouseListener(ma1);
         wrpWithdraw.addMouseListener(ma2);
 
-        
-        
-        if (!isSky)
-            bwrapper.add(bpanel);
+        bwrapper.add(bpanel);
 
         rightPanel.add(bwrapper);
         rightPanel.add(AppUI.hr(16));
