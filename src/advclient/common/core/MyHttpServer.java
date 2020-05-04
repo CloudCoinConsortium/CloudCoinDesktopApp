@@ -22,11 +22,16 @@ import org.json.JSONException;
 import com.sun.net.httpserver.HttpsServer;
 import global.cloudcoin.ccbank.ServantManager.ServantManager;
 import java.awt.RenderingHints.Key;
+import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.Reader;
 import java.net.InetSocketAddress;
+import java.nio.charset.Charset;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.KeyStore;
@@ -191,6 +196,8 @@ class MyHandler implements HttpHandler {
     String message;
     int rstatus;
     Wallet tmpWallet;
+    String ownStatus;
+    boolean keepWallet;
     
     public MyHandler(CloudBank cloudbank, GLogger logger) {
         this.logger = logger;
@@ -213,46 +220,75 @@ class MyHandler implements HttpHandler {
             return;
         }
 
-        if (method.equals("GET")) {
-            String[] params = uri.split("\\?");
-            route = params[0].substring(9);
-            if (params.length > 1) {
-                String[] kv = params[1].split("&");
-                for (int i = 0; i < kv.length; i++) {
-                    String[] parts = kv[i].split("=");
-                    if (parts.length != 2) {
-                        logger.debug(ltag, "Invalid parameter pair. Idx " + i);
-                        sendError(t, "Invalid parameters in HTTP query");
-                        return;
-                    }
-                    
-                    vars.put(parts[0], parts[1]);
+        System.out.println("b="+method);
+        
+        
+                
+                
+        String[] params = uri.split("\\?");
+        route = params[0].substring(9);
+        if (params.length > 1) {
+            String[] kv = params[1].split("&");
+            for (int i = 0; i < kv.length; i++) {
+                String[] parts = kv[i].split("=");
+                if (parts.length != 2) {
+                    logger.debug(ltag, "Invalid parameter pair. Idx " + i);
+                    sendError(t, "Invalid parameters in HTTP query");
+                    return;
                 }
+                   
+                vars.put(parts[0], parts[1]);
+            }
+        }
+        
+        if (method.equals("POST")) {
+            InputStream is = t.getRequestBody();
+            Reader reader = new BufferedReader(new InputStreamReader(is));
+            StringBuilder sb = new StringBuilder();
+            int c = 0;
+            while ((c = reader.read()) != -1) {
+                sb.append((char) c);
             }
             
-            tmpWallet = cloudbank.sm.getActiveWallet();
-            cloudbank.startCloudbankService(route, vars, new CallbackInterface() {
-                public void callback(Object o) {
-                    CloudbankResult cr = (CloudbankResult) o;
-                
-                    if (cr.status == CloudbankResult.STATUS_ERROR) {
-                        isError = true;                        
-                    }
-                    
-                    System.out.println("Completed " + cr.status);
-                    message = cr.message;
-                    rstatus = cr.status;
-                    completed = true;
+            String requestBody = sb.toString();
+            String[] kv = requestBody.split("&");
+            for (int i = 0; i < kv.length; i++) {
+                String[] parts = kv[i].split("=");
+                if (parts.length != 2) {
+                    logger.debug(ltag, "Invalid parameter pair. Idx " + i);
+                    sendError(t, "Invalid parameters in HTTP BODY");
+                    return;
                 }
-            });
-            /*
-            Iterator it = vars.entrySet().iterator();
-            while (it.hasNext()) {
-                Map.Entry pair = (Map.Entry)it.next();
-                System.out.println("-> " + pair.getKey() + " = " + pair.getValue());
+                   
+                vars.put(parts[0], parts[1]);
             }
-            */
         }
+            
+        tmpWallet = cloudbank.sm.getActiveWallet();
+        cloudbank.startCloudbankService(route, vars, new CallbackInterface() {
+            public void callback(Object o) {
+                CloudbankResult cr = (CloudbankResult) o;        
+                if (cr.status == CloudbankResult.STATUS_ERROR) {
+                    isError = true;                        
+                }
+                    
+                System.out.println("Completed " + cr.status);
+                message = cr.message;
+                rstatus = cr.status;
+                ownStatus = cr.ownStatus;
+                keepWallet = cr.keepWallet;
+                completed = true;
+            }
+        });
+          
+        /*
+        Iterator it = vars.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry)it.next();
+            System.out.println("-> " + pair.getKey() + " = " + pair.getValue());
+        }
+        */   
+        
         
         int iterations = 0;
         while (!completed) {
@@ -262,14 +298,14 @@ class MyHandler implements HttpHandler {
             } catch (InterruptedException e) {}
             iterations++;
             if (iterations > Config.CLOUDBANK_MAX_ITERATIONS) {
-                setWalletIfNessecary();
+                setWalletIfNessecary(keepWallet);
                 sendError(t, "timeout");
                 return;
             }
                 
         }
         
-        setWalletIfNessecary();
+        setWalletIfNessecary(keepWallet);
         
         completed = false;
         if (isError)
@@ -277,7 +313,7 @@ class MyHandler implements HttpHandler {
         else if (rstatus == CloudbankResult.STATUS_OK) {
             sendResult(t, message);
         } else {
-            sendResponse(t, 200, "ready", message);
+            sendResponse(t, 200, ownStatus, message);
         }
     }
     
@@ -319,8 +355,13 @@ class MyHandler implements HttpHandler {
         }
     }
     
-    public void setWalletIfNessecary() {
+    public void setWalletIfNessecary(boolean keepWallet) {
         if (tmpWallet == null)
+            return;
+        
+        System.out.println("kw="+keepWallet);
+        
+        if (keepWallet) 
             return;
         
         Wallet w = cloudbank.sm.getActiveWallet();

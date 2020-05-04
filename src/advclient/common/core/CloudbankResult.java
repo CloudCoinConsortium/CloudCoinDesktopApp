@@ -10,6 +10,9 @@ public class CloudbankResult {
     public String arefWallet;
 
 
+    public String ownStatus;
     public String message;
+    
+    boolean keepWallet;
 
 }

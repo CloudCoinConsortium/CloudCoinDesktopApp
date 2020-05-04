@@ -1,10 +1,17 @@
 package global.cloudcoin.ccbank.core;
 
+import advclient.AdvancedClient;
 import advclient.common.core.Validator;
+import global.cloudcoin.ccbank.Authenticator.AuthenticatorResult;
 import global.cloudcoin.ccbank.Exporter.ExporterResult;
+import global.cloudcoin.ccbank.FrackFixer.FrackFixerResult;
+import global.cloudcoin.ccbank.Grader.GraderResult;
+import global.cloudcoin.ccbank.LossFixer.LossFixerResult;
 import global.cloudcoin.ccbank.ServantManager.ServantManager;
 import global.cloudcoin.ccbank.ServantManager.ServantManager.makeChangeResult;
+import global.cloudcoin.ccbank.Unpacker.UnpackerResult;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Map;
 
@@ -87,6 +94,8 @@ public class CloudBank {
         
         if (service.equals("withdraw_one_stack")) {
             cr = withdrawOneStack(params, lw, rw, cb);
+        } else if (service.equals("deposit_one_stack")) {
+            cr = depositOneStack(params, lw, rw, cb);
         } else if (service.equals("echo")) {
             cr = echo();
         } else {
@@ -106,6 +115,7 @@ public class CloudBank {
         CloudbankResult cr = new CloudbankResult();
         cr.status = CloudbankResult.STATUS_ERROR;
         cr.message = errTxt;
+        cr.keepWallet = false;
         
         return cr;
     }
@@ -114,6 +124,7 @@ public class CloudBank {
         CloudbankResult cr = new CloudbankResult();
         cr.status = CloudbankResult.STATUS_OK;
         cr.message = text.replaceAll("\"", "\\\\\"").replaceAll("\n", "").replaceAll("\r", "").replaceAll("\t", "");
+        cr.keepWallet = false;
         
         return cr;
     }
@@ -122,9 +133,110 @@ public class CloudBank {
         CloudbankResult cr = new CloudbankResult();
         cr.status = CloudbankResult.STATUS_OK_CUSTOM;
         cr.message = "Server is ready";
+        cr.ownStatus = "ready";
         return cr;
     }
 
+    private boolean checkFolders(Wallet wallet) {
+        if (wallet.isSkyWallet())
+                return true;
+        
+        int cnt = AppCore.getFilesCount(Config.DIR_DETECTED, wallet.getName());
+        if (cnt != 0) {
+            logger.debug(ltag, "Detected dir cnt files: " + cnt);
+            return false;
+        }
+        
+        cnt = AppCore.getFilesCount(Config.DIR_SUSPECT, wallet.getName());
+        if (cnt != 0) {
+            logger.debug(ltag, "Suspect dir cnt files: " + cnt);
+            return false;
+        }
+        
+        cnt = AppCore.getFilesCount(Config.DIR_IMPORT, wallet.getName());
+        if (cnt != 0) {
+            logger.debug(ltag, "Import dir cnt files: " + cnt);
+            return false;
+        }
+        
+        return true;
+    }
+    
+    public CloudbankResult depositOneStack(Map params, Wallet lw, Wallet rw, CallbackInterface cb) {
+        Wallet wallet = lw;
+        
+        if (!checkFolders(wallet)) {
+            logger.error(ltag, "Detected, Import or Suspect dir aren't empty");
+            return getCrError("Failed to deposit. Detected, Import or Suspect dir aren't empty");
+        }
+        
+        String rn = (String) params.get("rn");
+        if (rn == null) {
+            rn = AppCore.generateHex();
+        }
+        
+        String tag = Config.DEFAULT_TAG;
+        String ptag = (String) params.get("memo");
+        if (ptag != null) {
+            tag = ptag;
+        }
+        
+        String stack = (String) params.get("stack");
+        if (stack == null) {
+            logger.debug(ltag, "No stack defined");
+            return getCrError("Stack is required");
+        }
+        
+        final String filename = AppCore.getUserDir(Config.DIR_IMPORT, wallet.getName()) + File.separator + rn + ".stack";
+        System.out.println("d="+filename);
+        System.out.println("s="+stack);
+        logger.debug(ltag, "Saving file " + filename);
+        if (!AppCore.saveFile(filename, stack)) {
+            logger.error(ltag, "Failed to save file");
+            return getCrError("Failed to save file");
+        }
+        
+        sm.setActiveWalletObj(wallet);
+   
+        final CallbackInterface fcb = cb;
+        final String frn = rn;
+        final String ftag = tag;
+        sm.startUnpackerService(new CallbackInterface() {
+            public void callback(Object o) {
+                final UnpackerResult ur = (UnpackerResult) o;
+                logger.debug(ltag, "Unpacker finished " + ur.status);
+                
+                System.out.println("up=" + ur.status);
+                if (ur.status == UnpackerResult.STATUS_ERROR || ur.failedFiles > 0) {
+                    AppCore.deleteFile(filename);
+                    logger.error(ltag, "err " + ur.errText);
+                    fcb.callback(getCrError("Unpack failed. Make sure stack file is not corrupted"));
+                    return;
+                }
+                
+                if (ur.status == UnpackerResult.STATUS_FINISHED) {
+                    logger.error(ltag, "Finished");
+                    CloudbankResult cr = getCrSuccess(frn);
+                    cr.status = CloudbankResult.STATUS_OK_CUSTOM;
+                    cr.ownStatus = "importing";
+                    cr.keepWallet = true;
+                    
+                    fcb.callback(cr);
+                    
+                    sm.startAuthenticatorService(new AuthenticatorCb(wallet, ftag, ur.duplicates));
+                    
+                    return;
+                }
+                
+                fcb.callback(getCrError("Unpack unknown error"));
+                return;
+                
+            }
+        });
+        
+        return null;
+    }
+    
     public CloudbankResult withdrawOneStack(Map params, Wallet lw, Wallet rw, CallbackInterface cb) {
         Wallet wallet = null;
         String amountStr = (String) params.get("amount");
@@ -154,12 +266,9 @@ public class CloudBank {
             return getCrError("Insufficient funds in Local Wallet");
         }
         
-        if (!wallet.isSkyWallet()) {
-            int cnt = AppCore.getFilesCount(Config.DIR_DETECTED, wallet.getName());
-            if (cnt != 0) {
-                logger.error(ltag, "Detected dir isn't empty");
-                return getCrError("Failed to withdraw. Detected dir isn't empty");
-            }
+        if (!checkFolders(wallet)) {
+            logger.error(ltag, "Detected, Import or Suspect dir aren't empty");
+            return getCrError("Failed to withdraw. Detected, Import or Suspect dir aren't empty");
         }
        
         String tag = Config.DEFAULT_TAG;
@@ -199,6 +308,92 @@ public class CloudBank {
     }
 
 
+    class AuthenticatorCb implements CallbackInterface {
+        ArrayList<CloudCoin> duplicates;
+        Wallet wallet;
+        String tag;
+        
+        public AuthenticatorCb(Wallet wallet, String tag, ArrayList<CloudCoin> duplicates) {
+            this.duplicates = duplicates;
+            this.wallet = wallet;
+            this.tag = tag;
+        }
+        
+        public void callback(Object o) {
+            final AuthenticatorResult ar = (AuthenticatorResult) o;
+            logger.debug(ltag, "Authenticator finished " + ar.status);
+            
+            if (ar.status == AuthenticatorResult.STATUS_ERROR) {
+                logger.error(ltag, "Authenticator failed");
+                return;
+            }
+            
+            if (ar.status == AuthenticatorResult.STATUS_FINISHED) {
+                logger.debug(ltag, "Auth Finished. Launching grader");
+                sm.startGraderService(new CallbackInterface() {
+                    public void callback(Object o) {
+                        final GraderResult gr = (GraderResult) o;
+                        logger.debug(ltag, "Grader finished " + ar.status);
+                        
+                        int statToBankValue = gr.totalAuthenticValue + gr.totalFrackedValue;
+                        int statFailedValue = gr.totalCounterfeitValue;
+                        int statLostValue = gr.totalLostValue;
+                        int statToBank = gr.totalAuthentic + gr.totalFracked;
+                        int statFailed = gr.totalCounterfeit;
+                        int statLost = gr.totalLost + gr.totalUnchecked;
+                        String receiptId = gr.receiptId;
+   
+
+                        if (statToBankValue != 0) {
+                            wallet.appendTransaction(tag, statToBankValue, receiptId);
+                        } else {
+                            String memo = "";
+                            if (statFailedValue > 0) {
+                                memo = AppCore.formatNumber(statFailedValue) + " Counterfeit";
+                            } else {
+                                memo = "Failed to Import";
+                            }
+                            
+                            wallet.appendTransaction(memo, 0, "COUNTERFEIT");
+                        }
+                        
+                        logger.debug(ltag, "Grader finished");
+                        
+                        sm.startFrackFixerService(new CallbackInterface() {
+                            public void callback(Object o) {
+                                FrackFixerResult fr = (FrackFixerResult) o;
+                                logger.debug(ltag, "Frackfixer finished: " + fr.status);
+                                
+                                if (fr.status == FrackFixerResult.STATUS_ERROR) {
+                                    logger.debug(ltag, "Failed to fix");
+                                }
+                                
+                                sm.startLossFixerService(new CallbackInterface() {
+                                    public void callback(Object o) {
+                                        LossFixerResult lr = (LossFixerResult) o;
+                                        logger.debug(ltag, "Lossfixer finished: " + lr.status);
+                                        
+                                        if (lr.recovered > 0) {
+                                            wallet.appendTransaction("LossFixer Recovered", lr.recoveredValue, lr.receiptId);
+                                        }
+                                        
+                                        if (wallet.isEncrypted()) {
+                                            logger.debug(ltag, "Encrypting again");
+                                            sm.startVaulterService(null, wallet.getPassword());
+                                        }
+                                    }
+                                });
+                                
+                            }
+                        }, false, wallet.getEmail());
+                        
+                        
+                    }
+                }, duplicates, null);
+            }
+        }
+    }
+    
     class ExporterCb implements CallbackInterface {
         Wallet wallet;
         String tag;
