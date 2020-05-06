@@ -330,12 +330,12 @@ public class ServantManager {
 	at.launch(cc, cb);
     }
 
-    public void startGraderService(CallbackInterface cb, ArrayList<CloudCoin> duplicates, String source) {
+    public void startGraderService(CallbackInterface cb, ArrayList<CloudCoin> duplicates, String source, String rn) {
         if (sr.isRunning("Grader"))
             return;
         
 	Grader gd = (Grader) sr.getServant("Grader");
-	gd.launch(cb, duplicates, source);
+	gd.launch(cb, duplicates, source, rn);
     }
     
     
@@ -823,7 +823,7 @@ public class ServantManager {
                     if (cb != null)
                         cb.callback(mcr);
                     
-                    startGraderService(new eGraderCb(cb, w), null, w.getName());
+                    startGraderService(new eGraderCb(cb, w), null, w.getName(), null);
             
                     /*
                     startAuthenticatorService(new CallbackInterface() {

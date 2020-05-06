@@ -219,7 +219,8 @@ public class Unpacker extends Servant {
             if (!f.exists())
                 continue;
             
-            AppCore.moveToImported(cc.originalFile, user);             
+            AppCore.moveToImported(cc.originalFile, user);  
+            globalResult.unpacked.add(cc);
         }
 
         globalResult.status = UnpackerResult.STATUS_FINISHED;

@@ -25,13 +25,16 @@ public class Grader extends Servant {
         super("Grader", rootDir, logger);
     }
 
-    public void launch(CallbackInterface icb, ArrayList<CloudCoin> duplicates, String source) {
+    public void launch(CallbackInterface icb, ArrayList<CloudCoin> duplicates, String source, String rn) {
         this.cb = icb;
 
         gr = new GraderResult();
         csb = new StringBuilder();
 
         receiptId = AppCore.generateHex();
+        if (rn != null)
+            receiptId = rn;
+        
         gr.receiptId = receiptId;
         
         final String fsource = source;
@@ -91,6 +94,10 @@ public class Grader extends Servant {
                 logger.info(ltag, "Removing dup coin: " + dcc.sn);
                 
                 String ccFile = AppCore.getUserDir(Config.DIR_TRASH, user) + File.separator + dcc.getFileName();
+                File f = new File(ccFile);
+                if (f.exists())
+                    f.delete();
+                
                 if (!AppCore.saveFile(ccFile, dcc.getJson(false))) {
                     logger.error(ltag, "Failed to save file: " + ccFile);
                     continue;

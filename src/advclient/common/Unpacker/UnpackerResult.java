@@ -22,6 +22,7 @@ public class UnpackerResult {
     public String errText;
     
     public ArrayList<CloudCoin> duplicates;
+    public ArrayList<CloudCoin> unpacked;
     
     public int status;
     public int failedFiles;
@@ -29,6 +30,7 @@ public class UnpackerResult {
     public UnpackerResult() {
         status = STATUS_PROCESSING;
         duplicates = new ArrayList<CloudCoin>();
+        unpacked = new ArrayList<CloudCoin>();
         failedFiles = 0;
     }
     

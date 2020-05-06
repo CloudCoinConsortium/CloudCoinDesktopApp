@@ -8602,7 +8602,7 @@ public class AdvancedClient  {
                 });
                 return;
             } else if (ar.status == AuthenticatorResult.STATUS_FINISHED) {
-                sm.startGraderService(new GraderCb(), ps.duplicates, null);
+                sm.startGraderService(new GraderCb(), ps.duplicates, null, null);
                 return;
             } else if (ar.status == AuthenticatorResult.STATUS_CANCELLED) {
                 sm.resumeAll();
@@ -9344,7 +9344,7 @@ public class AdvancedClient  {
             wl.debug(ltag, "rramount " + rr.amount + " typed " + ps.typedAmount + " name=" + name);
             
             if (!isWithdrawing())
-                sm.startGraderService(new GraderCb(), null, name);
+                sm.startGraderService(new GraderCb(), null, name, null);
             else 
                 sm.startExporterService(ps.exportType, rr.files, ps.typedMemo, ps.chosenFile, new ExporterCb());
                 

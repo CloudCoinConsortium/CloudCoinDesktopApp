@@ -11,8 +11,10 @@ import global.cloudcoin.ccbank.ServantManager.ServantManager;
 import global.cloudcoin.ccbank.ServantManager.ServantManager.makeChangeResult;
 import global.cloudcoin.ccbank.Unpacker.UnpackerResult;
 import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Date;
 import java.util.Map;
 
 public class CloudBank {
@@ -162,6 +164,57 @@ public class CloudBank {
         return true;
     }
     
+    private String getReceiptName(Wallet wallet, String rn) {
+        return AppCore.getUserDir(Config.DIR_RECEIPTS, wallet.getName()) + File.separator + "r" + rn + ".txt";
+    }
+    
+    public void setReceipt(Wallet wallet, int total, String status, String message, String rn) {
+        String rfile = getReceiptName(wallet, rn);
+        File f = new File(rfile);
+        if (f.exists())
+            f.delete();
+        
+        StringBuilder rsb = new StringBuilder();
+
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd hh:mm:a");
+        SimpleDateFormat formatterTz = new SimpleDateFormat("z");
+        Date date = new Date(System.currentTimeMillis());
+
+        String cdate = formatter.format(date);
+        String cdateFormat = formatterTz.format(date);
+
+        rsb.append("{\"receipt_id\": \"");
+        rsb.append(rn);
+        rsb.append("\", \"time\": \"");
+        rsb.append(cdate);
+        rsb.append("\", \"timezone\": \"");
+        rsb.append(cdateFormat);
+        rsb.append("\", \"status\": ");
+        rsb.append(status);
+        rsb.append("\", \"message\": ");
+        rsb.append(message);
+        rsb.append("\", \"total_authentic\": ");
+        rsb.append(0);
+        rsb.append(", \"total_fracked\": ");
+        rsb.append(0);
+        rsb.append(", \"total_counterfeit\": ");
+        rsb.append(0);
+        rsb.append(", \"total_lost\": ");
+        rsb.append(0);
+        rsb.append(", \"total_unchecked\": ");
+        rsb.append(total);
+        rsb.append(", \"prev_imported\": ");
+        rsb.append(0);
+        rsb.append(", \"receipt_detail\": [");
+        //rsb.append(csb);
+        rsb.append("]}");
+
+        if (!AppCore.saveFile(rfile, rsb.toString())) {
+            logger.error(ltag, "Failed to save file " + rfile);
+        } 
+        
+    }
+    
     public CloudbankResult depositOneStack(Map params, Wallet lw, Wallet rw, CallbackInterface cb) {
         Wallet wallet = lw;
         
@@ -173,6 +226,15 @@ public class CloudBank {
         String rn = (String) params.get("rn");
         if (rn == null) {
             rn = AppCore.generateHex();
+        }
+        
+        rn = rn.toUpperCase();
+        
+        final String rfile = AppCore.getUserDir(Config.DIR_RECEIPTS, lw.getName()) + File.separator + rn + ".txt";
+        File f = new File(rfile);
+        if (f.exists()) {
+            logger.debug(ltag, "Recipt " + rfile + " already exists");
+            return getCrError("Receipt already exists");
         }
         
         String tag = Config.DEFAULT_TAG;
@@ -206,7 +268,7 @@ public class CloudBank {
                 final UnpackerResult ur = (UnpackerResult) o;
                 logger.debug(ltag, "Unpacker finished " + ur.status);
                 
-                System.out.println("up=" + ur.status);
+                System.out.println("up=" + ur.status + " ff="+ur.failedFiles);
                 if (ur.status == UnpackerResult.STATUS_ERROR || ur.failedFiles > 0) {
                     AppCore.deleteFile(filename);
                     logger.error(ltag, "err " + ur.errText);
@@ -221,9 +283,10 @@ public class CloudBank {
                     cr.ownStatus = "importing";
                     cr.keepWallet = true;
                     
-                    fcb.callback(cr);
-                    
-                    sm.startAuthenticatorService(new AuthenticatorCb(wallet, ftag, ur.duplicates));
+                    final int fsize = ur.unpacked.size();
+                    setReceipt(wallet, fsize, "importing", "Importing CloudCoins", frn);
+                    fcb.callback(cr);                    
+                    sm.startAuthenticatorService(new AuthenticatorCb(wallet, frn, ftag, ur.duplicates));
                     
                     return;
                 }
@@ -312,11 +375,13 @@ public class CloudBank {
         ArrayList<CloudCoin> duplicates;
         Wallet wallet;
         String tag;
+        String rn;
         
-        public AuthenticatorCb(Wallet wallet, String tag, ArrayList<CloudCoin> duplicates) {
+        public AuthenticatorCb(Wallet wallet, String rn, String tag, ArrayList<CloudCoin> duplicates) {
             this.duplicates = duplicates;
             this.wallet = wallet;
             this.tag = tag;
+            this.rn = rn;
         }
         
         public void callback(Object o) {
@@ -385,11 +450,9 @@ public class CloudBank {
                                 });
                                 
                             }
-                        }, false, wallet.getEmail());
-                        
-                        
+                        }, false, wallet.getEmail());          
                     }
-                }, duplicates, null);
+                }, duplicates, null, rn);
             }
         }
     }

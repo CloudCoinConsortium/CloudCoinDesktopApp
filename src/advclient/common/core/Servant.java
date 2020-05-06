@@ -1065,6 +1065,12 @@ public class Servant {
         rsb.append("]}");
 
         String fileName = AppCore.getUserDir(Config.DIR_RECEIPTS, duser) + File.separator + receiptId + ".txt";
+        File fn = new File(fileName);
+        if (fn.exists()) {
+            logger.debug(ltag, "Deleting previous receipt " + fileName);
+            fn.delete();
+        }
+        
         if (!AppCore.saveFile(fileName, rsb.toString())) {
             logger.error(ltag, "Failed to save file " + fileName);
         } 
