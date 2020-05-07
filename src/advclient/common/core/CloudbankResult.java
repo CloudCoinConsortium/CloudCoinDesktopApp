@@ -4,6 +4,7 @@ public class CloudbankResult {
     public static int STATUS_OK = 0;
     public static int STATUS_ERROR = 1;
     public static int STATUS_OK_CUSTOM = 2;
+    public static int STATUS_OK_JSON = 3;
     
     public int status;
 
@@ -12,6 +13,8 @@ public class CloudbankResult {
 
     public String ownStatus;
     public String message;
+    
+    public String receipt;
     
     boolean keepWallet;
 

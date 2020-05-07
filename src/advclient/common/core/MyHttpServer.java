@@ -198,6 +198,7 @@ class MyHandler implements HttpHandler {
     Wallet tmpWallet;
     String ownStatus;
     boolean keepWallet;
+    String receipt;
     
     public MyHandler(CloudBank cloudbank, GLogger logger) {
         this.logger = logger;
@@ -277,6 +278,7 @@ class MyHandler implements HttpHandler {
                 rstatus = cr.status;
                 ownStatus = cr.ownStatus;
                 keepWallet = cr.keepWallet;
+                receipt = cr.receipt;
                 completed = true;
             }
         });
@@ -312,20 +314,22 @@ class MyHandler implements HttpHandler {
             sendError(t, message);
         else if (rstatus == CloudbankResult.STATUS_OK) {
             sendResult(t, message);
-        } else {
-            sendResponse(t, 200, ownStatus, message);
+        } else if (rstatus == CloudbankResult.STATUS_OK_CUSTOM) {
+            sendResponse(t, 200, ownStatus, receipt, message);
+        } else if (rstatus == CloudbankResult.STATUS_OK_JSON) {
+            sendJSONResponse(t, 200, message); 
         }
     }
     
     private void sendError(HttpExchange httpExchange, String message) {
-        sendResponse(httpExchange, 200, "error", message);
+        sendResponse(httpExchange, 200, "error", null, message);
     }
     
     private void sendResult(HttpExchange httpExchange, String message) {
-        sendResponse(httpExchange, 200, "pass", message);
+        sendResponse(httpExchange, 200, "pass", null, message);
     }
     
-    private void sendResponse(HttpExchange httpExchange, int code, String status, String message) {
+    private void sendResponse(HttpExchange httpExchange, int code, String status, String receipt, String message) {
         OutputStream outputStream = httpExchange.getResponseBody();
         String dateStr = AppCore.getDate("" + (System.currentTimeMillis() /1000));
         StringBuilder sb = new StringBuilder();
@@ -334,6 +338,11 @@ class MyHandler implements HttpHandler {
         sb.append(AppUI.brand.getTitle(null));
         sb.append("\", \"status\":\"");
         sb.append(status);
+        if (receipt != null) {
+            sb.append("\", \"receipt\":\"");
+            sb.append(receipt);
+        }
+        
         sb.append("\", \"message\":\"");
         sb.append(message);
         sb.append("\", \"time\":\"");
@@ -347,6 +356,19 @@ class MyHandler implements HttpHandler {
         try {
             httpExchange.sendResponseHeaders(code, response.length());
             outputStream.write(response.getBytes());
+            outputStream.flush();
+            outputStream.close();
+        } catch (IOException e) {
+            logger.error(ltag, "Failed to send response: " + e.getMessage());
+            return;
+        }
+    }
+    
+    private void sendJSONResponse(HttpExchange httpExchange, int code, String message) {
+        OutputStream outputStream = httpExchange.getResponseBody();        
+        try {
+            httpExchange.sendResponseHeaders(code, message.length());
+            outputStream.write(message.getBytes());
             outputStream.flush();
             outputStream.close();
         } catch (IOException e) {

@@ -1,6 +1,7 @@
 package global.cloudcoin.ccbank.core;
 
 import advclient.AdvancedClient;
+import advclient.AppUI;
 import advclient.common.core.Validator;
 import global.cloudcoin.ccbank.Authenticator.AuthenticatorResult;
 import global.cloudcoin.ccbank.Exporter.ExporterResult;
@@ -98,6 +99,10 @@ public class CloudBank {
             cr = withdrawOneStack(params, lw, rw, cb);
         } else if (service.equals("deposit_one_stack")) {
             cr = depositOneStack(params, lw, rw, cb);
+        } else if (service.equals("get_receipt")) {
+            cr = getReceipt(params, lw, rw, cb);
+        } else if (service.equals("show_coins")) {
+            cr = showCoins(params, lw, rw, cb);
         } else if (service.equals("echo")) {
             cr = echo();
         } else {
@@ -122,6 +127,16 @@ public class CloudBank {
         return cr;
     }
     
+    public CloudbankResult getCrErrorKeepWallet(String errTxt) {
+        CloudbankResult cr = new CloudbankResult();
+        cr.status = CloudbankResult.STATUS_ERROR;
+        cr.message = errTxt;
+        cr.keepWallet = true;
+        
+        return cr;
+    }
+    
+    
     public CloudbankResult getCrSuccess(String text) {
         CloudbankResult cr = new CloudbankResult();
         cr.status = CloudbankResult.STATUS_OK;
@@ -136,6 +151,7 @@ public class CloudBank {
         cr.status = CloudbankResult.STATUS_OK_CUSTOM;
         cr.message = "Server is ready";
         cr.ownStatus = "ready";
+        cr.keepWallet = true;
         return cr;
     }
 
@@ -168,6 +184,22 @@ public class CloudBank {
         return AppCore.getUserDir(Config.DIR_RECEIPTS, wallet.getName()) + File.separator + "r" + rn + ".txt";
     }
     
+    private String getReceiptLocalName(Wallet wallet, String rn) {
+        return AppCore.getUserDir(Config.DIR_RECEIPTS, wallet.getName()) + File.separator + rn + ".txt";
+    }
+    
+    
+    public void rmReceipt(Wallet wallet, String rn) {
+        String rfile = getReceiptName(wallet, rn);
+        File f = new File(rfile);
+        if (f.exists())
+            f.delete();
+    }
+    
+    public void setErrorReceipt(Wallet wallet, int total, String message, String rn) {
+        setReceipt(wallet, total, "error", message, rn);
+    }
+    
     public void setReceipt(Wallet wallet, int total, String status, String message, String rn) {
         String rfile = getReceiptName(wallet, rn);
         File f = new File(rfile);
@@ -189,9 +221,9 @@ public class CloudBank {
         rsb.append(cdate);
         rsb.append("\", \"timezone\": \"");
         rsb.append(cdateFormat);
-        rsb.append("\", \"status\": ");
+        rsb.append("\", \"status\": \"");
         rsb.append(status);
-        rsb.append("\", \"message\": ");
+        rsb.append("\", \"message\": \"");
         rsb.append(message);
         rsb.append("\", \"total_authentic\": ");
         rsb.append(0);
@@ -214,6 +246,121 @@ public class CloudBank {
         } 
         
     }
+    
+    private void fillHeader(StringBuilder sb, String status) {
+        String dateStr = AppCore.getDate("" + (System.currentTimeMillis() /1000));
+        
+        sb.append("{\"server\":\"");
+        sb.append(AppUI.brand.getTitle(null));
+        sb.append("\", \"status\":\"");
+        sb.append(status);
+        sb.append("\", \"time\":\"");
+        sb.append(dateStr);
+        sb.append("\", \"version\": \"");
+        sb.append(AppUI.brand.getResultingVersion(AdvancedClient.version));
+        sb.append("\"");
+    }
+    
+    public CloudbankResult showCoins(Map params, Wallet lw, Wallet rw, CallbackInterface cb) {
+        Wallet wallet = lw;
+        
+        int[][] counters = wallet.getCounters();
+        if (counters == null || counters.length == 0) {
+            return getCrErrorKeepWallet("Failed to find Coins");
+        }
+        
+        int totalCnt = AppCore.getTotal(counters[Config.IDX_FOLDER_BANK]) +
+			AppCore.getTotal(counters[Config.IDX_FOLDER_FRACKED]) +
+                        AppCore.getTotal(counters[Config.IDX_FOLDER_VAULT]);
+
+        int t1, t5, t25, t100, t250;
+        
+        t1 = counters[Config.IDX_FOLDER_BANK][Config.IDX_1] + 
+                counters[Config.IDX_FOLDER_FRACKED][Config.IDX_1] + 
+                counters[Config.IDX_FOLDER_VAULT][Config.IDX_1];
+        
+        t5 = counters[Config.IDX_FOLDER_BANK][Config.IDX_5] + 
+                counters[Config.IDX_FOLDER_FRACKED][Config.IDX_5] + 
+                counters[Config.IDX_FOLDER_VAULT][Config.IDX_5];
+        
+        t25 = counters[Config.IDX_FOLDER_BANK][Config.IDX_25] + 
+                counters[Config.IDX_FOLDER_FRACKED][Config.IDX_25] + 
+                counters[Config.IDX_FOLDER_VAULT][Config.IDX_25];
+        
+        t100 =  counters[Config.IDX_FOLDER_BANK][Config.IDX_100] + 
+                counters[Config.IDX_FOLDER_FRACKED][Config.IDX_100] + 
+                counters[Config.IDX_FOLDER_VAULT][Config.IDX_100];
+            
+        t250 = counters[Config.IDX_FOLDER_BANK][Config.IDX_250] + 
+                counters[Config.IDX_FOLDER_FRACKED][Config.IDX_250] + 
+                counters[Config.IDX_FOLDER_VAULT][Config.IDX_250];
+        
+        StringBuilder sb = new StringBuilder();
+        fillHeader(sb, "coins_shown");
+        
+        sb.append(",\"ones\": ");
+        sb.append(t1);        
+        sb.append(", \"fives\": ");
+        sb.append(t5);
+        sb.append(", \"twentyfives\": ");
+        sb.append(t25);        
+        sb.append(", \"hundreds\": ");
+        sb.append(t100);
+        sb.append(", \"twohundredfifties\": ");
+        sb.append(t250);
+        sb.append("}");
+        
+        CloudbankResult cr = new CloudbankResult();
+        cr.status = CloudbankResult.STATUS_OK_JSON;
+        cr.message = sb.toString();
+        cr.keepWallet = true;
+    
+        return cr;
+    }
+    
+    public CloudbankResult getReceipt(Map params, Wallet lw, Wallet rw, CallbackInterface cb) {
+        Wallet wallet = lw;
+        
+        String rn = (String) params.get("rn");
+        if (rn == null) {
+            return getCrErrorKeepWallet("RN parameter is required");
+        }
+        
+        String rfile = getReceiptName(wallet, rn);
+        File f = new File(rfile);
+        if (f.exists()) {
+            String json = AppCore.loadFile(rfile);
+            if (json == null) {
+                logger.error(ltag, "Failed to load file " + rfile);
+                return getCrErrorKeepWallet("Internal error");
+            }
+            CloudbankResult cr = new CloudbankResult();
+            cr.status = CloudbankResult.STATUS_OK_JSON;
+            cr.message = json;
+            cr.keepWallet = true;
+            
+            return cr;
+        }
+        
+        String lfile = getReceiptLocalName(wallet, rn);
+        f = new File(lfile);
+        if (f.exists()) {
+            String json = AppCore.loadFile(lfile);
+            if (json == null) {
+                logger.error(ltag, "Failed to load file " + lfile);
+                return getCrErrorKeepWallet("Internal error");
+            }
+            CloudbankResult cr = new CloudbankResult();
+            cr.status = CloudbankResult.STATUS_OK_JSON;
+            cr.message = json;
+            cr.keepWallet = true;
+            
+            return cr;
+        }
+        
+        return getCrErrorKeepWallet("Receipt not found");
+    }
+    
     
     public CloudbankResult depositOneStack(Map params, Wallet lw, Wallet rw, CallbackInterface cb) {
         Wallet wallet = lw;
@@ -281,12 +428,15 @@ public class CloudBank {
                     CloudbankResult cr = getCrSuccess(frn);
                     cr.status = CloudbankResult.STATUS_OK_CUSTOM;
                     cr.ownStatus = "importing";
+                    cr.message = "The stack file has been imported and detection will begin automatically "
+                            + "so long as they are not already in bank. Please check your reciept.";
+                    cr.receipt = frn;
                     cr.keepWallet = true;
                     
                     final int fsize = ur.unpacked.size();
                     setReceipt(wallet, fsize, "importing", "Importing CloudCoins", frn);
                     fcb.callback(cr);                    
-                    sm.startAuthenticatorService(new AuthenticatorCb(wallet, frn, ftag, ur.duplicates));
+                    sm.startAuthenticatorService(new AuthenticatorCb(wallet, frn, ftag, ur.unpacked, ur.duplicates));
                     
                     return;
                 }
@@ -376,12 +526,17 @@ public class CloudBank {
         Wallet wallet;
         String tag;
         String rn;
+        int total;
+        ArrayList<CloudCoin> coins;
         
-        public AuthenticatorCb(Wallet wallet, String rn, String tag, ArrayList<CloudCoin> duplicates) {
+        
+        public AuthenticatorCb(Wallet wallet, String rn, String tag, ArrayList<CloudCoin> coins, ArrayList<CloudCoin> duplicates) {
             this.duplicates = duplicates;
             this.wallet = wallet;
             this.tag = tag;
             this.rn = rn;
+            this.coins = coins;
+            this.total = coins.size();
         }
         
         public void callback(Object o) {
@@ -389,6 +544,7 @@ public class CloudBank {
             logger.debug(ltag, "Authenticator finished " + ar.status);
             
             if (ar.status == AuthenticatorResult.STATUS_ERROR) {
+                setErrorReceipt(wallet, total, "Authenticator Failed", rn);
                 logger.error(ltag, "Authenticator failed");
                 return;
             }
@@ -420,9 +576,12 @@ public class CloudBank {
                             }
                             
                             wallet.appendTransaction(memo, 0, "COUNTERFEIT");
+                            setErrorReceipt(wallet, total, "All Coins are counterfeit", rn);
+                            return;
                         }
                         
-                        logger.debug(ltag, "Grader finished");
+                        logger.debug(ltag, "Grader finished 2");
+                        rmReceipt(wallet, rn);
                         
                         sm.startFrackFixerService(new CallbackInterface() {
                             public void callback(Object o) {
