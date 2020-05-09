@@ -1190,6 +1190,9 @@ public class AdvancedClient  {
             case ProgramState.SCREEN_LIST_SERIALS:
                 showListSerialsScreen();
                 break;
+            case ProgramState.SCREEN_LIST_SERIALS_DOING:
+                showListSerialsDoing();
+                break;
             case ProgramState.SCREEN_CLEAR:
                 showClearScreen();
                 break;
@@ -5804,13 +5807,14 @@ public class AdvancedClient  {
         subInnerCore.setLayout(gridbag);
 
         final optRv rv = setOptionsForWallets(false, false);
+        /*
         if (rv.idxs.length == 0) {
             fname = new JLabel("You have no coins to list serial numbers");   
             AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
             y++;
             AppUI.GBPad(subInnerCore, y, gridbag); 
             return;
-        }
+        }*/
         
         fname = new JLabel("List Serials will show you Serial Numbers of your CloudCoins");     
         AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
@@ -5879,7 +5883,7 @@ public class AdvancedClient  {
             public void actionPerformed(ActionEvent e) {              
                 int srcIdx = cboxfrom.getSelectedIndex() - 1;   
                 if (srcIdx == rv.idxs.length) {
-                    ps.currentScreen = ProgramState.SCREEN_LIST_SERIALS_DONE;
+                    ps.currentScreen = ProgramState.SCREEN_LIST_SERIALS_DOING;
                     showScreen();
                     return;
                 }
@@ -5895,7 +5899,7 @@ public class AdvancedClient  {
                 Wallet srcWallet = wallets[srcIdx];
                 ps.srcWallet = srcWallet;            
                 
-                ps.currentScreen = ProgramState.SCREEN_LIST_SERIALS_DONE;
+                ps.currentScreen = ProgramState.SCREEN_LIST_SERIALS_DOING;
                 showScreen();
             }
         }, y, gridbag);
@@ -6596,48 +6600,95 @@ public class AdvancedClient  {
         resetState();
     }
     
+    public void showListSerialsDoing() {
+        
+        JLabel fname;
+        int y = 0;
+        
+        JPanel subInnerCore = getPanel("Doing List Serials...");                
+        GridBagLayout gridbag = new GridBagLayout();
+        subInnerCore.setLayout(gridbag);
+        
+        final Wallet w = ps.srcWallet; 
+        Thread t = new Thread(new Runnable() {
+            public void run() {
+                int[] sns;
+               
+                if (w != null) {
+                    sns = w.getSNs();
+                    if (sns.length == 0) {
+                        EventQueue.invokeLater(new Runnable() {
+                            public void run() {
+                                ps.errText = "No serials";
+                                ps.currentScreen = ProgramState.SCREEN_LIST_SERIALS_DONE;
+                                showScreen();
+                                return;
+                            }
+                        });
+                        
+                        return;
+                    }
+        
+                    //fname = AppUI.wrapDiv("Wallet <b>" + w.getName() + " - " + w.getTotal() + " CC</b>");   
+                    //AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
+                    //y++; 
+                    //wname = w.getName();
+                } else if (ps.chosenFile == null) {
+                    EventQueue.invokeLater(new Runnable() {
+                        public void run() {
+                            ps.errText = "No folder or Wallet chosen";
+                            ps.currentScreen = ProgramState.SCREEN_LIST_SERIALS_DONE;
+                            showScreen();
+                            return;
+                        }
+                    });
+
+                    return;
+                } else {
+                    sns = AppCore.getCoinsSNInDir(ps.chosenFile);
+                    if (sns == null) {
+                        EventQueue.invokeLater(new Runnable() {
+                            public void run() {
+                                ps.errText = "Failed to read folder";
+                                ps.currentScreen = ProgramState.SCREEN_LIST_SERIALS_DONE;
+                                showScreen();
+                                return;
+                            }
+                        });
+                        
+                        return;
+                    }
+
+                }
+                
+                                    
+                EventQueue.invokeLater(new Runnable() {
+                    public void run() {
+                        ps.lsSNs = sns;
+                        ps.currentScreen = ProgramState.SCREEN_LIST_SERIALS_DONE;
+                        showScreen();
+                        return;
+                    }
+                });
+            }
+        });
+        
+        t.start();
+        
+    }
+    
     public void showListSerialsDone() {
         
         JLabel fname;
         int y = 0;
         
-        JPanel subInnerCore = getPanel("List Serials");                
+        JPanel subInnerCore = getPanel("List Serials Done");                
         GridBagLayout gridbag = new GridBagLayout();
         subInnerCore.setLayout(gridbag);
         
-        final Wallet w = ps.srcWallet; 
-        int[] sns;
-        
-        if (w != null) {
-            sns = w.getSNs();
-            if (sns.length == 0) {
-                fname = new JLabel("No Serials");
-                AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
-                return;
-            }
-        
-            fname = AppUI.wrapDiv("Wallet <b>" + w.getName() + " - " + w.getTotal() + " CC</b>");   
-            AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
-            y++; 
-        } else if (ps.chosenFile == null) {
-            fname = new JLabel("No Folder or Wallet chosen");
-            AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
-            return;
-        } else {
-            CloudCoin[] ccs = AppCore.getCoinsInDir(ps.chosenFile);
-            if (ccs == null) {
-                fname = new JLabel("Failed to read folder " + ps.chosenFile);
-                AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
-                return;
-            }
-
-            sns = new int[ccs.length];
-            for (int i = 0; i < ccs.length; i++) {
-                sns[i] = ccs[i].sn;
-            }
-        }
         
         
+        /*
         // Scrollbar & Table  
         DefaultTableCellRenderer r = new DefaultTableCellRenderer() {
             JLabel lbl;
@@ -6662,17 +6713,30 @@ public class AdvancedClient  {
             }
         };
               
-
-        String[][] serials = new String[sns.length][];
-        for (int i = 0; i < sns.length; i++) {
-            CloudCoin cc = new CloudCoin(Config.DEFAULT_NN, sns[i]);
-            
-            serials[i] = new String[3];
-            serials[i][0] = "" + sns[i];
-            serials[i][1] = "" + cc.getDenomination();
-            serials[i][2] = ""; // We need it
-        }
+        */
         
+        if (ps.lsSNs == null)
+            return;
+        
+        Wallet w = ps.srcWallet;
+        String wname;
+        if (w == null)
+            wname = "list";
+        else
+            wname = w.getName();
+        
+        final String fwname = wname;
+        final int[] sns = ps.lsSNs;
+
+        JFileChooser c = new JFileChooser();
+            c.setSelectedFile(new File(fwname + "-serials.csv"));
+
+            int rVal = c.showSaveDialog(null);
+            if (rVal == JFileChooser.APPROVE_OPTION) {
+                AppCore.saveSerialsFromSNs(c.getSelectedFile().getAbsolutePath(), sns);
+        }
+       
+            /*
         //serial number table
         final JTable table = new JTable();
         final JScrollPane scrollPane = AppUI.setupTable(table, new String[] {"Serial Number", "Denomination"}, serials, r, null);
@@ -6685,6 +6749,7 @@ public class AdvancedClient  {
         
         AppUI.GBPad(subInnerCore, y, gridbag);        
         y++;
+        
         
         AppUI.getTwoButtonPanel(subInnerCore, "Print", "Export List", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -6705,7 +6770,7 @@ public class AdvancedClient  {
                 }
             }
         }, y, gridbag);
-             
+        */
         resetState();
     }
     

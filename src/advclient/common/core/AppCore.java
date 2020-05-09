@@ -1588,6 +1588,72 @@ public class AppCore {
         
         return ccs;
     }
+    
+    
+    public static int[] getCoinsSNInDir(String dir) {
+        File dirObj = new File(dir);
+        if (!dirObj.exists()) {
+            return null;
+        }
+        
+        ArrayList<Integer> sns = new ArrayList<Integer>();
+        
+        int c = 0;
+        for (File file: dirObj.listFiles()) {
+            if (file.isDirectory())
+                continue;
+            
+            if (!AppCore.hasCoinExtension(file))
+                continue;
+
+            String[] parts = file.getName().split("\\.");
+            if (parts.length != 5) {
+                continue;
+            }
+            
+            int sn;
+            
+            try {
+                sn = Integer.parseInt(parts[3]);
+            } catch (NumberFormatException e) {
+                continue;
+            }
+            
+            sns.add(sn);
+        }
+        
+        int asns[] = new int[sns.size()];
+        for (int i = 0; i < asns.length; i++)
+            asns[i] = sns.get(i).intValue();
+        
+        return asns;
+    }
+    
+    
+    public static void saveSerialsFromSNs(String fileName, int[] sns) {
+        
+        logger.debug(ltag, "Saving serials to " + fileName);
+        
+        StringBuilder sb = new StringBuilder();
+        
+        sb.append("Serial,Denomination\r\n");
+        for (int sn : sns) {
+            CloudCoin cc = new CloudCoin(Config.DEFAULT_NN, sn);
+            sb.append("" + sn);
+            sb.append(",");
+            sb.append("" + cc.getDenomination());
+            sb.append("\r\n");
+        }
+
+        AppCore.saveFile(fileName, sb.toString());
+    }
+    
+    
+    
+    
+    
+    
+    
  
     public static String[][] parseBillPayCsv(String filename) {
         String [][] rvs;
