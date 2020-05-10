@@ -191,6 +191,8 @@ It will check to see that there are:
 
 2 hundreds.
 
+If a local wallet does not have this change, it will use the "change" service on the RAIDA to break the largest note.
+
 
 
 
