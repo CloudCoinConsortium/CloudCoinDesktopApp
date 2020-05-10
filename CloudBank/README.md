@@ -3,9 +3,6 @@ CloudBank allows CloudCoin Wallet to turn into a server and accept RPC (Remote P
 The main purpose of this is to allow merchants to send and receive funds programmatically. It can also increase the security of an exchange or store by allowing the coins to be decentralized, thus protecting against theft.
 The CloudBank Server service can be accessed by a program on the local computer or by programs accessing remotely over the Internet. If the user wants to allow remote systems to RPC, the user will need to port-forward ports on their local router and will need to open ports on their computer's firewall to make it work.
 
-
-
-
 ## Send command
 Tells the CloudCoin Wallet to send money from a local wallet to a skywallet. 
 
@@ -80,7 +77,6 @@ SAMPLE RESPONSE IF SOME WAS RECEIVED
 	"version": "yyyy/MM/dd HH:mm:ss"
 }
 ```
-
 SAMPLE RESPONSE PARAMETERS WERE MISSING OR NOT VALID
 ```json
 {
@@ -91,18 +87,7 @@ SAMPLE RESPONSE PARAMETERS WERE MISSING OR NOT VALID
 }
 ```
 
-Optimize Change
-The optimize change algorithm is run after a "Send" command completes. It must ensure that there is enough change so that the next send command will not be delayed. It could be that the user is able to decide which wallets have changed optimized on. It could be a setting.
-This can run one time during the CloudCoin Wallet Startup. Then one time after each send command.
-It will check to see that there are:
-```
-5 ones.
 
-4 fives. 
-
-3 twentyfives.
-
-2 hundreds.
 ```
 If a local wallet does not have this change, it will use the "change" service on the RAIDA to break the largest note. 
 
@@ -193,21 +178,18 @@ TotalReceived=0
 status=none received
 message=No coins were received
 ```
-
-## Optimize Change
-The optimize change algorithm is run after a "Send" command completes. It must ensure that there is enough change so that the next send command will not be delayed. It could be that the user is able to decide which wallets will have changed optimized on. It could be a setting. 
-This can run one-time during the CloudCoin Wallet Startup. Then one time after each send command. 
-
-It will check to see that there are: 
+Optimize Change
+The optimize change algorithm is run after a "Send" command completes. It must ensure that there is enough change so that the next send command will not be delayed. It could be that the user is able to decide which wallets have changed optimized on. It could be a setting.
+This can run one time during the CloudCoin Wallet Startup. Then one time after each send command.
+It will check to see that there are:
 ```
 5 ones.
 
 4 fives. 
 
-3 twenty fives.
+3 twentyfives.
 
 2 hundreds.
-```
 
 
 
