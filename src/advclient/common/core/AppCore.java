@@ -1937,7 +1937,6 @@ public class AppCore {
         }
 
         String zippedFilename = filename + ".zip";
-
         try {
             FileOutputStream fos = new FileOutputStream(zippedFilename);
             ZipOutputStream zipOut = new ZipOutputStream(fos);
@@ -1959,6 +1958,33 @@ public class AppCore {
         } catch (IOException e) {
             logger.error(ltag, "Failed to zip: " + e.getMessage());
             return false;
+        }
+        
+        return true;
+    }
+    
+    public static boolean zipFiles(ArrayList<String> files, String outputFilename) {
+        try {
+            FileOutputStream fos = new FileOutputStream(outputFilename);
+            ZipOutputStream zipOut = new ZipOutputStream(fos);
+            for (String srcFile : files) {
+                File fileToZip = new File(srcFile);
+                FileInputStream fis = new FileInputStream(fileToZip);
+                ZipEntry zipEntry = new ZipEntry(fileToZip.getName());
+                zipOut.putNextEntry(zipEntry);
+ 
+                byte[] bytes = new byte[1024];
+                int length;
+                while((length = fis.read(bytes)) >= 0) {
+                    zipOut.write(bytes, 0, length);
+                }
+                fis.close();
+            }
+            zipOut.close();
+            fos.close();
+        } catch (IOException e) {
+            logger.error(ltag, "Failed to zip files: " + e.getMessage());
+            return false;         
         }
         
         return true;

@@ -4712,7 +4712,8 @@ public class AdvancedClient  {
         y++;
             
         fname = new JLabel("Format");
-        final RoundedCornerComboBox boxformat = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "Make Selection", new String[]{"Stack", "PNG", "JPEG"} );
+        final RoundedCornerComboBox boxformat = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), 
+                "Make Selection", new String[]{"Stack", "PNG", "JPEG", "Zipped Stack Files"} );
         AppUI.getGBRow(subInnerCore, fname, boxformat.getComboBox(), y, gridbag);
         boxformat.setDefaultIdx(1);
         y++;    
@@ -4824,6 +4825,8 @@ public class AdvancedClient  {
                     ps.exportType = Config.TYPE_PNG;
                 else if (ftype == 3)
                     ps.exportType = Config.TYPE_JPEG;
+                else if (ftype == 4) 
+                    ps.exportType = Config.TYPE_ZIPPED_STACK;
 
                 ps.sendType = ProgramState.SEND_TYPE_FOLDER;    
                     

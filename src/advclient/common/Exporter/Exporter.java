@@ -217,6 +217,14 @@ public class Exporter extends Servant {
 
                     return;
                 }
+        } else if (type == Config.TYPE_ZIPPED_STACK) {
+                if (!exportZippedStack(fullExportPath, tag)) {
+                    er.status = ExporterResult.STATUS_ERROR;
+                    if (cb != null)
+                        cb.callback(er);
+
+                    return;
+                }
         } else {
             logger.error(ltag, "Unsupported format");
             er.status = ExporterResult.STATUS_ERROR;
@@ -495,4 +503,44 @@ public class Exporter extends Servant {
         return true;
     }
 
+    private boolean exportZippedStack(String dir, String tag) {
+        StringBuilder sb = new StringBuilder();
+        boolean first = true;
+        int total = 0;
+        String fileName;
+        
+        ArrayList<String> ccNames = new ArrayList<String>();
+        for (CloudCoin cc : coinsPicked) {
+            ccNames.add(cc.originalFile);
+            total += cc.getDenomination();
+        }
+
+        File sdir = new File(dir);
+        if (sdir.isDirectory()) {
+            fileName = total + ".CloudCoin." + tag + ".zip";            
+            fileName = dir + File.separator + fileName;
+        } else {
+            fileName = dir;
+        }
+
+        File f = new File(fileName);
+        if (f.exists()) {
+            logger.error(ltag, "File exists: " + fileName);
+            er.status = ExporterResult.STATUS_ERROR;
+            er.errText = "Exported file with the same tag already exists";
+            return false;
+        }
+
+        if (!AppCore.zipFiles(ccNames, fileName)) {
+            logger.error(ltag, "Failed to zip");
+            er.status = ExporterResult.STATUS_ERROR;
+            er.errText = "Failed to Zip Files";
+            return false;
+        }
+        
+        er.exportedFileNames.add(fileName);
+        er.totalExported = total;
+
+        return true;
+    }
 }
