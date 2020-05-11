@@ -222,4 +222,6 @@ public class Config {
     public static String CLOUDBANK_PASSWORD = "";
     
     public static int CLOUDBANK_MAX_ITERATIONS = 150;
+    
+    public static int MAX_COINS_TO_SEND = 1000000;
 }

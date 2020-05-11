@@ -182,6 +182,8 @@ public class ProgramState {
     
     int[] lsSNs;
     
+    boolean fromLeftOver;
+    
     public ProgramState() {
         currentScreen = SCREEN_AGREEMENT;
         cwalletRecoveryRequested = cwalletPasswordRequested = false;
@@ -213,6 +215,7 @@ public class ProgramState {
         typedRemoteWallet = "";
         
         sendType = SEND_TYPE_WALLET;
+        fromLeftOver = false;
         
         needBackup = false;
         

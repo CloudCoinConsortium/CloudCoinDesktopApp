@@ -178,7 +178,7 @@ public class DetectionAgent {
                 lltag = ":" + callerClass + ":" + ltag;
         }
 
-	logger.debug(lltag, method + " url " + urlIn);
+	//logger.debug(lltag, method + " url " + urlIn);
 
 	tsBefore = System.currentTimeMillis();
 
@@ -193,7 +193,7 @@ public class DetectionAgent {
             urlConnection.setRequestProperty("User-Agent", "CloudCoin Wallet Client");
 
             if (post != null) {
-                logger.debug(lltag, AppCore.maskStr("pans\\[\\]=", post));
+                logger.debug(lltag, method + " " + urlIn + " data: " + AppCore.maskStr("pans\\[\\]=", post));
 
                 byte[] postDataBytes = post.getBytes("UTF-8");
 
@@ -201,6 +201,9 @@ public class DetectionAgent {
                 urlConnection.setRequestProperty("Content-Length", String.valueOf(postDataBytes.length));
                 urlConnection.setDoOutput(true);
                 urlConnection.getOutputStream().write(postDataBytes);
+            } else {
+                logger.debug(lltag, method + " " + urlIn);
+
             }
 
 

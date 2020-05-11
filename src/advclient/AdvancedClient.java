@@ -65,7 +65,7 @@ import javax.swing.table.TableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "3.0.4";
+    public static String version = "3.0.5";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -1914,45 +1914,6 @@ public class AdvancedClient  {
                     }
                 }
 
-                /*
-                if (ps.dstWallet != null && ps.dstWallet.isSkyWallet()) {
-                    ps.isCheckingSkyID = true;
-                    skyCC = ps.dstWallet.getIDCoin();
-
-                    pbarText.setText("Checking Your Destination SkyWallet ID");
-                    pbarText.repaint();
-
-                    sm.startAuthenticatorService(skyCC, new AuthenticatorForSkyCoinCb());
-                    while (ps.isCheckingSkyID) {
-                        try {
-                            Thread.sleep(300);
-                        } catch (InterruptedException e) {}
-                    }
-                    
-                    if (AppCore.getErrorCount(skyCC) > 0) {
-                        ps.errText = getSkyIDErrorIfRAIDAFailed();
-                        showScreen();
-                        return;
-                    }
-                    
-                    if (AppCore.getPassedCount(skyCC) < Config.PASS_THRESHOLD) {
-                        ps.errText = getSkyIDError(ps.dstWallet.getName(), ps.dstWallet.getIDCoin().getPownString());
-                        showScreen();
-                        return;
-                    }
-
-                    if (AppCore.getPassedCount(skyCC) != RAIDA.TOTAL_RAIDA_COUNT) {
-                        if (AppCore.getCounterfeitCount(skyCC) > 0) {
-                            ps.srcWallet = ps.dstWallet;
-                            ps.currentScreen = ProgramState.SCREEN_WARN_FRACKED_TO_SEND;
-                            showScreen();
-                            return;
-                        }         
-                    }
-                }
-                */
-                
-                
                 String dstName =  (ps.foundSN == 0) ? ps.dstWallet.getName() : "" + ps.foundSN;
                 
                 // Remote wallet
@@ -2897,6 +2858,17 @@ public class AdvancedClient  {
             }
         }, y, gridbag);
         
+        if (ps.fromLeftOver) {
+            ps.fromLeftOver = false;
+            Wallet w = ps.dstWallet;
+            wl.debug(ltag, "Moving leftovers");
+            Thread t = new Thread(new Runnable() {
+                public void run() {
+                    AppCore.cleanPreauthDirs(w.getName());
+                }
+            });
+            t.start();
+        }
     }
     
     
@@ -3512,6 +3484,7 @@ public class AdvancedClient  {
                 ps.currentScreen = ProgramState.SCREEN_IMPORTING;
                 ps.files = new ArrayList<String>();
                 ps.typedMemo = "Recovered from Last time";
+                ps.fromLeftOver = true;
                 
                 if (!ps.typedDstPassword.isEmpty()) {
                     if (ps.typedPassword.isEmpty()) {
@@ -4967,38 +4940,7 @@ public class AdvancedClient  {
             
         AppUI.GBPad(subInnerCore, y, gridbag);        
         y++;
-        
-        /*
-        cboxfrom.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                int srcIdx = cboxfrom.getSelectedIndex() - 1;
-                if (srcIdx < 0 || srcIdx >= wallets.length) 
-                    return;
-                
-                srcIdx = rvFrom.idxs[srcIdx];
-                Wallet srcWallet = wallets[srcIdx];
-                if (srcWallet == null)
-                    return;
 
-                if (srcWallet.isEncrypted()) {                 
-                    passwordSrc.getTextField().setVisible(true);
-                    spText.setVisible(true);
-                } else {
-                    passwordSrc.getTextField().setVisible(false);
-                    spText.setVisible(false);
-                }
-                
-                String value = cboxto.getSelectedValue();
-                optRv lrvTo = setOptionsForWalletsAll(srcWallet.getName());
-                rvTo.idxs = lrvTo.idxs;
-                rvTo.options = lrvTo.options;
-                cboxto.setOptions(rvTo.options);
-                cboxto.addOption(AppUI.getRemoteUserOption());
-                //cboxto.addOption(AppUI.getLocalFolderOption());
-                cboxto.setDefault(value);
-            }
-        });
-        */
         cboxto.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 int dstIdx = cboxto.getSelectedIndex() - 1;
@@ -5092,17 +5034,7 @@ public class AdvancedClient  {
                 //ps.selectedFromIdx = cboxfrom.getSelectedIndex();
                 ps.selectedToIdx =  cboxto.getSelectedIndex();
                 ps.typedRemoteWallet = remoteWalledId.getText();
-       
-                /*
-                if (srcIdx < 0 || srcIdx >= rvFrom.idxs.length) {                    
-                    ps.errText = "Please select From Wallet";
-                    showScreen();
-                    return;
-                }
-                
-                srcIdx = rvFrom.idxs[srcIdx];                  
-                Wallet srcWallet = wallets[srcIdx];
-                */
+
                 Wallet w = ps.currentWallet;
                 ps.srcWallet = w;
             
@@ -5125,6 +5057,13 @@ public class AdvancedClient  {
                     showScreen();
                     return;  
                 }
+                
+                if (ps.typedAmount >= Config.MAX_COINS_TO_SEND) {
+                    ps.errText = "You can't send " + AppCore.formatNumber(Config.MAX_COINS_TO_SEND) + " or more CloudCoins at a time";
+                    showScreen();
+                    return;
+                }
+                
                 
                 if (!Validator.memoLength(ps.typedMemo)) {
                     ps.errText = "Memo too long. Only 64 characters are allowed";

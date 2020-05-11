@@ -997,6 +997,12 @@ public class AppCore {
         return true;
     }
     
+    static public void cleanPreauthDirs(String user) {
+        moveFolderContentsToTrash(Config.DIR_SUSPECT, user);
+        moveFolderContentsToTrash(Config.DIR_DETECTED, user);
+        moveFolderContentsToTrash(Config.DIR_IMPORT, user);        
+    }
+    
     static public void moveFolderContentsToTrash(String folder, String user) {
         String path = AppCore.getUserDir(folder, user);
         
@@ -1007,6 +1013,7 @@ public class AppCore {
         }
         
         for (File file: dirObj.listFiles()) {
+            logger.debug(ltag, "Move to trash " + file.getAbsolutePath());
             AppCore.moveToTrash(file.getAbsolutePath(), user);
         }       
     }
