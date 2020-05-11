@@ -6285,6 +6285,14 @@ public class AdvancedClient  {
 
         passwordSrc.getTextField().setVisible(false);
         spText.setVisible(false);
+        
+        fname = new JLabel("Tag");
+        final MyTextField memo = new MyTextField("Optional", false);
+        if (!ps.typedMemo.isEmpty())
+            memo.setData(ps.typedMemo);
+        AppUI.getGBRow(subInnerCore, fname, memo.getTextField(), y, gridbag);
+        y++;
+
               
         cboxfrom.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -6339,7 +6347,8 @@ public class AdvancedClient  {
                 showScreen();
             }
         }, new ActionListener() {
-            public void actionPerformed(ActionEvent e) {              
+            public void actionPerformed(ActionEvent e) { 
+                ps.typedMemo = memo.getText();
                 int srcIdx = cboxfrom.getSelectedIndex() - 1;              
                 if (srcIdx < 0 || srcIdx >= rv.idxs.length) {
                     ps.errText = "Please select Wallet";
@@ -6381,12 +6390,38 @@ public class AdvancedClient  {
                     return;
                 }
                 
+                if (!Validator.memoLength(ps.typedMemo)) {
+                    ps.errText = "Memo too long. Only 64 characters are allowed";
+                    showScreen();
+                    return;
+                }
+
+                String tag = ps.srcWallet.getName() + ".CloudCoin." + Config.BACKUP_TAG;
+                if (!ps.typedMemo.isEmpty()) {
+                    if (!Validator.memo(ps.typedMemo)) {
+                        ps.errText = "Memo: special characters not allowed! Use numbers and letters only";
+                        showScreen();
+                        return;
+                    }
+                    
+                    tag += "." + ps.typedMemo;
+                }
+                int total = ps.srcWallet.getTotal();
+                String filename0 = ps.chosenFile + File.separator + total + "." + tag + ".stack";
+                String filename1 = ps.chosenFile + File.separator + total + "." + tag + ".stack.zip";
+                File f0 = new File(filename0);
+                File f1 = new File(filename1);
+                if (f0.exists() || f1.exists()) {
+                    ps.errText = "File with the same Tag already exists";
+                    showScreen();
+                    return;
+                }
+                
                 sm.setActiveWalletObj(ps.srcWallet);
                 ps.srcWallet.setPassword(ps.typedPassword);
-                int total = ps.srcWallet.getTotal();
                 
-                String tag = Config.BACKUP_TAG + "-" + System.currentTimeMillis();
                 
+                //String tag = ps.srcWallet.getName() + "." + Config.BACKUP_TAG + "-" + System.currentTimeMillis();
                 if (ps.srcWallet.isEncrypted()) {
                     sm.startSecureExporterService(Config.TYPE_STACK, total, tag, ps.chosenFile, true, new ExporterBackupCb());
                 } else {
@@ -8891,6 +8926,12 @@ public class AdvancedClient  {
                     wl.debug(ltag, "Ecrypting back");
                     sm.startVaulterService(new VaulterCb());
                     return;
+                }
+                
+                String filename = er.exportedFileNames.get(0);
+                if (!AppCore.zipFile(filename)) {
+                    wl.error(ltag, "Failed to zip");
+                    ps.errText = "Backup Exported, but zipping failed";
                 }
                 
                 EventQueue.invokeLater(new Runnable() {         

@@ -103,13 +103,15 @@ public class Exporter extends Servant {
 
         logger.debug(ltag, "Export type " + type + " amount " + amount + " dir " + dir + " tag " + tag + " user " + user);
 
-        if (tag.indexOf('.') != -1 || tag.indexOf('/') != -1 || tag.indexOf('\\') != -1) {
-            logger.error(ltag, "Invalid tag");
-            er.status = ExporterResult.STATUS_ERROR;
-            if (cb != null)
-                cb.callback(er);
+        if (!keepSrc) {
+            if (tag.indexOf('.') != -1 || tag.indexOf('/') != -1 || tag.indexOf('\\') != -1) {
+                logger.error(ltag, "Invalid tag");
+                er.status = ExporterResult.STATUS_ERROR;
+                if (cb != null)
+                    cb.callback(er);
             
-            return;
+                return;
+            }
         }
       
         if (tag.toLowerCase().equals(Config.TAG_RANDOM)) {
@@ -192,7 +194,7 @@ public class Exporter extends Servant {
         
         //type = Config.TYPE_PNG;
         if (type == Config.TYPE_STACK) {
-            if (!exportStack(fullExportPath, tag)) {
+            if (!exportStack(fullExportPath, tag, keepSrc)) {
                 er.status = ExporterResult.STATUS_ERROR;
                 if (cb != null)
                     cb.callback(er);
@@ -441,7 +443,7 @@ public class Exporter extends Servant {
         return true;       
     }
 
-    private boolean exportStack(String dir, String tag) {
+    private boolean exportStack(String dir, String tag, boolean keepSrc) {
         StringBuilder sb = new StringBuilder();
         boolean first = true;
         int total = 0;
@@ -464,7 +466,11 @@ public class Exporter extends Servant {
 
         File sdir = new File(dir);
         if (sdir.isDirectory()) {
-            fileName = total + ".CloudCoin." + tag + ".stack";
+            if (keepSrc)
+                fileName = total + "." + tag + ".stack";
+            else
+                fileName = total + ".CloudCoin." + tag + ".stack";
+            
             fileName = dir + File.separator + fileName;
         } else {
             fileName = dir;

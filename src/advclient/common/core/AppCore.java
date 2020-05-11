@@ -43,6 +43,8 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.zip.CRC32;
 import java.util.zip.Checksum;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -1926,5 +1928,40 @@ public class AppCore {
         return checksumValue;
     }
 
+    public static boolean zipFile(String filename) {
+        logger.debug(ltag, "Zipping " + filename);
+        File f = new File(filename);
+        if (!f.exists()) {
+            logger.error(ltag, "File doesn't exist");
+            return false;
+        }
+
+        String zippedFilename = filename + ".zip";
+
+        try {
+            FileOutputStream fos = new FileOutputStream(zippedFilename);
+            ZipOutputStream zipOut = new ZipOutputStream(fos);
+
+            FileInputStream fis = new FileInputStream(f);
+            ZipEntry zipEntry = new ZipEntry(f.getName());
+            zipOut.putNextEntry(zipEntry);
+            byte[] bytes = new byte[1024];
+            int length;
+            while((length = fis.read(bytes)) >= 0) {
+                zipOut.write(bytes, 0, length);
+            }
+            zipOut.close();
+            fis.close();
+            fos.close();
+            
+            logger.debug(ltag, "Deleting source");
+            f.delete();
+        } catch (IOException e) {
+            logger.error(ltag, "Failed to zip: " + e.getMessage());
+            return false;
+        }
+        
+        return true;
+    }
     
 }
