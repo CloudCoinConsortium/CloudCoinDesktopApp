@@ -1295,6 +1295,19 @@ public class AppCore {
                 Config.CLOUDBANK_PASSWORD = os;
             }
             
+            ob = o.optBoolean("use_custom_domain");
+            if (ob != false) {
+                logger.debug(ltag, "Use Custom Domain: " + ob);
+                Config.USE_CUSTOM_DOMAIN = ob;
+            }
+            
+            os = o.optString("custom_raida_domain");
+            if (os != null) {
+                logger.debug(ltag, "Custom RAIDA Domain: " + os);
+                Config.CUSTOM_RAIDA_DOMAIN = os;
+            }
+            
+            
             
         } catch (JSONException e) {
             logger.error(ltag, "Failed to parse config file: " + e.getMessage());
@@ -1324,7 +1337,9 @@ public class AppCore {
                 + "\"cloudbank_port\": " + Config.CLOUDBANK_PORT +  ", "
                 + "\"cloudbank_account\": \"" + Config.CLOUDBANK_ACCOUNT +  "\", "
                 + "\"cloudbank_password\": \"" + Config.CLOUDBANK_PASSWORD +  "\", "
-                + "\"ddnssn_server\": \"" + Config.DDNSSN_SERVER + "\""
+                + "\"ddnssn_server\": \"" + Config.DDNSSN_SERVER + "\", "
+                + "\"custom_raida_domain\": \"" + Config.CUSTOM_RAIDA_DOMAIN + "\", "
+                + "\"use_custom_domain\": " + Config.USE_CUSTOM_DOMAIN + ","
                 + "}";
         
         File f = new File(globalConfigFilename);

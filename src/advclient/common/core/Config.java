@@ -62,7 +62,8 @@ public class Config {
     public static int MULTI_DETECT_TIMEOUT = 40000; // ms
     public static int ECHO_TIMEOUT = 5000;
 
-
+    public static String CUSTOM_RAIDA_DOMAIN = "";
+    public static boolean USE_CUSTOM_DOMAIN = false;
 
     public static int MAX_ALLOWED_FAILED_RAIDAS = 3;
 
@@ -225,4 +226,6 @@ public class Config {
     public static int CLOUDBANK_MAX_ITERATIONS = 150;
     
     public static int MAX_COINS_TO_SEND = 1000000;
+    
+    
 }

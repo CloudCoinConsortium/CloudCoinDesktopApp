@@ -48,6 +48,15 @@ public class Echoer extends Servant {
 
     public void doEcho() {
         cleanLogDir();
+        
+        if (Config.USE_CUSTOM_DOMAIN) {
+            logger.debug(ltag, "Custom RAIDA Domain is set to: " + Config.CUSTOM_RAIDA_DOMAIN);
+            
+            raida.setUrlWithDomain(Config.CUSTOM_RAIDA_DOMAIN);
+            saveResults();
+            return;
+        }
+        
         raida.setDefaultUrls();
         
         if (!doEchoReal()) {

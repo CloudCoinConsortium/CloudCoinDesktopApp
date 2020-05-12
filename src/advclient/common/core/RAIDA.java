@@ -84,6 +84,11 @@ public class RAIDA {
 			agents[i].setFullUrl(ip, basePort);
 		}
 	}
+        
+        public void setUrlWithDomain(String domain) {
+            for (int i = 0; i < TOTAL_RAIDA_COUNT; i++)
+                agents[i].setUrlWithDomain(domain);
+        }
 
 	public String[] getRAIDAURLs() {
 		String[] data;

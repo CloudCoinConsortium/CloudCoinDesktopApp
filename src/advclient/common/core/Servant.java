@@ -534,18 +534,6 @@ public class Servant {
         return cc;
     }
 
-    protected void setSenderRAIDA() {
-        String[] urls = new String[RAIDA.TOTAL_RAIDA_COUNT];
-
-        for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
-         //   urls[i] = "https://s" + i + "." + Config.SENDER_DOMAIN;
-            urls[i] = "https://raida" + i + ".cloudcoin.global";
-        }
-
-        raida.setExactUrls(urls);
-    }
-
-
     protected boolean collectedEnough(int[] values) {
         for (int i = 0; i < values.length; i++) {
             if (values[i] != valuesPicked[i]) {

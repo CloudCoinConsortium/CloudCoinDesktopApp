@@ -3172,72 +3172,152 @@ public class AdvancedClient  {
         MyTextField walletName = null;
 
         JPanel subInnerCore = getPanel("Settings");                
+        GridBagLayout gridbagjp = new GridBagLayout();
+        subInnerCore.setLayout(gridbagjp);
+        
+        
+        JPanel jp = new JPanel();
         GridBagLayout gridbag = new GridBagLayout();
-        subInnerCore.setLayout(gridbag);
+        jp.setLayout(gridbag);
+        AppUI.noOpaque(jp);
+
         
         fname = new JLabel("Echo Timeout, s");
         final MyTextField echoTimeout = new MyTextField("Echo Timeout", false);         
-        AppUI.getGBRow(subInnerCore, fname, echoTimeout.getTextField(), y, gridbag);
+        AppUI.getGBRow(jp, fname, echoTimeout.getTextField(), y, gridbag);
         echoTimeout.setData(Integer.toString(Config.ECHO_TIMEOUT / 1000));
         y++;     
         
         fname = new JLabel("Send/Receive Timeout, s ");
         final MyTextField readTimeout = new MyTextField("Send/Receive Timeout", false);         
-        AppUI.getGBRow(subInnerCore, fname, readTimeout.getTextField(), y, gridbag);
+        AppUI.getGBRow(jp, fname, readTimeout.getTextField(), y, gridbag);
         readTimeout.setData(Integer.toString(Config.READ_TIMEOUT / 1000));
         y++;      
         
         fname = new JLabel("Detect Timeout, s");
         final MyTextField detectTimeout = new MyTextField("Detect Timeout", false);         
-        AppUI.getGBRow(subInnerCore, fname, detectTimeout.getTextField(), y, gridbag);
+        AppUI.getGBRow(jp, fname, detectTimeout.getTextField(), y, gridbag);
         detectTimeout.setData(Integer.toString(Config.MULTI_DETECT_TIMEOUT / 1000));
         y++; 
         
         fname = new JLabel("Fix Timeout, s");
         final MyTextField fixTimeout = new MyTextField("Fix Timeout", false);         
-        AppUI.getGBRow(subInnerCore, fname, fixTimeout.getTextField(), y, gridbag);
+        AppUI.getGBRow(jp, fname, fixTimeout.getTextField(), y, gridbag);
         fixTimeout.setData(Integer.toString(Config.FIX_FRACKED_TIMEOUT / 1000));
         y++; 
         
         fname = new JLabel("Max Notes");
         final MyTextField maxNotes = new MyTextField("Max Notes", false);         
-        AppUI.getGBRow(subInnerCore, fname, maxNotes.getTextField(), y, gridbag);
+        AppUI.getGBRow(jp, fname, maxNotes.getTextField(), y, gridbag);
         maxNotes.setData(Integer.toString(Config.DEFAULT_MAX_COINS_MULTIDETECT));
         y++; 
         
         fname = new JLabel("DDNS Server");
         final MyTextField ddnsServer = new MyTextField("DDNS Server", false);         
-        AppUI.getGBRow(subInnerCore, fname, ddnsServer.getTextField(), y, gridbag);
+        AppUI.getGBRow(jp, fname, ddnsServer.getTextField(), y, gridbag);
         ddnsServer.setData(Config.DDNSSN_SERVER);
         y++; 
         
-        /*
-        fname = new JLabel("Export Folder");
-        final JFileChooser chooser = new JFileChooser();
-        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        chooser.setAcceptAllFileFilterUsed(false);
 
-        final MyTextField localFolder = new MyTextField("Export Folder", false, true);
-        localFolder.setFilepickerListener(new MouseAdapter() {
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                if (!Config.DEFAULT_EXPORT_DIR.isEmpty())
-                    chooser.setCurrentDirectory(new File(Config.DEFAULT_EXPORT_DIR));
-
-                int returnVal = chooser.showOpenDialog(null);
-                if (returnVal == JFileChooser.APPROVE_OPTION) {
-                    ps.chosenFile = chooser.getSelectedFile().getAbsolutePath();
-                    localFolder.setData(chooser.getSelectedFile().getAbsolutePath());
+        fname = new JLabel("Use Custom RAIDA Domain");
+        final MyCheckBoxToggle cb1 = new MyCheckBoxToggle();
+        cb1.setSelected(false);
+        AppUI.getGBRow(jp, fname, cb1.getCheckBox(), y, gridbag);
+        y++;
+        
+        fname = new JLabel("RAIDA Domain");
+        final JLabel dfname = fname;
+        final MyTextField raidaDomain = new MyTextField("RAIDA Domain", false);         
+        AppUI.getGBRow(jp, fname, raidaDomain.getTextField(), y, gridbag);
+        raidaDomain.setData(Config.CUSTOM_RAIDA_DOMAIN);
+        y++; 
+        
+        if (Config.USE_CUSTOM_DOMAIN) {
+            raidaDomain.getTextField().setVisible(true);
+            dfname.setVisible(true);
+            cb1.setSelected(true);
+        } else {
+            raidaDomain.getTextField().setVisible(false);
+            dfname.setVisible(false);
+        }
+   
+        cb1.addListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+                boolean isChecked = e.getStateChange() == ItemEvent.SELECTED;
+                
+                if (isChecked) {
+                    raidaDomain.getTextField().setVisible(true);
+                    dfname.setVisible(true);
+                } else {
+                    raidaDomain.getTextField().setVisible(false);
+                    dfname.setVisible(false);
                 }
             }
         });
 
-        localFolder.setData(new File(Config.DEFAULT_EXPORT_DIR).getAbsolutePath());               
-        AppUI.getGBRow(subInnerCore, fname, localFolder.getTextField(), y, gridbag);
-        y++; 
-        */
   
-        AppUI.GBPad(subInnerCore, y, gridbag);        
+        JScrollBar scrollBar = new JScrollBar(JScrollBar.VERTICAL) {
+            @Override
+            public boolean isVisible() {
+                return true;
+            }
+        };
+
+        JScrollPane scrollPane = new JScrollPane(jp);
+        scrollPane.setVerticalScrollBar(scrollBar);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(42);
+        scrollPane.getViewport().setOpaque(false);
+        scrollPane.setOpaque(false);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(10, 0));
+        scrollPane.getVerticalScrollBar().setUI(new BasicScrollBarUI() {  
+            protected JButton createDecreaseButton(int orientation) {
+                TriangleButton jbutton = new TriangleButton(false);
+                AppUI.setHandCursor(jbutton);
+                jbutton.setContentAreaFilled(false);
+                jbutton.setFocusPainted(false);
+            
+                JButton b = new JButton();
+                AppUI.setSize(b, 0, 0);
+                
+                return b;
+            }
+
+            @Override    
+            protected JButton createIncreaseButton(int orientation) {
+                TriangleButton jbutton = new TriangleButton(true);
+                AppUI.setHandCursor(jbutton);
+                jbutton.setContentAreaFilled(false);
+                jbutton.setFocusPainted(false);
+            
+                JButton b = new JButton();
+                AppUI.setSize(b, 0, 0);
+                
+                return b;
+            }
+            
+            @Override 
+            protected void configureScrollBarColors(){
+                this.trackColor = brand.getScrollbarTrackColor();
+                this.thumbColor = brand.getScrollbarThumbColor();
+            }
+        });
+        AppUI.setSize(scrollPane, 800, 360);
+      
+        AppUI.getGBRow(subInnerCore, null, scrollPane, y, gridbagjp);
+        y++; 
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        AppUI.GBPad(subInnerCore, y, gridbagjp);        
         y++;
             
         AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Save", new ActionListener() {
@@ -3307,6 +3387,27 @@ public class AdvancedClient  {
                     return;
                 }
 
+                boolean useCustom = cb1.isChecked();
+                String rd = "";
+                if (useCustom) {
+                    rd = raidaDomain.getText();
+                
+                    if (!Validator.domain(rd)) {
+                        ps.errText = "Invalid RAIDA Domain";
+                        showScreen();
+                        return;
+                    }
+                }
+                
+                if (useCustom != Config.USE_CUSTOM_DOMAIN) {
+                    wl.debug(ltag, "Changing echo");
+                    ps.isEchoFinished = false;
+                    sm.startEchoService(new EchoCb());
+                }
+                
+                Config.USE_CUSTOM_DOMAIN = useCustom;
+                Config.CUSTOM_RAIDA_DOMAIN = rd;
+                
                 Config.DDNSSN_SERVER = ddnssn;
                 //Config.DEFAULT_EXPORT_DIR = ps.chosenFile;
                 Config.DEFAULT_MAX_COINS_MULTIDETECT = notes;
@@ -3325,7 +3426,7 @@ public class AdvancedClient  {
                 showScreen();
                 
             }
-        }, y, gridbag);
+        }, y, gridbagjp);
        
     }
     

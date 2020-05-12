@@ -80,6 +80,10 @@ public class DetectionAgent {
     public void setDefaultFullUrl() {
         this.fullURL = "https://RAIDA" + this.RAIDANumber + ".cloudcoin.global";
     }
+    
+    public void setUrlWithDomain(String domain) {
+        this.fullURL = "https://RAIDA" + this.RAIDANumber + "." + domain;
+    }
 
     public void setFullUrl(String ip, int basePortArg) {
         int basePort = basePortArg + this.RAIDANumber;

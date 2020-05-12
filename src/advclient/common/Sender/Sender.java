@@ -254,8 +254,6 @@ public class Sender extends Servant {
             }
         }
 
-        setSenderRAIDA();
-        
         ArrayList<CloudCoin> ccs;
         ccs = new ArrayList<CloudCoin>();
         
