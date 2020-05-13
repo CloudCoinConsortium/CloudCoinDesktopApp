@@ -228,5 +228,7 @@ public class Config {
     
     public static int MAX_COINS_TO_SEND = 1000000;
     
+    public static String UPDATE_URL = "https://cloudcoinconsortium.com/use.html";
+    
     
 }

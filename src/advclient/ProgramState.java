@@ -77,6 +77,7 @@ public class ProgramState {
     final public static int SCREEN_INIT_BRAND = 59;
     final public static int SCREEN_CLOUDBANK = 60;
     final public static int SCREEN_LIST_SERIALS_DOING = 61;
+    final public static int SCREEN_NEW_VERSION = 62;
     
     
     final static int CB_STATE_INIT = 1;

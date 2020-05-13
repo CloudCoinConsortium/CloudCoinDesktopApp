@@ -88,6 +88,8 @@ public class Brand {
     Font _osRegFont, _osSemiBoldFont;
     
     Map<String, dlResult> datamap;
+    
+    String needVersion;
 
     public Brand(String name, GLogger logger) {
         
@@ -121,6 +123,8 @@ public class Brand {
     }
     
     public void setDefaultVariables() {
+        this.needVersion = null;
+        
         String defaultColor = "#f0f0f0";
         
         this.backgroundColor = defaultColor;
@@ -163,6 +167,18 @@ public class Brand {
     public String getAssetPath(String file) {
         return this.brandDir + File.separator + file;
     }
+    
+    public String getAvailableVersion() {
+        return this.needVersion;
+    }
+    
+    public boolean updateAvailable() {
+        if (this.needVersion == null)
+            return false;
+        
+        return !this.needVersion.equals(AdvancedClient.version);
+    }
+    
     
     public void copyTemplate(String name, String dst) {
         dlResult dl = datamap.get(name);
@@ -289,6 +305,20 @@ public class Brand {
         return false;
     }
     
+    public String downloadFileNoSave(String purl) {
+        String url = Config.BRAND_URL + "/" + purl;
+        DetectionAgent daFake = new DetectionAgent(RAIDA.TOTAL_RAIDA_COUNT * 10000, logger);
+        daFake.setExactFullUrl(url);
+
+        byte[] bytes = daFake.doBinaryRequest("");
+        if (bytes == null) {
+            logger.error(ltag, "Failed to receive response from Brand Server");
+            return false;
+        }
+        
+        return new String(bytes);
+    }
+    
     public boolean downloadFile(String file) {
         String filename = this.brandDir + File.separator + file;
 
@@ -405,14 +435,21 @@ public class Brand {
             i++;
         }
         
-        br.text = "Starting program";
         br.step = 0;
         br.totalSteps = 0;
+        br.text = "Checking for updates";
         cb.callback(br);
 
+        needVersion = downloadFileNoSave("versions/dark_currentversion.txt");
+        if (needVersion != null)
+            needVersion = needVersion.trim().replaceAll("\r", "").replaceAll("\n", "");
+        logger.debug(ltag, "Version available on the Server: " + needVersion);
+
+        br.text = "Starting program";
+
+        cb.callback(br);
         initInternal();
-        
-        
+              
         br.text = "done";
         cb.callback(br);
         return true;

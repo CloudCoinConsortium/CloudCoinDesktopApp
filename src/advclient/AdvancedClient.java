@@ -150,7 +150,10 @@ public class AdvancedClient  {
     
     public void initCore() {
         initSystem();
-          
+        
+        if (brand.updateAvailable())
+            ps.currentScreen = ProgramState.SCREEN_NEW_VERSION;
+        
         /*
         CloudCoin cc = new CloudCoin(1, 10);
         cc.setPownString("ppppnppppppfppppfefpnpppp");
@@ -211,7 +214,7 @@ public class AdvancedClient  {
                 BrandResult br = (BrandResult) o;
                // EventQueue.invokeLater(new Runnable() {
                  //   public void run(){
-                        
+                
                         if (br.text.equals("done")) {
                             initCore();
                             return;
@@ -1120,6 +1123,10 @@ public class AdvancedClient  {
 
 
         switch (ps.currentScreen) {
+            case ProgramState.SCREEN_NEW_VERSION:
+                resetState();
+                showNewVersionScreen();
+                break;
             case ProgramState.SCREEN_AGREEMENT:
                 resetState();
                 showAgreementScreen();
@@ -8379,6 +8386,77 @@ public class AdvancedClient  {
         AppUI.setHandCursor(wpanel);
         
         return wpanel;
+    }
+    
+    public void showNewVersionScreen() {
+        AppUI.setMargin(corePanel, 40, 120, 80, 120);
+      
+        JPanel wrapperPanel = new JPanel();
+        AppUI.setBackground(wrapperPanel, brand.getPanelBackgroundColor());
+          
+        GridBagLayout gridbag = new GridBagLayout();  
+        wrapperPanel.setLayout(gridbag);
+           
+        int y = 0;
+
+        // Title 
+        JLabel text = new JLabel("New Version " + brand.getResultingVersion(brand.getAvailableVersion()) 
+                + " is Available. Click To Download");
+        AppUI.alignLeft(text);
+        AppUI.setFont(text, 30);
+        AppUI.setColor(text, brand.getHyperlinkColor());
+        
+        GridBagConstraints c = new GridBagConstraints();
+        c.anchor = GridBagConstraints.NORTHWEST;
+        c.insets = new Insets(20, 20, 0, 0);    
+        c.gridy = y;
+        c.weightx = 0;
+        c.weighty = 0;
+        gridbag.setConstraints(text, c);
+        wrapperPanel.add(text);
+        y++;
+        
+        AppUI.GBPad(wrapperPanel, y, gridbag);
+        y++;
+        
+        
+        AppUI.getTwoButtonPanel(wrapperPanel, "Later", "Download", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                resetState();
+                showScreen();
+            }
+        },  new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                if (Desktop.isDesktopSupported()) {
+                    try {
+                        URI uri = new URI(Config.UPDATE_URL);
+                        Desktop.getDesktop().browse(uri);
+                    } catch (IOException ex) { 
+  
+                    } catch (URISyntaxException ex) {
+                        
+                    }
+                }
+                
+                resetState();
+                showScreen();
+            }
+        }, y, gridbag);   
+
+        y++;
+        
+        text = new JLabel("");
+        c = new GridBagConstraints();
+        c.anchor = GridBagConstraints.NORTHWEST;
+        c.insets = new Insets(20, 20, 0, 0);    
+        c.gridy = y;
+        c.weightx = 0;
+        c.weighty = 0;
+        gridbag.setConstraints(text, c);
+        wrapperPanel.add(text);
+        y++;
+        
+        corePanel.add(wrapperPanel);        
     }
     
     public void showAgreementScreen() {          
