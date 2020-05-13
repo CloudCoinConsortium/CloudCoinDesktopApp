@@ -1521,6 +1521,41 @@ public class AppCore {
         f.delete();
     }
     
+    public static String[] getSentSkyWallets() {
+        String fileName = AppCore.getLogDir() + File.separator + Config.SENT_SKYWALLETS_FILENAME;
+        
+        String data = AppCore.loadFile(fileName);
+        if (data == null)
+            return null;
+        
+        String[] parts = data.split("\\r?\\n");
+        Arrays.sort(parts);
+        
+        return parts;
+        
+    }
+    
+    public static void appendSentSkyWallet(String walletName, String[] wallets) {
+        String fileName = AppCore.getLogDir() + File.separator + Config.SENT_SKYWALLETS_FILENAME;
+        
+        String appStr = "";
+        if (wallets != null) {
+            for (int i = 0; i < wallets.length; i++) {
+                if (walletName.equals(wallets[i]))
+                    return;
+            }   
+            
+            appStr += "\r\n";
+        }
+        
+        appStr += walletName;
+        
+        if (!AppCore.saveFileAppend(fileName, appStr, true)) {
+            logger.debug(ltag, "Failed to write to the SkySent log. Maybe this file is open");
+            return;
+        }
+    }
+    
     public static String[][] getSentCoins() {
         String fileName = AppCore.getLogDir() + File.separator + Config.SENT_SKYCOINS_FILENAME;
         

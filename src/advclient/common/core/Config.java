@@ -201,6 +201,7 @@ public class Config {
     public static int MAX_EXPORTED_NOTES = 3000;
     
     final public static String SENT_SKYCOINS_FILENAME = "sentcoins.csv";
+    final public static String SENT_SKYWALLETS_FILENAME = "sentwallets.txt";
     
     final public static String PNG_TEMPLATE_NAME = "template.png";
 

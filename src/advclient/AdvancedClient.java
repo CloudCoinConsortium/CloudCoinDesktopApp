@@ -4980,7 +4980,8 @@ public class AdvancedClient  {
      
         passwordDst.getTextField().setVisible(false);
         dpText.setVisible(false);
-               
+
+        /*
         final JLabel rwText = new JLabel("To SkyWallet");;
         final MyTextField remoteWalledId = new MyTextField("JohnDoe.SkyWallet.cc", false);
         if (!ps.typedRemoteWallet.isEmpty())
@@ -4988,8 +4989,46 @@ public class AdvancedClient  {
         AppUI.getGBRow(subInnerCore, rwText, remoteWalledId.getTextField(), y, gridbag);
         y++;
         
+        
         remoteWalledId.getTextField().setVisible(false);
         rwText.setVisible(false);
+        */
+        
+        optRv rv = new optRv();
+        rv.options = new String[0];
+        rv.idxs = new int[0];
+        String[] skyWalletNames = AppCore.getSentSkyWallets();
+        if (skyWalletNames != null) {
+            int len = skyWalletNames.length;
+            rv.options = new String[len];
+            rv.idxs = new int[len];
+            
+            for (int i = 0; i < len; i++) {
+                rv.options[i] = skyWalletNames[i];
+                rv.idxs[i] = i;         
+            }       
+        }
+        
+        
+        
+        
+        final JLabel rwText = new JLabel("To SkyWallet");
+        final RoundedCornerComboBox remoteWalledId = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "JohnDoe.SkyWallet.cc", rv.options);
+        remoteWalledId.setEditable();
+        if (!ps.typedRemoteWallet.isEmpty())
+            remoteWalledId.setData("" + ps.typedRemoteWallet);
+        AppUI.getGBRow(subInnerCore, rwText, remoteWalledId.getComboBox(), y, gridbag);
+        remoteWalledId.getComboBox().setVisible(false);
+        rwText.setVisible(false);
+        y++; 
+        
+        
+        
+        
+        
+        
+        
+        
     
         if (ps.chosenFile.isEmpty()) 
             ps.chosenFile = Config.DEFAULT_EXPORT_DIR;
@@ -5055,7 +5094,7 @@ public class AdvancedClient  {
                 
                 // Remote Wallet
                 if (dstIdx == rvTo.idxs.length) {
-                    remoteWalledId.getTextField().setVisible(true);
+                    remoteWalledId.getComboBox().setVisible(true);
                     rwText.setVisible(true);
                     
                     passwordDst.getTextField().setVisible(false);
@@ -5071,7 +5110,7 @@ public class AdvancedClient  {
                     memo.setPlaceholder("Optional");
                 } 
                 
-                remoteWalledId.getTextField().setVisible(false);
+                remoteWalledId.getComboBox().setVisible(false);
                 rwText.setVisible(false);
                   
                 // Local
@@ -5137,7 +5176,8 @@ public class AdvancedClient  {
                 
                 //ps.selectedFromIdx = cboxfrom.getSelectedIndex();
                 ps.selectedToIdx =  cboxto.getSelectedIndex();
-                ps.typedRemoteWallet = remoteWalledId.getText();
+                ps.typedRemoteWallet = remoteWalledId.getCustomValue();
+
 
                 Wallet w = ps.currentWallet;
                 ps.srcWallet = w;
@@ -5216,13 +5256,13 @@ public class AdvancedClient  {
                               
                 if (dstIdx == rvTo.idxs.length) {
                     // Remote User
-                    if (remoteWalledId.getText().isEmpty()) {
+                    if (remoteWalledId.getCustomValue().isEmpty()) {
                         ps.errText = "Remote Wallet is empty";
                         showScreen();
                         return;
                     }
 
-                    String dstName = remoteWalledId.getText().trim();
+                    String dstName = remoteWalledId.getCustomValue().trim();
                     if (ps.srcWallet.isSkyWallet() && ps.srcWallet.getName().equals(dstName)) {
                         ps.errText = "Wallets cannot be the same";
                         showScreen();
@@ -5245,7 +5285,9 @@ public class AdvancedClient  {
                         ps.errText = "Sky Wallet " + ps.typedRemoteWallet + " doesn't exist. If it is a newly created wallet please wait and try again later";
                         showScreen();
                         return;
-                    }         
+                    }   
+                    
+                    AppCore.appendSentSkyWallet(ps.typedRemoteWallet, skyWalletNames);
                 } else if (dstIdx == rvTo.idxs.length + 1) {
                     if (ps.typedMemo.isEmpty()) {
                         ps.errText = "Memo cannot be empty";
@@ -5296,13 +5338,7 @@ public class AdvancedClient  {
                     return;                    
                 } else {
                     dstIdx = rvTo.idxs[dstIdx];
-                    /*
-                    if (srcIdx == dstIdx) {
-                        ps.errText = "You can not transfer to the same wallet";
-                        showScreen();
-                        return;
-                    }
-                    */                
+          
                     // Wallet
                     Wallet dstWallet = wallets[dstIdx];
                     if (dstWallet.isEncrypted()) {
@@ -9504,7 +9540,6 @@ public class AdvancedClient  {
        public void callback(Object result) {
             final TransferResult tr = (TransferResult) result;
 
-            System.out.println("step="+tr.step + " tr="+tr.totalRAIDAProcessed + " x="+tr.totalCoinsProcessed);
             wl.debug(ltag, "Transfer finished: " + tr.status);
             if (tr.status == TransferResult.STATUS_PROCESSING) {
                 setRAIDATransferProgressCoins(tr.totalRAIDAProcessed, tr.totalCoinsProcessed, tr.totalCoins, tr.step);

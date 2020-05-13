@@ -6,6 +6,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.geom.*;
 import java.awt.image.BufferedImage;
 import java.util.*;
@@ -31,6 +32,7 @@ public class RoundedCornerComboBox {
     JComboBox<String> combo1;
     MyComboBoxModel cbm;
     ComboBoxRenderer renderer;
+
     
     public RoundedCornerComboBox(Color outerBgColor, String placeholder, String[] options) {
         this.outerBgColor = outerBgColor;
@@ -101,6 +103,20 @@ public class RoundedCornerComboBox {
         combo1.addItem(option);
     }
     
+    public void setEditable() {
+        combo1.setEditable(true);
+
+    }
+    
+    public String getCustomValue() {
+        return (String) combo1.getEditor().getItem();
+    }
+    
+    public void setData(String data) {
+        JTextField text = ((JTextField) combo1.getEditor().getEditorComponent());
+        text.setText(data);
+    }
+    
     
     public JPanel makeUI() { 
         background = AppUI.blendColors(AppUI.brand.getInputBackgroundColor(), outerBgColor);
@@ -115,6 +131,7 @@ public class RoundedCornerComboBox {
         AppUI.setFont(combo1, 18);
         AppUI.setBackground(combo1, background);
 
+        
         combo1.setBorder(new RoundedCornerBorder(this.outerBgColor));
         combo1.setUI(new ColorArrowUI(background));
         
@@ -125,6 +142,40 @@ public class RoundedCornerComboBox {
             c.setForeground(foreground);
             c.setBackground(background);
         }
+        
+        JTextField text = ((JTextField) combo1.getEditor().getEditorComponent());
+       
+       // text.setBackground(background);
+       // text.setForeground(AppUI.brand.getMainTextColor());
+        AppUI.setBackground(text, AppUI.brand.getInputBackgroundColor());
+        //AppUI.setColor(text, AppUI.brand.getMainTextColor());
+        text.setCaretColor(AppUI.brand.getMainTextColor());
+        AppUI.setMargin(text, 10);
+
+        AppUI.setColor(text, AppUI.brand.getSecondTextColor());
+        final JTextField ftf = text;       
+        text.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (ftf.getText().equals(placeholder)) {
+                    ftf.setForeground(AppUI.brand.getMainTextColor());
+                    ftf.setText("");
+                    ftf.repaint();
+                } else {
+                    ftf.setForeground(AppUI.brand.getMainTextColor());
+                    ftf.repaint();
+                }
+            }
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (ftf.getText().isEmpty()) {
+                    ftf.setForeground(AppUI.brand.getSecondTextColor());
+                    ftf.setText(placeholder);
+                    ftf.repaint();
+                }
+            }
+        });
+        
 
         combo1.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
