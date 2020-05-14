@@ -329,6 +329,15 @@ public class ServantManager {
 	Authenticator at = (Authenticator) sr.getServant("Authenticator");
 	at.launch(cc, cb);
     }
+    
+    public void startAuthenticatorService(ArrayList<CloudCoin> ccs, CallbackInterface cb) {
+        if (sr.isRunning("Authenticator"))
+            return;
+
+	Authenticator at = (Authenticator) sr.getServant("Authenticator");
+	at.launch(ccs, cb);
+    }
+    
 
     public void startGraderService(CallbackInterface cb, ArrayList<CloudCoin> duplicates, String source, String rn) {
         if (sr.isRunning("Grader"))

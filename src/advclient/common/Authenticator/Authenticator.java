@@ -44,6 +44,7 @@ public class Authenticator extends Servant {
         });
     }
 
+    
     public void launch(CloudCoin cc, CallbackInterface icb) {
         this.cb = icb;
         final CloudCoin fcc = cc;
@@ -72,6 +73,34 @@ public class Authenticator extends Servant {
         });
     }
     
+    public void launch(ArrayList<CloudCoin> ccs, CallbackInterface icb) {
+        this.cb = icb;
+        final ArrayList<CloudCoin> fccs = ccs;
+
+        globalResult = new AuthenticatorResult();
+        launchThread(new Runnable() {
+            @Override
+            public void run() {
+                logger.info(ltag, "RUN CloudCoins Authenticator");
+
+                AuthenticatorResult ar = new AuthenticatorResult();
+                if (!processDetect(fccs, false)) {
+                    logger.error(ltag, "Failed to detect");
+                    globalResult.status = AuthenticatorResult.STATUS_ERROR;
+                } else {
+                    globalResult.status = AuthenticatorResult.STATUS_FINISHED;
+                }
+
+                copyFromGlobalResult(ar);
+                if (cb != null)
+                    cb.callback(ar);
+            }
+        });
+    }
+    
+    
+    
+    // Need this
     public void setConfig() {
 
     }

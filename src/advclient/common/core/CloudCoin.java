@@ -36,6 +36,8 @@ public class CloudCoin {
 
     int sideSize;
     
+    int type;
+    
     public void initCommon() {
 	pans = new String[RAIDA.TOTAL_RAIDA_COUNT];
 	detectStatus = new int[RAIDA.TOTAL_RAIDA_COUNT];
@@ -47,8 +49,10 @@ public class CloudCoin {
         String data;
         if (fileName.endsWith(".png")) {
             data = AppCore.extractStackFromPNG(fileName);
+            type = Config.TYPE_PNG;
         }  else {
             data = AppCore.loadFile(fileName);
+            type = Config.TYPE_STACK;
         }
         if (data == null)
             throw(new JSONException("Failed to open file"));
@@ -158,6 +162,10 @@ public class CloudCoin {
 	return getJson(true);
     }
 
+    public int getType() {
+        return this.type;
+    }
+    
     public void setEd() {
        	Date date = new Date();
 	Calendar cal = Calendar.getInstance();

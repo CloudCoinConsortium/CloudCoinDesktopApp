@@ -1052,8 +1052,6 @@ public class AppCore {
         logger.info(ltag, "JAVA " + javaName + " " + javaVersion);
         logger.info(ltag, osName);
         logger.info(ltag, "CPUS: " + cpus + " Memory for JVM, (free/avail): " + freeMemory + "/" + totalMemory + " MB");
-        
-       
     }
     
     public static String calcCoinsFromFilenames(ArrayList<String> files) {
@@ -1706,12 +1704,6 @@ public class AppCore {
 
         AppCore.saveFile(fileName, sb.toString());
     }
-    
-    
-    
-    
-    
-    
     
  
     public static String[][] parseBillPayCsv(String filename) {

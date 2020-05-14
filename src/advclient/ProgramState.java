@@ -78,6 +78,8 @@ public class ProgramState {
     final public static int SCREEN_CLOUDBANK = 60;
     final public static int SCREEN_LIST_SERIALS_DOING = 61;
     final public static int SCREEN_NEW_VERSION = 62;
+    final public static int SCREEN_CHECKING_SKYWALLETS = 63;
+    final public static int SCREEN_CHECKING_SKYWALLETS_DONE = 64;
     
     
     final static int CB_STATE_INIT = 1;
@@ -185,6 +187,12 @@ public class ProgramState {
     
     boolean fromLeftOver;
     
+    int fxTotal;
+    int fxFixed;
+    int fxFailed;
+    ArrayList<CloudCoin> fxToFix;
+    ArrayList<CloudCoin> fxFailedToFix;
+    
     public ProgramState() {
         currentScreen = SCREEN_AGREEMENT;
         cwalletRecoveryRequested = cwalletPasswordRequested = false;
@@ -265,6 +273,11 @@ public class ProgramState {
         exportType = 0;
         
         needExtensiveFixing = false;
+        
+        fxTotal = fxFixed = 0;
+        
+        fxToFix = new ArrayList<CloudCoin>();
+        fxFailedToFix = new ArrayList<CloudCoin>();
     }
  
     public String toString() {

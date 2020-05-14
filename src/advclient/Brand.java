@@ -313,7 +313,7 @@ public class Brand {
         byte[] bytes = daFake.doBinaryRequest("");
         if (bytes == null) {
             logger.error(ltag, "Failed to receive response from Brand Server");
-            return false;
+            return null;
         }
         
         return new String(bytes);
