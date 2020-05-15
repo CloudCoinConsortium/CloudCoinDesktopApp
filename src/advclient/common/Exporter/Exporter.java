@@ -119,8 +119,7 @@ public class Exporter extends Servant {
             logger.debug(ltag, "Generated random tag: " + tag);
         }
         
-        String fullExportPath = AppCore.getUserDir(Config.DIR_EXPORT, user);
-        
+        String fullExportPath = AppCore.getUserDir(Config.DIR_EXPORT, user);       
         if (dir != null)
             fullExportPath = dir;
         

@@ -8,7 +8,8 @@ public class Config {
     public static String DIR_DEPOSIT = "Deposit";
     public static String DIR_DETECTED = "Detected";
     public static String DIR_EXPORT = "Export";
-    public static String DIR_EMAILOUT = "EmailOut";
+    public static String DIR_EMAIL_OUT = "EmailOut";
+    public static String DIR_EMAIL_SENT = "EmailSent";
     public static String DIR_FRACKED = "Fracked";
     public static String DIR_GALLERY = "Gallery";
     public static String DIR_ID = "ID";

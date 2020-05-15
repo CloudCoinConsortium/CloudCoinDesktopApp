@@ -528,9 +528,9 @@ public class ServantManager {
     
     
     
-    public void startEmailerService(String[] emails, String[] subjects, String[] bodies, String[][] attachments, CallbackInterface icb) {
+    public void startEmailerService(String[] emails, String[] subjects, String[] bodies, String[][] attachments, String doneDir, CallbackInterface icb) {
         Emailer el = (Emailer) sr.getServant("Emailer");
-        el.launch(emails, subjects, bodies, attachments, icb);
+        el.launch(emails, subjects, bodies, attachments, doneDir, icb);
     }
     
     public void startExporterService(int exportType, int amount, String tag, String dir, boolean keepSrc, CallbackInterface cb) {

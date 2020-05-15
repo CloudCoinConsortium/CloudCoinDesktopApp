@@ -1,5 +1,6 @@
 package global.cloudcoin.ccbank.core;
 
+import advclient.common.core.Validator;
 import global.cloudcoin.ccbank.ServantManager.ServantManager;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -154,7 +155,8 @@ public class AppCore {
             Config.DIR_DEPOSIT,
             Config.DIR_DETECTED,
             Config.DIR_EXPORT,
-            Config.DIR_EMAILOUT,
+            Config.DIR_EMAIL_OUT,
+            Config.DIR_EMAIL_SENT,
             Config.DIR_FRACKED,
             Config.DIR_GALLERY,
             Config.DIR_IMPORT,
@@ -1706,8 +1708,8 @@ public class AppCore {
     }
     
  
-    public static String[][] parseBillPayCsv(String filename) {
-        String [][] rvs;
+    public static BillPayItem[] parseBillPayCsv(String filename) throws Exception {
+        BillPayItem[] rvs;
         BufferedReader reader;
         ArrayList<String> as = new ArrayList<String>();
 	try {            
@@ -1720,15 +1722,81 @@ public class AppCore {
             reader.close();
             
             int i = 0;
-            rvs = new String[as.size()][];
+            rvs = new BillPayItem[as.size()];
             for (String s : as) {
                 String[] parts = s.split(",");
-                if (parts.length != 9) {
+                if (parts.length != 12) {
                     logger.debug(ltag, "Failed to parse string: " + s);
-                    return null;
+                    throw new Exception("Invalid Number of Fields");
                 }
                 
-                rvs[i++] = parts;
+                BillPayItem bi = new BillPayItem(i);
+                String sendMethodStr = parts[0].trim();
+                String sendFormatStr = parts[1].trim();
+                String sendStatusStr = parts[11].trim();
+                
+                if (!sendMethodStr.equals("email")) 
+                    throw new Exception("Line: " + (i + 1) + ". Only email methods are supported");
+                
+                if (!sendFormatStr.equals("stack"))
+                    throw new Exception("Line: " + (i + 1) + ". Only stack formats are supported");
+
+                if (sendStatusStr.equals("ready")) {
+                    bi.status = BillPayItem.SEND_STATUS_READY;
+                } else if (sendStatusStr.equals("skip")) {
+                    bi.status = BillPayItem.SEND_STATUS_SKIP;
+                } else {
+                    throw new Exception("Line: " + (i + 1) + ". Only ready and skip statuses are supported");
+                }
+                
+                bi.method = BillPayItem.SEND_METHOD_EMAIL;
+                bi.format = BillPayItem.SEND_FORMAT_STACK;
+                bi.filename = filename;
+
+                try {
+                    bi.total = Integer.parseInt(parts[2].trim());
+                    bi.s1 = Integer.parseInt(parts[3].trim());
+                    bi.s5 = Integer.parseInt(parts[4].trim());
+                    bi.s25 = Integer.parseInt(parts[5].trim());
+                    bi.s100 = Integer.parseInt(parts[6].trim());
+                    bi.s250 = Integer.parseInt(parts[7].trim());
+                } catch (NumberFormatException e) {
+                    throw new Exception("Line: " + (i + 1) + ". Failed to numbers. Line: " + (i + 1));
+                }
+                
+                if (bi.total < 0 || bi.s1 < 0 || bi.s5 < 0 || bi.s25 < 0 || bi.s100 < 0 || bi.s250 < 0) 
+                    throw new Exception("Line: " + (i + 1) + ". Negative amount value. Line " + (i + 1));
+                
+                if (bi.total != 0 && (bi.s1 > 0 || bi.s5 > 0 || bi.s25 > 0 || bi.s100 > 0 || bi.s250 > 0)) 
+                    throw new Exception("Line: " + (i + 1) + ". Both total and denominations are set");
+                
+                if (bi.total == 0)
+                    bi.calcTotal();
+                
+                bi.address = parts[8].trim();
+                if (!Validator.email(bi.address)) 
+                    throw new Exception("Invalid Email " + bi.address);
+                
+                bi.data = parts[9].trim();
+                String[] metadata = parts[10].trim().split("&");
+                for (int j = 0; j < metadata.length; j++) {
+                    String[] p = metadata[j].split("=");
+                    if (p.length != 2) {
+                        throw new Exception("Line: " + (i + 1) + ". Invalid Metadata Format");
+                    }
+                    
+                    bi.setMetadataItem(p[0], p[1]);
+                }
+                
+                String templatePath = bi.getMetadataItem("body");
+                if (templatePath == null)
+                    throw new Exception("Line: " + (i + 1) + ". Body is not defined");
+                
+                File f = new File(templatePath);
+                if (!f.exists()) 
+                    throw new Exception("Line: " + (i + 1) + ". Body template does not exist");
+                                
+                rvs[i++] = bi;
             }
             
 	} catch (IOException e) {
@@ -1760,7 +1828,7 @@ public class AppCore {
     }
     
     public static String getEmailTemplate(String template, int amount) {
-        String fname = AppCore.rootPath + File.separator + Config.DIR_EMAIL_TEMPLATES + File.separator + template;
+        String fname = template;
         File f = new File(fname);
         
         String fdata = AppCore.loadFile(fname);
@@ -1774,55 +1842,31 @@ public class AppCore {
         return fdata;
     }
     
-    public static boolean checkEmailTemplate(String template) {
-        String fname = AppCore.rootPath + File.separator + Config.DIR_EMAIL_TEMPLATES + File.separator + template;
-        File f = new File(fname);
-        if (!f.exists()) {
-            logger.debug(ltag, "FileTemplate " + fname + " doesn't exist");
-            return false;
-        }
-        
-        return true;
-    }
-    
-    public static String checkBillPays(ServantManager sm, Wallet w, String[][] s) {
+    public static String checkBillPays(ServantManager sm, Wallet w, BillPayItem[] bis) {
         int globalTotal = 0;
-        for (int i = 0; i < s.length; i++) {
-            String[] line = s[i];
-            
-            int total, s1, s5, s25, s100, s250;
-            total = s1 = s5 = s25 = s100 = s250 = 0;
-            
-            try {
-                total = Integer.parseInt(line[1]);
-                s1 = Integer.parseInt(line[2]);
-                s5 = Integer.parseInt(line[3]);
-                s25 = Integer.parseInt(line[4]);
-                s100 = Integer.parseInt(line[5]);
-                s250 = Integer.parseInt(line[6]);
-            } catch (NumberFormatException e) {
-                return "Failed to numbers. Line: " + (i + 1);
+
+        for (int i = 0; i < bis.length; i++) {
+            if (bis[i].status != BillPayItem.SEND_STATUS_READY)
+                continue;
+
+            String fileName = bis[i].getSentFilename(w.getName());
+            String fileNameStuck = bis[i].getStuckFilename(w.getName());
+
+            File f = new File(fileName);
+            if (f.exists()) {
+                bis[i].status = BillPayItem.SEND_STATUS_SENT;
+                continue;
             }
             
-            if (total < 0 || s1 < 0 || s5 < 0 || s25 < 0 || s100 < 0 || s250 < 0) {
-                return "Invalid amount value. Line " + (i + 1);
+            f = new File(fileNameStuck);
+            if (f.exists()) {
+                bis[i].status = BillPayItem.SEND_STATUS_STUCK;
+                continue;
             }
-            
-            if (total != 0 && (s1 > 0 || s5 > 0 || s25 > 0 || s100 > 0 || s250 > 0)) {
-                return "Both total and denominations are set";
-            }
-            
-            if (total == 0)
-                total = s1 + s5 + s25 + s100 + s250;
-             
-            globalTotal += total;
-            if (!AppCore.checkEmailTemplate(line[8])) {
-                return "Template " + line[8] + " doesn't exist. Line " + (i + 1);
-            }
-           // if (total != 0 && (s1 ))
-            
+
+            globalTotal += bis[i].total;
         }
-        
+
         if (w.getTotal() < globalTotal) {
             return "Not enough funds. Required: " + globalTotal;
         }
@@ -1833,27 +1877,7 @@ public class AppCore {
         
         return null;
     }
-    
-    public static int getTotalToSend(String[] line) {
-        int total, s1, s5, s25, s100, s250;
-        total = s1 = s5 = s25 = s100 = s250 = 0;
-            
-        try {
-            total = Integer.parseInt(line[1]);
-            s1 = Integer.parseInt(line[2]);
-            s5 = Integer.parseInt(line[3]);
-            s25 = Integer.parseInt(line[4]);
-            s100 = Integer.parseInt(line[5]);
-            s250 = Integer.parseInt(line[6]);
-        } catch (NumberFormatException e) {
-            return -1;
-        }
-            
-        if (total == 0)
-            total = s1 + s5 + s25 + s100 + s250;
-        
-        return total;
-    }
+
     
     
     public static String extractStackFromPNG(String fileName) {

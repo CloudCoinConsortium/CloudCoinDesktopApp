@@ -43,7 +43,7 @@ public class Emailer extends Servant {
         ger = new EmailerResult();
     }
 
-    public void launch(String[] emails, String[] subjects, String[] bodies, String[][] attachments, CallbackInterface icb) {
+    public void launch(String[] emails, String[] subjects, String[] bodies, String[][] attachments, String doneDir, CallbackInterface icb) {
         this.cb = icb;
 
         final String[] femails = emails;
@@ -61,7 +61,7 @@ public class Emailer extends Servant {
             public void run() {
                 logger.info(ltag, "RUN Emailer");
 
-                doEmail(femails, fsubjects, fbodies, fattachments, cb);
+                doEmail(femails, fsubjects, fbodies, fattachments, doneDir, cb);
                 if (cb != null) 
                     cb.callback(ger);
             }
@@ -138,7 +138,7 @@ public class Emailer extends Servant {
             }
         }
         
-        String host = smtp.getProperty("smptServerAddress");
+        String host = smtp.getProperty("smtpServerAddress");
         if (host != null)
             this.host = host;
         
@@ -184,7 +184,7 @@ public class Emailer extends Servant {
         return true;
     }
     
-    public void doEmail(String[] emails, String[] subjects, String[] bodies, String[][] attachments, CallbackInterface cb) {
+    public void doEmail(String[] emails, String[] subjects, String[] bodies, String[][] attachments, String doneDir, CallbackInterface cb) {
         if (!this.readConfig()) {
             logger.error(ltag, "Failed to read config");
             return;
@@ -209,7 +209,15 @@ public class Emailer extends Servant {
                         return;
                     }
        
-                    AppCore.moveToFolderNoTs(fattachments[0], Config.DIR_SENT, user, true);
+                    File f = new File(fattachments[0]);
+                    String fname = f.getName();
+                    //AppCore.moveToFolderNoTs(fattachments[0], Config.DIR_EMAIL_SENT, user, true);
+                    if (!AppCore.renameFile(fattachments[0], doneDir + File.separator + fname)) {
+                        logger.error(ltag, "Failed to rename file: " + fname);
+                        ger.errText = "Failed to rename file " + fname;
+                        return;
+                    }
+                    
                     ger.sentEmails++;
                     EmailerResult er = new EmailerResult();
                     copyFromMainResult(er);
@@ -262,7 +270,7 @@ public class Emailer extends Servant {
             String line; 
             line = reader.readLine();
             if (!isResponseOk(line, 220)) {
-                setError("Invalid response from Protonmail. Please check the logs");
+                setError("Invalid response from SMTP Server. Please check the logs");
                 socket.close();
                 return false;
             }
@@ -274,7 +282,7 @@ public class Emailer extends Servant {
                     continue;
                 
                 if (!isResponseOk(line, 250)) {
-                    setError("Invalid response from Protonmail (EHLO). Please check the logs");
+                    setError("Invalid response from SMTP Server (EHLO). Please check the logs");
                     socket.close();
                     return false;
                 }
@@ -290,7 +298,7 @@ public class Emailer extends Servant {
 
             line = reader.readLine();
             if (!isResponseOk(line, 334)) {
-                setError("Invalid response from Protonmail (Login). Please check the logs");
+                setError("Invalid response from SMTP Server (Login). Please check the logs");
                 socket.close();
                 return false;
             }
@@ -300,7 +308,7 @@ public class Emailer extends Servant {
             
             line = reader.readLine();
             if (!isResponseOk(line, 334)) {
-                setError("Invalid response from Protonmail (Login). Please check the logs");
+                setError("Invalid response from SMTP Server (ALogin). Please check the logs");
                 socket.close();
                 return false;
             }
@@ -310,7 +318,7 @@ public class Emailer extends Servant {
             
             line = reader.readLine();
             if (!isResponseOk(line, 235)) {
-                setError("Proton auth failed. Please check your credentials");
+                setError("SMTP Auth failed. Please check your credentials");
                 socket.close();
                 return false;
             }
@@ -320,7 +328,7 @@ public class Emailer extends Servant {
             
             line = reader.readLine();
             if (!isResponseOk(line, 250)) {
-                setError("Invalid response from Protonmail (MAIL FROM). Please check the logs");
+                setError("Invalid response from SMTP Server (MAIL FROM). Please check the logs");
                 socket.close();
                 return false;
             }
@@ -339,7 +347,7 @@ public class Emailer extends Servant {
             
             line = reader.readLine();
             if (!isResponseOk(line, 250)) {
-                setError("Invalid response from Protonmail (RCPT TO). Please check the logs");
+                setError("Invalid response from SMTP Server (RCPT TO). Please check the logs");
                 socket.close();
                 return false;
             }
@@ -349,7 +357,7 @@ public class Emailer extends Servant {
             
             line = reader.readLine();
             if (!isResponseOk(line, 354)) {
-                setError("Invalid response from Protonmail (DATA). Please check the logs");
+                setError("Invalid response from SMTP Server (DATA). Please check the logs");
                 socket.close();
                 return false;
             }
@@ -383,7 +391,7 @@ public class Emailer extends Servant {
             
             line = reader.readLine();
             if (!isResponseOk(line, 250)) {
-                setError("Proton rejected the message. Please check the logs");
+                setError("SMTP Server rejected the message. Please check the logs");
                 socket.close();
                 return false;
             }
@@ -397,8 +405,8 @@ public class Emailer extends Servant {
             setError("Unknown network error. Please check the logs");
             return false;
         } catch (IOException ex) {
-            setError("Failed to connect to the ProtonMail bridge. Make sure it is running");
-            logger.error(ltag, "Failed to connect to the ProtonMail bridge: " + ex.getMessage());
+            setError("Failed to connect to the SMTP Server bridge. Make sure it is running");
+            logger.error(ltag, "Failed to connect to the SMTP Server bridge: " + ex.getMessage());
             return false; 
         }
 
@@ -433,7 +441,7 @@ public class Emailer extends Servant {
         try {
             int rcode = Integer.parseInt(v[0]);
             if (rcode != dcode) {
-                logger.error(ltag, "Invalid code returned from Protonmail: " + rcode);
+                logger.error(ltag, "Invalid code returned from SMTP Server: " + rcode);
                 return false;
             }
         } catch (NumberFormatException e) {

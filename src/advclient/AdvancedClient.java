@@ -21,6 +21,7 @@ import global.cloudcoin.ccbank.Transfer.TransferResult;
 import global.cloudcoin.ccbank.Unpacker.UnpackerResult;
 import global.cloudcoin.ccbank.Vaulter.VaulterResult;
 import global.cloudcoin.ccbank.core.AppCore;
+import global.cloudcoin.ccbank.core.BillPayItem;
 import global.cloudcoin.ccbank.core.CallbackInterface;
 import global.cloudcoin.ccbank.core.CloudBank;
 import global.cloudcoin.ccbank.core.CloudCoin;
@@ -2491,9 +2492,14 @@ public class AdvancedClient  {
             public void run(){
                 pbar.setVisible(false);
              
-                CloudCoin skyCC = null;
+                //CloudCoin skyCC = null;
                 ps.coinIDinFix = null;
                 if (ps.srcWallet.isSkyWallet()) {
+                    ps.errText = "BillPay from SkyWallet is not supported";
+                    showScreen();
+                    return;
+                }
+                /*
                     ps.isCheckingSkyID = true;
                     skyCC = ps.srcWallet.getIDCoin();
 
@@ -2523,19 +2529,77 @@ public class AdvancedClient  {
                         }
                     }
                 }
+                */
                 
-                ps.finishedMc = false;
-                String[][] attachments = new String[ps.billpays.length][1];
+                
+                File f = new File(ps.chosenFile);
+                String fname = f.getName();
+                String outDir = AppCore.getUserDir(Config.DIR_EMAIL_OUT, ps.srcWallet.getName()) + File.separator + fname;
+                String doneDir = AppCore.getUserDir(Config.DIR_EMAIL_SENT, ps.srcWallet.getName()) + File.separator + fname;                    
+                File f0 = new File(outDir);
+                File f1 = new File(doneDir);
+                if (!f0.exists()) {
+                    if (!AppCore.createDirectoryPath(outDir)) {
+                        ps.errText =  "Failed to create directory " + outDir;
+                        ps.currentScreen = ProgramState.SCREEN_BILL_PAY_DONE;
+                        showScreen();
+                        return;
+                    }
+                }
+                    
+                if (!f1.exists()) {
+                    if (!AppCore.createDirectoryPath(doneDir)) {
+                        ps.errText =  "Failed to create directory " + doneDir;
+                        ps.currentScreen = ProgramState.SCREEN_BILL_PAY_DONE;
+                        showScreen();
+                        return;
+                    }
+                }
+        
+                
+                
+                int finalLength = 0;
                 for (int i = 0; i < ps.billpays.length; i++) {
-                    String email = ps.billpays[i][7];
+                    BillPayItem bi = ps.billpays[i];
+                    if (bi.status == BillPayItem.SEND_STATUS_SENT || bi.status == BillPayItem.SEND_STATUS_SKIP)
+                        continue;
+                    
+                    finalLength++;
+                }
+                
+                wl.debug(ltag, "Total emails to Send: " + finalLength);
+                ps.finishedMc = false;
+                String[][] attachments = new String[finalLength][1];
+                
+                int j = 0;
+                for (int i = 0; i < ps.billpays.length; i++) {
+                    BillPayItem bi = ps.billpays[i];
+                    String email = bi.address;
+                    if (bi.status == BillPayItem.SEND_STATUS_SENT || bi.status == BillPayItem.SEND_STATUS_SKIP) {
+                        wl.debug(ltag, "Skipping " + bi.idx + " " + bi.address + " " + bi.status);
+                        continue;
+                    }
+                    
+                    String tag = bi.idx + "_" + email.replaceAll("\\.", "_");               
+                    if (bi.status == BillPayItem.SEND_STATUS_STUCK) {
+                        String stuckFilename = bi.getStuckFilename(fwallet);
+                        
+                        wl.debug(ltag, "Using previously exported " + bi.idx + " " + bi.address + " " + bi.status + " f=" + stuckFilename + " j=" + j);
+                        
+                        System.out.println("sf=" + stuckFilename + " idx=" + j);
+                        
+                        attachments[j][0] = stuckFilename;
+                        continue;
+                    }
+ 
                     pbarText.setText("Exporting coins for " + email);
                     pbarText.repaint();
 
-                    ps.typedAmount = AppCore.getTotalToSend(ps.billpays[i]);
+                    ps.typedAmount = bi.total;
                     ps.finishedMc = false;
                     ps.triedToChange = false;
 
-                    final int fi = i;
+                    final int fj = j;
                     CallbackInterface cb = new CallbackInterface() {
                         public void callback(Object result) {
                             final Object eresult = result;
@@ -2585,15 +2649,15 @@ public class AdvancedClient  {
                             sm.getActiveWallet().appendTransaction("Sent to " + email, er.totalExported * -1, er.receiptId);
                             ps.finishedMc = true;
 
-                            attachments[fi][0] = er.exportedFileNames.get(0);
+                            wl.debug(ltag, " exp " + fj + " fn " + er.exportedFileNames.get(0));
+                            attachments[fj][0] = er.exportedFileNames.get(0);
                         }
                     };
 
-                    String tag = i + "_" + email.replaceAll("\\.", "_");
                     if (ps.srcWallet.isEncrypted()) {
-                        sm.startSecureExporterService(Config.TYPE_STACK, ps.typedAmount, tag, null, false, cb);
+                        sm.startSecureExporterService(Config.TYPE_STACK, ps.typedAmount, tag, outDir, false, cb);
                     } else {
-                        sm.startExporterService(Config.TYPE_STACK, ps.typedAmount, tag, null, false, cb);
+                        sm.startExporterService(Config.TYPE_STACK, ps.typedAmount, tag, outDir, false, cb);
                     }
 
                     while (!ps.finishedMc) {
@@ -2608,23 +2672,34 @@ public class AdvancedClient  {
                         showScreen();
                         return;
                     }
+                    
+                    j++;
                 }
+                
+                // endForLoop
 
                 sm.getActiveWallet().setNotUpdated();
 
-                setEmailerStatus(0, ps.billpays.length);
-                String[] bodies = new String[ps.billpays.length];
-                String[] subjects = new String[ps.billpays.length];
-                String[] emails = new String[ps.billpays.length];
+                setEmailerStatus(0, finalLength);
+                String[] bodies = new String[finalLength];
+                String[] subjects = new String[finalLength];
+                String[] emails = new String[finalLength];
 
+                j = 0;
                 for (int i = 0; i < ps.billpays.length; i++) {
-                    int total = AppCore.getTotalToSend(ps.billpays[i]);
-                    bodies[i] = AppCore.getEmailTemplate(ps.billpays[i][8], total);
-                    subjects[i] =  total + " CloudCoins";
-                    emails[i] = ps.billpays[i][7];
+                    BillPayItem bi = ps.billpays[i];
+                    if (bi.status == BillPayItem.SEND_STATUS_SENT || bi.status == BillPayItem.SEND_STATUS_SKIP)
+                        continue;
+                    
+                    int total = bi.total;
+                    bodies[j] = AppCore.getEmailTemplate(bi.getMetadataItem("body"), total);
+                    subjects[j] =  bi.data;
+                    emails[j] = bi.address;
+                    
+                    j++;
                 }
 
-                sm.startEmailerService(emails, subjects, bodies, attachments, new EmailerCb());
+                sm.startEmailerService(emails, subjects, bodies, attachments, doneDir, new EmailerCb());
 
 
             }
@@ -4172,7 +4247,15 @@ public class AdvancedClient  {
         JLabel fname, value;
         MyTextField walletName = null;
 
-        JPanel subInnerCore = getPanel("Bill Pay Confirmation");                
+        int total = 0;
+        for (int i = 0; i < ps.billpays.length; i++) {
+            if (ps.billpays[i].status != BillPayItem.SEND_STATUS_READY && ps.billpays[i].status != BillPayItem.SEND_STATUS_STUCK)
+                continue;
+            
+            total += ps.billpays[i].total;
+        }
+        
+        JPanel subInnerCore = getPanel("Bill Pay Confirmation: " + AppCore.formatNumber(total) + " CC");                
         GridBagLayout gridbag = new GridBagLayout();
         subInnerCore.setLayout(gridbag);
       
@@ -4185,15 +4268,23 @@ public class AdvancedClient  {
   
         String v = "<html>";
         for (int i = 0; i < ps.billpays.length; i++) {
-            v += "<p style=\"font-size:12px; text-align:left; color:white\">" + ps.billpays[i][0] + "," + ps.billpays[i][1] + "," + ps.billpays[i][2] + "," + ps.billpays[i][3] + "," + ps.billpays[i][4]  + " : " + ps.billpays[i][5] +
-                    "," + ps.billpays[i][6] + "," + ps.billpays[i][7] + "," + ps.billpays[i][8] + "</p><br>";
+            String ltext = ps.billpays[i].toString();
+            v += "<p style=\"font-size:12px; text-align:left; color:white\">" + ltext + "</p><br>";
         }
         v+="</html>";
         JLabel x = new JLabel(v);
         AppUI.noOpaque(x);
+        AppUI.alignLeft(x);
         
         JPanel jp = new JPanel();
-        jp.add(x);
+        jp.setLayout(new GridBagLayout());
+        GridBagConstraints cs = new GridBagConstraints();
+        cs.gridx = 0;
+        cs.anchor = GridBagConstraints.NORTHWEST;
+        cs.weightx = 1;
+        
+        
+        jp.add(x, cs);
         AppUI.noOpaque(jp);
         JScrollBar scrollBar = new JScrollBar(JScrollBar.VERTICAL) {
             @Override
@@ -4216,6 +4307,9 @@ public class AdvancedClient  {
         
         AppUI.GBPad(subInnerCore, y, gridbag);        
         y++;
+        
+        if (total == 0)
+            return;
         
         AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Confirm", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -4882,6 +4976,7 @@ public class AdvancedClient  {
         AppUI.getGBRow(subInnerCore, null, infox, y, gridbag);
         y++;
         
+        infox.setVisible(false);
 
         fname = new JLabel("From");
         final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "Make Selection", rvFrom.options);
@@ -5007,20 +5102,25 @@ public class AdvancedClient  {
                     return;
                 }
                     
-                String[][] s = AppCore.parseBillPayCsv(ps.chosenFile);
-                if (s == null) {
-                    ps.errText = "Failed to parse file. Make sure it is formatted corretly";
+                BillPayItem[] bis;
+                
+                try {
+                    bis = AppCore.parseBillPayCsv(ps.chosenFile);
+                } catch (Exception er) {
+                    ps.errText = "Failed to parse file: " + er.getMessage();
                     showScreen();
                     return;
                 }
                 
                 setActiveWallet(ps.srcWallet);
                 
+                infox.setVisible(true);
                 infox.setText("Checking Denominations...");
                 Thread t = new Thread(new Runnable() {
                     public void run() {
-                        String err = AppCore.checkBillPays(sm, ps.srcWallet, s);
+                        String err = AppCore.checkBillPays(sm, ps.srcWallet, bis);
                         if (err != null) {
+                            infox.setVisible(false);
                             ps.errText = "Parse error: " + err;
                             showScreen();
                             return;
@@ -5028,14 +5128,17 @@ public class AdvancedClient  {
 
                         infox.setText("Checking Email Gateway...");
                         err = sm.getEmailerError();
+                        
                         infox.setText("");
                         if (err != null) {
+                            infox.setVisible(false);
                             ps.errText = err;
                             showScreen();
                             return;
                         }
+                        
 
-                        ps.billpays = s;
+                        ps.billpays = bis;
                         ps.currentScreen = ProgramState.SCREEN_SHOW_CONFIRM_BILL_PAY;
                         showScreen();
                         return;

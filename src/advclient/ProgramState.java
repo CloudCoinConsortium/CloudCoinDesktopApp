@@ -7,6 +7,7 @@ package advclient;
 
 import global.cloudcoin.ccbank.core.CloudCoin;
 import global.cloudcoin.ccbank.core.Wallet;
+import global.cloudcoin.ccbank.core.BillPayItem;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -173,7 +174,7 @@ public class ProgramState {
     
     int failedFiles;
     
-    String[][] billpays;
+    BillPayItem[] billpays;
     
     boolean frombillpay;
     
