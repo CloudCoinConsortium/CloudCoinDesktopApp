@@ -55,19 +55,35 @@ public class CloudBank {
         }
         
         if (!service.equals("echo")) {
-            String pk = (String) params.get("pk");
+            
             String account = (String) params.get("account");
-            if (pk == null || account == null) {
-                cr = getCrError("Account and pk required");
+            if (account == null) {
+                cr = getCrError("Account is required");
                 cb.callback(cr);
                 return;
             }
         
-            if (!account.equals(Config.CLOUDBANK_ACCOUNT) || !pk.equals(Config.CLOUDBANK_PASSWORD)) {
-                cr = getCrError("Auth Failed");
+            if (!account.equals(Config.CLOUDBANK_ACCOUNT)) {
+                cr = getCrError("Unknown Account");
                 cb.callback(cr);
                 return;
             }
+            
+            if (!service.equals("deposit_one_stack")) {
+                String pk = (String) params.get("pk");
+                if (pk == null) {
+                    cr = getCrError("Pk is required");
+                    cb.callback(cr);
+                    return;
+                }
+                
+                if (!pk.equals(Config.CLOUDBANK_PASSWORD)) {
+                    cr = getCrError("Auth Failed");
+                    cb.callback(cr);
+                    return;
+                }
+            }
+            
         
             if (lw.isEncrypted()) {
                 wHash = lw.getPasswordHash();
@@ -90,7 +106,6 @@ public class CloudBank {
                 }
                      
                 logger.debug(ltag, "Setting password " + password);
-                System.out.println("setting password " + password);
                 lw.setPassword(password);
             }
         }
@@ -397,8 +412,6 @@ public class CloudBank {
         }
         
         final String filename = AppCore.getUserDir(Config.DIR_IMPORT, wallet.getName()) + File.separator + rn + ".stack";
-        System.out.println("d="+filename);
-        System.out.println("s="+stack);
         logger.debug(ltag, "Saving file " + filename);
         if (!AppCore.saveFile(filename, stack)) {
             logger.error(ltag, "Failed to save file");
@@ -415,7 +428,6 @@ public class CloudBank {
                 final UnpackerResult ur = (UnpackerResult) o;
                 logger.debug(ltag, "Unpacker finished " + ur.status);
                 
-                System.out.println("up=" + ur.status + " ff="+ur.failedFiles);
                 if (ur.status == UnpackerResult.STATUS_ERROR || ur.failedFiles > 0) {
                     AppCore.deleteFile(filename);
                     logger.error(ltag, "err " + ur.errText);
@@ -689,7 +701,14 @@ public class CloudBank {
                 wallet.setNotUpdated();
                 
                 AppCore.deleteFile(filename);
-                cb.callback(getCrSuccess(stack));                
+                
+                
+                CloudbankResult cr = new CloudbankResult();
+                cr.status = CloudbankResult.STATUS_OK_JSON;
+                cr.message = stack.replaceAll("\n", "").replaceAll("\r", "").replaceAll("\t", "");
+                cr.keepWallet = false;
+                
+                cb.callback(cr);                
                 
             }
                 

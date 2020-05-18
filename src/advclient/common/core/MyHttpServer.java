@@ -221,11 +221,6 @@ class MyHandler implements HttpHandler {
             return;
         }
 
-        System.out.println("b="+method);
-        
-        
-                
-                
         String[] params = uri.split("\\?");
         route = params[0].substring(9);
         if (params.length > 1) {
@@ -272,8 +267,7 @@ class MyHandler implements HttpHandler {
                 if (cr.status == CloudbankResult.STATUS_ERROR) {
                     isError = true;                        
                 }
-                    
-                System.out.println("Completed " + cr.status);
+
                 message = cr.message;
                 rstatus = cr.status;
                 ownStatus = cr.ownStatus;
@@ -380,8 +374,6 @@ class MyHandler implements HttpHandler {
     public void setWalletIfNessecary(boolean keepWallet) {
         if (tmpWallet == null)
             return;
-        
-        System.out.println("kw="+keepWallet);
         
         if (keepWallet) 
             return;
