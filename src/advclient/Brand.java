@@ -176,7 +176,42 @@ public class Brand {
         if (this.needVersion == null)
             return false;
         
-        return !this.needVersion.equals(AdvancedClient.version);
+        String[] nparts = this.needVersion.split("\\.");     
+        String[] parts = AdvancedClient.version.split("\\.");
+        if (parts.length != 3 || nparts.length != 3) {
+            logger.error(ltag, "Invalid version format");
+            return false;
+        }
+     
+       
+        int nmajor, nminor, nbuildNumber;
+        int major, minor, buildNumber;
+        try {
+            major = Integer.parseInt(parts[0]);
+            minor = Integer.parseInt(parts[1]);
+            buildNumber = Integer.parseInt(parts[2]);
+            
+            nmajor = Integer.parseInt(nparts[0]);
+            nminor = Integer.parseInt(nparts[1]);
+            nbuildNumber = Integer.parseInt(nparts[2]);
+        } catch (NumberFormatException e) {
+            logger.error(ltag, "Failed to parse version");
+            return false;
+        }
+        
+        if (nmajor > major) {
+            return true;
+        } else if (nmajor == major) {
+            if (nminor > minor) {
+                return true;
+            } else if (nminor == minor) {
+                if (nbuildNumber > buildNumber) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
     }
     
     

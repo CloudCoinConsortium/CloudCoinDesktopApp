@@ -66,7 +66,7 @@ import javax.swing.table.TableCellRenderer;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "3.0.6";
+    public static String version = "3.0.7";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -4144,7 +4144,7 @@ public class AdvancedClient  {
                     String defWalletName = dstWallet.getName();
                     String origName = ps.srcWallet.getIDCoin().originalFile;
                     String name = ps.srcWallet.getIDCoin().getFileName();
-                     
+
                     wl.debug(ltag, "Moving id " + origName + " to " + defWalletName + " name");                 
                     if (dstWallet.isEncrypted()) {
                         if (mtf0 == null)
@@ -4173,10 +4173,31 @@ public class AdvancedClient  {
                         dstWallet.setPassword(mtf0.getText());                        
                     }
                     
-                    if (!AppCore.moveToFolderNewName(origName, Config.DIR_BANK, defWalletName, name)) {
-                        ps.errText = "Failed to delete Wallet";
-                        showScreen();
-                        return;
+                    if (ps.srcWallet.getIDCoin().getType() == Config.TYPE_PNG) {
+                        wl.debug(ltag, "Extractin stack");
+                        String stack = AppCore.extractStackFromPNG(origName);
+                        if (stack == null) {
+                            ps.errText = "Failed to extract stack";
+                            showScreen();
+                            return;
+                        }
+                        
+                        String fileName = AppCore.getUserDir(Config.DIR_BANK, dstWallet.getName()) + File.separator + ps.srcWallet.getIDCoin().getFileName();
+                        if (!AppCore.saveFile(fileName, stack)) {
+                            ps.errText = "Failed to save stack";
+                            showScreen();
+                            return;
+                        }
+
+                        AppCore.moveToTrash(origName, dstWallet.getName());
+                    } else {
+                    
+
+                        if (!AppCore.moveToFolderNewName(origName, Config.DIR_BANK, defWalletName, name)) {
+                            ps.errText = "Failed to delete Wallet";
+                            showScreen();
+                            return;
+                        }
                     }
                   
                     dstWallet.appendTransaction("Coin from Deleted Sky Wallet", ps.srcWallet.getIDCoin().getDenomination(), "skymove");
