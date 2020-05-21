@@ -32,7 +32,7 @@ public class Sender extends Servant {
     }
 
     public void launch(int tosn, String dstFolder, int[] values, int amount, 
-            String envelope, String remoteWalletName, CallbackInterface icb) {
+            String envelope, String remoteWalletName, String rn, CallbackInterface icb) {
         this.cb = icb;
 
         final int ftosn = tosn;
@@ -50,7 +50,11 @@ public class Sender extends Servant {
         globalResult.memo = envelope;
         
         csb = new StringBuilder();
+        
         receiptId = AppCore.generateHex();
+        if (rn != null)
+            receiptId = rn;
+        
         globalResult.receiptId = receiptId;
      
         av = fv = 0;        

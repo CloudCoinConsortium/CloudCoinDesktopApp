@@ -8,6 +8,7 @@ import global.cloudcoin.ccbank.Exporter.ExporterResult;
 import global.cloudcoin.ccbank.FrackFixer.FrackFixerResult;
 import global.cloudcoin.ccbank.Grader.GraderResult;
 import global.cloudcoin.ccbank.LossFixer.LossFixerResult;
+import global.cloudcoin.ccbank.Sender.SenderResult;
 import global.cloudcoin.ccbank.ServantManager.ServantManager;
 import global.cloudcoin.ccbank.ServantManager.ServantManager.makeChangeResult;
 import global.cloudcoin.ccbank.Unpacker.UnpackerResult;
@@ -118,6 +119,8 @@ public class CloudBank {
             cr = getReceipt(params, lw, rw, cb);
         } else if (service.equals("show_coins")) {
             cr = showCoins(params, lw, rw, cb);
+        } else if (service.equals("send_to_skywallet")) {
+            cr = sendToSkyWallet(params, lw, rw, cb);
         } else if (service.equals("echo")) {
             cr = echo();
         } else {
@@ -215,11 +218,16 @@ public class CloudBank {
         setReceipt(wallet, total, "error", message, rn);
     }
     
+    
     public void setReceipt(Wallet wallet, int total, String status, String message, String rn) {
+        setReceiptGeneral(wallet, total, status, message, 0, 0, 0, rn);
+    }
+    
+    public void setReceiptGeneral(Wallet wallet, int total, String status, String message, int a, int f, int c, String rn) {
         String rfile = getReceiptName(wallet, rn);
-        File f = new File(rfile);
-        if (f.exists())
-            f.delete();
+        File fl = new File(rfile);
+        if (fl.exists())
+            fl.delete();
         
         StringBuilder rsb = new StringBuilder();
 
@@ -241,11 +249,11 @@ public class CloudBank {
         rsb.append("\", \"message\": \"");
         rsb.append(message);
         rsb.append("\", \"total_authentic\": ");
-        rsb.append(0);
+        rsb.append("" + a);
         rsb.append(", \"total_fracked\": ");
-        rsb.append(0);
+        rsb.append("" + f);
         rsb.append(", \"total_counterfeit\": ");
-        rsb.append(0);
+        rsb.append("" + c);
         rsb.append(", \"total_lost\": ");
         rsb.append(0);
         rsb.append(", \"total_unchecked\": ");
@@ -376,6 +384,83 @@ public class CloudBank {
         return getCrErrorKeepWallet("Receipt not found");
     }
     
+    
+    public CloudbankResult sendToSkyWallet(Map params, Wallet lw, Wallet rw, CallbackInterface cb) {
+        String rn = (String) params.get("rn");
+        if (rn == null) {
+            rn = AppCore.generateHex();
+        }
+        
+        rn = rn.toUpperCase();                
+        final String rfile = AppCore.getUserDir(Config.DIR_RECEIPTS, lw.getName()) + File.separator + rn + ".txt";
+        File f = new File(rfile);
+        if (f.exists()) {
+            logger.debug(ltag, "Recipt " + rfile + " already exists");
+            return getCrError("Receipt already exists");
+        }
+        
+        String memo = Config.DEFAULT_TAG;
+        String ptag = (String) params.get("base64");
+        if (ptag != null) {
+            //byte[] decodedBytes = Base64.getDecoder().decode(ptag);
+            //memo = new String(decodedBytes);
+            memo = ptag;
+        }
+        
+        if (!Validator.memo(memo)) {
+            logger.error(ltag, "Invalid tag");
+            return getCrError("Invalid memo");
+        }
+        
+        String amountStr = (String) params.get("amount");
+        if (amountStr == null) 
+            return getCrError("Amount must be set");
+      
+        int amount;
+        try {
+            amount = Integer.parseInt(amountStr);
+            if (amount <= 0)
+                throw new NumberFormatException();
+        } catch (NumberFormatException e) {
+            return getCrError("Invalid amount");
+        }
+        
+        if (lw.getTotal() < amount) {
+            return getCrError("Insufficient funds");
+        }
+        
+        String to = (String) params.get("to");
+        if (to == null) 
+            return getCrError("To is a mandatory parameter");
+        
+        if (!Validator.domain(to))
+            return getCrError("Invalid To SkyWallet");
+        
+        DNSSn d = new DNSSn(to, null, logger);
+        int sn = d.getSN();
+        if (sn < 0) 
+            return getCrError("Failed to resolve Wallet");
+        
+        
+        logger.debug(ltag, "Requested To Send: " + amount + " to " + to + " sn:" + sn);
+        
+        CloudbankResult cr = getCrSuccess(rn);
+        cr.status = CloudbankResult.STATUS_OK_CUSTOM;
+        cr.ownStatus = "sending";
+        cr.message = "Sending will begin automatically. Please check your reciept.";
+        cr.receipt = rn;
+        cr.keepWallet = true;
+                    
+        setReceipt(lw, amount, "sending", "Sending CloudCoins", rn);
+
+
+        sm.setActiveWalletObj(lw);
+
+        sm.startSenderServiceBank(lw, sn, amount, memo, to, rn, new SenderCb(lw, amount, sn, memo, rn, to, false, cb)); 
+        
+        return cr;
+        
+    }
     
     public CloudbankResult depositOneStack(Map params, Wallet lw, Wallet rw, CallbackInterface cb) {
         Wallet wallet = lw;
@@ -627,6 +712,102 @@ public class CloudBank {
             }
         }
     }
+    
+    
+    class SenderCb implements CallbackInterface {
+        Wallet wallet;
+        String rn;
+        int amount;
+        String dir;
+        CallbackInterface cb;
+        boolean fromChange;
+        int sn;
+        String memo;
+        String to;
+        
+        public SenderCb(Wallet wallet, int amount, int sn, String memo, String rn, String to, boolean fromChange, CallbackInterface cb) {
+            this.dir = getAccountDir();
+            this.wallet = wallet;
+            this.amount = amount;
+            this.rn = rn;
+            this.cb = cb;       
+            this.sn = sn;
+            this.memo = memo;
+            this.to = to;
+            this.fromChange = fromChange;
+        }
+        
+        public void callback(Object o) {
+            SenderResult sr = (SenderResult) o;
+
+            logger.debug(ltag, "Sender (Depostit) finished: " + sr.status);
+            if (sr.status == SenderResult.STATUS_PROCESSING) {
+                return;
+            }
+
+            if (sr.status == SenderResult.STATUS_CANCELLED) {
+                logger.debug(ltag, "Failed to send coins");
+                setErrorReceipt(wallet, amount, "Sender Cancelled", rn);
+                return;
+            }
+      
+            if (sr.status == SenderResult.STATUS_ERROR) {
+                if (this.fromChange) {
+                    logger.debug(ltag, "From change true, giving up");
+                    setErrorReceipt(wallet, amount, "Failed to make change", rn);
+                    cb.callback(getCrError("Not enough coins after change"));
+                    return;
+                }
+                
+                logger.debug(ltag, "Pick error. Will make Change"); 
+                sm.makeChange(wallet, amount, new CallbackInterface() {
+                    public void callback(Object o) {
+                        makeChangeResult mcr = (makeChangeResult) o;                               
+                        if (!mcr.errText.isEmpty()) {
+                            logger.error(ltag, "Failed to make change: " + mcr.errText);
+                            setErrorReceipt(wallet, amount, "Failed to make change", rn);
+                            cb.callback(getCrError("Failed to make change"));
+                            return;
+                        }
+                        
+                        if (mcr.status == 1) { 
+                        } else if (mcr.status == 2) {
+                            logger.debug(ltag, "Change done successfully. Retrying");  
+                            
+                            sm.startSenderServiceBank(wallet, sn, amount, memo, to, rn, new SenderCb(wallet, amount, sn, memo, rn, to, true, cb)); 
+                        }
+                
+                        return;
+                    }
+                    
+                    
+                });
+                
+                cb.callback(getCrError("Failed to send Coins"));
+                return;
+                
+            }  
+            
+            if (sr.status == ExporterResult.STATUS_FINISHED) {
+                logger.debug(ltag, "We are finally done");
+                
+                int total = sr.totalCoins;
+                int a = sr.totalAuthentic;
+                int f = sr.totalFracked;
+                int c = sr.totalCounterfeit;
+                setReceiptGeneral(wallet, total, "sent", "Coins set successfully to " + to, a, f, c, rn);
+                
+              
+                wallet.appendTransaction(memo, sr.amount * -1, sr.receiptId);
+                wallet.setNotUpdated();
+                
+            }
+                
+        }
+           
+    }
+        
+    
     
     class ExporterCb implements CallbackInterface {
         Wallet wallet;

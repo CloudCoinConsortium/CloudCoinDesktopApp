@@ -9208,7 +9208,7 @@ public class AdvancedClient  {
 
             //setRAIDAProgress(0, 0, AppCore.getFilesCount(Config.DIR_SUSPECT, sm.getActiveWallet().getName()));
             setRAIDAProgressCoins(0, 0, 0);
-            sm.startSenderService(sn, null, 0, ps.typedMemo, sm.getActiveWallet().getName(), new SenderDepositCb());
+            sm.startSenderService(sn, null, 0, ps.typedMemo, sm.getActiveWallet().getName(), null, new SenderDepositCb());
 
         }
     }
