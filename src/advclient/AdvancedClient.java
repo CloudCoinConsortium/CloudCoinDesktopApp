@@ -60,6 +60,8 @@ import javax.swing.plaf.MenuItemUI;
 import javax.swing.plaf.basic.BasicScrollBarUI;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 
 /**
@@ -1305,6 +1307,9 @@ public class AdvancedClient  {
                 break;
             case ProgramState.SCREEN_CHECKING_SKYWALLETS_DONE:
                 showCheckingSkyWalletsDoneScreen();
+                break;
+            case ProgramState.SCREEN_CLOUDBANK_SETTINGS_SAVED:
+                showCloudbankSettingsSavedScreen();
                 break;
         }
         
@@ -3302,6 +3307,7 @@ public class AdvancedClient  {
         serverPort.setData(Integer.toString(Config.CLOUDBANK_PORT));
         y++;     
         
+        /*
         fname = new JLabel("Account");
         final MyTextField account = new MyTextField("Account", false);         
         AppUI.getGBRow(subInnerCore, fname, account.getTextField(), y, gridbag);
@@ -3313,6 +3319,7 @@ public class AdvancedClient  {
         AppUI.getGBRow(subInnerCore, fname, password.getTextField(), y, gridbag);
         password.setData(Config.CLOUDBANK_PASSWORD);
         y++;
+        */
 
         fname = new JLabel("Local Wallet");
         final RoundedCornerComboBox cboxlocal = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "Make Selection", rvLocal.options);
@@ -3445,8 +3452,8 @@ public class AdvancedClient  {
             public void actionPerformed(ActionEvent e) {
                 boolean cbEnabled = cb1.isChecked();
                 
-                String cbAccount = account.getText();
-                String cbPassword = password.getText();
+                //String cbAccount = account.getText();
+                //String cbPassword = password.getText();
                 int cbPort;
                 try {
                     cbPort = Integer.parseInt(serverPort.getText());
@@ -3461,7 +3468,7 @@ public class AdvancedClient  {
                     showScreen();
                     return;
                 }
-                
+                /*
                 if (cbAccount.isEmpty()) {
                     ps.errText = "Account can't be empty";
                     showScreen();
@@ -3473,6 +3480,7 @@ public class AdvancedClient  {
                     showScreen();
                     return;
                 }
+                */
 
                 int lIdx = cboxlocal.getSelectedIndex() - 1;
                 if (lIdx < 0 || lIdx >= rvLocal.idxs.length) {                    
@@ -3520,8 +3528,8 @@ public class AdvancedClient  {
                 
                 Config.CLOUDBANK_ENABLED = cbEnabled;
                 Config.CLOUDBANK_PORT = cbPort;
-                Config.CLOUDBANK_ACCOUNT = cbAccount;
-                Config.CLOUDBANK_PASSWORD = cbPassword;
+                //Config.CLOUDBANK_ACCOUNT = cbAccount;
+                //Config.CLOUDBANK_PASSWORD = cbPassword;
                 Config.CLOUDBANK_LWALLET = lWallet.getName();
                 Config.CLOUDBANK_LWALLET_PASSWORD = walletPassword;
                 Config.CLOUDBANK_RWALLET = rWallet.getName();
@@ -3532,13 +3540,32 @@ public class AdvancedClient  {
                     return;
                 }
 
+                Thread t = new Thread(new Runnable() {
+                    public void run() {   
+                        cloudbank = new CloudBank(wl, sm);
+                        cloudbank.init();
+                        startHttpServer();
+                    }
+                });
+                t.start();
+
+                DetectionAgent daFake = new DetectionAgent(RAIDA.TOTAL_RAIDA_COUNT * 10000, wl);
+                daFake.setExactFullUrl(Config.GETMYIP_URL);
+                String result = daFake.doRequest("", null);     
+                ps.myIp = "127.0.0.1";
+                if (result == null) {
+                    wl.debug(ltag, "No response from myIPApi");
+                } else {
+                    try {
+                        JSONObject o = new JSONObject(result);
+                        ps.myIp = o.getString("ip");
+                    } catch (JSONException ex) {
+                        wl.debug(ltag, "Invlid response from myIPApi: " + result);
+                    }
+                }
                 
-                cloudbank = new CloudBank(wl, sm);
-                cloudbank.init();
-
-
-                startHttpServer();
-                ps.currentScreen = ProgramState.SCREEN_SETTINGS_SAVED;
+                //startHttpServer();
+                ps.currentScreen = ProgramState.SCREEN_CLOUDBANK_SETTINGS_SAVED;
                 showScreen();
                 
             }
@@ -3811,6 +3838,83 @@ public class AdvancedClient  {
        
     }
     
+    public void showCloudbankSettingsSavedScreen() {
+        boolean isError = !ps.errText.equals("");
+        JPanel subInnerCore;
+        
+        if (isError) {
+            subInnerCore = getPanel("Error");
+            resetState();
+            return;
+        }
+             
+        int y = 0;
+        JLabel fname, value;
+
+        subInnerCore = getPanel("SUCCESS! Your CloudBank is online");                
+        GridBagLayout gridbag = new GridBagLayout();
+        subInnerCore.setLayout(gridbag);
+        
+        String txt = "Here is the information to access your account remotely<br>A link to a text file with this information is below<br><br>";
+        
+        txt += "URL: https://" + ps.myIp + ":" + Config.CLOUDBANK_PORT + "/<br>";
+        txt += "Account: " + Config.CLOUDBANK_ACCOUNT + "<br>";
+        txt += "Password: " + Config.CLOUDBANK_PASSWORD + "<br>";
+        
+        
+        System.out.println("s=" + Config.CLOUDBANK_ACCOUNT + " p=" + Config.CLOUDBANK_PASSWORD + " ip="+ps.myIp);
+        
+        fname = AppUI.wrapDiv(txt);
+        AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
+        y++;
+        
+        String keyData = "{\n\"url\":\"" + ps.myIp + ":" + Config.CLOUDBANK_PORT + "\",\n"
+                + "\"account\":\"" + Config.CLOUDBANK_ACCOUNT + "\",\n"
+                + "\"privatekey\": \"" + Config.CLOUDBANK_PASSWORD + "\"\n}";
+        
+        
+        String keyFile = AppCore.getCloudbankKeysDir() + File.separator + "key." + Config.CLOUDBANK_LWALLET + ".txt";
+        File f = new File(keyFile);
+        if (f.exists())
+            f.delete();
+        
+        if (!AppCore.saveFile(keyFile, keyData)) {
+            wl.debug(ltag, "Failed to save keys file: " + keyFile);
+        }
+        
+        JLabel sl = AppUI.getHyperLink(keyFile, "javascript:void(0); return false", 20);
+        sl.addMouseListener(new MouseAdapter() {
+            public void mouseReleased(MouseEvent e) {
+                if (!Desktop.isDesktopSupported())
+                    return;
+                try {
+                    Desktop.getDesktop().open(new File(keyFile));
+                } catch (IOException ie) {
+                    wl.error(ltag, "Failed to open browser: " + ie.getMessage());
+                }
+            }
+        });
+        
+        AppUI.getGBRow(subInnerCore, null, sl, y, gridbag);
+        AppUI.setColor(sl, brand.getHyperlinkColor());
+        AppUI.underLine(sl);
+        y++;  
+
+                          
+        AppUI.GBPad(subInnerCore, y, gridbag);        
+        y++;
+        
+        AppUI.getTwoButtonPanel(subInnerCore, "", "Continue", null,  new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                showScreen();
+            }
+        }, y, gridbag);   
+        
+        
+        resetState();
+        
+    }
     
     public void showSettingsDoneScreen() {
         boolean isError = !ps.errText.equals("");

@@ -43,6 +43,8 @@ public class Config {
     public static String DIR_DOWNLOADS = "Downloads";
     public static String DIR_BRANDS = "Brands";
     public static String DIR_CLOUDBANK = "CloudBank";
+    
+    public static String DIR_CLOUDBANK_KEYS = "Keys";
 
     public static String GLOBAL_CONFIG_FILENAME = "global.config";
     public static String MAIL_CONFIG_FILENAME = "mailsettings.ini";
@@ -231,5 +233,5 @@ public class Config {
     
     public static String UPDATE_URL = "https://cloudcoinconsortium.com/use.html";
     
-    
+    public static String GETMYIP_URL = "https://api.ipify.org?format=json";
 }

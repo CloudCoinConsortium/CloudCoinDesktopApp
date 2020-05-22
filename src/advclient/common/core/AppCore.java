@@ -139,6 +139,9 @@ public class AppCore {
             if (!createDirectory(Config.DIR_CLOUDBANK))
                 return false;
             
+            if (!createDirectory(Config.DIR_CLOUDBANK + File.separator + Config.DIR_CLOUDBANK_KEYS))
+                return false;
+            
         } catch (Exception e) {
             logger.error(ltag, "Exception " + e.toString());
             return false;
@@ -198,11 +201,11 @@ public class AppCore {
        return f.toString();
    }
 
-   static public String getBackupDir() {
+    static public String getBackupDir() {
        File f = new File(rootPath, Config.DIR_BACKUPS);
        
        return f.toString();
-   }
+    }
    
     static public String getBrandsDir() {
         File f = new File(rootPath, Config.DIR_BRANDS);
@@ -215,8 +218,15 @@ public class AppCore {
        
        return f.toString();
     }
+    
+    static public String getCloudbankKeysDir() {
+       File f = new File(rootPath, Config.DIR_CLOUDBANK + File.separator + Config.DIR_CLOUDBANK_KEYS);
+       
+       return f.toString();
+    }
+    
  
-   static public String getDownloadsDir() {
+    static public String getDownloadsDir() {
        File f = new File(rootPath, Config.DIR_DOWNLOADS);
        
        return f.toString();

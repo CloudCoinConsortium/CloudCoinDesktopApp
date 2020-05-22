@@ -12,6 +12,7 @@ import global.cloudcoin.ccbank.Receiver.ReceiverResult;
 import global.cloudcoin.ccbank.Sender.SenderResult;
 import global.cloudcoin.ccbank.ServantManager.ServantManager;
 import global.cloudcoin.ccbank.ServantManager.ServantManager.makeChangeResult;
+import global.cloudcoin.ccbank.Transfer.TransferResult;
 import global.cloudcoin.ccbank.Unpacker.UnpackerResult;
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -122,6 +123,8 @@ public class CloudBank {
             cr = showCoins(params, lw, rw, cb);
         } else if (service.equals("send_to_skywallet")) {
             cr = sendToSkyWallet(params, lw, rw, cb);
+        } else if (service.equals("transfer_between_skywallets")) {
+            cr = transferBetweenSkyWallets(params, lw, rw, cb);
         } else if (service.equals("receive_from_skywallet")) {
             cr = receiveFromSkyWallet(params, lw, rw, cb);
         } else if (service.equals("echo")) {
@@ -512,6 +515,111 @@ public class CloudBank {
         return cr;
         
     }
+    
+    
+    public CloudbankResult transferBetweenSkyWallets(Map params, Wallet lw, Wallet rw, CallbackInterface cb) {
+        String rn = (String) params.get("rn");
+        if (rn == null) {
+            rn = AppCore.generateHex();
+        }
+        
+        rn = rn.toUpperCase();                
+        final String rfile = AppCore.getUserDir(Config.DIR_RECEIPTS, lw.getName()) + File.separator + rn + ".txt";
+        File f = new File(rfile);
+        if (f.exists()) {
+            logger.debug(ltag, "Recipt " + rfile + " already exists");
+            return getCrError("Receipt already exists");
+        }
+        
+        String memo = Config.DEFAULT_TAG;
+        String ptag = (String) params.get("base64");
+        if (ptag != null) {
+            //byte[] decodedBytes = Base64.getDecoder().decode(ptag);
+            //memo = new String(decodedBytes);
+            memo = ptag;
+        }
+        
+        if (!Validator.memo(memo)) {
+            logger.error(ltag, "Invalid tag");
+            return getCrError("Invalid memo");
+        }
+        
+        String amountStr = (String) params.get("amount");
+        if (amountStr == null) 
+            return getCrError("Amount must be set");
+      
+        int amount;
+        try {
+            amount = Integer.parseInt(amountStr);
+            if (amount <= 0)
+                throw new NumberFormatException();
+        } catch (NumberFormatException e) {
+            return getCrError("Invalid amount");
+        }
+        
+        if (lw.getTotal() < amount) {
+            return getCrError("Insufficient funds");
+        }
+        
+        String to = (String) params.get("to");
+        if (to == null) 
+            return getCrError("To is a mandatory parameter");
+        
+        if (!Validator.domain(to))
+            return getCrError("Invalid To SkyWallet");
+        
+        DNSSn d = new DNSSn(to, null, logger);
+        int sn = d.getSN();
+        if (sn < 0) 
+            return getCrError("Failed to resolve Wallet");
+        
+        
+        logger.debug(ltag, "Requested To Transfer: " + amount + " to " + to + " sn:" + sn);
+        
+        CloudbankResult cr = getCrSuccess(rn);
+        cr.status = CloudbankResult.STATUS_OK_CUSTOM;
+        cr.ownStatus = "sending";
+        cr.message = "Sending will begin automatically. Please check your reciept.";
+        cr.receipt = rn;
+        cr.keepWallet = true;
+                    
+        setReceipt(lw, amount, "sending", "Sending CloudCoins", rn);
+
+        final String frn = rn;
+        final String fto = to;
+
+        sm.setActiveWalletObj(rw);
+
+        sm.startTransferService(rw.getIDCoin().sn, sn, rw.getSNs(), amount, memo, new CallbackInterface() {
+            public void callback(Object o) {
+                TransferResult tr = (TransferResult) o;
+                
+                logger.debug(ltag, "Sender (Depostit) finished: " + tr.status);
+                if (tr.status == TransferResult.STATUS_PROCESSING) {
+                    return;
+                }
+
+                if (tr.status == TransferResult.STATUS_CANCELLED || tr.status == TransferResult.STATUS_ERROR) {
+                    logger.debug(ltag, "Failed to transfer coins");
+                    setErrorReceipt(lw, amount, "Sender Failed or Cancelled", frn);
+                    return;
+                }
+      
+                
+            
+                if (tr.status == ExporterResult.STATUS_FINISHED) {
+                    logger.debug(ltag, "We are finally done");
+                
+                    int total = tr.totalCoins;
+                    setReceiptGeneral(lw, total, "sent", "Coins sent successfully to " + fto, 0, 0, 0, frn);
+                }
+            }
+        }); 
+        
+        return cr;
+        
+    }
+    
     
     public CloudbankResult sendToSkyWallet(Map params, Wallet lw, Wallet rw, CallbackInterface cb) {
         String rn = (String) params.get("rn");
