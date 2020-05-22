@@ -390,10 +390,10 @@ public class ServantManager {
      
     
     public void startReceiverService(int sn, int sns[], 
-            String dstFolder, int amount, String memo, CallbackInterface cb) {
+            String dstFolder, int amount, String memo, String rn, CallbackInterface cb) {
 	Receiver r = (Receiver) sr.getServant("Receiver");
 	//r.launch(, new int[]{1,1}, new int[] {7050330, 7050331}, memo, cb);
-        r.launch(sn, sns, dstFolder, amount, false, cb);
+        r.launch(sn, sns, dstFolder, amount, false, rn, cb);
     }
 
     public void startSenderServiceForChange(int sn, int[] values, String memo, CallbackInterface cb) {
@@ -487,7 +487,7 @@ public class ServantManager {
                 sn = srcWalletObj.getIDCoin().sn;
                 int[] sns = srcWalletObj.getSNs();
                 logger.debug(ltag, "Got SN " + sn);
-                startReceiverService(sn, sns, dstWalletObj.getName(), amount, memo, rcb);
+                startReceiverService(sn, sns, dstWalletObj.getName(), amount, memo, null, rcb);
                 return true;
             }
         }

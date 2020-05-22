@@ -27,7 +27,7 @@ public class Receiver extends Servant {
     }
 
     //public void launch(String user, int tosn, int[] nns, int[] sns, String envelope, CallbackInterface icb) {
-    public void launch(int fromsn, int[] sns, String dstFolder, int amount, boolean needReceipt, CallbackInterface icb) {
+    public void launch(int fromsn, int[] sns, String dstFolder, int amount, boolean needReceipt, String rn, CallbackInterface icb) {
         this.cb = icb;
 
         final int ffromsn = fromsn;
@@ -48,7 +48,11 @@ public class Receiver extends Servant {
         globalResult = new ReceiverResult();
         
         csb = new StringBuilder();
+        
         receiptId = AppCore.generateHex();
+        if (rn != null)
+            receiptId = rn;
+        
         globalResult.receiptId = receiptId;
 
         ff = new ArrayList<String>();
@@ -462,8 +466,6 @@ public class Receiver extends Servant {
             dir = AppCore.getDownloadsDir();
         
         String file;
-        
-        int passed, failed;
         for (i = 0; i < sccs.length; i++) {
             if (sccs[i] == null) {
                 logger.error(ltag, "Skipping as counterfeit coin: " + ccs.get(i));

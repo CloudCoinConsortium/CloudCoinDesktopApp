@@ -8,6 +8,7 @@ import global.cloudcoin.ccbank.Exporter.ExporterResult;
 import global.cloudcoin.ccbank.FrackFixer.FrackFixerResult;
 import global.cloudcoin.ccbank.Grader.GraderResult;
 import global.cloudcoin.ccbank.LossFixer.LossFixerResult;
+import global.cloudcoin.ccbank.Receiver.ReceiverResult;
 import global.cloudcoin.ccbank.Sender.SenderResult;
 import global.cloudcoin.ccbank.ServantManager.ServantManager;
 import global.cloudcoin.ccbank.ServantManager.ServantManager.makeChangeResult;
@@ -121,6 +122,8 @@ public class CloudBank {
             cr = showCoins(params, lw, rw, cb);
         } else if (service.equals("send_to_skywallet")) {
             cr = sendToSkyWallet(params, lw, rw, cb);
+        } else if (service.equals("receive_from_skywallet")) {
+            cr = receiveFromSkyWallet(params, lw, rw, cb);
         } else if (service.equals("echo")) {
             cr = echo();
         } else {
@@ -384,6 +387,131 @@ public class CloudBank {
         return getCrErrorKeepWallet("Receipt not found");
     }
     
+    public CloudbankResult receiveFromSkyWallet(Map params, Wallet lw, Wallet rw, CallbackInterface cb) {
+        String rn = (String) params.get("rn");
+        if (rn == null) {
+            rn = AppCore.generateHex();
+        }
+        
+        rn = rn.toUpperCase();                
+        final String rfile = AppCore.getUserDir(Config.DIR_RECEIPTS, lw.getName()) + File.separator + rn + ".txt";
+        File f = new File(rfile);
+        if (f.exists()) {
+            logger.debug(ltag, "Recipt " + rfile + " already exists");
+            return getCrError("Receipt already exists");
+        }
+        
+        String memo = Config.DEFAULT_TAG;
+        String ptag = (String) params.get("base64");
+        if (ptag != null) {
+            //byte[] decodedBytes = Base64.getDecoder().decode(ptag);
+            //memo = new String(decodedBytes);
+            memo = ptag;
+        }
+        
+        if (!Validator.memo(memo)) {
+            logger.error(ltag, "Invalid tag");
+            return getCrError("Invalid memo");
+        }
+
+        if (rw.getTotal() == 0) {
+            return getCrError("Remote wallet is empty");
+        }
+
+        
+        logger.debug(ltag, "Requested To Receive: " + rw.getName());
+        
+        CloudbankResult cr = getCrSuccess(rn);
+        cr.status = CloudbankResult.STATUS_OK_CUSTOM;
+        cr.ownStatus = "receiving";
+        cr.message = "Receiving will begin automatically. Please check your reciept.";
+        cr.receipt = rn;
+        cr.keepWallet = true;
+                    
+        setReceipt(lw, rw.getTotal(), "receiving", "Receiving CloudCoins", rn);
+
+
+        sm.setActiveWalletObj(lw);
+        final int total = rw.getTotal();
+        final String frn = rn;
+        final String fmemo = memo;
+        sm.startReceiverService(rw.getIDCoin().sn, rw.getSNs(), lw.getName(), total, memo, rn, new CallbackInterface() {
+            public void callback(Object result) {
+                final ReceiverResult rr = (ReceiverResult) result;
+
+                if (rr.status == ReceiverResult.STATUS_PROCESSING)
+                    return;
+            
+                logger.debug(ltag, "Receiver finished: " + rr.status);
+                if (rr.status == ReceiverResult.STATUS_ERROR || rr.status == ReceiverResult.STATUS_CANCELLED) {
+                    setErrorReceipt(lw, total, "Receiver Failed", frn);
+                    return;
+                }
+                
+                logger.debug(ltag, "Starting Grader");
+                sm.startGraderService(new CallbackInterface() {
+                    public void callback(Object o) {
+                        final GraderResult gr = (GraderResult) o;
+                        logger.debug(ltag, "Grader finished");
+                        
+                        int statToBankValue = gr.totalAuthenticValue + gr.totalFrackedValue;
+                        int statFailedValue = gr.totalCounterfeitValue;
+                        String receiptId = gr.receiptId;
+   
+                        if (statToBankValue != 0) {
+                            lw.appendTransaction(fmemo, statToBankValue, receiptId);
+                        } else {
+                            String memo = "";
+                            if (statFailedValue > 0) {
+                                memo = AppCore.formatNumber(statFailedValue) + " Counterfeit";
+                            } else {
+                                memo = "Failed to Receiver";
+                            }
+                            
+                            lw.appendTransaction(memo, 0, "COUNTERFEIT");
+                            setErrorReceipt(lw, total, "All Coins are counterfeit", frn);
+                            return;
+                        }
+                        
+                        logger.debug(ltag, "Grader finished 2");
+                        rmReceipt(lw, frn);
+                        
+                        sm.startFrackFixerService(new CallbackInterface() {
+                            public void callback(Object o) {
+                                FrackFixerResult fr = (FrackFixerResult) o;
+                                logger.debug(ltag, "Frackfixer finished: " + fr.status);
+                                
+                                if (fr.status == FrackFixerResult.STATUS_ERROR) {
+                                    logger.debug(ltag, "Failed to fix");
+                                }
+                                
+                                sm.startLossFixerService(new CallbackInterface() {
+                                    public void callback(Object o) {
+                                        LossFixerResult lr = (LossFixerResult) o;
+                                        logger.debug(ltag, "Lossfixer finished: " + lr.status);
+                                        
+                                        if (lr.recovered > 0) {
+                                            lw.appendTransaction("LossFixer Recovered", lr.recoveredValue, lr.receiptId);
+                                        }
+                                        
+                                        if (lw.isEncrypted()) {
+                                            logger.debug(ltag, "Encrypting again");
+                                            sm.startVaulterService(null, lw.getPassword());
+                                        }
+                                    }
+                                });
+                                
+                            }
+                        }, false, lw.getEmail());          
+                    }
+                }, null, null, frn);
+             
+            }
+	});
+        
+        return cr;
+        
+    }
     
     public CloudbankResult sendToSkyWallet(Map params, Wallet lw, Wallet rw, CallbackInterface cb) {
         String rn = (String) params.get("rn");
@@ -651,7 +779,7 @@ public class CloudBank {
                 sm.startGraderService(new CallbackInterface() {
                     public void callback(Object o) {
                         final GraderResult gr = (GraderResult) o;
-                        logger.debug(ltag, "Grader finished " + ar.status);
+                        logger.debug(ltag, "Grader finished");
                         
                         int statToBankValue = gr.totalAuthenticValue + gr.totalFrackedValue;
                         int statFailedValue = gr.totalCounterfeitValue;
@@ -795,7 +923,7 @@ public class CloudBank {
                 int a = sr.totalAuthentic;
                 int f = sr.totalFracked;
                 int c = sr.totalCounterfeit;
-                setReceiptGeneral(wallet, total, "sent", "Coins set successfully to " + to, a, f, c, rn);
+                setReceiptGeneral(wallet, total, "sent", "Coins sent successfully to " + to, a, f, c, rn);
                 
               
                 wallet.appendTransaction(memo, sr.amount * -1, sr.receiptId);

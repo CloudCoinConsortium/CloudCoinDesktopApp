@@ -157,12 +157,12 @@ public class AdvancedClient  {
         
         /*
         CloudCoin cc = new CloudCoin(1, 10);
-        cc.setPownString("ppppnppppppfppppfefpnpppp");
+        cc.setPownString("ppfppfpppppfppppfpfpppppp");
         //cc.setPownString("pppppppppppfppppfefpnpppp");
 
         
         System.out.println("cc="+cc.getPownString() + " cc=" +cc.isSentFixable() + " x="+cc.isSentFixableColumns(false) + " y=" + cc.isSentFixableRows(false));
-        System.out.println("lost=" + cc.canbeRecoveredFromLost());
+        System.out.println("canberecovered=" + cc.canbeRecoveredFromLost());
         System.exit(1);
         */
         
@@ -2401,7 +2401,7 @@ public class AdvancedClient  {
                 
                 wl.debug(ltag, "Start receiver from " + ps.srcWallet.getIDCoin().sn);
                 sm.startReceiverService(ps.srcWallet.getIDCoin().sn, ps.srcWallet.getSNs(), 
-                    "SkyWithdraw", ps.typedAmount, ps.typedMemo, new ReceiverCb());
+                    "SkyWithdraw", ps.typedAmount, ps.typedMemo, null, new ReceiverCb());
 
             }
         });
