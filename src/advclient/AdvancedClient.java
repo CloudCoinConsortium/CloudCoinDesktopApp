@@ -274,7 +274,26 @@ public class AdvancedClient  {
             cloudbank.init();
         }
         
-        httpServer = new MyHttpServer(Config.CLOUDBANK_PORT, Config.CLOUDBANK_PASSWORD, cloudbank, wl);
+        
+        String myIP = null;
+        DetectionAgent daFake = new DetectionAgent(RAIDA.TOTAL_RAIDA_COUNT * 10000, wl);
+        daFake.setExactFullUrl(Config.GETMYIP_URL);
+        String result = daFake.doRequest("", null);     
+        if (result == null) {
+            wl.debug(ltag, "No response from myIPApi");
+        } else {
+            try {
+                JSONObject o = new JSONObject(result);
+                myIP = o.getString("ip");
+            } catch (JSONException ex) {
+                wl.debug(ltag, "Invlid response from myIPApi: " + result);
+            }
+        }
+        
+        wl.debug(ltag, "Got my Ip " + myIP);
+        System.out.println("myip="+myIP);
+
+        httpServer = new MyHttpServer(myIP, Config.CLOUDBANK_PORT, Config.CLOUDBANK_PASSWORD, cloudbank, wl);
         if (!httpServer.startServer()) {
             wl.error(ltag, "HTTP server failed to start. Will continue anyway");
         }
@@ -7300,10 +7319,6 @@ public class AdvancedClient  {
     }
     
     public void showListSerialsDoing() {
-        
-        JLabel fname;
-        int y = 0;
-        
         JPanel subInnerCore = getPanel("Doing List Serials...");                
         GridBagLayout gridbag = new GridBagLayout();
         subInnerCore.setLayout(gridbag);
@@ -7377,10 +7392,6 @@ public class AdvancedClient  {
     }
     
     public void showListSerialsDone() {
-        
-        JLabel fname;
-        int y = 0;
-        
         JPanel subInnerCore = getPanel("List Serials Done");                
         GridBagLayout gridbag = new GridBagLayout();
         subInnerCore.setLayout(gridbag);

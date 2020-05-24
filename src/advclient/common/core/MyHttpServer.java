@@ -20,8 +20,6 @@ import java.net.UnknownHostException;
 import org.json.JSONException;
 
 import com.sun.net.httpserver.HttpsServer;
-import global.cloudcoin.ccbank.ServantManager.ServantManager;
-import java.awt.RenderingHints.Key;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -66,13 +64,16 @@ public class MyHttpServer {
     HttpsServer httpsServer;
     CloudBank cloudbank;
     
-    public MyHttpServer(int port, String password, CloudBank cloudbank, GLogger logger) {
+    String myIP;
+    
+    public MyHttpServer(String myIP, int port, String password, CloudBank cloudbank, GLogger logger) {
         this.logger = logger;
         this.port = port;
         this.password = password;
         this.certFile = AppCore.getRootPath() + File.separator + "mycert.crt";
         this.keyFile = AppCore.getRootPath() + File.separator + "mykey.jks";
         this.cloudbank = cloudbank;
+        this.myIP = myIP;
         //ks.store( new FileOutputStream( "NewClientKeyStore" ), "MyPass".toCharArray() );
     }
     
@@ -94,8 +95,12 @@ public class MyHttpServer {
             CertAndKeyGen gen = new CertAndKeyGen("RSA","SHA1WithRSA");
             gen.generate(1024);
 
+            String cn = "ROOT";
+            if (myIP != null)
+                cn = myIP;
+            
             PrivateKey key = gen.getPrivateKey();
-            X509Certificate cert = gen.getSelfCertificate(new X500Name("CN=ROOT"), (long)365*24*3600);
+            X509Certificate cert = gen.getSelfCertificate(new X500Name("CN=" + cn), (long)5*365*24*3600);
             
             X509Certificate[] chain = new X509Certificate[1];
             chain[0] = cert;
