@@ -3277,7 +3277,7 @@ public class AdvancedClient  {
         GridBagLayout gridbag = new GridBagLayout();
         subInnerCore.setLayout(gridbag);
         
-        final optRv rvLocal = setOptionsForWalletsCommon(false, false, false, null);
+        final optRv rvLocal = setOptionsForWalletsAllLocal();
         if (rvLocal.idxs.length == 0) {
             fname = AppUI.wrapDiv("You don't have Local Wallets");
             AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
@@ -6692,6 +6692,37 @@ public class AdvancedClient  {
 
         return rv;
     }
+    
+    public optRv setOptionsForWalletsAllLocal() {
+        optRv rv = new optRv();
+
+        int len = 0;
+        for (int i = 0; i < wallets.length; i++) {
+            if (wallets[i].isSkyWallet())
+                continue;
+            
+            len++;
+        }
+
+        rv.options = new String[len];
+        rv.idxs = new int[len];
+
+        if (len == 0)
+            return rv;
+  
+        for (int i = 0, j = 0; i < wallets.length; i++) {
+            if (wallets[i].isSkyWallet())
+                continue;
+
+            rv.options[j] = wallets[i].getName() + " - " + AppCore.formatNumber(wallets[i].getTotal()) + " CC";
+            rv.idxs[j] = i;
+            j++;
+        }
+
+        return rv;
+    }
+    
+    
 
     public optRv setOptionsForWalletsSky() {
         optRv rv = new optRv();
