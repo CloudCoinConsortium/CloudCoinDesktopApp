@@ -57,7 +57,7 @@ public class CloudBank {
             return;
         }
         
-        if (!service.equals("echo")) {
+        if (!service.equals("print_welcome") && !service.equals("echo")) {
             
             String account = (String) params.get("account");
             if (account == null) {
@@ -127,6 +127,8 @@ public class CloudBank {
             cr = transferBetweenSkyWallets(params, lw, rw, cb);
         } else if (service.equals("receive_from_skywallet")) {
             cr = receiveFromSkyWallet(params, lw, rw, cb);
+        } else if (service.equals("print_welcome")) {
+            cr = printWelcome();
         } else if (service.equals("echo")) {
             cr = echo();
         } else {
@@ -170,14 +172,70 @@ public class CloudBank {
         return cr;
     }
 
-    public CloudbankResult echo() {
+    public CloudbankResult printWelcome() {
         CloudbankResult cr = new CloudbankResult();
         cr.status = CloudbankResult.STATUS_OK_CUSTOM;
-        cr.message = "Server is ready";
-        cr.ownStatus = "ready";
+        cr.message = "CloudCoin Bank. Used to Authenticate, "
+                + "Store and Payout CloudCoins. This Software is provided as is with all faults, "
+                + "defects and errors, and without warranty of any kind. "
+                + "Free from the CloudCoin Consortium";
+        cr.ownStatus = "welcome";
         cr.keepWallet = true;
         return cr;
     }
+    
+    public CloudbankResult echo() {
+        CloudbankResult cr = new CloudbankResult();
+        cr.status = CloudbankResult.STATUS_OK_JSON;
+        cr.message = "";
+        cr.keepWallet = true;
+        
+        
+        sm.startEchoService(new CallbackInterface() {
+            public void callback(Object o) {
+                String message = "The RAIDA is ready for counterfeit detection.";
+                String status = "ready";
+                int readyCount = 0;
+                int notReadyCount = 0;
+                int[] statuses = sm.getRAIDAStatuses();
+                for (int i = 0; i < statuses.length; i++) {
+                    if (statuses[i] == -1)
+                        notReadyCount++;
+                    else
+                        readyCount++;
+                }
+                
+                String dateStr = AppCore.getDate("" + (System.currentTimeMillis() /1000));
+                StringBuilder sb = new StringBuilder();
+        
+                sb.append("{\"server\":\"");
+                sb.append(AppUI.brand.getTitle(null));
+                sb.append("\", \"status\":\"");
+                sb.append(status);        
+                sb.append("\", \"message\":\"");
+                sb.append(message);
+                sb.append("\", \"time\":\"");
+                sb.append(dateStr);
+                sb.append("\", \"version\": \"");
+                sb.append(AppUI.brand.getResultingVersion(AdvancedClient.version));
+                sb.append("\", \"readyCount\": ");
+                sb.append(readyCount);
+                sb.append(", \"readyCount\": ");
+                sb.append(notReadyCount);
+                sb.append("}");
+
+                cr.message = sb.toString();
+            }
+        });
+        
+        while (cr.message.isEmpty()) {
+            try { Thread.sleep(500); } catch (InterruptedException e) {}
+        }
+        
+        
+        return cr;
+    }
+    
 
     private boolean checkFolders(Wallet wallet) {
         if (wallet.isSkyWallet())

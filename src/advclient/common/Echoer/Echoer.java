@@ -134,7 +134,7 @@ public class Echoer extends Servant {
     }
 
     private boolean saveResults() {
-        String status, message;
+        String status;
 
         long latency;
         String intLatency;
