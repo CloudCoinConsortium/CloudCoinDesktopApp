@@ -1349,7 +1349,7 @@ public class AppCore {
                 + "\"cloudbank_password\": \"" + Config.CLOUDBANK_PASSWORD +  "\", "
                 + "\"ddnssn_server\": \"" + Config.DDNSSN_SERVER + "\", "
                 + "\"custom_raida_domain\": \"" + Config.CUSTOM_RAIDA_DOMAIN + "\", "
-                + "\"use_custom_domain\": " + Config.USE_CUSTOM_DOMAIN + ","
+                + "\"use_custom_domain\": " + Config.USE_CUSTOM_DOMAIN + ""
                 + "}";
         
         File f = new File(globalConfigFilename);
