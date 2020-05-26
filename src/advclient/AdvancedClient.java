@@ -68,7 +68,7 @@ import org.json.JSONObject;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "3.0.7";
+    public static String version = "3.0.8";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -291,9 +291,8 @@ public class AdvancedClient  {
         }
         
         wl.debug(ltag, "Got my Ip " + myIP);
-        System.out.println("myip="+myIP);
 
-        httpServer = new MyHttpServer(myIP, Config.CLOUDBANK_PORT, Config.CLOUDBANK_PASSWORD, cloudbank, wl);
+        httpServer = new MyHttpServer(myIP, Config.CLOUDBANK_PORT, Config.KEYSTONE_PASSWORD, cloudbank, wl);
         if (!httpServer.startServer()) {
             wl.error(ltag, "HTTP server failed to start. Will continue anyway");
         }

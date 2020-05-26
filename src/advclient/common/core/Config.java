@@ -234,4 +234,6 @@ public class Config {
     public static String UPDATE_URL = "https://cloudcoinconsortium.com/use.html";
     
     public static String GETMYIP_URL = "https://api.ipify.org?format=json";
+    
+    public static String KEYSTONE_PASSWORD = "keystonepassword";
 }

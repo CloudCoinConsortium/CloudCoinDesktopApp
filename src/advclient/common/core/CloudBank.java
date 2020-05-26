@@ -72,7 +72,7 @@ public class CloudBank {
                 return;
             }
             
-            if (!service.equals("deposit_one_stack")) {
+            if (!service.equals("deposit_one_stack") && !service.equals("get_receipt")) {
                 String pk = (String) params.get("pk");
                 if (pk == null) {
                     cr = getCrError("Pk is required");
