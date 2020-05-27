@@ -29,7 +29,9 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.net.InetSocketAddress;
+import java.net.URLDecoder;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.KeyStore;
@@ -261,10 +263,18 @@ class MyHandler implements HttpHandler {
                     return;
                 }
                    
-                vars.put(parts[0], parts[1]);
+                String value;
+                try {
+                    value = URLDecoder.decode(parts[1], StandardCharsets.UTF_8.name());                   
+                } catch (Exception e) {
+                    logger.debug(ltag, "Failed to decode " + parts[0]);
+                    sendError(t, "Failed to decode POST");
+                    return;
+                }
+                vars.put(parts[0], value);
             }
         }
-            
+
         tmpWallet = cloudbank.sm.getActiveWallet();
         cloudbank.startCloudbankService(route, vars, new CallbackInterface() {
             public void callback(Object o) {

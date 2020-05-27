@@ -76,7 +76,7 @@ public class ShowCoins extends Servant {
                 continue;
             
             String[] parts = file.getName().split("\\.");
-            if (parts.length != 5) {
+            if (parts.length != 5 && parts.length != 6) {
                 continue;
             }
             

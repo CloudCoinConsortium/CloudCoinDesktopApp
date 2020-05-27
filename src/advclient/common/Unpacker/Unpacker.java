@@ -72,17 +72,29 @@ public class Unpacker extends Servant {
             if (!AppCore.hasCoinExtension(file))
                 continue;
             
-            logger.debug(ltag, "Parsing " + file);
-
+            String[] parts = file.getName().split("\\.");
+            if (parts.length != 5 && parts.length != 6) {
+                continue;
+            }
+            
+            int sn;
+            try {
+                sn = Integer.parseInt(parts[3]);
+            } catch (NumberFormatException e) {
+                continue;
+            }
+            
+            //logger.debug(ltag, "Parsing " + file);
+            /*
             try {
                 cc = new CloudCoin(file.toString());
             } catch (JSONException e) {
                 logger.error(ltag, "Failed to parse JSON: " + e.getMessage());
                 continue;
             }
-            
+            */
             for (CloudCoin tcc : rccs) {
-                if (tcc.sn == cc.sn) {
+                if (tcc.sn == sn) {
                     logger.debug(ltag, "Duplicate sn " + tcc.sn + " in the " + folder);
                     globalResult.duplicates.add(tcc);
                 }

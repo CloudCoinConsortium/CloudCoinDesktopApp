@@ -530,7 +530,8 @@ public class CloudBank {
                             }
                             
                             lw.appendTransaction(memo, 0, "COUNTERFEIT");
-                            setErrorReceipt(lw, total, "All Coins are counterfeit", frn);
+                            //setErrorReceipt(lw, total, "All Coins are counterfeit", frn);
+                            setReceiptGeneral(lw, 0, "error", "All Coins are counterfeit", 0, 0, total, frn);
                             return;
                         }
                         
@@ -967,7 +968,8 @@ public class CloudBank {
                             }
                             
                             wallet.appendTransaction(memo, 0, "COUNTERFEIT");
-                            setErrorReceipt(wallet, total, "All Coins are counterfeit", rn);
+                            //setErrorReceipt(wallet, total, "All Coins are counterfeit", rn);
+                            setReceiptGeneral(wallet, 0, "error", "All Coins are counterfeit", 0, 0, total, rn);
                             return;
                         }
                         
