@@ -75,6 +75,8 @@ public class MyHttpServer {
         this.certFile = AppCore.getRootPath() + File.separator + "mycert.crt";
         this.keyFile = AppCore.getRootPath() + File.separator + "mykey.jks";
         this.cloudbank = cloudbank;
+        
+        //myIP = "10.1.1.249";
         this.myIP = myIP;
         //ks.store( new FileOutputStream( "NewClientKeyStore" ), "MyPass".toCharArray() );
     }
@@ -317,7 +319,6 @@ class MyHandler implements HttpHandler {
         }
         
         setWalletIfNessecary(keepWallet);
-        
         completed = false;
         if (isError)
             sendError(t, message);
@@ -328,6 +329,7 @@ class MyHandler implements HttpHandler {
         } else if (rstatus == CloudbankResult.STATUS_OK_JSON) {
             sendJSONResponse(t, 200, message); 
         }
+
     }
     
     private void sendError(HttpExchange httpExchange, String message) {
@@ -339,10 +341,11 @@ class MyHandler implements HttpHandler {
     }
     
     private void sendResponse(HttpExchange httpExchange, int code, String status, String receipt, String message) {
+        httpExchange.getResponseHeaders.add("Access-Control-Allow-Origin", "*");
         OutputStream outputStream = httpExchange.getResponseBody();
         String dateStr = AppCore.getDate("" + (System.currentTimeMillis() /1000));
+
         StringBuilder sb = new StringBuilder();
-        
         sb.append("{\"server\":\"");
         sb.append(AppUI.brand.getTitle(null));
         sb.append("\", \"status\":\"");
@@ -363,6 +366,7 @@ class MyHandler implements HttpHandler {
         String response = sb.toString();
         
         try {
+            
             httpExchange.sendResponseHeaders(code, response.length());
             outputStream.write(response.getBytes());
             outputStream.flush();
@@ -373,8 +377,9 @@ class MyHandler implements HttpHandler {
         }
     }
     
-    private void sendJSONResponse(HttpExchange httpExchange, int code, String message) {
-        OutputStream outputStream = httpExchange.getResponseBody();        
+    private void sendJSONResponse(HttpExchange httpExchange, int code, String message) { 
+        httpExchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+        OutputStream outputStream = httpExchange.getResponseBody();             
         try {
             httpExchange.sendResponseHeaders(code, message.length());
             outputStream.write(message.getBytes());

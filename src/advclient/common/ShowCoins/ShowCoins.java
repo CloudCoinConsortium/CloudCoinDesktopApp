@@ -72,11 +72,11 @@ public class ShowCoins extends Servant {
             if (file.isDirectory())
                 continue;
 
-            if (!AppCore.hasCoinExtension(file))
-                continue;
+            //if (!AppCore.hasCoinExtension(file))
+            //    continue;
             
             String[] parts = file.getName().split("\\.");
-            if (parts.length != 5 && parts.length != 6) {
+            if (parts.length < 4) {
                 continue;
             }
             

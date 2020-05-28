@@ -232,8 +232,7 @@ public class Wallet implements Comparable<Wallet> {
                 rest = 0;
             }
         }
-         
-        int expectedRest = getTotal() + amount;
+
         String result = "";
         if (rest != getTotal() && !correctionAdded) {
             int adjusted = getTotal() - rest;
