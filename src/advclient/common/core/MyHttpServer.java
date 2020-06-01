@@ -337,6 +337,8 @@ class MyHandler implements HttpHandler {
             sendResponse(t, 200, ownStatus, receipt, message);
         } else if (rstatus == CloudbankResult.STATUS_OK_JSON) {
             sendJSONResponse(t, 200, message); 
+        } else {
+            sendError(t, "Invalid rstatus: " + rstatus);
         }
 
     }
