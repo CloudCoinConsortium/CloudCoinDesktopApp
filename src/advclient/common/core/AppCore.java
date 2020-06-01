@@ -908,7 +908,7 @@ public class AppCore {
     }
     
     public static String getReceiptHtml(String hash, String user) {
-        if (hash.equals("dummy"))
+        if (hash.equals("dummy") || hash.equals("COUNTERFEIT"))
             return null;
         
         String receiptsFile = AppCore.getUserDir(Config.DIR_RECEIPTS, user);

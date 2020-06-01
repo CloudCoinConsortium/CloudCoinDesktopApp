@@ -404,6 +404,11 @@ public class Sender extends Servant {
                     AppCore.moveToFolderNoTs(cc.originalFile, Config.DIR_LOST, user, true);
                     e++;
                 }
+            } else {
+                logger.info(ltag, "Moving to Lost: " + cc.sn);
+                addCoinToReceipt(cc, "error", Config.DIR_LOST);
+                AppCore.moveToFolderNoTs(cc.originalFile, Config.DIR_LOST, user, true);
+                e++;
             }
         }      
     }

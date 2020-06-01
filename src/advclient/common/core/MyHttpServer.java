@@ -241,8 +241,17 @@ class MyHandler implements HttpHandler {
                     sendError(t, "Invalid parameters in HTTP query");
                     return;
                 }
-                   
-                vars.put(parts[0], parts[1]);
+                
+                String value;
+                try {
+                    value = URLDecoder.decode(parts[1], StandardCharsets.UTF_8.name());                   
+                } catch (Exception e) {
+                    logger.debug(ltag, "Failed to decode " + parts[0]);
+                    sendError(t, "Failed to decode POST");
+                    return;
+                }
+
+                vars.put(parts[0], value);
             }
         }
         
@@ -341,7 +350,7 @@ class MyHandler implements HttpHandler {
     }
     
     private void sendResponse(HttpExchange httpExchange, int code, String status, String receipt, String message) {
-        httpExchange.getResponseHeaders.add("Access-Control-Allow-Origin", "*");
+        httpExchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
         OutputStream outputStream = httpExchange.getResponseBody();
         String dateStr = AppCore.getDate("" + (System.currentTimeMillis() /1000));
 

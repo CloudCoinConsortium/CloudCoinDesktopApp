@@ -68,7 +68,7 @@ import org.json.JSONObject;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "3.0.8";
+    public static String version = "3.0.9";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -3406,6 +3406,14 @@ public class AdvancedClient  {
             
         AppUI.getTwoButtonPanel(subInnerCore, "Test Connection", "Save", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+                boolean cbEnabled = cb1.isChecked();
+                
+                if (cbEnabled == false) {
+                    ps.errText = "CloudBank Server is not enabled";
+                    showScreen();
+                    return;
+                }
+                
                 int cbPort;
                 try {
                     cbPort = Integer.parseInt(serverPort.getText());
@@ -3425,6 +3433,59 @@ public class AdvancedClient  {
                 JButton jb = (JButton) e.getSource();
                 MyButton mb = (MyButton) jb.getClientProperty("ref");
                 
+                
+                                int lIdx = cboxlocal.getSelectedIndex() - 1;
+                if (lIdx < 0 || lIdx >= rvLocal.idxs.length) {                    
+                    ps.errText = "Please select Local Wallet";
+                    showScreen();
+                    return;
+                }
+                
+                int rIdx = cboxsky.getSelectedIndex() - 1;
+                if (rIdx < 0 || rIdx >= rvSky.idxs.length) {                    
+                    ps.errText = "Please select Sky Wallet";
+                    showScreen();
+                    return;
+                }
+
+                lIdx = rvLocal.idxs[lIdx];
+                rIdx = rvSky.idxs[rIdx];
+                Wallet lWallet = wallets[lIdx];
+                Wallet rWallet = wallets[rIdx];
+                String walletPassword = "";
+                
+                if (lWallet.isEncrypted()) {
+                    if (passwordSrc.getText().isEmpty()) {
+                        ps.errText = "Password is empty";
+                        showScreen();
+                        return;
+                    }
+                    
+                    String wHash = lWallet.getPasswordHash();
+                    String providedHash = AppCore.getMD5(passwordSrc.getText());
+                    if (wHash == null) {
+                        ps.errText = "Local Wallet is corrupted";
+                        showScreen();
+                        return;
+                    }
+                    
+                    if (!wHash.equals(providedHash)) {
+                        ps.errText = "Local Wallet Password is incorrect";
+                        showScreen();
+                        return;
+                    } 
+                    
+                    walletPassword = passwordSrc.getText();
+                }
+                
+                Config.CLOUDBANK_ENABLED = cbEnabled;
+                Config.CLOUDBANK_PORT = cbPort;
+                Config.CLOUDBANK_LWALLET = lWallet.getName();
+                Config.CLOUDBANK_LWALLET_PASSWORD = walletPassword;
+                Config.CLOUDBANK_RWALLET = rWallet.getName();
+                
+                
+                
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {
                         mainTitleText.setText("Checking Connection. Please wait");
@@ -3434,6 +3495,13 @@ public class AdvancedClient  {
 
                 Thread t = new Thread(new Runnable() {
                     public void run(){
+                        
+                        if (cloudbank == null) {
+                            cloudbank = new CloudBank(wl, sm);
+                            cloudbank.init();
+                            startHttpServer();
+                        }
+                        
                         DetectionAgent daFake = new DetectionAgent(RAIDA.TOTAL_RAIDA_COUNT * 10000, wl);
                         daFake.setExactFullUrl(Config.CLOUDBANK_TEST_CONNECTION_URL + "?port=" + cbPort);
                         String result = daFake.doRequest("", null);                       
@@ -3486,19 +3554,6 @@ public class AdvancedClient  {
                     showScreen();
                     return;
                 }
-                /*
-                if (cbAccount.isEmpty()) {
-                    ps.errText = "Account can't be empty";
-                    showScreen();
-                    return;
-                }
-                
-                if (cbPassword.isEmpty()) {
-                    ps.errText = "Password can't be empty";
-                    showScreen();
-                    return;
-                }
-                */
 
                 int lIdx = cboxlocal.getSelectedIndex() - 1;
                 if (lIdx < 0 || lIdx >= rvLocal.idxs.length) {                    
@@ -3878,9 +3933,6 @@ public class AdvancedClient  {
         txt += "URL: https://" + ps.myIp + ":" + Config.CLOUDBANK_PORT + "/<br>";
         txt += "Account: " + Config.CLOUDBANK_ACCOUNT + "<br>";
         txt += "Password: " + Config.CLOUDBANK_PASSWORD + "<br>";
-        
-        
-        System.out.println("s=" + Config.CLOUDBANK_ACCOUNT + " p=" + Config.CLOUDBANK_PASSWORD + " ip="+ps.myIp);
         
         fname = AppUI.wrapDiv(txt);
         AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);

@@ -465,9 +465,9 @@ public class CloudBank {
         String memo = Config.DEFAULT_TAG;
         String ptag = (String) params.get("base64");
         if (ptag != null) {
-            //byte[] decodedBytes = Base64.getDecoder().decode(ptag);
-            //memo = new String(decodedBytes);
-            memo = ptag;
+            byte[] decodedBytes = Base64.getDecoder().decode(ptag);
+            memo = new String(decodedBytes);
+            //memo = ptag;
         }
         
         if (!Validator.memo(memo)) {
@@ -593,9 +593,9 @@ public class CloudBank {
         String memo = Config.DEFAULT_TAG;
         String ptag = (String) params.get("base64");
         if (ptag != null) {
-            //byte[] decodedBytes = Base64.getDecoder().decode(ptag);
-            //memo = new String(decodedBytes);
-            memo = ptag;
+            byte[] decodedBytes = Base64.getDecoder().decode(ptag);
+            memo = new String(decodedBytes);
+            //memo = ptag;
         }
         
         if (!Validator.memo(memo)) {
@@ -616,7 +616,7 @@ public class CloudBank {
             return getCrError("Invalid amount");
         }
         
-        if (lw.getTotal() < amount) {
+        if (rw.getTotal() < amount) {
             return getCrError("Insufficient funds");
         }
         
@@ -642,7 +642,7 @@ public class CloudBank {
         cr.receipt = rn;
         cr.keepWallet = true;
                     
-        setReceipt(lw, amount, "sending", "Sending CloudCoins", rn);
+        setReceipt(lw, amount, "transferring", "Sending CloudCoins", rn);
 
         final String frn = rn;
         final String fto = to;
@@ -660,7 +660,7 @@ public class CloudBank {
 
                 if (tr.status == TransferResult.STATUS_CANCELLED || tr.status == TransferResult.STATUS_ERROR) {
                     logger.debug(ltag, "Failed to transfer coins");
-                    setErrorReceipt(lw, amount, "Sender Failed or Cancelled", frn);
+                    setErrorReceipt(lw, amount, "Transfer Failed or Cancelled", frn);
                     return;
                 }
       
@@ -697,9 +697,9 @@ public class CloudBank {
         String memo = Config.DEFAULT_TAG;
         String ptag = (String) params.get("base64");
         if (ptag != null) {
-            //byte[] decodedBytes = Base64.getDecoder().decode(ptag);
-            //memo = new String(decodedBytes);
-            memo = ptag;
+            byte[] decodedBytes = Base64.getDecoder().decode(ptag);
+            memo = new String(decodedBytes);
+            //memo = ptag;
         }
         
         if (!Validator.memo(memo)) {
@@ -1036,7 +1036,7 @@ public class CloudBank {
         public void callback(Object o) {
             SenderResult sr = (SenderResult) o;
 
-            logger.debug(ltag, "Sender (Depostit) finished: " + sr.status);
+            logger.debug(ltag, "Sender (Deposit) finished: " + sr.status);
             if (sr.status == SenderResult.STATUS_PROCESSING) {
                 return;
             }
@@ -1052,6 +1052,17 @@ public class CloudBank {
                     logger.debug(ltag, "From change true, giving up");
                     setErrorReceipt(wallet, amount, "Failed to make change", rn);
                     cb.callback(getCrError("Not enough coins after change"));
+                    if (wallet.isEncrypted())
+                        sm.startVaulterService(null, wallet.getPassword());
+                    return;
+                }
+                
+                if (sr.errText != Config.PICK_ERROR_MSG) {
+                    logger.debug(ltag, "Sender error " + sr.errText);
+                    setErrorReceipt(wallet, amount, "Sender Error " + sr.errText, rn);
+                    cb.callback(getCrError("Sender error"));
+                    if (wallet.isEncrypted())
+                        sm.startVaulterService(null, wallet.getPassword());
                     return;
                 }
                 
@@ -1068,8 +1079,7 @@ public class CloudBank {
                         
                         if (mcr.status == 1) { 
                         } else if (mcr.status == 2) {
-                            logger.debug(ltag, "Change done successfully. Retrying");  
-                            
+                            logger.debug(ltag, "Change done successfully. Retrying");                          
                             sm.startSenderServiceBank(wallet, sn, amount, memo, to, rn, new SenderCb(wallet, amount, sn, memo, rn, to, true, cb)); 
                         }
                 
@@ -1079,7 +1089,7 @@ public class CloudBank {
                     
                 });
                 
-                cb.callback(getCrError("Failed to send Coins"));
+                //cb.callback(getCrError("Failed to send Coins"));
                 return;
                 
             }  
