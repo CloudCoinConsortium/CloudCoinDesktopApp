@@ -324,7 +324,7 @@ public class CloudBank {
         rsb.append(total);
         rsb.append(", \"prev_imported\": ");
         rsb.append(0);
-        rsb.append(", \"receipt_detail\": [");
+        rsb.append(", \"receipt\": [");
         //rsb.append(csb);
         rsb.append("]}");
 
@@ -421,6 +421,9 @@ public class CloudBank {
                 logger.error(ltag, "Failed to load file " + rfile);
                 return getCrErrorKeepWallet("Internal error");
             }
+            
+            json = json.replace("receipt_detail", "receipt");
+            
             CloudbankResult cr = new CloudbankResult();
             cr.status = CloudbankResult.STATUS_OK_JSON;
             cr.message = json;
@@ -437,6 +440,9 @@ public class CloudBank {
                 logger.error(ltag, "Failed to load file " + lfile);
                 return getCrErrorKeepWallet("Internal error");
             }
+            
+            json = json.replace("receipt_detail", "receipt");
+            
             CloudbankResult cr = new CloudbankResult();
             cr.status = CloudbankResult.STATUS_OK_JSON;
             cr.message = json;
