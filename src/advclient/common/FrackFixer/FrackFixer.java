@@ -124,6 +124,7 @@ public class FrackFixer extends Servant {
         nfr.totalRAIDAProcessed = fr.totalRAIDAProcessed;
         nfr.fixingRAIDA = fr.fixingRAIDA;
         nfr.round = fr.round;
+        nfr.pownStrings = fr.pownStrings;
     }
 
     
@@ -131,6 +132,8 @@ public class FrackFixer extends Servant {
         int cnt = 0;
         
         logger.info(ltag, "Maybe moving " + ccs.size() + " coins");
+        fr.pownStrings = new String[ccs.size()];
+        int j = 0;
         for (CloudCoin cc : ccs) {
             logger.debug(ltag, "Moving coin " + cc.sn);
             cnt = 0;
@@ -139,6 +142,7 @@ public class FrackFixer extends Servant {
                     cnt++;
             }
 
+            fr.pownStrings[j] = cc.getPownString();
             if (cnt == RAIDA.TOTAL_RAIDA_COUNT) {
                 logger.info(ltag, "Coin " + cc.sn + " is fixed. Moving to bank");
                 AppCore.moveToBank(cc.originalFile, user);
@@ -147,6 +151,8 @@ public class FrackFixer extends Servant {
             } else {
                 logger.debug(ltag, "Not ready to move. Failed to fix. Only passed:" + cnt);
             }
+            
+            j++;
         }   
     }
     
@@ -183,7 +189,7 @@ public class FrackFixer extends Servant {
             if (cb != null)
                 cb.callback(fr);
         }
-               
+             
         for (File file : listOfFiles) {
             if (file.isDirectory())
                 continue;
@@ -218,7 +224,7 @@ public class FrackFixer extends Servant {
         logger.debug(ltag, "maxcoins " + maxCoins);
 
         ArrayList<CloudCoin> ccactive = new ArrayList<CloudCoin>();
-        int corner, i;
+        int i;
 
         logger.debug(ltag, "Round1");
         

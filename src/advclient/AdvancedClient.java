@@ -2838,7 +2838,6 @@ public class AdvancedClient  {
              
         int y = 0;
         JLabel fname, value;
-        MyTextField walletName = null;
 
         subInnerCore = getPanel("Fix Complete");                
         GridBagLayout gridbag = new GridBagLayout();
@@ -2851,6 +2850,19 @@ public class AdvancedClient  {
         String txt;
         if (!totalFixed.equals("" + total)) {
             txt = "Not all CloudCoins from <b>" + ps.srcWallet.getName() + "</b> had been fixed. Try it again later";
+            if (ps.fixPownstrings != null) {
+                int l = ps.fixPownstrings.length;
+                if (l > 3)
+                    l = 3;
+                
+                txt += "<br>Pownstrings:<br>";
+                for (int i = 0; i < l; i++)
+                    txt += ps.fixPownstrings[i] + "<br>";
+                
+                if (l > 3)
+                    txt += "...";
+                
+            }
         } else {
             txt = "Your CloudCoins from <b>" + ps.srcWallet.getName() + "</b> have been fixed";
         }
@@ -6606,19 +6618,7 @@ public class AdvancedClient  {
         GridBagLayout gridbag = new GridBagLayout();
         subInnerCore.setLayout(gridbag);
 
-        final optRv rv = setOptionsForWallets(true, false);
-        
-        /*if (rv.idxs.length == 0) {
-            fname = AppUI.wrapDiv("You have no fracked coins");
-            AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
-            y++;
-            AppUI.GBPad(subInnerCore, y, gridbag);   
-            return;
-        }
-        */
-        
-        
-        
+        final optRv rv = setOptionsForWallets(true, false);        
         fname = new JLabel("From Wallet");
         final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "Make Selection", rv.options);
         cboxfrom.addOption("Sky Wallets");
@@ -9592,6 +9592,8 @@ public class AdvancedClient  {
 		if (fr.fixed + fr.failed > 0) {
                     wl.debug(ltag, "Fracker fixed: " + fr.fixed + ", failed: " + fr.failed);
 		}
+                
+                
             }
 
             EventQueue.invokeLater(new Runnable() {         
@@ -9627,6 +9629,7 @@ public class AdvancedClient  {
                 });
                 return;
             } else if (fr.status == FrackFixerResult.STATUS_FINISHED) {
+                ps.fixPownstrings = fr.pownStrings;
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {
                         pbarText.setText("Recovering lost coins ...");

@@ -197,6 +197,8 @@ public class ProgramState {
     
     String myIp;
     
+    String[] fixPownstrings;
+    
     public ProgramState() {
         currentScreen = SCREEN_AGREEMENT;
         cwalletRecoveryRequested = cwalletPasswordRequested = false;
@@ -284,6 +286,8 @@ public class ProgramState {
         fxFailedToFix = new ArrayList<CloudCoin>();
         
         myIp = "";
+        
+        fixPownstrings = null;
     }
  
     public String toString() {
