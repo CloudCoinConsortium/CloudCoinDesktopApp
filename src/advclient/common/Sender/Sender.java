@@ -209,7 +209,6 @@ public class Sender extends Servant {
             return;
         }
 
-        String fullSentPath = AppCore.getUserDir(Config.DIR_SENT, user);
         String fullFrackedPath = AppCore.getUserDir(Config.DIR_FRACKED, user);
         String fullBankPath = AppCore.getUserDir(Config.DIR_BANK, user);
 

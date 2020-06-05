@@ -404,6 +404,11 @@ public class FrackFixer extends Servant {
         for (int i = 0; i < triadSize; i++) {
             neighIdx = triad[i];
 
+            if (cc.getDetectStatus(neighIdx) == CloudCoin.STATUS_FAIL) {
+                logger.error(ltag, "Neighbour " + neighIdx + " is counterfeit. Skipping it");
+                return false;
+            }
+            
             logger.debug(ltag, "Checking neighbour: " + neighIdx);
             if (raida.isFailed(neighIdx)) {
                 logger.error(ltag, "Neighbour " + neighIdx + " is unavailable. Skipping it");
@@ -536,9 +541,7 @@ public class FrackFixer extends Servant {
         sbs = new StringBuilder[triadSize];
         triad = trustedTriads[raidaIdx][corner];
         
-        int nn, prevnn;
-        nn = prevnn = 0;
-        
+        int nn = 0;
         for (int i = 0; i < triadSize; i++) {
             neighIdx = triad[i];
 

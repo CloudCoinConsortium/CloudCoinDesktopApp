@@ -6048,6 +6048,7 @@ public class AdvancedClient  {
         AppUI.GBPad(subInnerCore, y, gridbag);        
         y++;
         
+        
         new FileDrop(null, ddPanel, new FileDrop.Listener() {
             public void filesDropped( java.io.File[] files ) {   
                 for( int i = 0; i < files.length; i++ ) {
@@ -6063,7 +6064,15 @@ public class AdvancedClient  {
                 String totalCloudCoins = AppCore.calcCoinsFromFilenames(ps.files);
                 String text = "Selected " + ps.files.size() + " files - " + totalCloudCoins + " CloudCoins";
                               
-                tl.setText(text);            
+                tl.setText(text);      
+
+
+                /*
+                if (ps.files.size() == 0)
+                    ddPanel.setBorder(new DashedBorder(40, brand.getThirdTextColor()));
+                else
+                    ddPanel.setBorder(new DashedBorder(40, brand.getSecondTextColor()));
+                */
             } 
         }); 
         
@@ -6090,6 +6099,7 @@ public class AdvancedClient  {
                     String text = "Selected " + ps.files.size() + " files - " + totalCloudCoins + " CloudCoins";
                               
                     tl.setText(text);  
+
                     
                     Config.DEFAULT_DEPOSIT_DIR = chooser.getCurrentDirectory().getAbsolutePath();
                     AppCore.writeConfig();
@@ -10030,7 +10040,7 @@ public class AdvancedClient  {
                 return;
             } else {
                 ps.typedAmount = 0;
-                ps.errText = "Coins were not sent. Please check the logs";     
+                ps.errText = "Coins were not sent. Please check the receipt and log files for the details";   
             }
             
             EventQueue.invokeLater(new Runnable() {

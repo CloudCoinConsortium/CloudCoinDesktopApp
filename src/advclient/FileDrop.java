@@ -20,7 +20,8 @@ import java.io.Reader;
 
 public class FileDrop {
     
-    private transient javax.swing.border.Border normalBorder;
+    //private transient javax.swing.border.Border normalBorder;
+    public javax.swing.border.Border normalBorder;
     private transient java.awt.dnd.DropTargetListener dropListener;
     
     
