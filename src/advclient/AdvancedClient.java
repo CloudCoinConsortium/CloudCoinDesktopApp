@@ -68,7 +68,7 @@ import org.json.JSONObject;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "3.0.9";
+    public static String version = "3.0.10";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -926,7 +926,7 @@ public class AdvancedClient  {
  
         String[] items = {"Backup", "List serials", "Clear History", "Fix Fracked", 
             "Delete Wallet", "Show Folders", "Echo RAIDA", "Settings", "Sent Coins", 
-            "Export Keys", "Bill Pay", "Cloud Bank"};
+             "Bill Pay", "Cloud Bank"};
         for (int i = 0; i < items.length; i++) {
             JMenuItem menuItem = new JMenuItem(items[i]);
             menuItem.setActionCommand("" + i);
@@ -986,11 +986,9 @@ public class AdvancedClient  {
                         ps.currentScreen = ProgramState.SCREEN_SETTINGS;
                     } else if (action.equals("8")) {
                         ps.currentScreen = ProgramState.SCREEN_SHOW_SENT_COINS;
-                    } else if (action.equals("9")) {
-                        ps.currentScreen = ProgramState.SCREEN_SHOW_BACKUP_KEYS;
-                    } else if (action.equals("10")) {
+                    } else if (action.equals("9")) {                      
                         ps.currentScreen = ProgramState.SCREEN_SHOW_BILL_PAY;
-                    } else if (action.equals("11")) {
+                    } else if (action.equals("10")) {
                         ps.currentScreen = ProgramState.SCREEN_CLOUDBANK;
                     }
 
@@ -1286,9 +1284,6 @@ public class AdvancedClient  {
                 break;
             case ProgramState.SCREEN_SHOW_SENT_COINS:
                 showSentCoins();
-                break;
-            case ProgramState.SCREEN_SHOW_BACKUP_KEYS:
-                showBackupKeys();
                 break;
             case ProgramState.SCREEN_SHOW_BACKUP_KEYS_DONE:
                 showBackupKeysDone();
@@ -6970,82 +6965,7 @@ public class AdvancedClient  {
             }
         }, y, gridbag);       
     }
-    
-    public void showBackupKeys() {
-        int y = 0;
-        JLabel fname;
-        MyTextField walletName = null;
 
-        JPanel subInnerCore = getPanel("Export Keys");                
-        GridBagLayout gridbag = new GridBagLayout();
-        subInnerCore.setLayout(gridbag);
-
-        String[] idCoins = AppCore.getFilesInDir(AppCore.getIDDir(), null);
-        if (idCoins.length == 0) {
-            fname = new JLabel("You have no keys to backup");   
-            AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
-            y++;
-            AppUI.GBPad(subInnerCore, y, gridbag); 
-            return;
-        }
-        
-        fname = new JLabel("Keys will not be encrypted. You should put them in a secure location");   
-        AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
-        y++; 
-        
-        fname = new JLabel("Backup Folder");
-        final JFileChooser chooser = new JFileChooser();
-        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        chooser.setAcceptAllFileFilterUsed(false);
-        final MyTextField tf1 = new MyTextField("Click here to select folder", false, true);
-        //tf1.disable();
-        tf1.setFilepickerListener(new MouseAdapter() {
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                int returnVal = chooser.showOpenDialog(null);
-                if (returnVal == JFileChooser.APPROVE_OPTION) {       
-                    ps.chosenFile = chooser.getSelectedFile().getAbsolutePath();
-                    tf1.setData(chooser.getSelectedFile().getName());
-                }
-            }
-        });
-
-        AppUI.getGBRow(subInnerCore, fname, tf1.getTextField(), y, gridbag);
-        y++; 
-
-        AppUI.GBPad(subInnerCore, y, gridbag);        
-        y++;
-
-        AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Continue", new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
-                showScreen();
-            }
-        }, new ActionListener() {
-            public void actionPerformed(ActionEvent e) {                           
-                if (ps.chosenFile.isEmpty()) {
-                    ps.errText = "Folder is not chosen";
-                    showScreen();
-                    return;
-                }
-                
-                for (int i = 0; i < idCoins.length; i++) {
-                    String src = AppCore.getIDDir() + File.separator + idCoins[i];
-                    String dst = ps.chosenFile + File.separator + idCoins[i];
-
-                    if (!AppCore.copyFile(src, dst)) {
-                        ps.errText = "Failed to copy file: " + idCoins[i];
-                        showScreen();
-                        return;
-                    }
-                }
-
-                ps.currentScreen = ProgramState.SCREEN_SHOW_BACKUP_KEYS_DONE;
-                showScreen();
-            }
-        }, y, gridbag);
-    }
-    
     public void showBackupScreen() {
         int y = 0;
         JLabel fname;
@@ -7070,6 +6990,7 @@ public class AdvancedClient  {
         
         fname = new JLabel("Wallet");
         final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "Make Selection", rv.options);
+        cboxfrom.addOption(AppUI.getBackupKeysOption());
         AppUI.getGBRow(subInnerCore, fname, cboxfrom.getComboBox(), y, gridbag);
         y++; 
         
@@ -7144,12 +7065,42 @@ public class AdvancedClient  {
         }, new ActionListener() {
             public void actionPerformed(ActionEvent e) { 
                 ps.typedMemo = memo.getText();
-                int srcIdx = cboxfrom.getSelectedIndex() - 1;              
+                int srcIdx = cboxfrom.getSelectedIndex() - 1;
+                if (srcIdx == rv.idxs.length) {           
+                    if (ps.chosenFile.isEmpty()) {
+                        ps.errText = "Folder is not chosen";
+                        showScreen();
+                        return;
+                    }
+                    String[] idCoins = AppCore.getFilesInDir(AppCore.getIDDir(), null);
+                    if (idCoins.length == 0) {
+                        ps.errText = "No keys to Backup";
+                        showScreen();
+                        return;
+                    }
+                    
+                    for (int i = 0; i < idCoins.length; i++) {
+                        String src = AppCore.getIDDir() + File.separator + idCoins[i];
+                        String dst = ps.chosenFile + File.separator + idCoins[i];
+
+                        if (!AppCore.copyFile(src, dst)) {
+                            ps.errText = "Failed to copy file: " + idCoins[i];
+                            showScreen();
+                            return;
+                        }
+                    }
+
+                    ps.currentScreen = ProgramState.SCREEN_SHOW_BACKUP_KEYS_DONE;
+                    showScreen();
+                    return;
+                }
+                
                 if (srcIdx < 0 || srcIdx >= rv.idxs.length) {
                     ps.errText = "Please select Wallet";
                     showScreen();
                     return;
                 }
+                
 
                 srcIdx = rv.idxs[srcIdx];
    

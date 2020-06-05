@@ -364,6 +364,10 @@ public class AppUI {
         return hct;
     }
     
+    public static String getBackupKeysOption() {
+        return "- Backup Keys";
+    }
+    
     public static String getRemoteUserOption() {
         return "- Remote User";
     }
