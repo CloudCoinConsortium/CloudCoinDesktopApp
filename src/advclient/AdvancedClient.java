@@ -5174,11 +5174,23 @@ public class AdvancedClient  {
             return;
         }
         
+        //JLabel infox = AppUI.wrapDiv("uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu");
+        
+
         JLabel infox = AppUI.wrapDiv("");
         AppUI.getGBRow(subInnerCore, null, infox, y, gridbag);
+        infox.setVisible(false);
         y++;
         
-        infox.setVisible(false);
+        String urlName = "https://github.com/CloudCoinConsortium/CloudCoin/blob/master/Merchant%20Tools/BillPay/README.md";
+        JLabel link = AppUI.getHyperLink("Bill Pay Website", urlName, 0);
+        
+        
+        AppUI.getGBRow(subInnerCore, new JLabel("Instructions"), link, y, gridbag);
+        AppUI.setColor(link, brand.getHyperlinkColor());
+        AppUI.underLine(link);
+        y++;
+        
 
         fname = new JLabel("From");
         final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "Make Selection", rvFrom.options);
