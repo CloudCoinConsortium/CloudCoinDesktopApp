@@ -5891,6 +5891,14 @@ public class AdvancedClient  {
                     ps.typedRemoteWallet = dstName;
                     ps.sendType = ProgramState.SEND_TYPE_REMOTE;
                     
+                    
+                    if (!Validator.domain(ps.typedRemoteWallet)) {
+                        ps.errText = "Invalid SkyWallet Address";
+                        showScreen();
+                        return;
+                    }
+
+                    
                     DNSSn d = new DNSSn(ps.typedRemoteWallet, null, wl);
                     if (!d.recordExists()) {
                         ps.errText = "Sky Wallet " + ps.typedRemoteWallet + " doesn't exist. If it is a newly created wallet please wait and try again later";
