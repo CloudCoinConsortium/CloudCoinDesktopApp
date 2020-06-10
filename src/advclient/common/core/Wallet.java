@@ -211,7 +211,7 @@ public class Wallet implements Comparable<Wallet> {
         if (isSkyWallet())
             return;
         
-        if (!receiptId.equals("COUNTERFEIT")) {
+        if (receiptId != null && !receiptId.equals("COUNTERFEIT")) {
             if (amount == 0)
                 return;
         }

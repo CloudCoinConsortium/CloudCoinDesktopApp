@@ -2068,17 +2068,13 @@ public class AppCore {
     }
  
     
-    public static int skyCoinThere(ArrayList<CloudCoin> ccs, Wallet[] wallets, String user) {
-        System.out.println("xxx");
-        
+    public static int skyCoinThere(ArrayList<CloudCoin> ccs, Wallet[] wallets, String user) {     
         int rcc = 0;
         for (int i = 0; i < wallets.length; i++) {
             if (!wallets[i].isSkyWallet())
                 continue;
             
-            System.out.println("w=" + wallets[i].getIDCoin().sn);
             for (CloudCoin cc : ccs) {
-                System.out.println("comp " + cc.sn);
                 if (cc.sn == wallets[i].getIDCoin().sn ) {
                     rcc = cc.sn;
                     logger.debug(ltag, "ID coin was tried to be used. Moving to Trash " + cc.sn);
@@ -2089,9 +2085,7 @@ public class AppCore {
                         continue;
                     }
                     
-                    String filename = dir + File.separator + cc.getFileName();
-                    System.out.println("fn="+filename);
-                    
+                    String filename = dir + File.separator + cc.getFileName();                  
                     AppCore.moveToTrash(filename, user);
 
                 }

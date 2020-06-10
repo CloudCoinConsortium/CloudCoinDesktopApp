@@ -1442,6 +1442,18 @@ public class AdvancedClient  {
         pbarText.repaint();
     }
     
+    private void setRAIDALostProgressCoins(int raidaProcessed, int totalCoinsProcessed, int totalCoins) {
+        pbar.setVisible(true);
+        pbar.setValue(raidaProcessed);
+        
+        String stc = AppCore.formatNumber(totalCoinsProcessed);
+        String tc = AppCore.formatNumber(totalCoins);
+        
+        pbarText.setText("<html><div style='text-align:center'>" + stc + " / " + tc + " CloudCoins Processed</div></html>");
+        
+        pbarText.repaint();
+    }
+    
     /*
     private void setRAIDAFixingProgress(int raidaProcessed, int totalFilesProcessed, int totalFiles, int fixingRAIDA, int round) {
         pbar.setVisible(true);
@@ -2880,7 +2892,7 @@ public class AdvancedClient  {
         String totalFixedValue = AppCore.formatNumber(ps.statTotalFixedValue);
           
         String txt;
-        if (!totalFixed.equals("" + total)) {
+        if (!totalFixedValue.equals("" + total)) {
             txt = "Not all CloudCoins from <b>" + ps.srcWallet.getName() + "</b> had been fixed. Try it again later";
             if (ps.fixPownstrings != null) {
                 int l = ps.fixPownstrings.length;
@@ -9880,6 +9892,7 @@ public class AdvancedClient  {
             
             if (lr.status == LossFixerResult.STATUS_PROCESSING) {
                 wl.debug(ltag, "Processing lossfixer");
+                setRAIDALostProgressCoins(lr.totalRAIDAProcessed, lr.totalCoinsProcessed, lr.totalCoins);
                 return;
             }
             

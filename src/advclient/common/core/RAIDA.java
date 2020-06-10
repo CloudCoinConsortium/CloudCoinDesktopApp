@@ -209,4 +209,60 @@ public class RAIDA {
 		return results;
 	}
 
+        public String[] querySync(String[] requests, String[] posts, CallbackInterface cb, int[] rlist) {
+            int raidalistSize;
+
+            if (rlist == null)
+                rlist = getAllRAIDAs();
+
+            raidalistSize = rlist.length;
+            final String[] results = new String[raidalistSize];
+            if (requests.length != raidalistSize) {
+                logger.error(ltag, "Internal error. Wrong parameters");
+                return null;
+            }
+
+            if (posts != null) {
+                if (posts.length != raidalistSize) {
+                    logger.error(ltag, "Internal error. Wrong post parameters");
+                    return null;
+                }
+            } else {
+                posts = new String[raidalistSize];
+                for (int i = 0; i < raidalistSize; i++) {
+                    posts[i] = null;
+                }
+            }
+                
+            StackTraceElement[] es = Thread.currentThread().getStackTrace();
+            String callerClass = "";
+            for (int i = 0; i < es.length; i++) {
+                String className = es[i].getClassName();
+                   
+                if (className.equals(packageName) || className.equals("java.lang.Thread"))
+                    continue;
+
+                callerClass = className;
+
+                break;
+            }
+
+                
+            for (int i = 0; i < raidalistSize; i++) {
+		final int rIdxFinal = rlist[i];
+		final int iFinal = i;
+		final String request = requests[i];
+		final String post = posts[i];
+		final CallbackInterface myCb = cb;
+                final String fcallerClass = callerClass;
+   
+                
+                String url = "/service/" + request;
+                results[iFinal] = agents[rIdxFinal].doRequest(url, post, fcallerClass);
+                if (myCb != null)
+                    myCb.callback(null);
+            }
+
+            return results;
+	}
 }

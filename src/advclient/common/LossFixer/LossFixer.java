@@ -13,6 +13,7 @@ import global.cloudcoin.ccbank.core.GLogger;
 import global.cloudcoin.ccbank.core.RAIDA;
 import global.cloudcoin.ccbank.core.Servant;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class LossFixer extends Servant {
     String ltag = "LossFixer";
@@ -60,6 +61,7 @@ public class LossFixer extends Servant {
         nlr.totalRAIDAProcessed = lr.totalRAIDAProcessed;
         nlr.totalCoins = lr.totalCoins;
         nlr.totalCoinsProcessed = lr.totalCoinsProcessed;
+        nlr.receiptId = lr.receiptId;
     }
 
     public void doLossFix() {
@@ -183,17 +185,45 @@ public class LossFixer extends Servant {
 
         int i;
         boolean first = true;
-
-        posts = new String[RAIDA.TOTAL_RAIDA_COUNT];
-        requests = new String[RAIDA.TOTAL_RAIDA_COUNT];
-        sbs = new StringBuilder[RAIDA.TOTAL_RAIDA_COUNT];
+        
+        HashMap<Integer, Integer> hm = new HashMap<Integer, Integer>();
         for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+            for (CloudCoin cc : ccs) {
+                if (cc.getDetectStatus(i) == CloudCoin.STATUS_PASS)
+                    continue;
+                
+                hm.put(i, i);
+            }
+        }
+
+        int[] rlist = new int[hm.size()];
+        i = 0;
+        for (HashMap.Entry<Integer, Integer> set : hm.entrySet()) {
+            rlist[i]= set.getKey();
+            i++;
+        }
+        
+        for (i = 0; i < rlist.length; i++) {
+            logger.debug(ltag, "Will query raida " + rlist[i]);
+        }
+        
+        int rsize = rlist.length;
+        
+        posts = new String[rsize];
+        requests = new String[rsize];
+        sbs = new StringBuilder[rsize];
+        //for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+        for (i = 0; i < rlist.length; i++) {
             requests[i] = "fix_lost";
             sbs[i] = new StringBuilder();
         }
+        
+        
 
         for (CloudCoin cc : ccs) {
-            for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+            //for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+            for (i = 0; i < rlist.length; i++) {
+                int raidaIdx = rlist[i];
                 if (!first)
                     sbs[i].append("&");
 
@@ -207,33 +237,36 @@ public class LossFixer extends Servant {
                 sbs[i].append(cc.getDenomination());
 
                 sbs[i].append("&ans[]=");
-                sbs[i].append(cc.ans[i]);
+                sbs[i].append(cc.ans[raidaIdx]);
 
                 sbs[i].append("&pans[]=");
-                sbs[i].append(cc.pans[i]);
+                sbs[i].append(cc.pans[raidaIdx]);
             }
 
+            logger.debug(ltag, "cc="+cc.sn + " x="+cc.getPownString());
             first = false;
         }
 
-        for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+        //for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+        for (i = 0; i < rlist.length; i++) {
             posts[i] = sbs[i].toString();
         }
-        
-        results = raida.query(requests, posts, new CallbackInterface() {
+
+        results = raida.querySync(requests, posts, new CallbackInterface() {
             final GLogger gl = logger;
             final CallbackInterface myCb = cb;
 
             @Override
             public void callback(Object result) {
-                lr.totalRAIDAProcessed++;
+                int step = RAIDA.TOTAL_RAIDA_COUNT / rsize;
+                lr.totalRAIDAProcessed += step;
                 if (myCb != null) {
                     LossFixerResult lr = new LossFixerResult();
                     copyFromGlobalResult(lr);
                     myCb.callback(lr);
                 }
             }
-        });
+        }, rlist);
 
         if (results == null) {
             logger.error(ltag, "Failed to query multi_detect");
@@ -244,14 +277,15 @@ public class LossFixer extends Servant {
         LossFixerResponse[][] lfrs;
         Object[] o;
 
-        lfrs = new LossFixerResponse[RAIDA.TOTAL_RAIDA_COUNT][];
-        for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
-            logger.info(ltag, "i="+i+ " r="+results[i]);
+        lfrs = new LossFixerResponse[rsize][];
+        for (i = 0; i < rsize; i++) {
+            int raidaIdx = rlist[i];
+            logger.info(ltag, "i="+i+ " r="+results[i] + " raidx="+raidaIdx);
 
             if (results[i] != null) {
                 if (results[i].equals("")) {
-                    logger.error(ltag, "Skipped raida" + i);
-                    setCoinStatus(ccs, i, CloudCoin.STATUS_UNTRIED);
+                    logger.error(ltag, "Skipped raida" + raidaIdx);
+                    setCoinStatus(ccs, raidaIdx, CloudCoin.STATUS_UNTRIED);
                     continue;
                 }
             }
@@ -259,7 +293,7 @@ public class LossFixer extends Servant {
             o = parseArrayResponse(results[i], LossFixerResponse.class);
             if (o == null) {
                 errorResponse = (CommonResponse) parseResponse(results[i], CommonResponse.class);
-                setCoinStatus(ccs, i, CloudCoin.STATUS_ERROR);
+                setCoinStatus(ccs, raidaIdx, CloudCoin.STATUS_ERROR);
                 if (errorResponse == null) {
                     logger.error(ltag, "Failed to get error");
                     continue;
@@ -282,16 +316,16 @@ public class LossFixer extends Servant {
                     status = CloudCoin.STATUS_PASS;
                 } else if (strStatus.equals("pan")) {
                     status = CloudCoin.STATUS_PASS;
-                    ccs.get(j).ans[i] =  ccs.get(j).pans[i];
+                    ccs.get(j).ans[raidaIdx] =  ccs.get(j).pans[i];
                 } else if (strStatus.equals("neither")) {
                     status = CloudCoin.STATUS_FAIL;
                 } else {
                     status = CloudCoin.STATUS_ERROR;
-                    logger.error(ltag, "Unknown coin status from RAIDA" + i + ": " + strStatus);
+                    logger.error(ltag, "Unknown coin status from RAIDA" + raidaIdx + ": " + strStatus);
                 }
 
-                ccs.get(j).setDetectStatus(i, status);
-                logger.info(ltag, "raida" + i + " v=" + lfrs[i][j].status + " m="+lfrs[i][j].message + " j= " + j + " st=" + status);
+                ccs.get(j).setDetectStatus(raidaIdx, status);
+                logger.info(ltag, "raida" + raidaIdx + " v=" + lfrs[i][j].status + " m="+lfrs[i][j].message + " j= " + j + " st=" + status);
             }
         }
 
@@ -322,28 +356,34 @@ public class LossFixer extends Servant {
                 failed++;
             }
             
-            if (failed > RAIDA.TOTAL_RAIDA_COUNT - Config.PASS_THRESHOLD) {
-                logger.debug(ltag, "Coin " + cc.sn + " can't be restored: " + failed);
-                AppCore.moveToTrash(cc.originalFile, user);
-                addCoinToReceipt(cc, "counterfeit", Config.DIR_COUNTERFEIT);
-                lr.failed++;
-                continue;
+            if (cc.isSentFixable()) {
+                if (failed == 0) {
+                    moveCoin(cc);
+                    logger.debug(ltag, "Moving to bank: " + cc.sn);
+                    lr.recovered++;
+                    lr.recoveredValue += cc.getDenomination();
+                    addCoinToReceipt(cc, "bank", Config.DIR_BANK);
+                    
+                } else {
+                    logger.debug(ltag, "Coin " + cc.sn + " move to fracked " + failed);
+                    moveCoinToFracked(cc);
+                    lr.recovered++;
+                    lr.recoveredValue += cc.getDenomination();
+                    addCoinToReceipt(cc, "fracked", Config.DIR_FRACKED);
+                    
+                }
+            } else {
+                if (!cc.canbeRecoveredFromLost()) {
+                    logger.debug(ltag, "Coin " + cc.sn + " can't be restored: " + failed);
+                    AppCore.moveToTrash(cc.originalFile, user);
+                    addCoinToReceipt(cc, "counterfeit", Config.DIR_COUNTERFEIT);
+                    lr.failed++;                    
+                } else {
+                    logger.debug(ltag, "Coin " + cc.sn + " will stay with us for a while");
+                    continue;
+                }
             }
-            
-            if (failed > 0) {
-                logger.debug(ltag, "Coin " + cc.sn + " move to fracked " + failed);
-                moveCoinToFracked(cc);
-                lr.recovered++;
-                lr.recoveredValue += cc.getDenomination();
-                addCoinToReceipt(cc, "fracked", Config.DIR_FRACKED);
-                continue;
-            }
-            
-            moveCoin(cc);
-            logger.debug(ltag, "Moving to bank: " + cc.sn);
-            lr.recovered++;
-            lr.recoveredValue += cc.getDenomination();
-            addCoinToReceipt(cc, "bank", Config.DIR_BANK);
+
             
         }
     }
