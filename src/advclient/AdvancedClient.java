@@ -1947,6 +1947,38 @@ public class AdvancedClient  {
                         }
                     }
                 }
+                
+                if (ps.dstWallet != null && ps.dstWallet.isSkyWallet()) {
+                    ps.isCheckingSkyID = true;
+                    skyCC = ps.dstWallet.getIDCoin();
+
+                    pbarText.setText("Checking Your Destination SkyWallet ID");
+                    pbarText.repaint();
+
+                    sm.startAuthenticatorService(skyCC, new AuthenticatorForSkyCoinCb());
+                    while (ps.isCheckingSkyID) {
+                        try {
+                            Thread.sleep(300);
+                        } catch (InterruptedException e) {}
+                    }
+
+                    if (AppCore.getErrorCount(skyCC) > Config.MAX_FAILED_RAIDAS_TO_SEND) {
+                        ps.errText = getSkyIDErrorIfRAIDAFailed();
+                        showScreen();
+                        return;
+                    } else if (AppCore.getPassedCount(skyCC) < Config.PASS_THRESHOLD) {
+                        ps.errText = getSkyIDError(ps.srcWallet.getName(), ps.srcWallet.getIDCoin().getPownString());
+                        showScreen();
+                        return;
+                    } else if (AppCore.getPassedCount(skyCC) != RAIDA.TOTAL_RAIDA_COUNT) {
+                        if (AppCore.getCounterfeitCount(skyCC) > 0) {
+                            ps.currentScreen = ProgramState.SCREEN_WARN_FRACKED_TO_SEND;
+                            showScreen();
+                            return;
+                        }
+                    }
+                }
+
 
                 String dstName =  (ps.foundSN == 0) ? ps.dstWallet.getName() : "" + ps.foundSN;
                 
