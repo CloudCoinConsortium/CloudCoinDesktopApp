@@ -194,7 +194,6 @@ public class Sender extends Servant {
     }
     
     public void doSend(int tosn, int[] values, int amount, String envelope) {
-        boolean isSuspect = false;
         logger.debug(ltag, "Sending remotely " + amount + " to " + tosn + " memo=" + envelope + " values=" + values);
         
         SenderResult sr = new SenderResult();
@@ -252,7 +251,6 @@ public class Sender extends Servant {
                 }
             } else {
                 logger.debug(ltag, "Pick from suspect");
-                isSuspect = true;
                 pickCoinsFromSuspect();
             }
         }
@@ -279,6 +277,21 @@ public class Sender extends Servant {
         copyFromGlobalResult(sr);
         if (cb != null)
             cb.callback(sr);
+        
+        for (CloudCoin cc : coinsPicked) {
+            if (cc.sn == tosn) {
+                logger.debug(ltag, "ID coin in the Bank. Giving up: " + cc.sn);
+                
+                sr = new SenderResult();
+                globalResult.status = SenderResult.STATUS_ERROR;
+                globalResult.errText = "ID Coin " + cc.sn + " is present in the Bank. Can't continue";
+                copyFromGlobalResult(sr);
+                if (cb != null)
+                    cb.callback(sr);
+                
+                return;
+            }
+        }
                 
         logger.info(ltag, "total files "+ globalResult.totalFiles);
         
