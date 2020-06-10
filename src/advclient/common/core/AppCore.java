@@ -2066,5 +2066,40 @@ public class AppCore {
         
         return true;
     }
+ 
     
+    public static int skyCoinThere(ArrayList<CloudCoin> ccs, Wallet[] wallets, String user) {
+        System.out.println("xxx");
+        
+        int rcc = 0;
+        for (int i = 0; i < wallets.length; i++) {
+            if (!wallets[i].isSkyWallet())
+                continue;
+            
+            System.out.println("w=" + wallets[i].getIDCoin().sn);
+            for (CloudCoin cc : ccs) {
+                System.out.println("comp " + cc.sn);
+                if (cc.sn == wallets[i].getIDCoin().sn ) {
+                    rcc = cc.sn;
+                    logger.debug(ltag, "ID coin was tried to be used. Moving to Trash " + cc.sn);
+                    
+                    String dir = AppCore.getUserDir(Config.DIR_SUSPECT, user);
+                    if (dir == null) {
+                        logger.error(ltag, "Failed to find suspect dir");
+                        continue;
+                    }
+                    
+                    String filename = dir + File.separator + cc.getFileName();
+                    System.out.println("fn="+filename);
+                    
+                    AppCore.moveToTrash(filename, user);
+
+                }
+            }
+        }
+        //System.exit(1);
+        return rcc;
+        
+        
+    }
 }

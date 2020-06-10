@@ -327,6 +327,7 @@ class MyHandler implements HttpHandler {
                 
         }
         
+        System.out.println("kw="+keepWallet);
         setWalletIfNessecary(keepWallet);
         completed = false;
         if (isError)

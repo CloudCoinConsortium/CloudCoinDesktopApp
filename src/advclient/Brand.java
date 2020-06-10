@@ -952,7 +952,7 @@ public class Brand {
         String[] oparts = version.split("\\.");     
         String[] parts = this.versionOffset.split("\\.");
         if (parts.length != 3) {
-            logger.error(ltag, "Invalid versionOffset format");
+            //logger.error(ltag, "Invalid versionOffset format");
             return version;
         }
      

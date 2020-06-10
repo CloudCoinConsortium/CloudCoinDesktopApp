@@ -9381,6 +9381,18 @@ public class AdvancedClient  {
                 return;
             }
             
+            int ccsn = AppCore.skyCoinThere(ur.unpacked, wallets, sm.getActiveWallet().getName());
+            if (ccsn != 0) {
+                EventQueue.invokeLater(new Runnable() {         
+                    public void run() {
+                        ps.errText = "Coin " + ccsn + " can't be sent. It is a SkyWallet ID";
+                        ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
+                        showScreen();
+                    }
+                });
+                return;
+            }
+
             int sn = sm.getActiveWallet().getIDCoin().sn;
             wl.debug(ltag, "UnpackerForSender sn=" + sn);
 
@@ -9411,6 +9423,18 @@ public class AdvancedClient  {
                     }
                 });
                 
+                return;
+            }
+            
+            int ccsn = AppCore.skyCoinThere(ur.unpacked, wallets, sm.getActiveWallet().getName());
+            if (ccsn != 0) {
+                EventQueue.invokeLater(new Runnable() {         
+                    public void run() {
+                        ps.errText = "Coin " + ccsn + " can't be imported. It is a SkyWallet ID";
+                        ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
+                        showScreen();
+                    }
+                });
                 return;
             }
 

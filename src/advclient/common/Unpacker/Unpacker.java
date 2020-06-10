@@ -110,7 +110,7 @@ public class Unpacker extends Servant {
         cc.originalFile = fileName;
         rccs.add(cc);
     }
-    
+
     public void doUnpack() {
         String importFolder = AppCore.getUserDir(Config.DIR_IMPORT, user);
         String fileName, extension;

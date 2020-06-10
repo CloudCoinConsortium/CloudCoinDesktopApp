@@ -26,10 +26,13 @@ public class CloudBank {
     GLogger logger;
     ServantManager sm;
     Wallet tmpWallet;
+    boolean isBusy;
+    
     
     public CloudBank(GLogger logger, ServantManager sm) {
         this.logger = logger;
         this.sm = sm;
+        this.isBusy = false;
     }
     
     public String getAccountDir() {
@@ -43,6 +46,19 @@ public class CloudBank {
         AppCore.createDirectoryPath(dir);        
     }
     
+    
+    
+    public void setBusy() {
+        this.isBusy = true;
+    }
+    
+    public void setNonBusy() {
+        this.isBusy = false;
+    }
+    
+    public boolean isBusy() {
+        return this.isBusy;
+    }
         
     public void startCloudbankService(String service, Map params, CallbackInterface cb) {
         logger.debug(ltag, "Starting CloudBank service " + service);
@@ -52,7 +68,7 @@ public class CloudBank {
         Wallet lw = sm.getWalletByName(Config.CLOUDBANK_LWALLET);
         Wallet rw = sm.getWalletByName(Config.CLOUDBANK_RWALLET);
         if (lw == null || rw == null) {
-            cr = getCrError("CloudBank is not set up properly");
+            cr = getCrErrorKeepWallet("CloudBank is not set up properly");
             cb.callback(cr);
             return;
         }
@@ -61,13 +77,13 @@ public class CloudBank {
             
             String account = (String) params.get("account");
             if (account == null) {
-                cr = getCrError("Account is required");
+                cr = getCrErrorKeepWallet("Account is required");
                 cb.callback(cr);
                 return;
             }
         
             if (!account.equals(Config.CLOUDBANK_ACCOUNT)) {
-                cr = getCrError("Unknown Account");
+                cr = getCrErrorKeepWallet("Unknown Account");
                 cb.callback(cr);
                 return;
             }
@@ -75,13 +91,13 @@ public class CloudBank {
             if (!service.equals("deposit_one_stack") && !service.equals("get_receipt")) {
                 String pk = (String) params.get("pk");
                 if (pk == null) {
-                    cr = getCrError("Pk is required");
+                    cr = getCrErrorKeepWallet("Pk is required");
                     cb.callback(cr);
                     return;
                 }
                 
                 if (!pk.equals(Config.CLOUDBANK_PASSWORD)) {
-                    cr = getCrError("Auth Failed");
+                    cr = getCrErrorKeepWallet("Auth Failed");
                     cb.callback(cr);
                     return;
                 }
@@ -91,7 +107,7 @@ public class CloudBank {
             if (lw.isEncrypted()) {
                 wHash = lw.getPasswordHash();
                 if (wHash == null) {
-                    cr = getCrError("Local Wallet is corrupted");
+                    cr = getCrErrorKeepWallet("Local Wallet is corrupted");
                     cb.callback(cr);
                     return;
                 }
@@ -103,7 +119,7 @@ public class CloudBank {
             
                 String providedHash = AppCore.getMD5(password);
                 if (!wHash.equals(providedHash)) {
-                    cr = getCrError("Incorrect Password for Local Wallet");
+                    cr = getCrErrorKeepWallet("Incorrect Password for Local Wallet");
                     cb.callback(cr);
                     return;
                 }
@@ -208,6 +224,9 @@ public class CloudBank {
                 String dateStr = AppCore.getDate("" + (System.currentTimeMillis() /1000));
                 StringBuilder sb = new StringBuilder();
         
+                if (isBusy())
+                    status = "busy";
+                
                 sb.append("{\"server\":\"");
                 sb.append(AppUI.brand.getTitle(null));
                 sb.append("\", \"status\":\"");
@@ -833,7 +852,14 @@ public class CloudBank {
                     
                     final int fsize = ur.unpacked.size();
                     setReceipt(wallet, fsize, "importing", "Importing CloudCoins", frn);
-                    fcb.callback(cr);                    
+                    fcb.callback(cr);   
+                    
+                    System.out.println("sleep");
+                    try {
+                        Thread.sleep(20000);
+                    } catch (InterruptedException e) {}
+                    System.out.println("done sleep");
+                    
                     sm.startAuthenticatorService(new AuthenticatorCb(wallet, frn, ftag, ur.unpacked, ur.duplicates));
                     
                     return;
