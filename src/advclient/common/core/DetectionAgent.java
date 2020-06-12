@@ -5,6 +5,9 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.io.InputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
@@ -117,13 +120,14 @@ public class DetectionAgent {
         URL cloudCoinGlobal;	
 	try {
 
+            logger.debug(ltag, "Getting Binary URL " + url);
             
             cloudCoinGlobal = new URL(urlIn);           
             urlConnection = (HttpURLConnection) cloudCoinGlobal.openConnection();
             urlConnection.setConnectTimeout(connectionTimeout);
             urlConnection.setReadTimeout(readTimeout);
             urlConnection.setRequestProperty("User-Agent", "CloudCoin Wallet Client");
-
+            
             if (urlConnection.getResponseCode() != 200) {
                 logger.error(ltag, "Invalid response from server " + urlIn + " -> " + urlConnection.getResponseCode());
                 lastStatus = RAIDA.STATUS_FAILED;
@@ -134,7 +138,6 @@ public class DetectionAgent {
             int nRead;
             byte[] data = new byte[16384];
             ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-
 
             while ((nRead = input.read(data, 0, data.length)) != -1) {
                 buffer.write(data, 0, nRead);
@@ -151,6 +154,12 @@ public class DetectionAgent {
             return null;
 	} catch (IOException e) {
             logger.error(ltag, "Failed to fetch URL: " + e.getMessage());
+            logger.error(ltag, e.toString());
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            e.printStackTrace(pw);
+            logger.error(ltag, sw.toString());
+            lastStatus = RAIDA.STATUS_FAILED;
             return null;
 	} finally {
             if (urlConnection != null)
@@ -198,14 +207,19 @@ public class DetectionAgent {
       
 	URL cloudCoinGlobal;	
 	try {
-            cloudCoinGlobal = new URL(urlIn);           
+            cloudCoinGlobal = new URL(urlIn);     
+            
+            String host = cloudCoinGlobal.getHost();
+            InetAddress address = InetAddress.getByName(host);
+            String ip = address.getHostAddress();
+            
             urlConnection = (HttpURLConnection) cloudCoinGlobal.openConnection();
             urlConnection.setConnectTimeout(connectionTimeout);
             urlConnection.setReadTimeout(readTimeout);
             urlConnection.setRequestProperty("User-Agent", "CloudCoin Wallet Client");
 
             if (post != null) {
-                logger.debug(lltag, method + " " + urlIn + " data: " + AppCore.maskStr("pans\\[\\]=", post));
+                logger.debug(lltag, ip + " " + method + " " + urlIn + " data: " + AppCore.maskStr("pans\\[\\]=", post));
 
                 byte[] postDataBytes = post.getBytes("UTF-8");
 
@@ -214,20 +228,16 @@ public class DetectionAgent {
                 urlConnection.setDoOutput(true);
                 urlConnection.getOutputStream().write(postDataBytes);
             } else {
-                logger.debug(lltag, method + " " + urlIn);
-
+                logger.debug(lltag, ip + " " + method + " " + urlIn);
             }
-
 
             if (urlConnection.getResponseCode() != 200) {
                 logger.error(lltag, "Invalid response from server " + urlIn + " -> " + urlConnection.getResponseCode());
                 lastStatus = RAIDA.STATUS_FAILED;
                 return null;
             }
-
-            
+     
             InputStream input = urlConnection.getInputStream(); 
-
             while (((c = input.read()) != -1)) {
                     sb.append((char) c);
             }
@@ -250,6 +260,11 @@ public class DetectionAgent {
             return null;
 	} catch (IOException e) {
             logger.error(lltag, "Failed to fetch URL: " + e.getMessage());
+            logger.error(lltag, e.toString());
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            e.printStackTrace(pw);
+            logger.error(lltag, sw.toString());
             lastStatus = RAIDA.STATUS_FAILED;
             return null;
 	} finally {

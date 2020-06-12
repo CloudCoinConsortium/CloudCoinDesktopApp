@@ -15,8 +15,6 @@ import global.cloudcoin.ccbank.core.Config;
 import global.cloudcoin.ccbank.core.GLogger;
 import global.cloudcoin.ccbank.core.RAIDA;
 import global.cloudcoin.ccbank.core.Servant;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 public class Sender extends Servant {
     String ltag = "Sender";
@@ -97,7 +95,6 @@ public class Sender extends Servant {
     public void doSendLocal(int amount, String dstUser) {
         logger.debug(ltag, "Sending locally " + amount + " to " + dstUser);
         
-        String dstPath = AppCore.getUserDir(Config.DIR_BANK, dstUser);
         String fullBankPath = AppCore.getUserDir(Config.DIR_BANK, user);
         String fullFrackedPath = AppCore.getUserDir(Config.DIR_FRACKED, user);
         if (!pickCoinsAmountInDirs(fullBankPath, fullFrackedPath, amount)) {
@@ -440,23 +437,19 @@ public class Sender extends Servant {
         for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
             requests[i] = "send";
             sbs[i] = new StringBuilder();
+            sbs[i].append("b=t");
         }
 
         for (CloudCoin cc : ccs) {
             logger.debug(ltag, "Processing coin " + cc.sn);
 
             for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
-                if (!first) {
-                    sbs[i].append("&");
-                } else {
-                    sbs[i].append("to_sn=");
-                    sbs[i].append(tosn);
-                    sbs[i].append("&tag=");
-                    sbs[i].append(URLEncoder.encode(envelope));
-                    sbs[i].append("&");
-                }
+                sbs[i].append("&to_sn=");
+                sbs[i].append(tosn);
+                sbs[i].append("&tag=");
+                sbs[i].append(URLEncoder.encode(envelope));
 
-                sbs[i].append("nns[]=");
+                sbs[i].append("&nns[]=");
                 sbs[i].append(cc.nn);
 
                 sbs[i].append("&sns[]=");
@@ -497,10 +490,11 @@ public class Sender extends Servant {
         }
 
         CommonResponse errorResponse;
-        SenderResponse[][] ar;
-        Object[] o;
+        //SenderResponse[][] ar;
+        //Object[] o;
+        Object o;
         
-        ar = new SenderResponse[RAIDA.TOTAL_RAIDA_COUNT][];
+        //ar = new SenderResponse[RAIDA.TOTAL_RAIDA_COUNT][];
         for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
             logger.debug(ltag, "Parsing result from RAIDA" + i + " r: " + results[i]);
             if (results[i] != null) {
@@ -510,8 +504,15 @@ public class Sender extends Servant {
                     continue;
                 }
             }
+            
+            if (results[i] == null) {
+                logger.error(ltag, "Skipped raida due to zero response: " + i);
+                setCoinStatus(ccs, i, CloudCoin.STATUS_NORESPONSE);
+                continue;
+            }
 
-            o = parseArrayResponse(results[i], SenderResponse.class);
+            //o = parseArrayResponse(results[i], SenderResponse.class);
+            o = parseResponse(results[i], SenderResponse.class);
             if (o == null) {
                 errorResponse = (CommonResponse) parseResponse(results[i], CommonResponse.class);
                 setCoinStatus(ccs, i, CloudCoin.STATUS_ERROR);
@@ -524,6 +525,46 @@ public class Sender extends Servant {
                 continue;
             }
    
+            SenderResponse ars = (SenderResponse) o;           
+            logger.debug(ltag, "raida" + i + " status: " + ars.status);
+            if (ars.status.equals("allpass")) {
+                logger.debug(ltag, "allpass");
+                setCoinStatus(ccs, i, CloudCoin.STATUS_PASS);
+                continue;
+            } else if (ars.status.equals("allfail")) {
+                logger.debug(ltag, "allfail");
+                setCoinStatus(ccs, i, CloudCoin.STATUS_FAIL);
+                continue;
+            } else if (ars.status.equals("mixed")) {
+                logger.debug(ltag, "mixed " + ars.message);
+                String[] rss = ars.message.split(",");
+                if (rss.length != ccs.size()) {
+                    logger.error(ltag, "Invalid length returned: " + rss.length + ", expected: " + ccs.size());
+                    setCoinStatus(ccs, i, CloudCoin.STATUS_ERROR);
+                    continue;
+                }
+                
+                for (int j = 0; j < rss.length; j++) {
+                    String strStatus = rss[j];
+                    int status;
+                    if (strStatus.equals(Config.REQUEST_STATUS_PASS)) {
+                        status = CloudCoin.STATUS_PASS;
+                    } else if (strStatus.equals(Config.REQUEST_STATUS_FAIL)) {
+                        status = CloudCoin.STATUS_FAIL;
+                    } else {
+                        status = CloudCoin.STATUS_ERROR;
+                        logger.error(ltag, "Unknown coin status from RAIDA" + i + ": " + strStatus);
+                    }
+                    
+                    ccs.get(j).setDetectStatus(i, status);
+                }
+            } else {
+                logger.error(ltag, "Invalid status: " + ars.status);
+                setCoinStatus(ccs, i, CloudCoin.STATUS_ERROR);
+                continue;
+            }
+            
+            /*
             for (int j = 0; j < o.length; j++) {
                 String strStatus;
                 int status;
@@ -546,6 +587,8 @@ public class Sender extends Servant {
                 
                 //logger.info(ltag, "raida" + i + " v=" + ar[i][j].status + " m="+ar[i][j].message);
             }
+                    
+            */
         }
 
 

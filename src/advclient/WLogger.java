@@ -30,7 +30,7 @@ public class WLogger extends GLogger implements GLoggerInterface {
         channels = new HashMap<String, PrintWriter>();
         fileNames = new HashMap<String, String>();
 
-        channels.put("Echoer", null);
+        //channels.put("Echoer", null);
         channels.put("ShowCoins", null);
         channels.put("ShowEnvelopeCoins", null);
           

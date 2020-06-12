@@ -67,7 +67,7 @@ public class MyCheckBox {
             img = ImageIO.read(getClass().getClassLoader().getResource("resources/checkbox.png"));
             imgUnchecked = new ImageIcon(img);
             
-            img = ImageIO.read(getClass().getClassLoader().getResource("resources/checkboxChecked.png"));
+            img = ImageIO.read(getClass().getClassLoader().getResource("resources/checkboxchecked.png"));
             imgChecked = new ImageIcon(img);
         } catch (Exception ex) {
 

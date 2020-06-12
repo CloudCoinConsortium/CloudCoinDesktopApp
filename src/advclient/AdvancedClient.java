@@ -68,7 +68,7 @@ import org.json.JSONObject;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "3.0.10";
+    public static String version = "3.0.11";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -2561,39 +2561,7 @@ public class AdvancedClient  {
                     showScreen();
                     return;
                 }
-                /*
-                    ps.isCheckingSkyID = true;
-                    skyCC = ps.srcWallet.getIDCoin();
 
-                    pbarText.setText("Checking Your Source SkyWallet ID");
-                    pbarText.repaint();
-
-                    sm.startAuthenticatorService(skyCC, new AuthenticatorForSkyCoinCb());
-                    while (ps.isCheckingSkyID) {
-                        try {
-                            Thread.sleep(300);
-                        } catch (InterruptedException e) {}
-                    }
-                   
-                    if (AppCore.getErrorCount(skyCC) > Config.MAX_FAILED_RAIDAS_TO_SEND) {
-                        ps.errText = getSkyIDErrorIfRAIDAFailed();
-                        showScreen();
-                        return;
-                    } else if (AppCore.getPassedCount(skyCC) < Config.PASS_THRESHOLD) {
-                        ps.errText = getSkyIDError(ps.srcWallet.getName(), ps.srcWallet.getIDCoin().getPownString());
-                        showScreen();
-                        return;
-                    } else if (AppCore.getPassedCount(skyCC) != RAIDA.TOTAL_RAIDA_COUNT) {
-                        if (AppCore.getCounterfeitCount(skyCC) > 0) {
-                            ps.currentScreen = ProgramState.SCREEN_WARN_FRACKED_TO_SEND;
-                            showScreen();
-                            return;
-                        }
-                    }
-                }
-                */
-                
-                
                 File f = new File(ps.chosenFile);
                 String fname = f.getName();
                 String outDir = AppCore.getUserDir(Config.DIR_EMAIL_OUT, ps.srcWallet.getName()) + File.separator + fname;
@@ -6097,17 +6065,43 @@ public class AdvancedClient  {
         AppUI.getGBRow(subInnerCore, fname, memo.getTextField(), y, gridbag);
         y++; 
  
-        String totalCloudCoins = AppCore.calcCoinsFromFilenames(ps.files);
-        final JLabel tl = new JLabel("Selected " + ps.files.size() + " files - " + totalCloudCoins + " CloudCoins");
-        AppUI.getGBRow(subInnerCore, null, tl, y, gridbag);
-        y++;
-  
-             
         int ddWidth = 701;
+        String dropText = "<html><div style='text-align:center; width:" + ddWidth  +"'><b>Drop files here or click<br>to select files</b></div></html>";
+        JLabel l = new JLabel(dropText);
         JPanel ddPanel = new JPanel();
         ddPanel.setLayout(new GridBagLayout());
         
-        JLabel l = new JLabel("<html><div style='text-align:center; width:" + ddWidth  +"'><b>Drop files here or click<br>to select files</b></div></html>");
+        String totalCloudCoins = AppCore.calcCoinsFromFilenames(ps.files);
+        final JLabel tl = new JLabel("Selected " + ps.files.size() + " files - " + totalCloudCoins + " CloudCoins");
+        final JLabel t2 = new JLabel("  Clear");
+        AppUI.underLine(t2);
+        AppUI.setHandCursor(t2);
+        t2.setVisible(false);
+        t2.addMouseListener(new MouseAdapter() {
+            public void mouseReleased(MouseEvent e) {
+                ps.files.clear();
+                l.setText(dropText);
+                String text = "Selected " + ps.files.size() + " files - " + totalCloudCoins + " CloudCoins";                              
+                tl.setText(text);    
+                t2.setVisible(false);
+                ddPanel.setBorder(new DashedBorder(40, brand.getThirdTextColor()));
+            }
+        });
+        
+        AppUI.getGBRow(subInnerCore, tl, t2, y, gridbag);
+        y++;
+  
+        
+       // AppUI.underLine(t2);
+       // AppUI.getGBRow(subInnerCore, null, t2, y, gridbag);
+       // y++;
+        
+        //t2.setVisible(false);
+             
+        
+
+        
+        
         AppUI.setColor(l, brand.getThirdTextColor());
         AppUI.setBoldFont(l, 32);
         AppUI.noOpaque(ddPanel);
@@ -6125,7 +6119,7 @@ public class AdvancedClient  {
         y++;
         
         
-        new FileDrop(null, ddPanel, new FileDrop.Listener() {
+        new FileDrop(null, ddPanel, new DashedBorder(40, brand.getSecondTextColor()), false, new FileDrop.Listener() {
             public void filesDropped( java.io.File[] files ) {   
                 for( int i = 0; i < files.length; i++ ) {
                     if (!AppCore.hasCoinExtension(files[i])) {
@@ -6138,11 +6132,14 @@ public class AdvancedClient  {
                 }
                              
                 String totalCloudCoins = AppCore.calcCoinsFromFilenames(ps.files);
-                String text = "Selected " + ps.files.size() + " files - " + totalCloudCoins + " CloudCoins";
-                              
+                String text = "Selected " + ps.files.size() + " files - " + totalCloudCoins + " CloudCoins";                              
                 tl.setText(text);      
-
-
+                
+                l.setText("Dropped " + ps.files.size() + " file(s)");
+                if (ps.files.size() > 0) {
+                    t2.setVisible(true);
+                } else
+                    t2.setVisible(false);
                 /*
                 if (ps.files.size() == 0)
                     ddPanel.setBorder(new DashedBorder(40, brand.getThirdTextColor()));
@@ -6152,9 +6149,11 @@ public class AdvancedClient  {
             } 
         }); 
         
+        
+        
         final JFileChooser chooser = new JFileChooser();
         FileNameExtensionFilter filter = new FileNameExtensionFilter(
-                "CloudCoins", "jpg", "jpeg", "stack", "json", "txt");
+                "CloudCoins", "jpg", "jpeg", "png", "stack", "json", "txt");
         chooser.setFileFilter(filter);
         chooser.setMultiSelectionEnabled(true);
         
@@ -6173,8 +6172,15 @@ public class AdvancedClient  {
                     
                     String totalCloudCoins = AppCore.calcCoinsFromFilenames(ps.files);
                     String text = "Selected " + ps.files.size() + " files - " + totalCloudCoins + " CloudCoins";
-                              
+                        
+                    l.setText("Dropped " + ps.files.size() + " file(s)");
                     tl.setText(text);  
+                    if (ps.files.size() > 0) {
+                        t2.setVisible(true);
+                        ddPanel.setBorder(new DashedBorder(40, brand.getSecondTextColor()));
+                    }
+                    else
+                        t2.setVisible(false);
 
                     
                     Config.DEFAULT_DEPOSIT_DIR = chooser.getCurrentDirectory().getAbsolutePath();
@@ -10098,6 +10104,9 @@ public class AdvancedClient  {
                             return;
                         }
                     });
+                    
+                    
+                    ps.srcWallet.appendTransaction(ps.typedMemo, sr.amount * -1, sr.receiptId);
                     return;
                 }
                 

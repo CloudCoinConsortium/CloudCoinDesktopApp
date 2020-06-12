@@ -193,12 +193,12 @@ public class Authenticator extends Servant {
         }
 
         CommonResponse errorResponse;
-        AuthenticatorResponse[][] ar;
+        //AuthenticatorResponse[][] ar;
         //Object[] o;
         Object o;
         
 
-        ar = new AuthenticatorResponse[RAIDA.TOTAL_RAIDA_COUNT][];
+        //ar = new AuthenticatorResponse[RAIDA.TOTAL_RAIDA_COUNT][];
         for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
             logger.info(ltag, "i="+i+ " r="+results[i]);
 

@@ -299,6 +299,7 @@ public class FileDrop {
                             // Mark that drop is completed.
                             evt.getDropTargetContext().dropComplete(true);
                             log( out, "FileDrop: drop complete." );
+                            
                         }   // end if: file list
                         else // this section will check for a reader flavor.
                         {
@@ -349,8 +350,10 @@ public class FileDrop {
                         // If it's a Swing component, reset its border
                         if( c instanceof javax.swing.JComponent )
                         {   javax.swing.JComponent jc = (javax.swing.JComponent) c;
-                            jc.setBorder( normalBorder );
+                            //jc.setBorder( normalBorder );
+                            jc.setBorder( dragBorder );
                             log( out, "FileDrop: normal border restored." );
+                            
                         }   // end if: JComponent
                     }   // end finally
                 }   // end drop

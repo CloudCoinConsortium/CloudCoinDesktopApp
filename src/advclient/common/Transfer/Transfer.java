@@ -277,9 +277,16 @@ public class Transfer extends Servant {
         
     }
     
+    private void setCoinStatus(ArrayList<CloudCoin> ccs, int idx, int status) {
+        for (CloudCoin cc : ccs) {
+            cc.setDetectStatus(idx, status);
+        }
+    }
+    
     public boolean processTransfer(ArrayList<CloudCoin> ccs, CloudCoin cc, String tag, int tosn)  {       
         String[] results;
-        Object[] o;
+        //Object[] o;
+        Object o;
         CommonResponse errorResponse;
         TransferResponse[][] trs;
         String[] requests;
@@ -298,7 +305,8 @@ public class Transfer extends Servant {
             requests[i] = "transfer";
 
             sbs[i] = new StringBuilder();
-            sbs[i].append("nn=");
+            sbs[i].append("b=t");
+            sbs[i].append("&nn=");
             sbs[i].append(cc.nn);
             sbs[i].append("&sn=");
             sbs[i].append(cc.sn);
@@ -348,13 +356,22 @@ public class Transfer extends Servant {
             if (results[i] != null) {
                 if (results[i].equals("")) {
                     logger.error(ltag, "Skipped raida" + i);
+                    setCoinStatus(ccs, i, CloudCoin.STATUS_NORESPONSE);
                     continue;
                 }
             }
+            
+            if (results[i] == null) {
+                logger.error(ltag, "Skipped raida due to zero response: " + i);
+                setCoinStatus(ccs, i, CloudCoin.STATUS_NORESPONSE);
+                continue;
+            }
 
-            o = parseArrayResponse(results[i], TransferResponse.class);
+            //o = parseArrayResponse(results[i], TransferResponse.class);
+            o = parseResponse(results[i], TransferResponse.class);
             if (o == null) {
                 errorResponse = (CommonResponse) parseResponse(results[i], CommonResponse.class);
+                setCoinStatus(ccs, i, CloudCoin.STATUS_ERROR);
                 if (errorResponse == null) {
                     logger.error(ltag, "Failed to get error");
                     continue;
@@ -363,7 +380,47 @@ public class Transfer extends Servant {
                 logger.error(ltag, "Failed to auth coin. Status: " + errorResponse.status);
                 continue;
             }
+            
+            TransferResponse ars = (TransferResponse) o;           
+            logger.debug(ltag, "raida" + i + " status: " + ars.status);
+            if (ars.status.equals("allpass")) {
+                logger.debug(ltag, "allpass");
+                setCoinStatus(ccs, i, CloudCoin.STATUS_PASS);
+                continue;
+            } else if (ars.status.equals("allfail")) {
+                logger.debug(ltag, "allfail");
+                setCoinStatus(ccs, i, CloudCoin.STATUS_FAIL);
+                continue;
+            } else if (ars.status.equals("mixed")) {
+                logger.debug(ltag, "mixed " + ars.message);
+                String[] rss = ars.message.split(",");
+                if (rss.length != ccs.size()) {
+                    logger.error(ltag, "Invalid length returned: " + rss.length + ", expected: " + ccs.size());
+                    setCoinStatus(ccs, i, CloudCoin.STATUS_ERROR);
+                    continue;
+                }
+                
+                for (int j = 0; j < rss.length; j++) {
+                    String strStatus = rss[j];
+                    int status;
+                    if (strStatus.equals(Config.REQUEST_STATUS_PASS)) {
+                        status = CloudCoin.STATUS_PASS;
+                    } else if (strStatus.equals(Config.REQUEST_STATUS_FAIL)) {
+                        status = CloudCoin.STATUS_FAIL;
+                    } else {
+                        status = CloudCoin.STATUS_ERROR;
+                        logger.error(ltag, "Unknown coin status from RAIDA" + i + ": " + strStatus);
+                    }
+                    
+                    ccs.get(j).setDetectStatus(i, status);
+                }
+            } else {
+                logger.error(ltag, "Invalid status: " + ars.status);
+                setCoinStatus(ccs, i, CloudCoin.STATUS_ERROR);
+                continue;
+            }
 
+            /*
             if (o.length != sccs.length) {
                 logger.error(ltag, "RAIDA " + i + " wrong number of coins: " + o.length);
                 continue;
@@ -395,6 +452,7 @@ public class Transfer extends Servant {
                 
                 ccs.get(j).setDetectStatus(i, cstatus);            
             }
+            */
         }
 
         boolean failed = false;
@@ -424,7 +482,7 @@ public class Transfer extends Servant {
         return true;
     }
     
-    
+    /*
     public boolean processTransferWithChange(CloudCoin tcc, CloudCoin cc, String tag, int tosn, int amount)  {       
         String[] results;
         CommonResponse errorResponse;
@@ -608,5 +666,5 @@ public class Transfer extends Servant {
 
         return true;
     }
-    
+    */
 }
