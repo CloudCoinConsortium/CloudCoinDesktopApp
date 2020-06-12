@@ -82,6 +82,7 @@ public class ProgramState {
     final public static int SCREEN_CHECKING_SKYWALLETS = 63;
     final public static int SCREEN_CHECKING_SKYWALLETS_DONE = 64;
     final public static int SCREEN_CLOUDBANK_SETTINGS_SAVED = 65;
+    final public static int SCREEN_PRE_DELETE_WALLET = 66;
     
     
     final static int CB_STATE_INIT = 1;

@@ -977,7 +977,7 @@ public class AdvancedClient  {
                     } else if (action.equals("3")) {
                         ps.currentScreen = ProgramState.SCREEN_FIX_FRACKED;
                     } else if (action.equals("4")) {
-                        ps.currentScreen = ProgramState.SCREEN_DELETE_WALLET;
+                        ps.currentScreen = ProgramState.SCREEN_PRE_DELETE_WALLET;
                     } else if (action.equals("5")) {
                         ps.currentScreen = ProgramState.SCREEN_SHOW_FOLDERS;
                     } else if (action.equals("6")) {
@@ -1242,6 +1242,9 @@ public class AdvancedClient  {
                 break;
             case ProgramState.SCREEN_DELETE_WALLET:
                 showDeleteWalletScreen();
+                break;
+            case ProgramState.SCREEN_PRE_DELETE_WALLET:
+                showPreDeleteWalletScreen();
                 break;
             case ProgramState.SCREEN_CONFIRM_DELETE_WALLET:
                 showConfirmDeleteWalletScreen();
@@ -6975,6 +6978,43 @@ public class AdvancedClient  {
      
         return rv;
     }
+    
+    public void showPreDeleteWalletScreen() {
+        JPanel subInnerCore = getPanel("Finishing Updating Wallets. Please wait...");                
+        GridBagLayout gridbag = new GridBagLayout();
+        subInnerCore.setLayout(gridbag);
+
+        Thread t = new Thread(new Runnable() {
+            public void run() {
+                boolean finished = false;
+                while (true) {
+                    for (int i = 0; i < wallets.length; i++) {
+                       if (!wallets[i].isUpdated()) {
+                           System.out.println("wallet " + wallets[i].getName() + " is not updated");
+                           finished = false;
+                           break;
+                       }
+                    }
+                    
+                    if (finished) 
+                        break;
+                    
+                    finished = true;
+                    try {
+                        Thread.sleep(300);
+                    } catch (InterruptedException e) {}
+                    
+                }
+                
+                ps.currentScreen = ProgramState.SCREEN_DELETE_WALLET;
+                showScreen();
+
+            }
+        });
+        
+        t.start();
+
+    }
 
     public void showDeleteWalletScreen() {
         int y = 0;
@@ -6985,6 +7025,10 @@ public class AdvancedClient  {
         GridBagLayout gridbag = new GridBagLayout();
         subInnerCore.setLayout(gridbag);
 
+        for (int i = 0; i < wallets.length; i++) {
+            System.out.println("x="+wallets[i].getName() + " up="+ wallets[i].isUpdated());
+        }
+        
         final optRv rv = setOptionsForWalletsCommon(false, true, true, null);
         if (rv.idxs.length == 0) {
             fname = AppUI.wrapDiv("You have no empty wallets to delete");
