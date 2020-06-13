@@ -117,8 +117,7 @@ public class Grader extends Servant {
         String dstFolder;
         int untried, counterfeit, passed, error, noresponse;
 
-        untried = counterfeit = passed = error = noresponse = 0;
-        logger.debug(ltag, "cc="+cc.sn+ " u="+untried+ " c=" + counterfeit + " passed="+passed+ " e="+error + " n="+ noresponse);
+        untried = counterfeit = passed = error = noresponse = 0;       
         for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
             switch (cc.getDetectStatus(i)) {
                 case CloudCoin.STATUS_NORESPONSE:
@@ -139,6 +138,7 @@ public class Grader extends Servant {
             }
         }
 
+        logger.debug(ltag, "cc="+cc.sn+ " u="+untried+ " c=" + counterfeit + " passed="+passed+ " e="+error + " n="+ noresponse);
         boolean includePans = false;
         String ccFile;
 

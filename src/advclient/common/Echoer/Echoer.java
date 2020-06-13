@@ -1,5 +1,6 @@
 package global.cloudcoin.ccbank.Echoer;
 
+import global.cloudcoin.ccbank.EchoResult.EchoResult;
 import java.io.File;
 
 import global.cloudcoin.ccbank.core.AppCore;
@@ -15,6 +16,7 @@ public class Echoer extends Servant {
     String ltag = "Echoer";
     EchoResponse[] ers;
     long[] latencies;
+    EchoResult globalResult;
 
     public Echoer(String rootDir, GLogger logger) {
         super("Echoer", rootDir, logger);
@@ -27,6 +29,8 @@ public class Echoer extends Servant {
         ers = new EchoResponse[RAIDA.TOTAL_RAIDA_COUNT];
         latencies = new long[RAIDA.TOTAL_RAIDA_COUNT];
 
+        globalResult = new EchoResult();
+        
         launchThread(new Runnable() {
             @Override
             public void run() {
@@ -37,11 +41,17 @@ public class Echoer extends Servant {
                 raida.setReadTimeout(Config.READ_TIMEOUT);
 
                 if (cb != null)
-                    cb.callback(null);
+                    cb.callback(globalResult);
             }
         });
     }
 
+    private void copyFromGlobalResult(EchoResult aResult) {
+        aResult.status = globalResult.status;
+        aResult.errText = globalResult.errText;
+        aResult.totalRAIDAProcessed = globalResult.totalRAIDAProcessed;
+    }
+    
     private void setRAIDAUrl(String ip, int basePort) {
         raida.setUrl(ip, basePort);
     }
@@ -53,15 +63,18 @@ public class Echoer extends Servant {
             logger.debug(ltag, "Custom RAIDA Domain is set to: " + Config.CUSTOM_RAIDA_DOMAIN);
             
             raida.setUrlWithDomain(Config.CUSTOM_RAIDA_DOMAIN);
-            saveResults();
-            return;
+            //saveResults();
+            //return;
+        } else {
+            raida.setDefaultUrls();
         }
         
-        raida.setDefaultUrls();
-        
         if (!doEchoReal()) {
-            logger.info(ltag, "Switching to the Backup0 RAIDA");
+            logger.info(ltag, "RAIDA Failed");
+            
+            globalResult.status = EchoResult.STATUS_ERROR;
 
+            /*
             setRAIDAUrl(Config.BACKUP0_RAIDA_IP, Config.BACKUP0_RAIDA_PORT);
             if (!doEchoReal()) {
                 logger.info(ltag, "Switching to the Backup1 RAIDA");
@@ -76,6 +89,9 @@ public class Echoer extends Servant {
                     }
                 }
             }
+            */
+        } else {
+            globalResult.status = EchoResult.STATUS_FINISHED;
         }
 
         saveResults();
@@ -92,7 +108,20 @@ public class Echoer extends Servant {
         for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++)
             requests[i] = "echo";
 
-        results = raida.query(requests);
+        results = raida.query(requests, null, new CallbackInterface() {
+            final GLogger gl = logger;
+            final CallbackInterface myCb = cb;
+
+            @Override
+            public void callback(Object result) {
+                globalResult.totalRAIDAProcessed++;
+                if (myCb != null) {
+                    EchoResult ar = new EchoResult();
+                    copyFromGlobalResult(ar);
+                    myCb.callback(ar);
+                }
+            }
+        });
         if (results == null) {
             logger.error(ltag, "Failed to query echo");
             return false;

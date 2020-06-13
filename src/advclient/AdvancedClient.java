@@ -3,6 +3,7 @@ package advclient;
 import advclient.common.core.Validator;
 import global.cloudcoin.ccbank.Authenticator.AuthenticatorResult;
 import global.cloudcoin.ccbank.Backupper.BackupperResult;
+import global.cloudcoin.ccbank.EchoResult.EchoResult;
 import global.cloudcoin.ccbank.Eraser.EraserResult;
 import global.cloudcoin.ccbank.Emailer.EmailerResult;
 import global.cloudcoin.ccbank.Exporter.ExporterResult;
@@ -1395,6 +1396,15 @@ public class AdvancedClient  {
         
     }
     
+    private void setRAIDAEchoProgressCoins(int raidaProcessed) {
+        pbar.setVisible(true);
+        pbar.setValue(raidaProcessed);
+
+        pbarText.setText("Echoing RAIDA...");
+        pbarText.repaint();        
+    }
+    
+    
     /*
     private void setRAIDAProgress(int raidaProcessed, int totalFilesProcessed, int totalFiles) {
         pbar.setVisible(true);
@@ -1511,11 +1521,25 @@ public class AdvancedClient  {
         Thread t = new Thread(new Runnable() {
             public void run(){
                 wl.debug(ltag, "Fixing coins in " + ps.srcWallet.getName());
-                try {
-                    while (!ps.isEchoFinished) {
-                        Thread.sleep(100);
-                    }
-                } catch (InterruptedException e) {}
+                ps.isEchoFinished = false;
+                setRAIDAEchoProgressCoins(0);                
+                sm.startEchoService(new EchoCb());
+                while (!ps.isEchoFinished) {
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException e) {}
+
+                }
+                
+                if (!sm.isRAIDAOK()) {
+                    ps.errText = "RAIDA cannot be contacted. "
+                            + "This is usually caused by company routers blocking outgoing traffic. "
+                            + "Please Echo RAIDA and try again.";
+                    ps.isEchoFinished = false;
+                    ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
+                    showScreen();
+                    return;
+                }
 
                 sm.setActiveWalletObj(ps.srcWallet);                
                 sm.startFrackFixerService(new FrackFixerOnPurposeCb(), ps.needExtensiveFixing, ps.srcWallet.getEmail());
@@ -1746,11 +1770,7 @@ public class AdvancedClient  {
                     pbarText.setText("Checking RAIDA ...");
                     pbarText.repaint();
                 }
-                
-                try {
-                    Thread.sleep(200);
-                } catch (InterruptedException e) {}
-                
+
                 while (!ps.isEchoFinished) {
                     try {
                         Thread.sleep(300);
@@ -1903,19 +1923,14 @@ public class AdvancedClient  {
         Thread t = new Thread(new Runnable() {
             public void run(){
                 pbar.setVisible(false);
-                if (!ps.isEchoFinished) {
-                    pbarText.setText("Checking RAIDA ...");
-                    pbarText.repaint();
-                }
-                
-                try {
-                    Thread.sleep(200);
-                } catch (InterruptedException e) {}
-                
+                ps.isEchoFinished = false;
+                setRAIDAEchoProgressCoins(0);                
+                sm.startEchoService(new EchoCb());
                 while (!ps.isEchoFinished) {
                     try {
-                        Thread.sleep(300);
+                        Thread.sleep(500);
                     } catch (InterruptedException e) {}
+
                 }
                 
                 if (!sm.isRAIDAOK()) {
@@ -1923,7 +1938,7 @@ public class AdvancedClient  {
                             + "This is usually caused by company routers blocking outgoing traffic. "
                             + "Please Echo RAIDA and try again.";
                     ps.isEchoFinished = false;
-                    ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                    ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
                     showScreen();
                     return;
                 }
@@ -2146,11 +2161,7 @@ public class AdvancedClient  {
                     pbarText.setText("Checking RAIDA ...");
                     pbarText.repaint();
                 }
-                
-                try {
-                    Thread.sleep(200);
-                } catch (InterruptedException e) {}
-                
+
                 while (!ps.isEchoFinished) {
                     try {
                         Thread.sleep(300);
@@ -2243,8 +2254,6 @@ public class AdvancedClient  {
                 pbarText.setText("Fixing Coins");
                 pbarText.repaint();
                 
-                
-
                 for (CloudCoin cc : ps.fxToFix) {
                     String coinName = cc.getFileName();
                 
@@ -2406,19 +2415,14 @@ public class AdvancedClient  {
         Thread t = new Thread(new Runnable() {
             public void run(){
                 pbar.setVisible(false);
-                if (!ps.isEchoFinished) {
-                    pbarText.setText("Checking RAIDA ...");
-                    pbarText.repaint();
-                }
-                
-                try {
-                    Thread.sleep(200);
-                } catch (InterruptedException e) {}
-                
+                ps.isEchoFinished = false;
+                setRAIDAEchoProgressCoins(0);                
+                sm.startEchoService(new EchoCb());
                 while (!ps.isEchoFinished) {
                     try {
-                        Thread.sleep(300);
+                        Thread.sleep(500);
                     } catch (InterruptedException e) {}
+
                 }
                 
                 if (!sm.isRAIDAOK()) {
@@ -2426,7 +2430,7 @@ public class AdvancedClient  {
                             + "This is usually caused by company routers blocking outgoing traffic. "
                             + "Please Echo RAIDA and try again.";
                     ps.isEchoFinished = false;
-                    ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                    ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
                     showScreen();
                     return;
                 }
@@ -2792,12 +2796,9 @@ public class AdvancedClient  {
         Thread t = new Thread(new Runnable() {
             public void run(){
                 pbar.setVisible(false);
-                if (!ps.isEchoFinished) {
-                    pbarText.setText("Checking RAIDA ...");
-                    pbarText.repaint();
-                }
-                
-                wl.debug(ltag, "Going here");
+                ps.isEchoFinished = false;
+                setRAIDAEchoProgressCoins(0);                
+                sm.startEchoService(new EchoCb());
                 while (!ps.isEchoFinished) {
                     try {
                         Thread.sleep(500);
@@ -2814,7 +2815,7 @@ public class AdvancedClient  {
                     showScreen();
                     return;
                 }
-                
+
                 ps.dstWallet.setPassword(ps.typedPassword);
                 sm.setActiveWalletObj(ps.dstWallet);
                 
@@ -6990,7 +6991,6 @@ public class AdvancedClient  {
                 while (true) {
                     for (int i = 0; i < wallets.length; i++) {
                        if (!wallets[i].isUpdated()) {
-                           System.out.println("wallet " + wallets[i].getName() + " is not updated");
                            finished = false;
                            break;
                        }
@@ -8733,10 +8733,7 @@ public class AdvancedClient  {
 
         corePanel.add(mwrapperPanel);
         updateWalletAmount();
-     
-        if (!ps.isEchoFinished)
-            sm.startEchoService(new EchoCb());
-        
+
         return mwrapperPanel;
     }
     
@@ -9436,20 +9433,27 @@ public class AdvancedClient  {
     }
     
     class EchoCb implements CallbackInterface {
-	public void callback(Object result) {
-            wl.debug(ltag, "Echo finisheed");
+	public void callback(Object result) {                        
+            final Object fresult = result;
+            final EchoResult er = (EchoResult) fresult;
             
-            echoDone();
-            
-            if (ps.currentScreen == ProgramState.SCREEN_ECHO_RAIDA) {
-                EventQueue.invokeLater(new Runnable() {         
-                    public void run() {
-                        ps.currentScreen = ProgramState.SCREEN_ECHO_RAIDA_FINISHED;
-                        showScreen();
-                    }
-                });
-            }
-	}  
+            wl.debug(ltag, "Echoer finished " + er.status);
+            if (er.status == EchoResult.STATUS_ERROR || er.status == EchoResult.STATUS_FINISHED) {
+                echoDone();
+                if (ps.currentScreen == ProgramState.SCREEN_ECHO_RAIDA) {
+                    EventQueue.invokeLater(new Runnable() {         
+                        public void run() {
+                            ps.currentScreen = ProgramState.SCREEN_ECHO_RAIDA_FINISHED;
+                            showScreen();
+                        }
+                    });
+                }
+                return;
+            } 
+
+            setRAIDAEchoProgressCoins(er.totalRAIDAProcessed);
+            //setRAIDAProgress(ar.totalRAIDAProcessed, ar.totalFilesProcessed, ar.totalFiles);
+	}
     }
  
     class UnpackerSenderCb implements CallbackInterface {

@@ -230,9 +230,7 @@ public class Servant {
             logger.error(ltag, "Only " + cntValid + " raidas are online. Can't proceed");
             return false;
         }
-
         
-
         return true;
     }
 
@@ -489,7 +487,7 @@ public class Servant {
         
         for (File file: files) {
             if (!file.isDirectory()) {
-                logger.debug(ltag, "Deleting " + file);
+                //logger.debug(ltag, "Deleting " + file);
                 file.delete();
             }
         }
@@ -1689,7 +1687,7 @@ public class Servant {
 
         fakeCC.setPownStringFromDetectStatus();
         logger.debug(ltag, "Change: " + fakeCC.getPownString());
-        System.out.println("Change: " + fakeCC.getPownString());
+
         
         if (fakeCC.isSentFixable()) {
             logger.debug(ltag, "Break completed successfully");
@@ -1698,7 +1696,7 @@ public class Servant {
         
         
         logger.info(ltag, "Break failed");
-        System.out.println("failed");
+
         //for (i = 0; i < sns.length; i++) { coinsPicked.add(new CloudCoin(Config.DEFAULT_NN, sns[i]));     }  return true;
         //return false;
         
