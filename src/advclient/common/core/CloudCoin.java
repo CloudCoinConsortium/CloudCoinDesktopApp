@@ -255,11 +255,15 @@ public class CloudCoin {
 	json = "{" + ls + "\t\t\"nn\":\"" + nn + "\"," + ls + "\t\t\"sn\":\"" + sn + "\"," + ls + "\t\t\"an\":[\"";
 	for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
             String an = ans[i];
-                                       
+
             json += an;
             if (i != RAIDA.TOTAL_RAIDA_COUNT - 1) {
-		json += "\", \"";
-            }
+                json += "\",";
+                if (((i + 1) % 5) == 0)
+                    json += ls;
+                        
+                    json += "\"";
+            }            
 	}
 
         if (ed == null)
