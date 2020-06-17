@@ -369,7 +369,7 @@ public class AppUI {
     }
     
     public static String getRemoteUserOption() {
-        return "- Remote User";
+        return "New Remote User";
     }
     
     public static String getLocalFolderOption() {

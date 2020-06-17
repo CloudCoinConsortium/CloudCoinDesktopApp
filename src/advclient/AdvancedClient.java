@@ -69,7 +69,7 @@ import org.json.JSONObject;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "3.0.12";
+    public static String version = "3.0.13";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -5445,7 +5445,7 @@ public class AdvancedClient  {
         int y = 0;
         JLabel fname;
 
-        JPanel subInnerCore = getPanel("Transfer from " + ps.currentWallet.getName());                
+        JPanel subInnerCore = getPanel("Send from " + ps.currentWallet.getName());                
         GridBagLayout gridbag = new GridBagLayout();
         subInnerCore.setLayout(gridbag);
 
@@ -5467,7 +5467,7 @@ public class AdvancedClient  {
         
         fname = new JLabel("Transfer To");
         final RoundedCornerComboBox cboxto = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "Make Selection", rvTo.options);
-        cboxto.addOption(AppUI.getRemoteUserOption());
+        cboxto.addOption("Send to " + AppUI.getRemoteUserOption());
         //cboxto.addOption(AppUI.getLocalFolderOption());
         AppUI.getGBRow(subInnerCore, fname, cboxto.getComboBox(), y, gridbag);
         y++; 
@@ -5503,14 +5503,11 @@ public class AdvancedClient  {
             rv.idxs = new int[len];
             
             for (int i = 0; i < len; i++) {
-                rv.options[i] = skyWalletNames[i];
+                rv.options[i] = "Send to " + skyWalletNames[i];
                 rv.idxs[i] = i;         
             }       
         }
-        
-        
-        
-        
+
         final JLabel rwText = new JLabel("To SkyWallet");
         final RoundedCornerComboBox remoteWalledId = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "JohnDoe.SkyWallet.cc", rv.options);
         remoteWalledId.setEditable();
@@ -5578,6 +5575,12 @@ public class AdvancedClient  {
         if (!ps.typedMemo.isEmpty())
             memo.setData(ps.typedMemo);
         AppUI.getGBRow(subInnerCore, fname, memo.getTextField(), y, gridbag);
+        y++;
+        
+        
+        fname = AppUI.wrapDiv("NOTE: if you want to send by email, skype, facebook, "
+                + "messenger or any other app, first withdraw the CloudCoins and send them like any other file");
+        AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
         y++;
             
         AppUI.GBPad(subInnerCore, y, gridbag);        
@@ -6694,7 +6697,7 @@ public class AdvancedClient  {
             if (name != null && wallets[i].getName().equals(name))
                 continue;
 
-            rv.options[j] = wallets[i].getName() + " - " + AppCore.formatNumber(wallets[i].getTotal()) + " CC";
+            rv.options[j] = "Transfer to " + wallets[i].getName() + " - " + AppCore.formatNumber(wallets[i].getTotal()) + " CC";
             rv.idxs[j] = i;
             j++;
         }
@@ -7735,7 +7738,7 @@ public class AdvancedClient  {
         // Transfer
         JPanel wrpTransfer = new JPanel();
         AppUI.setBoxLayout(wrpTransfer, false);
-        AppUI.setSize(wrpTransfer, bwidth, 56);
+        AppUI.setSize(wrpTransfer, bwidth + 50, 56);
         AppUI.setBackground(wrpTransfer, brand.getTopMenuHoverColor());
         AppUI.noOpaque(wrpTransfer);
             
@@ -7745,7 +7748,7 @@ public class AdvancedClient  {
         wrpTransfer.add(transferIcon);
         wrpTransfer.add(AppUI.vr(12));
             
-        titleText = new JLabel("Transfer");
+        titleText = new JLabel("Transfer/Send");
         AppUI.setTitleFont(titleText, fsize);
         wrpTransfer.add(titleText);
             
