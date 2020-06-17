@@ -50,6 +50,7 @@ public class Echoer extends Servant {
         aResult.status = globalResult.status;
         aResult.errText = globalResult.errText;
         aResult.totalRAIDAProcessed = globalResult.totalRAIDAProcessed;
+        aResult.latencies = globalResult.latencies;
     }
     
     private void setRAIDAUrl(String ip, int basePort) {
@@ -92,6 +93,21 @@ public class Echoer extends Servant {
             */
         } else {
             globalResult.status = EchoResult.STATUS_FINISHED;
+        
+        
+            long latency;
+            globalResult.latencies = new long[RAIDA.TOTAL_RAIDA_COUNT];
+            for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {                
+                if (ers[i] == null) {
+                    latency = Config.MAX_ALLOWED_LATENCY + 1;
+                    logger.debug(ltag, "RAIDA " + i + " unavailable");
+                } else {
+                    latency = latencies[i];
+                    logger.debug(ltag, "RAIDA " + i + " latency: " + latencies[i]);
+                }
+                
+                globalResult.latencies[i] = latency;  
+            }
         }
 
         saveResults();
@@ -108,7 +124,7 @@ public class Echoer extends Servant {
         for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++)
             requests[i] = "echo";
 
-        results = raida.query(requests, null, new CallbackInterface() {
+        results = raida.queryParallel(requests, null, new CallbackInterface() {
             final GLogger gl = logger;
             final CallbackInterface myCb = cb;
 
@@ -121,7 +137,7 @@ public class Echoer extends Servant {
                     myCb.callback(ar);
                 }
             }
-        });
+        }, null);
         if (results == null) {
             logger.error(ltag, "Failed to query echo");
             return false;

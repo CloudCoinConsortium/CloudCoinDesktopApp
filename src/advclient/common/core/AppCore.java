@@ -61,6 +61,8 @@ public class AppCore {
     
     static public String raidaErrText = "Cannot Connect to the RAIDA. "
             + "Check that local routers are not blocking your connection.";
+    
+    public static int currentMode;
 
     static public boolean createDirectory(String dirName) {
         String idPath;
@@ -1317,13 +1319,39 @@ public class AppCore {
                 Config.CUSTOM_RAIDA_DOMAIN = os;
             }
             
-            
+            oi = o.optInt("mode");
+            if (oi != -1) {
+                logger.debug(ltag, "Custom Mode: " + oi);
+                Config.REQUESTED_MODE = oi;
+            }
             
         } catch (JSONException e) {
             logger.error(ltag, "Failed to parse config file: " + e.getMessage());
             return;
         }
         
+    }
+    
+    public static void syncMode() {
+        if (Config.REQUESTED_MODE == Config.OPERATION_MODE_FAST)
+            AppCore.currentMode = Config.OPERATION_MODE_FAST;
+        else if (Config.REQUESTED_MODE == Config.OPERATION_MODE_SLOW) {
+            AppCore.currentMode = Config.OPERATION_MODE_SLOW;
+        } else if (Config.REQUESTED_MODE == Config.OPERATION_MODE_AUTO) {
+            AppCore.currentMode = Config.OPERATION_MODE_FAST;
+        }
+        
+        logger.debug(ltag, "Mode Set: " + AppCore.currentMode);
+    }
+    
+    public static String getModeStr() {
+        if (AppCore.currentMode == Config.OPERATION_MODE_FAST)
+            return "Parallel";
+        
+        if (AppCore.currentMode == Config.OPERATION_MODE_SLOW)
+            return "Serial";
+     
+        return "Unknown";
     }
     
     public static boolean writeConfig() {
@@ -1349,7 +1377,8 @@ public class AppCore {
                 + "\"cloudbank_password\": \"" + Config.CLOUDBANK_PASSWORD +  "\", "
                 + "\"ddnssn_server\": \"" + Config.DDNSSN_SERVER + "\", "
                 + "\"custom_raida_domain\": \"" + Config.CUSTOM_RAIDA_DOMAIN + "\", "
-                + "\"use_custom_domain\": " + Config.USE_CUSTOM_DOMAIN + ""
+                + "\"use_custom_domain\": " + Config.USE_CUSTOM_DOMAIN + ", "
+                + "\"mode\": " + Config.REQUESTED_MODE + ""
                 + "}";
         
         File f = new File(globalConfigFilename);

@@ -121,92 +121,107 @@ public class RAIDA {
 	}
 
 	public String[] query(String[] requests) {
-		return query(requests, null, null, null);
+            return query(requests, null, null, null);
 	}
 
 	public String[] query(String[] requests, String[] posts) {
-		return query(requests, posts, null, null);
+            return query(requests, posts, null, null);
 	}
 
 	public String[] query(String[] requests, String[] posts, CallbackInterface cb) {
-		return query(requests, posts, cb, null);
+            return query(requests, posts, cb, null);
 	}
+        
+        public String[] query(String[] requests, String[] posts, CallbackInterface cb, int[] rlist) {
+            
+            if (AppCore.currentMode == Config.OPERATION_MODE_FAST) {
+                logger.debug(ltag, "Querying raida in parallel");
+                return queryParallel(requests, posts, cb, rlist);
+            } else if (AppCore.currentMode == Config.OPERATION_MODE_SLOW) {
+                logger.debug(ltag, "Querying raida in serial mode");
+                return querySync(requests, posts, cb, rlist);               
+            } else {
+                logger.error(ltag, "Invalid mode: " + AppCore.currentMode);
+            }
+            
+            return null;
+        }
 
-	public String[] query(String[] requests, String[] posts, CallbackInterface cb, int[] rlist) {
-		int raidalistSize;
-		service = AppCore.getServiceExecutor();
-		List<Future<Runnable>> futures = new ArrayList<Future<Runnable>>();
+	public String[] queryParallel(String[] requests, String[] posts, CallbackInterface cb, int[] rlist) {
+            int raidalistSize;
+            service = AppCore.getServiceExecutor();
+            List<Future<Runnable>> futures = new ArrayList<Future<Runnable>>();
 
-		if (rlist == null)
-			rlist = getAllRAIDAs();
+            if (rlist == null)
+		rlist = getAllRAIDAs();
 
-		raidalistSize = rlist.length;
+            raidalistSize = rlist.length;
 
-		final String[] results = new String[raidalistSize];
+            final String[] results = new String[raidalistSize];
 
-		if (requests.length != raidalistSize) {
-			logger.error(ltag, "Internal error. Wrong parameters");
-			return null;
+            if (requests.length != raidalistSize) {
+		logger.error(ltag, "Internal error. Wrong parameters");
+		return null;
+            }
+
+            if (posts != null) {
+		if (posts.length != raidalistSize) {
+                    logger.error(ltag, "Internal error. Wrong post parameters");
+                    return null;
 		}
-
-		if (posts != null) {
-			if (posts.length != raidalistSize) {
-				logger.error(ltag, "Internal error. Wrong post parameters");
-				return null;
-			}
-		} else {
-			posts = new String[raidalistSize];
-			for (int i = 0; i < raidalistSize; i++) {
-				posts[i] = null;
-			}
-		}
-                
-                StackTraceElement[] es = Thread.currentThread().getStackTrace();
-                String callerClass = "";
-                for (int i = 0; i < es.length; i++) {
-                    String className = es[i].getClassName();
-                    
-                    if (className.equals(packageName) || className.equals("java.lang.Thread"))
-                        continue;
-
-                    callerClass = className;
-
-                    break;
-                }
-
-                
+            } else {
+		posts = new String[raidalistSize];
 		for (int i = 0; i < raidalistSize; i++) {
-			final int rIdxFinal = rlist[i];
-			final int iFinal = i;
-			final String request = requests[i];
-			final String post = posts[i];
-			final CallbackInterface myCb = cb;
-                        final String fcallerClass = callerClass;
-
-			Future f = service.submit(new Runnable() {
-				public void run() {
-                                    String url = "/service/" + request;
-                                    results[iFinal] = agents[rIdxFinal].doRequest(url, post, fcallerClass);
-                                    if (myCb != null)
-					myCb.callback(null);
-				}
-			});
-			futures.add(f);
+                    posts[i] = null;
 		}
+            }
+                
+            StackTraceElement[] es = Thread.currentThread().getStackTrace();
+            String callerClass = "";
+            for (int i = 0; i < es.length; i++) {
+                String className = es[i].getClassName();
+                    
+                if (className.equals(packageName) || className.equals("java.lang.Thread"))
+                    continue;
 
-		for (Future<Runnable> f : futures) {
-			try {
-				f.get(agents[0].getReadTimeout() * 2, TimeUnit.MILLISECONDS);
-			} catch (ExecutionException e) {
-				logger.error(ltag, "Error executing the task");
-			} catch (TimeoutException e) {
-				logger.error(ltag, "Timeout during connection to the server");
-			} catch (InterruptedException e) {
-				logger.error(ltag, "Task interrupted");
-			}
+                callerClass = className;
+
+                break;
+            }
+    
+            for (int i = 0; i < raidalistSize; i++) {
+		final int rIdxFinal = rlist[i];
+		final int iFinal = i;
+		final String request = requests[i];
+		final String post = posts[i];
+		final CallbackInterface myCb = cb;
+                final String fcallerClass = callerClass;
+
+		Future f = service.submit(new Runnable() {
+                    public void run() {
+                        String url = "/service/" + request;
+                        results[iFinal] = agents[rIdxFinal].doRequest(url, post, fcallerClass);
+                        if (myCb != null)
+                            myCb.callback(null);
+                    }
+                });
+                
+                futures.add(f);
+            }
+
+            for (Future<Runnable> f : futures) {
+		try {
+                    f.get(agents[0].getReadTimeout() * 2, TimeUnit.MILLISECONDS);
+		} catch (ExecutionException e) {
+                    logger.error(ltag, "Error executing the task");
+		} catch (TimeoutException e) {
+                    logger.error(ltag, "Timeout during connection to the server");
+		} catch (InterruptedException e) {
+                    logger.error(ltag, "Task interrupted");
 		}
+            }
 
-		return results;
+            return results;
 	}
 
         public String[] querySync(String[] requests, String[] posts, CallbackInterface cb, int[] rlist) {

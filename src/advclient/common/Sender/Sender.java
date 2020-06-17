@@ -15,6 +15,7 @@ import global.cloudcoin.ccbank.core.Config;
 import global.cloudcoin.ccbank.core.GLogger;
 import global.cloudcoin.ccbank.core.RAIDA;
 import global.cloudcoin.ccbank.core.Servant;
+import java.util.HashMap;
 
 public class Sender extends Servant {
     String ltag = "Sender";
@@ -89,6 +90,8 @@ public class Sender extends Servant {
         
         sResult.totalAuthenticValue = globalResult.totalAuthenticValue;
         sResult.totalFrackedValue = globalResult.totalFrackedValue;
+        
+        sResult.step = globalResult.step;
     }
     
     
@@ -379,47 +382,180 @@ public class Sender extends Servant {
     }
 
     private void moveCoins(ArrayList<CloudCoin> ccs) {
-        int passed, failed;
+   
+    }
+    
+    public boolean processSendAgain(ArrayList<CloudCoin> ccs, int tosn, String envelope) {
+        String[] results;
+        String[] requests;
+        StringBuilder[] sbs;
+        String[] posts;
+
+        int i;        
+        HashMap<Integer, Integer> hm = new HashMap<Integer, Integer>();
+        for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+            for (CloudCoin cc : ccs) {
+                if (cc.getDetectStatus(i) == CloudCoin.STATUS_PASS)
+                    continue;
+                
+                hm.put(i, i);
+            }
+        }
+
+        int[] rlist = new int[hm.size()];
+        i = 0;
+        for (HashMap.Entry<Integer, Integer> set : hm.entrySet()) {
+            rlist[i]= set.getKey();
+            i++;
+        }
+        
+        for (i = 0; i < rlist.length; i++) {
+            logger.debug(ltag, "Will query raida " + rlist[i]);
+        }
+        
+        int rsize = rlist.length;       
+        posts = new String[rsize];
+        requests = new String[rsize];
+        sbs = new StringBuilder[rsize];
+
+        for (i = 0; i < rlist.length; i++) {
+            requests[i] = "sendagain";
+            sbs[i] = new StringBuilder();
+            sbs[i].append("b=t");
+        }
 
         for (CloudCoin cc : ccs) {
-            String ccFile = cc.originalFile;
-            passed = failed = 0;
-            for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
-                if (cc.getDetectStatus(i) == CloudCoin.STATUS_PASS)
-                    passed++;
-                else if (cc.getDetectStatus(i) == CloudCoin.STATUS_FAIL)
-                    failed++;
+            logger.debug(ltag, "Processing coin " + cc.sn);
+
+            for (i = 0; i < rlist.length; i++) {
+                int raidaIdx = rlist[i];
+                sbs[i].append("&to_sn=");
+                sbs[i].append(tosn);
+                sbs[i].append("&tag=");
+                sbs[i].append(URLEncoder.encode(envelope));
+
+                sbs[i].append("&nns[]=");
+                sbs[i].append(cc.nn);
+
+                sbs[i].append("&sns[]=");
+                sbs[i].append(cc.sn);
+
+                sbs[i].append("&denomination[]=");
+                sbs[i].append(cc.getDenomination());
+
+                sbs[i].append("&ans[]=");
+                sbs[i].append(cc.ans[raidaIdx]);
+            }
+        }
+
+        for (i = 0; i < rlist.length; i++) {
+            posts[i] = sbs[i].toString();
+        }
+
+        globalResult.totalRAIDAProcessed = 0;
+        globalResult.step = Config.STEP_AGAIN;
+        results = raida.querySync(requests, posts, new CallbackInterface() {
+            final GLogger gl = logger;
+            final CallbackInterface myCb = cb;
+
+            @Override
+            public void callback(Object result) {
+                int step = RAIDA.TOTAL_RAIDA_COUNT / rsize;
+                globalResult.totalRAIDAProcessed += step;
+                if (myCb != null) {
+                    SenderResult srlocal = new SenderResult();
+                    copyFromGlobalResult(srlocal);
+                    myCb.callback(srlocal);
+                }
+            }
+        }, rlist);
+        globalResult.step = Config.STEP_NORMAL;
+
+        if (results == null) {
+            logger.error(ltag, "Failed to query send");
+            return false;
+        }
+
+        CommonResponse errorResponse;
+        //SenderResponse[][] ar;
+        //Object[] o;
+        Object o;
+        
+        //ar = new SenderResponse[RAIDA.TOTAL_RAIDA_COUNT][];
+        for (i = 0; i < rlist.length; i++) {
+            int raidaIdx = rlist[i];
+            logger.debug(ltag, "Parsing result from RAIDA" + raidaIdx + " r: " + results[i]);
+            if (results[i] != null) {
+                if (results[i].equals("")) {
+                    logger.error(ltag, "No response raida" + raidaIdx);
+                    setCoinStatus(ccs, raidaIdx, CloudCoin.STATUS_NORESPONSE);
+                    continue;
+                }
             }
             
-            cc.setPownStringFromDetectStatus();
+            if (results[i] == null) {
+                logger.error(ltag, "Skipped raida due to zero response: " + raidaIdx);
+                setCoinStatus(ccs, raidaIdx, CloudCoin.STATUS_NORESPONSE);
+                continue;
+            }
 
-            logger.info(ltag, "Doing " + cc.originalFile + " pass="+passed + " f="+failed + " pown=" + cc.getPownString());
-            if (cc.isSentFixable()) {
-                logger.info(ltag, "Moving to Sent: " + cc.sn);
-                globalResult.amount += cc.getDenomination();
-                addCoinToReceipt(cc, "authentic", "Remote Wallet " + remoteWalletName);
-                a++;
-                av += cc.getDenomination();
-                AppCore.moveToFolderNoTs(cc.originalFile, Config.DIR_SENT, user, true);
-            } else if (failed > 0) {
-                if (failed >= RAIDA.TOTAL_RAIDA_COUNT - Config.PASS_THRESHOLD) {
-                    logger.info(ltag, "Moving to Counterfeit: " + cc.sn);
-                    addCoinToReceipt(cc, "counterfeit", Config.DIR_COUNTERFEIT);
-                    c++;
-                    AppCore.moveToFolderNoTs(cc.originalFile, Config.DIR_COUNTERFEIT, user, true);
-                } else {
-                    logger.info(ltag, "Moving to Lost: " + cc.sn);
-                    addCoinToReceipt(cc, "error", Config.DIR_LOST);
-                    AppCore.moveToFolderNoTs(cc.originalFile, Config.DIR_LOST, user, true);
-                    e++;
+            //o = parseArrayResponse(results[i], SenderResponse.class);
+            o = parseResponse(results[i], SenderResponse.class);
+            if (o == null) {
+                errorResponse = (CommonResponse) parseResponse(results[i], CommonResponse.class);
+                setCoinStatus(ccs, raidaIdx, CloudCoin.STATUS_ERROR);
+                if (errorResponse == null) {
+                    logger.error(ltag, "Failed to get error");
+                    continue;
+                }
+
+                logger.error(ltag, "Failed to auth coin. Status: " + errorResponse.status);
+                continue;
+            }
+   
+            SenderResponse ars = (SenderResponse) o;           
+            logger.debug(ltag, "raida" + raidaIdx + " status: " + ars.status);
+            if (ars.status.equals("allpass")) {
+                logger.debug(ltag, "allpass");
+                setCoinStatus(ccs, raidaIdx, CloudCoin.STATUS_PASS);
+                continue;
+            } else if (ars.status.equals("allfail")) {
+                logger.debug(ltag, "allfail");
+                setCoinStatus(ccs, raidaIdx, CloudCoin.STATUS_FAIL);
+                continue;
+            } else if (ars.status.equals("mixed")) {
+                logger.debug(ltag, "mixed " + ars.message);
+                String[] rss = ars.message.split(",");
+                if (rss.length != ccs.size()) {
+                    logger.error(ltag, "Invalid length returned: " + rss.length + ", expected: " + ccs.size());
+                    setCoinStatus(ccs, raidaIdx, CloudCoin.STATUS_ERROR);
+                    continue;
+                }
+                
+                for (int j = 0; j < rss.length; j++) {
+                    String strStatus = rss[j];
+                    int status;
+                    if (strStatus.equals(Config.REQUEST_STATUS_PASS)) {
+                        status = CloudCoin.STATUS_PASS;
+                    } else if (strStatus.equals(Config.REQUEST_STATUS_FAIL)) {
+                        status = CloudCoin.STATUS_FAIL;
+                    } else {
+                        status = CloudCoin.STATUS_ERROR;
+                        logger.error(ltag, "Unknown coin status from RAIDA" + raidaIdx + ": " + strStatus);
+                    }
+                    
+                    ccs.get(j).setDetectStatus(raidaIdx, status);
                 }
             } else {
-                logger.info(ltag, "Moving to Lost: " + cc.sn);
-                addCoinToReceipt(cc, "error", Config.DIR_LOST);
-                AppCore.moveToFolderNoTs(cc.originalFile, Config.DIR_LOST, user, true);
-                e++;
+                logger.error(ltag, "Invalid status: " + ars.status);
+                setCoinStatus(ccs, raidaIdx, CloudCoin.STATUS_ERROR);
+                continue;
             }
-        }      
+            
+        }
+
+
+        return true;
     }
 
     public boolean processSend(ArrayList<CloudCoin> ccs, int tosn, String envelope) {
@@ -563,36 +699,72 @@ public class Sender extends Servant {
                 setCoinStatus(ccs, i, CloudCoin.STATUS_ERROR);
                 continue;
             }
-            
-            /*
-            for (int j = 0; j < o.length; j++) {
-                String strStatus;
-                int status;
 
-                ar[i] = new SenderResponse[o.length];
-                ar[i][j] = (SenderResponse) o[j];
-
-                strStatus = ar[i][j].status;
-
-                if (strStatus.equals("pass")) {
-                    status = CloudCoin.STATUS_PASS;
-                } else if (strStatus.equals("fail")) {
-                    status = CloudCoin.STATUS_FAIL;
-                } else {
-                    status = CloudCoin.STATUS_ERROR;
-                    logger.error(ltag, "Unknown coin status from RAIDA" + i + ": " + strStatus);
-                }
-
-                ccs.get(j).setDetectStatus(i, status);
-                
-                //logger.info(ltag, "raida" + i + " v=" + ar[i][j].status + " m="+ar[i][j].message);
-            }
-                    
-            */
         }
 
+        for (CloudCoin cc : ccs) {
+            cc.setDetectStatus(0, CloudCoin.STATUS_ERROR);
+            cc.setDetectStatus(7, CloudCoin.STATUS_ERROR);
+            cc.setDetectStatus(9, CloudCoin.STATUS_ERROR);
+            cc.setDetectStatus(14, CloudCoin.STATUS_ERROR);
+            cc.setDetectStatus(18, CloudCoin.STATUS_ERROR);
+            cc.setDetectStatus(19, CloudCoin.STATUS_ERROR);
+            cc.setDetectStatus(20, CloudCoin.STATUS_ERROR);
+            cc.setDetectStatus(21, CloudCoin.STATUS_ERROR);
+        }
 
-        moveCoins(ccs);
+        ArrayList<CloudCoin> againCCs = new ArrayList<CloudCoin>();
+        for (CloudCoin cc : ccs) {
+            cc.setPownStringFromDetectStatus();
+            logger.info(ltag, "Doing " + cc.originalFile + " pown=" + cc.getPownString());
+            System.out.println("sss=" + cc.sn + " p="+cc.getPownString());
+            if (cc.isSentFixable()) {
+                logger.info(ltag, "Moving to Sent: " + cc.sn);
+                globalResult.amount += cc.getDenomination();
+                addCoinToReceipt(cc, "authentic", "Remote Wallet " + remoteWalletName);
+                a++;
+                av += cc.getDenomination();
+                AppCore.moveToFolderNoTs(cc.originalFile, Config.DIR_SENT, user, true);
+            } else {
+                if (cc.canbeRecoveredFromLost()) {
+                    
+                    logger.debug(ltag, "Need to launch sendAgain for " + cc.sn);
+                    againCCs.add(cc);
+                    continue;
+                } else {
+                    c++;
+                    AppCore.moveToFolderNoTs(cc.originalFile, Config.DIR_COUNTERFEIT, user, true);
+                }
+            }
+        }   
+        
+        if (againCCs.size() != 0) {
+            logger.debug(ltag, "Running SendAgain");
+            if (!processSendAgain(againCCs, tosn, envelope)) {
+                logger.error(ltag, "Send again failed");
+                return true;
+            }
+            
+            logger.debug(ltag, "Processing send again");
+            for (CloudCoin cc : againCCs) {            
+                cc.setPownStringFromDetectStatus();
+                logger.info(ltag, "SendAgain Doing " + cc.originalFile + " pown=" + cc.getPownString());
+                System.out.println("sss=" + cc.sn + " p="+cc.getPownString());
+                if (cc.isSentFixable()) {
+                    logger.info(ltag, "Moving to Sent After SendAgain: " + cc.sn);
+                    globalResult.amount += cc.getDenomination();
+                    addCoinToReceipt(cc, "authentic", "Remote Wallet " + remoteWalletName);
+                    a++;
+                    av += cc.getDenomination();
+                    AppCore.moveToFolderNoTs(cc.originalFile, Config.DIR_SENT, user, true);
+                } else {
+                    logger.debug(ltag, "Send again failed for cc " + cc.sn + " Giving up");
+                    c++;
+                    AppCore.moveToFolderNoTs(cc.originalFile, Config.DIR_COUNTERFEIT, user, true);
+                }
+            }
+        }
+
 
         return true;
     }

@@ -89,6 +89,8 @@ public class Config {
     public static String DEFAULT_DEPOSIT_DIR = "";
 
     public static int MAX_ALLOWED_LATENCY = 20000;
+    
+    public static int AGG_LATENCY_FOR_SERIAL_MODE = 8000;
 
 
     public static int IDX_1 = 0;
@@ -236,4 +238,16 @@ public class Config {
     public static String GETMYIP_URL = "https://api.ipify.org?format=json";
     
     public static String KEYSTONE_PASSWORD = "keystonepassword";
+    
+    
+    public static int REQUESTED_MODE = 0;
+    
+    public static int OPERATION_MODE_AUTO = 0;
+    public static int OPERATION_MODE_FAST = 1;
+    public static int OPERATION_MODE_SLOW = 2;
+    
+    
+    public static int STEP_BREAK = 0;
+    public static int STEP_NORMAL = 1;
+    public static int STEP_AGAIN = 3;
 }

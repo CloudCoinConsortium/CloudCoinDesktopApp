@@ -12,6 +12,8 @@ public class EchoResult {
     public int totalRAIDAProcessed;
     public String errText;
 
+    public long[] latencies;
+    
     public EchoResult() {
         status = STATUS_PROCESSING;
         errText = "";

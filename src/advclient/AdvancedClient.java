@@ -69,7 +69,7 @@ import org.json.JSONObject;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "3.0.11";
+    public static String version = "3.0.12";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -107,6 +107,8 @@ public class AdvancedClient  {
     JLabel trTitle;
     JPanel invPanel;
     
+    JLabel modeText;
+    
     Brand brand;
     
     JLabel infoText;
@@ -117,7 +119,7 @@ public class AdvancedClient  {
     
     public AdvancedClient() {
         wl = new WLogger();
-
+        
         String home = System.getProperty("user.home");
         resetState();
         
@@ -251,7 +253,10 @@ public class AdvancedClient  {
         sm = new ServantManager(wl);
         sm.init();
 
+        AppCore.currentMode = Config.OPERATION_MODE_FAST;
+        
         AppCore.readConfig();
+        AppCore.syncMode();
         //AppCore.copyTemplatesFromJar();
         
         brand.copyTemplates();
@@ -300,8 +305,32 @@ public class AdvancedClient  {
     }
     
     
-    public void echoDone() {
+    public void echoDone(long[] latencies) {
         ps.isEchoFinished = true;
+        
+        if (Config.REQUESTED_MODE == Config.OPERATION_MODE_AUTO) {
+            Arrays.sort(latencies);
+            long total = 0;
+            for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT - 2; i++) {            
+                total += latencies[i];
+            }
+        
+            long agg = total / (RAIDA.TOTAL_RAIDA_COUNT - 2);
+        
+            wl.debug(ltag, "Cumulative latency of 23 raida servers (2 servers dropped): " + total + " agg: " + agg);
+            if (agg >= Config.AGG_LATENCY_FOR_SERIAL_MODE) {
+                wl.debug(ltag, "Agg latency threshold exceeded. Switching to serial mode");
+                AppCore.currentMode = Config.OPERATION_MODE_SLOW;
+            } else {
+                wl.debug(ltag, "Agg latency threshold not exceeded. Switching to parallel mode");
+                AppCore.currentMode = Config.OPERATION_MODE_FAST;
+            }
+        
+            modeText.setText("mode: " + AppCore.getModeStr());
+            modeText.repaint();
+        }
+        
+        //System.exit(1);
     }
        
     
@@ -611,8 +640,7 @@ public class AdvancedClient  {
 
 
         JLabel icon0, icon1, icon2, icon3;
-        final JLabel depositIcon, transferIcon, withdrawIcon, coinsIcon;
-        final ImageIcon depositIi, transferIi, withdrawIi, depositIiLight, transferIiLight, withdrawIiLight;
+        final JLabel coinsIcon;
         ImageIcon ii;
         try {
             Image img;
@@ -634,30 +662,6 @@ public class AdvancedClient  {
             
             img = ImageIO.read(brand.getImgCoinsIcon());
             coinsIcon = new JLabel(new ImageIcon(img));
-            
-        /*    img = ImageIO.read(brand.getImgDepositIcon());
-            depositIi = new ImageIcon(img);
-            depositIcon = new JLabel(new ImageIcon(img));
-            
-            img = ImageIO.read(brand.getImgWithdrawIcon());
-            withdrawIi = new ImageIcon(img);
-            withdrawIcon = new JLabel(new ImageIcon(img));
-            
-            
-            img = ImageIO.read(brand.getImgTransferIcon());
-            transferIi = new ImageIcon(img);
-            transferIcon = new JLabel(new ImageIcon(img));
-
-            
-            img = ImageIO.read(brand.getImgDepositIconHover());
-            depositIiLight = new ImageIcon(img);
-                      
-            img = ImageIO.read(brand.getImgTransferIconHover());
-            transferIiLight = new ImageIcon(img);
-            
-            img = ImageIO.read(brand.getImgWithdrawIconHover());
-            withdrawIiLight = new ImageIcon(img);
-        */    
         } catch (Exception ex) {
             wl.error(ltag, "Failed to open file: " + ex.getMessage());
             return;
@@ -682,7 +686,7 @@ public class AdvancedClient  {
         
         JPanel wrp = new JPanel();
         AppUI.setBoxLayout(wrp, false);
-        AppUI.setSize(wrp, 296, headerHeight);
+        AppUI.setSize(wrp, 386, headerHeight);
         AppUI.noOpaque(wrp);
  
         if (ps.currentScreen == ProgramState.SCREEN_AGREEMENT) {
@@ -698,10 +702,7 @@ public class AdvancedClient  {
             p.add(wrp);
             
             return;
-        } else {
-            int bwidth = 158;
-            // Coins
-            
+        } else {            
             wrp.add(coinsIcon);
             wrp.add(AppUI.vr(16));
             
@@ -718,187 +719,25 @@ public class AdvancedClient  {
             AppUI.setTitleFont(titleText, 16);
             AppUI.setMargin(titleText, 0, 6, 16, 0);
             wrp.add(titleText);
-                      
+            
+            
+            
+            modeText = new JLabel("mode: " + AppCore.getModeStr());
+            AppUI.setTitleFont(modeText, 12);
+            AppUI.setMargin(modeText, 12, 16, 16, 0);
+            wrp.add(modeText);
+            
+            
+            
             c.insets = new Insets(0, 2, 0, 0);
             c.anchor = GridBagConstraints.NORTH;
             gridbag.setConstraints(wrp, c);
             p.add(wrp);
-            /*        
-            // Deposit
-            JPanel wrpDeposit = new JPanel();
-            AppUI.setBoxLayout(wrpDeposit, false);
-            AppUI.setSize(wrpDeposit, bwidth, headerHeight);
-            AppUI.setBackground(wrpDeposit, brand.getTopMenuHoverColor());
-            AppUI.noOpaque(wrpDeposit);
-            
-            wrpDeposit.add(AppUI.vr(12));
-            
-            wrpDeposit.add(depositIcon);
-            if (isDepositing()) {
-                depositIcon.setIcon(depositIiLight);
-                AppUI.opaque(wrpDeposit);
-            } else {               
-                AppUI.setHandCursor(wrpDeposit);
-                depositIcon.setIcon(depositIi);
-            }
-                                    
-            wrpDeposit.add(AppUI.vr(6));
-            
-            titleText = new JLabel("Deposit");
-            AppUI.setTitleFont(titleText, 20);
-            wrpDeposit.add(titleText);
-            
-            c.insets = new Insets(0, 2, 0, 0);
-            c.anchor = GridBagConstraints.NORTH;
-            gridbag.setConstraints(wrpDeposit, c);
-            p.add(wrpDeposit);
-            
-            
-            
-            // Withdraw
-            JPanel wrpWithdraw = new JPanel();
-            AppUI.setBoxLayout(wrpWithdraw, false);
-            AppUI.setSize(wrpWithdraw, bwidth, headerHeight);
-            AppUI.setBackground(wrpWithdraw, brand.getTopMenuHoverColor());
-            AppUI.noOpaque(wrpWithdraw);
-            
-            wrpWithdraw.add(AppUI.vr(12));
-            
-            wrpWithdraw.add(withdrawIcon);
-            if (isWithdrawing()) {
-                withdrawIcon.setIcon(withdrawIiLight);
-                AppUI.opaque(wrpWithdraw);
-            } else {               
-                AppUI.setHandCursor(wrpWithdraw);
-                withdrawIcon.setIcon(withdrawIi);
-            }
-                                    
-            wrpWithdraw.add(AppUI.vr(6));
-            
-            titleText = new JLabel("Withdraw");
-            AppUI.setTitleFont(titleText, 20);
-            wrpWithdraw.add(titleText);
-            
-            c.insets = new Insets(0, 2, 0, 0);
-            c.anchor = GridBagConstraints.NORTH;
-            gridbag.setConstraints(wrpWithdraw, c);
-            p.add(wrpWithdraw);
             
 
-            
-            
-            // Transfer
-            JPanel wrpTransfer = new JPanel();
-            AppUI.setBoxLayout(wrpTransfer, false);
-            AppUI.setSize(wrpTransfer, bwidth, headerHeight);
-            AppUI.setBackground(wrpTransfer, brand.getTopMenuHoverColor());
-            AppUI.noOpaque(wrpTransfer);
-            
-            wrpTransfer.add(AppUI.vr(12));
-            
-            if (isTransferring()) {
-                transferIcon.setIcon(transferIiLight);
-                AppUI.opaque(wrpTransfer);
-            } else {               
-                AppUI.setHandCursor(wrpTransfer);
-                transferIcon.setIcon(transferIi);
-            }
-                        
-            wrpTransfer.add(transferIcon);
-            wrpTransfer.add(AppUI.vr(12));
-            
-            titleText = new JLabel("Transfer");
-            AppUI.setTitleFont(titleText, 20);
-            wrpTransfer.add(titleText);
-            
-            c.insets = new Insets(0, 2, 0, 0);
-            c.anchor = GridBagConstraints.NORTH;
-            gridbag.setConstraints(wrpTransfer, c);
-            p.add(wrpTransfer);
-            
-            MouseAdapter ma0 = new MouseAdapter() {
-                public void mouseReleased(MouseEvent e) {
-                    resetState();
-                    ps.isSkyDeposit = false;
-                    ps.currentScreen = ProgramState.SCREEN_DEPOSIT;
-                    showScreen();
-                }
-                public void mouseEntered(MouseEvent e) {
-                    JPanel p = (JPanel) e.getSource();
-                    AppUI.opaque(p);
-                    depositIcon.setIcon(depositIiLight);
-                    p.revalidate();
-                    p.repaint();
-                }
-                
-                public void mouseExited(MouseEvent e) {                  
-                    JPanel p = (JPanel) e.getSource();            
-                    if (!isDepositing()) {
-                        AppUI.noOpaque(p);
-                        depositIcon.setIcon(depositIi);
-                        p.revalidate();
-                        p.repaint();
-                    }                    
-                }
-            };
-            
-            MouseAdapter ma1 = new MouseAdapter() {
-                public void mouseReleased(MouseEvent e) {
-                    resetState();
-                    ps.currentScreen = ProgramState.SCREEN_TRANSFER;
-                    showScreen();
-                }
-                
-                public void mouseEntered(MouseEvent e) {             
-                    JPanel p = (JPanel) e.getSource();
-                    AppUI.opaque(p);
-                    transferIcon.setIcon(transferIiLight);
-                    p.revalidate();
-                    p.repaint();
-                }
-                public void mouseExited(MouseEvent e) {                   
-                    JPanel p = (JPanel) e.getSource();
-                    if (!isTransferring()) {
-                        AppUI.noOpaque(p);
-                        transferIcon.setIcon(transferIi);
-                        p.revalidate();
-                        p.repaint();
-                    }
-                }
-            };
-            
-            MouseAdapter ma2 = new MouseAdapter() {
-                public void mouseReleased(MouseEvent e) {
-                    resetState();
-                    ps.currentScreen = ProgramState.SCREEN_WITHDRAW;
-                    showScreen();
-                }
-                
-                public void mouseEntered(MouseEvent e) {             
-                    JPanel p = (JPanel) e.getSource();
-                    AppUI.opaque(p);
-                    withdrawIcon.setIcon(withdrawIiLight);
-                    p.revalidate();
-                    p.repaint();
-                }
-                public void mouseExited(MouseEvent e) {                   
-                    JPanel p = (JPanel) e.getSource();
-                    if (!isWithdrawing()) {
-                        AppUI.noOpaque(p);
-                        withdrawIcon.setIcon(withdrawIi);
-                        p.revalidate();
-                        p.repaint();
-                    }
-                }
-            };
-
-            wrpDeposit.addMouseListener(ma0);
-            wrpTransfer.addMouseListener(ma1);
-            wrpWithdraw.addMouseListener(ma2);
-            */
         }
 
-        c.insets = new Insets(0, 482, 0, 0);
+        c.insets = new Insets(0, 412, 0, 0);
         c.gridwidth = 1;
         c.weightx = 0;
         c.fill = GridBagConstraints.NORTH;
@@ -1434,8 +1273,11 @@ public class AdvancedClient  {
         if (isWithdrawing())
             s = "Received";
         
-        if (step == 0) {
+        if (step == Config.STEP_BREAK) {
             pbarText.setText("Breaking Coin");
+        } else if (step == Config.STEP_AGAIN) {
+            s = "Sent Again";
+            pbarText.setText(s + " " + stc + " / " + tc + " CloudCoins");
         } else {
             pbarText.setText(s + " " + stc + " / " + tc + " CloudCoins");
         }
@@ -3684,7 +3526,23 @@ public class AdvancedClient  {
         GridBagLayout gridbag = new GridBagLayout();
         jp.setLayout(gridbag);
         AppUI.noOpaque(jp);
+        
+                
+        
+        optRv rv = new optRv();
+        rv.options = new String[3];
+        rv.idxs = new int[3];
+        rv.options[0] = "Auto";
+        rv.options[1] = "Parallel";
+        rv.options[2] = "Serial";
+        for (int i = 0; i < rv.options.length; i++)
+            rv.idxs[i] = i;
 
+        final JLabel rwText = new JLabel("Mode");
+        final RoundedCornerComboBox mode = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "Mode", rv.options);
+        mode.setDefaultIdx(Config.REQUESTED_MODE + 1);
+        AppUI.getGBRow(jp, rwText, mode.getComboBox(), y, gridbag);
+        y++; 
         
         fname = new JLabel("Echo Timeout, s");
         final MyTextField echoTimeout = new MyTextField("Echo Timeout", false);         
@@ -3744,6 +3602,11 @@ public class AdvancedClient  {
             raidaDomain.getTextField().setVisible(false);
             dfname.setVisible(false);
         }
+
+
+
+        
+        
    
         cb1.addListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {
@@ -3811,16 +3674,7 @@ public class AdvancedClient  {
       
         AppUI.getGBRow(subInnerCore, null, scrollPane, y, gridbagjp);
         y++; 
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+
         AppUI.GBPad(subInnerCore, y, gridbagjp);        
         y++;
             
@@ -3831,6 +3685,9 @@ public class AdvancedClient  {
             }
         }, new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+                int smode = mode.getSelectedIndex() - 1;
+                
+                
                 int echot = Validator.getIntFromString(echoTimeout.getText(), Config.MIN_ECHO_TIMEOUT / 1000, Config.MAX_ECHO_TIMEOUT / 1000);
                 if (echot < 0) {
                     ps.errText = "Echo timeout must be in the range (" + Config.MIN_ECHO_TIMEOUT/1000 + ", " + Config.MAX_ECHO_TIMEOUT + ")";
@@ -3919,12 +3776,16 @@ public class AdvancedClient  {
                 Config.MULTI_DETECT_TIMEOUT = detectt * 1000;
                 Config.READ_TIMEOUT = readt * 1000;
                 Config.ECHO_TIMEOUT = echot * 1000;
+                Config.REQUESTED_MODE = smode;
 
+                System.out.println("sm="+smode);
                 if (AppCore.writeConfig() == false) {
                     ps.errText = "Failed to write config file";
                     showScreen();
                     return;
                 }
+                
+                AppCore.syncMode();
 
                 ps.currentScreen = ProgramState.SCREEN_SETTINGS_SAVED;
                 showScreen();
@@ -5583,7 +5444,6 @@ public class AdvancedClient  {
     public void showTransferScreen() {
         int y = 0;
         JLabel fname;
-        MyTextField walletName = null;
 
         JPanel subInnerCore = getPanel("Transfer from " + ps.currentWallet.getName());                
         GridBagLayout gridbag = new GridBagLayout();
@@ -9439,7 +9299,7 @@ public class AdvancedClient  {
             
             wl.debug(ltag, "Echoer finished " + er.status);
             if (er.status == EchoResult.STATUS_ERROR || er.status == EchoResult.STATUS_FINISHED) {
-                echoDone();
+                echoDone(er.latencies);
                 if (ps.currentScreen == ProgramState.SCREEN_ECHO_RAIDA) {
                     EventQueue.invokeLater(new Runnable() {         
                         public void run() {
@@ -10075,7 +9935,7 @@ public class AdvancedClient  {
             
             wl.debug(ltag, "Sender finished: " + sr.status);
             if (sr.status == SenderResult.STATUS_PROCESSING) {
-                setRAIDATransferProgressCoins(sr.totalRAIDAProcessed, sr.totalCoinsProcessed, sr.totalCoins, 1);
+                setRAIDATransferProgressCoins(sr.totalRAIDAProcessed, sr.totalCoinsProcessed, sr.totalCoins, sr.step);
                 return;
             }
             

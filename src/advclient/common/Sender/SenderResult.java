@@ -1,5 +1,7 @@
 package global.cloudcoin.ccbank.Sender;
 
+import global.cloudcoin.ccbank.core.Config;
+
 public class SenderResult {
     public int totalFilesProcessed;
     public int totalFiles;
@@ -30,6 +32,8 @@ public class SenderResult {
 
     public int totalFrackedValue;
     
+    public int step;
+    
     public SenderResult() {
         memo = "Send";
         amount = 0;
@@ -37,5 +41,6 @@ public class SenderResult {
         totalFiles = 0;
         status = STATUS_PROCESSING;
         errText = "";
+        step = Config.STEP_NORMAL;
     }
 }
