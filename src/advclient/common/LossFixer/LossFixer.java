@@ -55,6 +55,7 @@ public class LossFixer extends Servant {
     public void copyFromGlobalResult(LossFixerResult nlr) {
         nlr.failed = lr.failed;
         nlr.recovered = lr.recovered;
+        nlr.recoveredValue = lr.recoveredValue;
         nlr.status = lr.status;
         nlr.totalFiles = lr.totalFiles;
         nlr.totalFilesProcessed = lr.totalFilesProcessed;

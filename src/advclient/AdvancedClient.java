@@ -1999,6 +1999,9 @@ public class AdvancedClient  {
         Thread t = new Thread(new Runnable() {
             public void run(){
                 pbar.setVisible(false);
+                setRAIDAEchoProgressCoins(0);                
+                sm.startEchoService(new EchoCb());
+                ps.isEchoFinished = false;
                 if (!ps.isEchoFinished) {
                     pbarText.setText("Checking RAIDA ...");
                     pbarText.repaint();
@@ -2038,9 +2041,7 @@ public class AdvancedClient  {
                         Thread.sleep(300);
                     } catch (InterruptedException e) {}
                 }
-                    
-                    // cc.setPownStringFromDetectStatus(); is set in the getPassedCount
-                
+
                 ps.fxTotal = ccs.size();
                 ps.fxFixed = 0;
                 ps.fxFailedToFix = new ArrayList<CloudCoin>();
@@ -2118,6 +2119,15 @@ public class AdvancedClient  {
                         ps.statFailedToFix = fr.failed;
             
                         if (fr.status == FrackFixerResult.STATUS_ERROR || fr.status == FrackFixerResult.STATUS_CANCELLED) {
+                            wl.debug(ltag, "Failed to fix. Try to clean-up");
+                            for (CloudCoin cc : ps.fxToFix) {
+                                CloudCoin foundCC = AppCore.findCoinBySN(Config.DIR_FRACKED, ps.srcWallet.getName(), cc.sn);
+                                if (foundCC != null) {
+                                    String nonfixedFile = foundCC.originalFile;
+                                    wl.debug(ltag, "Will remove " + nonfixedFile);
+                                    AppCore.deleteFile(nonfixedFile);
+                                }                                
+                            }
                             EventQueue.invokeLater(new Runnable() {         
                                 public void run() {
                                     ps.errText = "Failed to Fix Coins. Please see logs at<br> " + AppCore.getLogPath() + "";
@@ -2704,6 +2714,7 @@ public class AdvancedClient  {
         String totalFixed = AppCore.formatNumber(ps.statTotalFixed);
         String total = AppCore.formatNumber(ps.statTotalFrackedValue);
         String totalFixedValue = AppCore.formatNumber(ps.statTotalFixedValue);
+        String totalLostRecovered =  AppCore.formatNumber(ps.statTotalLostFixedValue);
           
         String txt;
         if (!totalFixedValue.equals("" + total)) {
@@ -2739,6 +2750,13 @@ public class AdvancedClient  {
         value = new JLabel(totalFixedValue);
         AppUI.getGBRow(subInnerCore, fname, value, y, gridbag);
         y++; 
+        
+        if (ps.statTotalLostFixedValue > 0) {
+            fname = new JLabel("Total Recovered Limbo Coins:");
+            value = new JLabel(totalLostRecovered);
+            AppUI.getGBRow(subInnerCore, fname, value, y, gridbag);
+            y++; 
+        }
                   
         AppUI.GBPad(subInnerCore, y, gridbag);        
         y++;
@@ -6460,15 +6478,6 @@ public class AdvancedClient  {
         subInnerCore.setLayout(gridbag);
 
         final optRv rv = setOptionsForWallets(false, false);
-        /*
-        if (rv.idxs.length == 0) {
-            fname = new JLabel("You have no coins to list serial numbers");   
-            AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
-            y++;
-            AppUI.GBPad(subInnerCore, y, gridbag); 
-            return;
-        }*/
-        
         fname = new JLabel("List Serials will show you Serial Numbers of your CloudCoins");     
         AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
         y++;     
@@ -6567,11 +6576,12 @@ public class AdvancedClient  {
         JLabel fname;
         MyTextField tf0, tf1;
 
-        JPanel subInnerCore = getPanel("Fix Fracked Coins");                
+        JPanel subInnerCore = getPanel("Fix Fracked and Limbo Coins");                
         GridBagLayout gridbag = new GridBagLayout();
         subInnerCore.setLayout(gridbag);
 
-        final optRv rv = setOptionsForWallets(true, false);        
+        //final optRv rv = setOptionsForWallets(true, false);   
+        final optRv rv = setOptionsForWalletsFix();
         fname = new JLabel("From Wallet");
         final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "Make Selection", rv.options);
         cboxfrom.addOption("Sky Wallets");
@@ -6851,6 +6861,56 @@ public class AdvancedClient  {
             if (name != null && wallets[i].getName().equals(name))
                 continue;
             
+            rv.options[j] = wallets[i].getName() + " - " + AppCore.formatNumber(wTotal) + " CC";
+            rv.idxs[j] = i;
+            j++;
+        }
+     
+        return rv;
+    }
+    
+    // true false false null
+    public optRv setOptionsForWalletsFix() {
+        optRv rv = new optRv();
+        
+        int cnt = 0;
+        int fc = 0;
+        int fl = 0;
+        for (int i = 0; i < wallets.length; i++) {
+            if (wallets[i].isSkyWallet())
+                continue;
+
+            fc = AppCore.getFilesCount(Config.DIR_FRACKED, wallets[i].getName());
+            fl = AppCore.getFilesCount(Config.DIR_LOST, wallets[i].getName());
+            if (fl == 0 && fc == 0)
+                continue;
+
+
+            cnt++;
+        }
+      
+        System.out.println("l="+cnt);
+        rv.options = new String[cnt];
+        rv.idxs = new int[cnt];
+        
+        if (cnt == 0)
+            return rv;
+              
+        int j = 0;
+        for (int i = 0; i < wallets.length; i++) {
+            if (wallets[i].isSkyWallet())
+                continue;
+
+            fc = AppCore.getFilesCount(Config.DIR_FRACKED, wallets[i].getName());
+            fl = AppCore.getFilesCount(Config.DIR_LOST, wallets[i].getName());
+            if (fl == 0 && fc == 0)
+                continue;
+
+            int wTotal = wallets[i].getTotal();               
+            int[][] counters = wallets[i].getCounters();
+            wTotal = AppCore.getTotal(counters[Config.IDX_FOLDER_FRACKED]);
+
+
             rv.options[j] = wallets[i].getName() + " - " + AppCore.formatNumber(wTotal) + " CC";
             rv.idxs[j] = i;
             j++;
@@ -9882,7 +9942,10 @@ public class AdvancedClient  {
 
             
             if (lr.recovered > 0) {
+                ps.statTotalLostFixedValue = lr.recoveredValue;
                 sm.getActiveWallet().appendTransaction("LossFixer Recovered", lr.recoveredValue, lr.receiptId);
+            } else {
+                ps.statTotalLostFixedValue = 0;
             }
             
 

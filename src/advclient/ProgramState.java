@@ -200,6 +200,8 @@ public class ProgramState {
     
     String[] fixPownstrings;
     
+    int statTotalLostFixedValue;
+    
     public ProgramState() {
         currentScreen = SCREEN_AGREEMENT;
         cwalletRecoveryRequested = cwalletPasswordRequested = false;
@@ -239,6 +241,8 @@ public class ProgramState {
         
         statTotalFracked = statTotalFixed = statFailedToFix = 0;
         statTotalFrackedValue = statTotalFixedValue = statFailedToFixValue = 0;
+        
+        statTotalLostFixedValue = 0;
         
         domain = "";
         trustedServer = "";
