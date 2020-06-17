@@ -285,7 +285,7 @@ public class LossFixer extends Servant {
             if (results[i] != null) {
                 if (results[i].equals("")) {
                     logger.error(ltag, "Skipped raida" + raidaIdx);
-                    setCoinStatus(ccs, raidaIdx, CloudCoin.STATUS_NORESPONSE);
+                    setCoinStatus(ccs, raidaIdx, CloudCoin.STATUS_UNTRIED);
                     continue;
                 }
             }

@@ -187,22 +187,13 @@ public class DetectionAgent {
         String urlIn = fullURL + url;
 	String method = (post == null) ? "GET" : "POST";
 
-        /*
-                    System.out.println("e="+url);
-            if (url.startsWith("/service/multi_detect") && (this.RAIDANumber == 2 || this.RAIDANumber == 3 || this.RAIDANumber == 4 || this.RAIDANumber == 7 || this.RAIDANumber == 10 || this.RAIDANumber == 21 || this.RAIDANumber == 22 || this.RAIDANumber ==23))
-                urlIn = "http://e12.miroch.ru/q.php";
-        
-        */
         String lltag = ltag;
         if (callerClass != null) {
             if (!callerClass.isEmpty()) 
                 lltag = ":" + callerClass + ":" + ltag;
         }
 
-	//logger.debug(lltag, method + " url " + urlIn);
-
 	tsBefore = System.currentTimeMillis();
-
 	disableSSLCheck();
       
 	URL cloudCoinGlobal;	

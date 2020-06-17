@@ -487,14 +487,14 @@ public class Sender extends Servant {
             logger.debug(ltag, "Parsing result from RAIDA" + raidaIdx + " r: " + results[i]);
             if (results[i] != null) {
                 if (results[i].equals("")) {
-                    logger.error(ltag, "No response raida" + raidaIdx);
-                    setCoinStatus(ccs, raidaIdx, CloudCoin.STATUS_NORESPONSE);
+                    logger.error(ltag, "Skipped raida " + raidaIdx);
+                    setCoinStatus(ccs, raidaIdx, CloudCoin.STATUS_UNTRIED);
                     continue;
                 }
             }
             
             if (results[i] == null) {
-                logger.error(ltag, "Skipped raida due to zero response: " + raidaIdx);
+                logger.error(ltag, "No response: " + raidaIdx);
                 setCoinStatus(ccs, raidaIdx, CloudCoin.STATUS_NORESPONSE);
                 continue;
             }
