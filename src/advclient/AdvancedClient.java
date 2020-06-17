@@ -3106,7 +3106,7 @@ public class AdvancedClient  {
         AppUI.getGBRow(subInnerCore, fname, value, y, gridbag);
         y++; 
         
-        fname = new JLabel("Total Lost Coins:");
+        fname = new JLabel("Total Limbo Coins:");
         value = new JLabel(totalLostValue);
         AppUI.getGBRow(subInnerCore, fname, value, y, gridbag);
         y++; 
@@ -9679,7 +9679,7 @@ public class AdvancedClient  {
 
             EventQueue.invokeLater(new Runnable() {         
                 public void run() {
-                    pbarText.setText("Recovering lost coins ...");
+                    pbarText.setText("Recovering Limbo coins ...");
                     pbarText.repaint();
                 }
             });
@@ -9713,7 +9713,7 @@ public class AdvancedClient  {
                 ps.fixPownstrings = fr.pownStrings;
                 EventQueue.invokeLater(new Runnable() {         
                     public void run() {
-                        pbarText.setText("Recovering lost coins ...");
+                        pbarText.setText("Recovering Limbo coins ...");
                         pbarText.repaint();
                     }
                 });
@@ -9943,7 +9943,7 @@ public class AdvancedClient  {
             
             if (lr.recovered > 0) {
                 ps.statTotalLostFixedValue = lr.recoveredValue;
-                sm.getActiveWallet().appendTransaction("LossFixer Recovered", lr.recoveredValue, lr.receiptId);
+                sm.getActiveWallet().appendTransaction("Limbo Recovered", lr.recoveredValue, lr.receiptId);
             } else {
                 ps.statTotalLostFixedValue = 0;
             }
