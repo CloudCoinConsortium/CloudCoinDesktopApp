@@ -765,7 +765,7 @@ public class AdvancedClient  {
         };
  
         String[] items = {"Backup", "List serials", "Clear History", "Fix Fracked", 
-            "Delete Wallet", "Show Folders", "Echo RAIDA", "Settings", "Sent Coins", 
+            "Delete a Wallet", "Show Folders", "Echo RAIDA", "Settings", "Sent Coins", 
              "Bill Pay", "Cloud Bank"};
         for (int i = 0; i < items.length; i++) {
             JMenuItem menuItem = new JMenuItem(items[i]);
@@ -5957,18 +5957,7 @@ public class AdvancedClient  {
         
         AppUI.getGBRow(subInnerCore, tl, t2, y, gridbag);
         y++;
-  
-        
-       // AppUI.underLine(t2);
-       // AppUI.getGBRow(subInnerCore, null, t2, y, gridbag);
-       // y++;
-        
-        //t2.setVisible(false);
-             
-        
 
-        
-        
         AppUI.setColor(l, brand.getThirdTextColor());
         AppUI.setBoldFont(l, 32);
         AppUI.noOpaque(ddPanel);
@@ -5993,6 +5982,19 @@ public class AdvancedClient  {
                         ps.errText = "File must have .png .jpeg or .stack extension";
                         showScreen();
                         return;
+                    }
+                    
+                    boolean isDup = false;
+                    for (String file : ps.files) {
+                        if (file.equals(files[i].getAbsolutePath())) {
+                            isDup = true;
+                            break;
+                        }
+                    }
+                    
+                    if (isDup) {
+                        wl.debug(ltag, "Skipping dup file " + files[i].getAbsolutePath());
+                        continue;
                     }
 
                     ps.files.add(files[i].getAbsolutePath());
@@ -6034,6 +6036,20 @@ public class AdvancedClient  {
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     File[] files = chooser.getSelectedFiles();
                     for (int i = 0; i < files.length; i++) {
+                        
+                        boolean isDup = false;
+                        for (String file : ps.files) {
+                            if (file.equals(files[i].getAbsolutePath())) {
+                                isDup = true;
+                                break;
+                            }
+                        }
+                    
+                        if (isDup) {
+                            wl.debug(ltag, "Skipping dup file " + files[i].getAbsolutePath());
+                            continue;
+                        }
+                        
                         ps.files.add(files[i].getAbsolutePath());
                     }
                     
