@@ -213,6 +213,8 @@ class MyHandler implements HttpHandler {
         this.logger = logger;
         this.cloudbank = cloudbank;
         this.completed = false;
+        
+        System.setProperty("jdk.httpclient.keepalive.timeout", "3");
     }
     @Override
     public synchronized void handle(HttpExchange t) throws IOException {
@@ -220,7 +222,7 @@ class MyHandler implements HttpHandler {
         String uri = t.getRequestURI().toString();
         Map vars = new HashMap<String,String>();
         String route = t.getRequestURI().getPath();
-        
+
         isError = false;
         message = "";
         
@@ -285,6 +287,9 @@ class MyHandler implements HttpHandler {
                 vars.put(parts[0], value);
             }
         }
+        
+        System.out.println("x1");
+        System.out.flush();
 
         tmpWallet = cloudbank.sm.getActiveWallet();
         cloudbank.startCloudbankService(route, vars, new CallbackInterface() {
@@ -303,6 +308,9 @@ class MyHandler implements HttpHandler {
             }
         });
           
+        System.out.println("x2="+completed);
+        System.out.flush();
+
         /*
         Iterator it = vars.entrySet().iterator();
         while (it.hasNext()) {
@@ -310,11 +318,11 @@ class MyHandler implements HttpHandler {
             System.out.println("-> " + pair.getKey() + " = " + pair.getValue());
         }
         */   
-        
+
         
         int iterations = 0;
         while (!completed) {
-            //System.out.println("sleep");
+            System.out.println("sleep2");
             try {
                 Thread.sleep(200);
             } catch (InterruptedException e) {}
@@ -326,8 +334,7 @@ class MyHandler implements HttpHandler {
             }
                 
         }
-        
-        System.out.println("kw="+keepWallet);
+
         setWalletIfNessecary(keepWallet);
         completed = false;
         if (isError)
@@ -374,11 +381,11 @@ class MyHandler implements HttpHandler {
         sb.append("\", \"version\": \"");
         sb.append(AppUI.brand.getResultingVersion(AdvancedClient.version));
         sb.append("\"}");
-        
+
         String response = sb.toString();
         
         try {
-            
+                    
             httpExchange.sendResponseHeaders(code, response.length());
             outputStream.write(response.getBytes());
             outputStream.flush();
@@ -386,12 +393,15 @@ class MyHandler implements HttpHandler {
         } catch (IOException e) {
             logger.error(ltag, "Failed to send response: " + e.getMessage());
             return;
+        } finally {
+            outputStream.close();
         }
     }
     
     private void sendJSONResponse(HttpExchange httpExchange, int code, String message) { 
         httpExchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
-        OutputStream outputStream = httpExchange.getResponseBody();             
+        OutputStream outputStream = httpExchange.getResponseBody();     
+
         try {
             httpExchange.sendResponseHeaders(code, message.length());
             outputStream.write(message.getBytes());
@@ -400,6 +410,8 @@ class MyHandler implements HttpHandler {
         } catch (IOException e) {
             logger.error(ltag, "Failed to send response: " + e.getMessage());
             return;
+        } finally {
+            outputStream.close();
         }
     }
     
