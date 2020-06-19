@@ -12,6 +12,8 @@ import global.cloudcoin.ccbank.Receiver.ReceiverResult;
 import global.cloudcoin.ccbank.Sender.SenderResult;
 import global.cloudcoin.ccbank.ServantManager.ServantManager;
 import global.cloudcoin.ccbank.ServantManager.ServantManager.makeChangeResult;
+import global.cloudcoin.ccbank.ShowCoins.ShowCoinsResult;
+import global.cloudcoin.ccbank.ShowEnvelopeCoins.ShowEnvelopeCoinsResult;
 import global.cloudcoin.ccbank.Transfer.TransferResult;
 import global.cloudcoin.ccbank.Unpacker.UnpackerResult;
 import java.io.File;
@@ -853,15 +855,8 @@ public class CloudBank {
                     final int fsize = ur.unpacked.size();
                     setReceipt(wallet, fsize, "importing", "Importing CloudCoins", frn);
                     fcb.callback(cr);   
-                    
-                    System.out.println("sleep");
-                    try {
-                        Thread.sleep(20000);
-                    } catch (InterruptedException e) {}
-                    System.out.println("done sleep");
-                    
-                    sm.startAuthenticatorService(new AuthenticatorCb(wallet, frn, ftag, ur.unpacked, ur.duplicates));
-                    
+
+                    sm.startAuthenticatorService(new AuthenticatorCb(wallet, frn, ftag, ur.unpacked, ur.duplicates));                    
                     return;
                 }
                 
@@ -909,10 +904,11 @@ public class CloudBank {
         }
        
         String tag = Config.DEFAULT_TAG;
-        String ptag = (String) params.get("base64");
+        String ptag = (String) params.get("memo");
         if (ptag != null) {
-            byte[] decodedBytes = Base64.getDecoder().decode(ptag);
-            tag = new String(decodedBytes);
+            //byte[] decodedBytes = Base64.getDecoder().decode(ptag);
+            //tag = new String(decodedBytes);
+            tag = ptag;
         }
         
         if (!Validator.memo(tag)) {
@@ -982,10 +978,6 @@ public class CloudBank {
                         
                         int statToBankValue = gr.totalAuthenticValue + gr.totalFrackedValue;
                         int statFailedValue = gr.totalCounterfeitValue;
-                        int statLostValue = gr.totalLostValue;
-                        int statToBank = gr.totalAuthentic + gr.totalFracked;
-                        int statFailed = gr.totalCounterfeit;
-                        int statLost = gr.totalLost + gr.totalUnchecked;
                         String receiptId = gr.receiptId;
    
 
@@ -1025,6 +1017,21 @@ public class CloudBank {
                                         if (lr.recovered > 0) {
                                             wallet.appendTransaction("LossFixer Recovered", lr.recoveredValue, lr.receiptId);
                                         }
+                                        
+                                        sm.startShowCoinsService(new CallbackInterface() {
+                                            public void callback(Object o) {
+                                                ShowCoinsResult scresult = (ShowCoinsResult) o;
+                                                wallet.setSNs(scresult.coins);
+                                
+                                                int[][] counters = scresult.counters;                        
+                                                int totalCnt = AppCore.getTotal(counters[Config.IDX_FOLDER_BANK]) +
+                                                AppCore.getTotal(counters[Config.IDX_FOLDER_FRACKED]) +
+                                                AppCore.getTotal(counters[Config.IDX_FOLDER_VAULT]);
+                        
+                                                wallet.setTotal(totalCnt);
+                                                wallet.setCounters(counters);
+                                            }
+                                        });
                                         
                                         if (wallet.isEncrypted()) {
                                             logger.debug(ltag, "Encrypting again");
@@ -1099,6 +1106,7 @@ public class CloudBank {
                 }
                 
                 logger.debug(ltag, "Pick error. Will make Change"); 
+                /*
                 sm.makeChange(wallet, amount, new CallbackInterface() {
                     public void callback(Object o) {
                         makeChangeResult mcr = (makeChangeResult) o;                               
@@ -1120,6 +1128,7 @@ public class CloudBank {
                     
                     
                 });
+                */
                 
                 //cb.callback(getCrError("Failed to send Coins"));
                 return;
@@ -1138,6 +1147,27 @@ public class CloudBank {
               
                 wallet.appendTransaction(memo, sr.amount * -1, sr.receiptId);
                 wallet.setNotUpdated();
+                
+                sm.startShowSkyCoinsService(new CallbackInterface() {
+                    public void callback(Object o) {
+                        ShowEnvelopeCoinsResult scresult = (ShowEnvelopeCoinsResult) o;
+
+                        if (scresult.status != ShowEnvelopeCoinsResult.STATUS_FINISHED)
+                            return;
+                        
+                        w.setSNs(scresult.coins);
+                        w.setEnvelopes(scresult.envelopes);
+                                
+                        int[][] counters = scresult.counters;                        
+                        int totalCnt = AppCore.getTotal(counters[Config.IDX_FOLDER_BANK]) +
+			AppCore.getTotal(counters[Config.IDX_FOLDER_FRACKED]) +
+                        AppCore.getTotal(counters[Config.IDX_FOLDER_VAULT]);
+
+                        w.setCounters(counters);
+                        walletSetTotal(w, totalCnt);
+                        setTotalCoins();
+                    }
+                });
                 
             }
                 
@@ -1220,14 +1250,30 @@ public class CloudBank {
                 wallet.setNotUpdated();
                 
                 AppCore.deleteFile(filename);
+
+                sm.startShowCoinsService(new CallbackInterface() {
+                    public void callback(Object o) {
+                        ShowCoinsResult scresult = (ShowCoinsResult) o;
+                        wallet.setSNs(scresult.coins);
+                                
+                        int[][] counters = scresult.counters;                        
+                        int totalCnt = AppCore.getTotal(counters[Config.IDX_FOLDER_BANK]) +
+			AppCore.getTotal(counters[Config.IDX_FOLDER_FRACKED]) +
+                        AppCore.getTotal(counters[Config.IDX_FOLDER_VAULT]);
+                        
+                        wallet.setTotal(totalCnt);
+                        wallet.setCounters(counters);
+
+                        CloudbankResult cr = new CloudbankResult();
+                        cr.status = CloudbankResult.STATUS_OK_JSON;
+                        cr.message = stack.replaceAll("\n", "").replaceAll("\r", "").replaceAll("\t", "");
+                        cr.keepWallet = false;
+                        
+                        cb.callback(cr); 
+                    }
+                });
                 
-                
-                CloudbankResult cr = new CloudbankResult();
-                cr.status = CloudbankResult.STATUS_OK_JSON;
-                cr.message = stack.replaceAll("\n", "").replaceAll("\r", "").replaceAll("\t", "");
-                cr.keepWallet = false;
-                
-                cb.callback(cr);                
+                              
                 
             }
                 

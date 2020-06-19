@@ -287,9 +287,7 @@ class MyHandler implements HttpHandler {
                 vars.put(parts[0], value);
             }
         }
-        
-        System.out.println("x1");
-        System.out.flush();
+
 
         tmpWallet = cloudbank.sm.getActiveWallet();
         cloudbank.startCloudbankService(route, vars, new CallbackInterface() {
@@ -308,9 +306,6 @@ class MyHandler implements HttpHandler {
             }
         });
           
-        System.out.println("x2="+completed);
-        System.out.flush();
-
         /*
         Iterator it = vars.entrySet().iterator();
         while (it.hasNext()) {
@@ -322,7 +317,6 @@ class MyHandler implements HttpHandler {
         
         int iterations = 0;
         while (!completed) {
-            System.out.println("sleep2");
             try {
                 Thread.sleep(200);
             } catch (InterruptedException e) {}
