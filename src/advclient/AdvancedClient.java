@@ -69,7 +69,7 @@ import org.json.JSONObject;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "3.0.13";
+    public static String version = "3.0.14";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -5284,8 +5284,14 @@ public class AdvancedClient  {
         }
 
            
-        if (ps.chosenFile.isEmpty()) 
+        if (ps.chosenFile.isEmpty()) {
             ps.chosenFile = Config.DEFAULT_EXPORT_DIR;
+            if (ps.chosenFile.isEmpty()) {
+                String home = System.getProperty("user.home");
+                File file = new File(home + "/Downloads"); 
+                ps.chosenFile = file.getAbsolutePath();
+            }
+        }
         
         final JLabel lfText = new JLabel("Local folder");
         final JFileChooser chooser = new JFileChooser();

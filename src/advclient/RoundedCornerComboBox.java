@@ -26,13 +26,11 @@ public class RoundedCornerComboBox {
     
     String[] options;
     String placeholder;
-    
-    
+
     JPanel core;
     JComboBox<String> combo1;
     MyComboBoxModel cbm;
     ComboBoxRenderer renderer;
-
     
     public RoundedCornerComboBox(Color outerBgColor, String placeholder, String[] options) {
         this.outerBgColor = outerBgColor;
