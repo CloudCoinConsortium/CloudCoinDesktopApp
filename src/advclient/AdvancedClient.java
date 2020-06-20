@@ -378,10 +378,11 @@ public class AdvancedClient  {
         }
         cntLabel.repaint();
         
+        
         if (ps.currentScreen == ProgramState.SCREEN_SHOW_TRANSACTIONS) {
             //if (w == sm.getActiveWallet()) {
             if (w == ps.currentWallet) {
-                updateTransactionWalletData(w);
+                updateTransactionWalletData(w, "thread");
             }
         }     
         
@@ -4976,6 +4977,7 @@ public class AdvancedClient  {
                         AppCore.getTotal(counters[Config.IDX_FOLDER_VAULT]);
 
                         w.setCounters(counters);
+                        
                         walletSetTotal(w, totalCnt);
                         setTotalCoins();
                     }
@@ -7549,7 +7551,11 @@ public class AdvancedClient  {
         resetState();
     }
     
-     public synchronized void updateTransactionWalletData(Wallet w) {
+    public void sleep(int ms) {
+        try { Thread.sleep(ms); } catch (InterruptedException e) {}
+    }
+    
+    public synchronized void updateTransactionWalletData(Wallet w, String fromWhere) {
         if (trTitle != null) {
             String rec = "";
             if (!w.getEmail().isEmpty()) {
@@ -7560,11 +7566,16 @@ public class AdvancedClient  {
             String totalString = "Counting";
             if (w.isUpdated())
                 totalString = AppCore.formatNumber(w.getTotal()) + "<span style='font-size:0.8em'><sup>cc</sup></span>";
-            
+
             String titleText = "<html>" + w.getName() + " : " +  totalString + "" + rec + "</html>";
-            trTitle.setText(titleText);
-            trTitle.validate();
-            trTitle.repaint();
+            EventQueue.invokeLater(new Runnable() {
+                public void run() {
+                    trTitle.setText(titleText);
+                    trTitle.validate();
+                    trTitle.revalidate();
+                    trTitle.repaint();
+                }
+            });
         }
 
         if (invPanel != null) {
@@ -7622,56 +7633,48 @@ public class AdvancedClient  {
 
     
     public void showTransactionsScreen() {      
-        invPanel = new JPanel();    
-        //AppUI.noOpaque(invPanel);
+        Wallet w = ps.currentWallet;
+        invPanel = new JPanel();   
+        int[][] counters = w.getCounters(); 
+        if (counters != null && counters.length != 0) {
+            AppUI.setBackground(invPanel, brand.getInventoryBackgroundColor());
+            AppUI.setSize(invPanel, 520, 62);
+            AppUI.setMargin(invPanel, 0, 0, 0, 0);  
+        }
+        AppUI.noOpaque(invPanel);
         trTitle = new JLabel("");
         //Wallet w = sm.getActiveWallet();  
-        Wallet w = ps.currentWallet;
-        updateTransactionWalletData(w);
+        
+        AppUI.setColor(trTitle, brand.getTitleTextColor());
+        AppUI.setFont(trTitle, 30);        
+        AppUI.alignLeft(trTitle);
+        AppUI.alignTop(trTitle);
+        updateTransactionWalletData(w, "screen");
 
         boolean isSky = w.isSkyWallet() ? true : false;
          
         showLeftScreen();
         JPanel rightPanel = getRightPanel(); 
-
+  
         JPanel hwrapper = new JPanel();
         AppUI.setBoxLayout(hwrapper, false);
         AppUI.alignLeft(hwrapper);
         AppUI.noOpaque(hwrapper);
 
-        AppUI.alignLeft(trTitle);
-        AppUI.alignTop(trTitle);
-        AppUI.setFont(trTitle, 30);
-        AppUI.setColor(trTitle, brand.getTitleTextColor());
+
         hwrapper.add(trTitle);
-        
         // holder for three buttons
         JPanel bpanel = new JPanel();
-        
 
         JPanel wrp = new JPanel();
         AppUI.alignTop(wrp);
         hwrapper.add(wrp);
         
-        int[][] counters = w.getCounters(); 
-        if (counters != null && counters.length != 0) {
-            AppUI.setBackground(invPanel, brand.getInventoryBackgroundColor());
-            //AppUI.alignBottom(invPanel);
-            AppUI.setSize(invPanel, 520, 62);
-            AppUI.setMargin(invPanel, 0, 0, 0, 0);  
-            //AppUI.setSize(invPanel, 520, 42);
-            
-            //hwrapper.add(invPanel);
-
-        } //else {
-           // hwrapper.add(bpanel);
-        //}
         
 
         rightPanel.add(hwrapper);
         rightPanel.add(AppUI.hr(22));
-                
-        
+
         /* buttons */
         JPanel bwrapper = new JPanel();
         AppUI.setBoxLayout(bwrapper, false);
@@ -7755,7 +7758,7 @@ public class AdvancedClient  {
         
         int fsize = 18;
         //bpanel.add(wrp);
-        if (counters != null && counters.length != 0) 
+        //if (counters != null && counters.length != 0) 
             bpanel.add(invPanel);
  
         int bwidth = 138;

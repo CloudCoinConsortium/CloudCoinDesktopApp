@@ -388,7 +388,10 @@ class MyHandler implements HttpHandler {
             logger.error(ltag, "Failed to send response: " + e.getMessage());
             return;
         } finally {
-            outputStream.close();
+            try {
+                outputStream.close();
+            } catch (IOException e) {}
+            
         }
     }
     
@@ -405,7 +408,9 @@ class MyHandler implements HttpHandler {
             logger.error(ltag, "Failed to send response: " + e.getMessage());
             return;
         } finally {
-            outputStream.close();
+            try {
+                outputStream.close();
+            } catch (IOException e) {}
         }
     }
     

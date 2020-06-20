@@ -1148,6 +1148,7 @@ public class CloudBank {
                 wallet.appendTransaction(memo, sr.amount * -1, sr.receiptId);
                 wallet.setNotUpdated();
                 
+                /*
                 sm.startShowSkyCoinsService(new CallbackInterface() {
                     public void callback(Object o) {
                         ShowEnvelopeCoinsResult scresult = (ShowEnvelopeCoinsResult) o;
@@ -1168,7 +1169,7 @@ public class CloudBank {
                         setTotalCoins();
                     }
                 });
-                
+                */
             }
                 
         }
