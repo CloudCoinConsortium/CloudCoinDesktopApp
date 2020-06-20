@@ -172,26 +172,32 @@ public class AdvancedClient  {
         */
         
         AppUI.init(tw, th, brand); 
-        initMainScreen();
-        if (!ps.errText.equals("")) {
-            JLabel x = new JLabel(ps.errText);
-            AppUI.setFont(x, 16);
-            AppUI.setMargin(x, 28);
-            AppUI.alignCenter(x);
-            mainPanel.add(x);
-            return;
-        } 
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                initMainScreen();
+                if (!ps.errText.equals("")) {
+                    JLabel x = new JLabel(ps.errText);
+                    AppUI.setFont(x, 16);
+                    AppUI.setMargin(x, 28);
+                    AppUI.alignCenter(x);
+                    mainPanel.add(x);
+                    return;
+                } 
         
         
-        headerHeight = th / 10;
-        initHeaderPanel();
-        initCorePanel();
+                headerHeight = th / 10;
+                initHeaderPanel();
+                initCorePanel();
       
-        mainPanel.add(headerPanel);
-        mainPanel.add(corePanel);
+                mainPanel.add(headerPanel);
+                mainPanel.add(corePanel);
     
 
-        showScreen();
+                showScreen();
+                
+            }
+        });
+
     }
 
     public void initBrand() {
@@ -975,6 +981,7 @@ public class AdvancedClient  {
     public void showScreen() {
         wl.debug(ltag, "SCREEN " + ps.currentScreen + ": " + ps.toString());
 
+        System.out.println("is="+SwingUtilities.isEventDispatchThread());
         clear();   
         if (ps.needInitWallets) {
             sm.initWallets();
@@ -7641,6 +7648,7 @@ public class AdvancedClient  {
     public void showTransactionsScreen() {      
         Wallet w = ps.currentWallet;
         invPanel = new JPanel();   
+        System.out.println("is="+SwingUtilities.isEventDispatchThread());
         int[][] counters = w.getCounters(); 
         if (counters != null && counters.length != 0) {
             AppUI.setBackground(invPanel, brand.getInventoryBackgroundColor());
@@ -9384,7 +9392,6 @@ public class AdvancedClient  {
 	public void callback(Object result) {                        
             final Object fresult = result;
             final EchoResult er = (EchoResult) fresult;
-            
             wl.debug(ltag, "Echoer finished " + er.status);
             if (er.status == EchoResult.STATUS_ERROR || er.status == EchoResult.STATUS_FINISHED) {
                 echoDone(er.latencies);
