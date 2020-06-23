@@ -491,7 +491,6 @@ public class AppUI {
     
     
     public static JLabel getHyperLink(String name, String url, int fontSize) {
-        final String fname = name;
         final String furl = url;
         
         JLabel l = new JLabel(name);

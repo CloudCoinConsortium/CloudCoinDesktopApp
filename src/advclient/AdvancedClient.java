@@ -69,7 +69,7 @@ import org.json.JSONObject;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "3.0.14";
+    public static String version = "3.0.15";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -112,6 +112,8 @@ public class AdvancedClient  {
     Brand brand;
     
     JLabel infoText;
+    
+    JFileChooser chooser;
     
     MyHttpServer httpServer;
     
@@ -170,7 +172,7 @@ public class AdvancedClient  {
         System.out.println("canberecovered=" + cc.canbeRecoveredFromLost());
         System.exit(1);
         */
-        
+        chooser = new JFileChooser();
         AppUI.init(tw, th, brand); 
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
@@ -981,7 +983,9 @@ public class AdvancedClient  {
     public void showScreen() {
         wl.debug(ltag, "SCREEN " + ps.currentScreen + ": " + ps.toString());
 
-        System.out.println("is="+SwingUtilities.isEventDispatchThread());
+        //ps.currentScreen = ProgramState.SCREEN_DEPOSIT;
+        //ps.currentScreen = ProgramState.SCREEN_WITHDRAW;
+        
         clear();   
         if (ps.needInitWallets) {
             sm.initWallets();
@@ -2481,10 +2485,7 @@ public class AdvancedClient  {
                     if (bi.status == BillPayItem.SEND_STATUS_STUCK) {
                         String stuckFilename = bi.getStuckFilename(fwallet);
                         
-                        wl.debug(ltag, "Using previously exported " + bi.idx + " " + bi.address + " " + bi.status + " f=" + stuckFilename + " j=" + j);
-                        
-                        System.out.println("sf=" + stuckFilename + " idx=" + j);
-                        
+                        wl.debug(ltag, "Using previously exported " + bi.idx + " " + bi.address + " " + bi.status + " f=" + stuckFilename + " j=" + j);                        
                         attachments[j][0] = stuckFilename;
                         continue;
                     }
@@ -3804,7 +3805,6 @@ public class AdvancedClient  {
                 Config.ECHO_TIMEOUT = echot * 1000;
                 Config.REQUESTED_MODE = smode;
 
-                System.out.println("sm="+smode);
                 if (AppCore.writeConfig() == false) {
                     ps.errText = "Failed to write config file";
                     showScreen();
@@ -5300,6 +5300,8 @@ public class AdvancedClient  {
             }
         }
         
+        
+        
         final JLabel lfText = new JLabel("Local folder");
         final JFileChooser chooser = new JFileChooser();
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
@@ -5944,6 +5946,8 @@ public class AdvancedClient  {
         final JLabel pText = fname;
         final MyTextField password = new MyTextField("Wallet Password", true);
         
+        System.out.println("is=" + SwingUtilities.isEventDispatchThread());
+        
         if (ps.currentWallet.isEncrypted()) {
             AppUI.getGBRow(subInnerCore, fname, password.getTextField(), y, gridbag);
             y++;
@@ -5953,6 +5957,7 @@ public class AdvancedClient  {
                 password.setData(ps.currentWallet.getPassword());
             }
         }
+
         
         fname = new JLabel("Memo (Note)");
         final MyTextField memo = new MyTextField("Optional", false);
@@ -6006,7 +6011,8 @@ public class AdvancedClient  {
         
         AppUI.GBPad(subInnerCore, y, gridbag);        
         y++;
-        
+                
+
         
         new FileDrop(null, ddPanel, new DashedBorder(40, brand.getSecondTextColor()), false, new FileDrop.Listener() {
             public void filesDropped( java.io.File[] files ) {   
@@ -6050,15 +6056,15 @@ public class AdvancedClient  {
                 */
             } 
         }); 
-        
-        
-        
-        final JFileChooser chooser = new JFileChooser();
+
+    
+       // final JFileChooser chooser = new JFileChooser();
         FileNameExtensionFilter filter = new FileNameExtensionFilter(
                 "CloudCoins", "jpg", "jpeg", "png", "stack", "json", "txt");
+ 
         chooser.setFileFilter(filter);
         chooser.setMultiSelectionEnabled(true);
-        
+
         ddPanel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseReleased(MouseEvent e) {
@@ -6104,7 +6110,8 @@ public class AdvancedClient  {
                 }
             }   
         });
- 
+       
+
         AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Continue", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 //ps.currentScreen = ProgramState.SCREEN_DEFAULT;
@@ -6135,6 +6142,17 @@ public class AdvancedClient  {
                     return;
                 }
                 
+                for (String filename : ps.files) {
+                    File f = new File(filename);
+                    boolean fileIsNotLocked = f.renameTo(f);
+                    if (!fileIsNotLocked) {
+                        ps.errText = "File " + filename + " can't be accessed. Make sure it is not open by another process";
+                        showScreen();
+                        return;
+                    }
+                    
+                }
+
                 if (w.isSkyWallet()) {
                     ps.errText = "The program cannot deposit to Sky Wallets. Use Transfer Screen";
                     showScreen();
@@ -6904,7 +6922,6 @@ public class AdvancedClient  {
             cnt++;
         }
       
-        System.out.println("l="+cnt);
         rv.options = new String[cnt];
         rv.idxs = new int[cnt];
         
@@ -6979,10 +6996,6 @@ public class AdvancedClient  {
         GridBagLayout gridbag = new GridBagLayout();
         subInnerCore.setLayout(gridbag);
 
-        for (int i = 0; i < wallets.length; i++) {
-            System.out.println("x="+wallets[i].getName() + " up="+ wallets[i].isUpdated());
-        }
-        
         final optRv rv = setOptionsForWalletsCommon(false, true, true, null);
         if (rv.idxs.length == 0) {
             fname = AppUI.wrapDiv("You have no empty wallets to delete");
@@ -7648,7 +7661,7 @@ public class AdvancedClient  {
     public void showTransactionsScreen() {      
         Wallet w = ps.currentWallet;
         invPanel = new JPanel();   
-        System.out.println("is="+SwingUtilities.isEventDispatchThread());
+
         int[][] counters = w.getCounters(); 
         if (counters != null && counters.length != 0) {
             AppUI.setBackground(invPanel, brand.getInventoryBackgroundColor());
@@ -7683,8 +7696,6 @@ public class AdvancedClient  {
         JPanel wrp = new JPanel();
         AppUI.alignTop(wrp);
         hwrapper.add(wrp);
-        
-        
 
         rightPanel.add(hwrapper);
         rightPanel.add(AppUI.hr(22));
@@ -7770,12 +7781,12 @@ public class AdvancedClient  {
         AppUI.setBoxLayout(wrp, false);
 
         
-        int fsize = 18;
+        int fsize = 20;
         //bpanel.add(wrp);
         //if (counters != null && counters.length != 0) 
             bpanel.add(invPanel);
  
-        int bwidth = 138;
+        int bwidth = 148;
         GridBagConstraints c = new GridBagConstraints();
         c.insets = new Insets(0, 2, 0, 0);
         c.anchor = GridBagConstraints.NORTH;
@@ -7788,6 +7799,7 @@ public class AdvancedClient  {
             AppUI.setBoxLayout(wrpDeposit, false);
             AppUI.setSize(wrpDeposit, bwidth, 56);
             AppUI.setBackground(wrpDeposit, brand.getTopMenuHoverColor());
+            
             AppUI.noOpaque(wrpDeposit);
             
             wrpDeposit.add(AppUI.vr(12));         

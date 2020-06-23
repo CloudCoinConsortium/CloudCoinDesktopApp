@@ -76,7 +76,6 @@ public class AppCore {
         logger.info(ltag, "Creating " + idPath);
         try {
             if (!idPathFile.mkdirs()) {
-                System.out.println("FAILED");
                 logger.error(ltag, "Can not create directory " + dirName);
                 return false;
             }
@@ -1741,7 +1740,6 @@ public class AppCore {
             sb.append(",");
             sb.append("" + cc.getDenomination());
             sb.append("\r\n");
-            System.out.println("sn="+sn + " d="+cc.getDenomination());
         }
 
         AppCore.saveFile(fileName, sb.toString());
