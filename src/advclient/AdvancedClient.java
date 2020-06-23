@@ -91,6 +91,8 @@ public class AdvancedClient  {
     ServantManager sm;
     WLogger wl;
     
+    
+    String[] args;
     Wallet[] wallets; 
     MyButton continueButton, cancelButton;
     
@@ -119,8 +121,10 @@ public class AdvancedClient  {
     
     JLabel mainTitleText;
     
-    public AdvancedClient() {
+    public AdvancedClient(String[] args) {
         wl = new WLogger();
+        
+
         
         String home = System.getProperty("user.home");
         resetState();
@@ -143,20 +147,25 @@ public class AdvancedClient  {
         AppCore.logger = wl;
         boolean rv = AppCore.initFolders(new File(home));
         AppCore.logSystemInfo(version);
+        
+        wl.debug(ltag, "Num arguments: " + args.length);
+        for (int i = 0; i < args.length; i++) {
+            wl.debug(ltag, "arg" + i + " " + args[i]);
+        }
         if (!rv) {
             wl.error(ltag, "Failed to create folders");
             ps.errText = "Failed to init folders";
         } else {  
             Thread t = new Thread(new Runnable() {
                 public void run(){
-                    initBrand();
+                    initBrand(args);
                 }
             });
             t.start();
         }
     }
     
-    public void initCore() {
+    public void initCore(String[] args) {
         initSystem();
         
         if (brand.updateAvailable())
@@ -194,6 +203,21 @@ public class AdvancedClient  {
                 mainPanel.add(headerPanel);
                 mainPanel.add(corePanel);
     
+                if (args.length != 0) {
+                    String filename = args[0];
+                    wl.debug(ltag, "Checking file: " + filename);
+                    File f = new File(filename);
+                    if (f.exists()) {
+                        wl.debug(ltag, "Trying to assosiate file");
+                        Wallet w = sm.getFirstNonSkyWallet();
+                        if (w != null) {
+                            wl.debug(ltag, "Chosen wallet: " + w.getName());
+                            ps.currentScreen = ProgramState.SCREEN_DEPOSIT;
+                            ps.files.add(f.getAbsolutePath());
+                                    
+                        }
+                    }
+                }
 
                 showScreen();
                 
@@ -202,7 +226,7 @@ public class AdvancedClient  {
 
     }
 
-    public void initBrand() {
+    public void initBrand(String[] args) {
         wl.debug(ltag, "Init brand");
         
         String brandName = Config.DEFAULT_BRAND_NAME;
@@ -230,7 +254,7 @@ public class AdvancedClient  {
                  //   public void run(){
                 
                         if (br.text.equals("done")) {
-                            initCore();
+                            initCore(args);
                             return;
                         }
                         
@@ -5945,9 +5969,7 @@ public class AdvancedClient  {
         fname = new JLabel("Password");
         final JLabel pText = fname;
         final MyTextField password = new MyTextField("Wallet Password", true);
-        
-        System.out.println("is=" + SwingUtilities.isEventDispatchThread());
-        
+
         if (ps.currentWallet.isEncrypted()) {
             AppUI.getGBRow(subInnerCore, fname, password.getTextField(), y, gridbag);
             y++;
@@ -5992,6 +6014,9 @@ public class AdvancedClient  {
                 ddPanel.setBorder(new DashedBorder(40, brand.getThirdTextColor()));
             }
         });
+  
+        
+        
         
         AppUI.getGBRow(subInnerCore, tl, t2, y, gridbag);
         y++;
@@ -6048,14 +6073,14 @@ public class AdvancedClient  {
                     t2.setVisible(true);
                 } else
                     t2.setVisible(false);
-                /*
-                if (ps.files.size() == 0)
-                    ddPanel.setBorder(new DashedBorder(40, brand.getThirdTextColor()));
-                else
-                    ddPanel.setBorder(new DashedBorder(40, brand.getSecondTextColor()));
-                */
             } 
         }); 
+
+        if (ps.files.size() > 0) {
+            l.setText("Dropped " + ps.files.size() + " file(s)");
+            t2.setVisible(true);
+            ddPanel.setBorder(new DashedBorder(40, brand.getSecondTextColor()));
+        }
 
     
        // final JFileChooser chooser = new JFileChooser();
@@ -9355,6 +9380,10 @@ public class AdvancedClient  {
         System.setProperty("awt.useSystemAAFontSettings","on");
         System.setProperty("swing.aatext", "true");
         
+        
+        
+        
+        
         /*
         try {
             UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
@@ -9395,7 +9424,7 @@ public class AdvancedClient  {
         //UIManager.put("ScrollBar.background", new ColorUIResource(AppUI.getColor6()));
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                new AdvancedClient();
+                new AdvancedClient(args);
             }
         });
     }

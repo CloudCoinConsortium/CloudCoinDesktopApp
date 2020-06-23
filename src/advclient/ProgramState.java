@@ -121,6 +121,8 @@ public class ProgramState {
     Wallet coinIDinFix;
     
     boolean isEchoFinished;
+    
+    String[] args;
 
     
     int statToBankValue, statToBank, statFailed, statLost;
