@@ -69,7 +69,7 @@ import org.json.JSONObject;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "3.0.15";
+    public static String version = "3.0.16";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -799,7 +799,7 @@ public class AdvancedClient  {
  
         String[] items = {"Backup", "List serials", "Clear History", "Fix Fracked", 
             "Delete a Wallet", "Show Folders", "Echo RAIDA", "Settings", "Sent Coins", 
-             "Bill Pay", "Cloud Bank"};
+             "Bill Pay", "Cloud Bank", "Recovery"};
         for (int i = 0; i < items.length; i++) {
             JMenuItem menuItem = new JMenuItem(items[i]);
             menuItem.setActionCommand("" + i);
@@ -863,7 +863,9 @@ public class AdvancedClient  {
                         ps.currentScreen = ProgramState.SCREEN_SHOW_BILL_PAY;
                     } else if (action.equals("10")) {
                         ps.currentScreen = ProgramState.SCREEN_CLOUDBANK;
-                    }
+                    } else if (action.equals("11")) {
+                        ps.currentScreen = ProgramState.SCREEN_RECOVERY;
+                    } 
 
                     showScreen();
                 }
@@ -1202,6 +1204,15 @@ public class AdvancedClient  {
                 break;
             case ProgramState.SCREEN_CLOUDBANK_SETTINGS_SAVED:
                 showCloudbankSettingsSavedScreen();
+                break;
+            case ProgramState.SCREEN_RECOVERY:
+                showRecoveryScreen();
+                break;
+            case ProgramState.SCREEN_RECOVERING:
+                showRecoveringScreen();
+                break;
+            case ProgramState.SCREEN_RECOVERY_DONE:
+                showRecoveryDoneScreen();
                 break;
         }
         
@@ -6226,16 +6237,11 @@ public class AdvancedClient  {
     
     public void showFoldersScreen() {  
         int y = 0;
-        JLabel fname, value;
-        MyTextField walletName = null;
-
+        JLabel value;
         JPanel subInnerCore = getPanel("Folders");                
         GridBagLayout gridbag = new GridBagLayout();
         subInnerCore.setLayout(gridbag);
       
-        Wallet w = sm.getActiveWallet();
- 
-        
         for (int i = 0; i < wallets.length; i++) {
             if (wallets[i].isSkyWallet()) 
                 continue;
@@ -8637,6 +8643,243 @@ public class AdvancedClient  {
                 }
             }
         });
+    }
+    
+    public void showRecoveringScreen() {
+        JPanel subInnerCore = getPanel("Recovery in Progress");
+
+        JPanel ct = new JPanel();
+        AppUI.noOpaque(ct);
+        subInnerCore.add(ct);
+        
+        GridBagLayout gridbag = new GridBagLayout();
+        GridBagConstraints c = new GridBagConstraints();      
+        ct.setLayout(gridbag);
+        
+        JLabel x = new JLabel("Do not close the application until all CloudCoins are recovered!");
+        AppUI.setCommonFont(x);
+        AppUI.setColor(x, brand.getErrorColor());
+        c.anchor = GridBagConstraints.CENTER;
+        c.insets = new Insets(10, 0, 4, 0); 
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = 0;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+        
+        pbarText = new JLabel("");
+        AppUI.setCommonFont(pbarText);
+        c.insets = new Insets(40, 20, 4, 0);
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = 1;
+        gridbag.setConstraints(pbarText, c);
+        ct.add(pbarText);
+        
+        // ProgressBar
+        pbar = new JProgressBar();
+        pbar.setStringPainted(true);
+        AppUI.setMargin(pbar, 0);
+        AppUI.setSize(pbar, (int) (tw / 2.6f) , 50);
+        pbar.setMinimum(0);
+        pbar.setMaximum(24);
+        pbar.setValue(0);
+        pbar.setUI(new FancyProgressBar());
+        AppUI.noOpaque(pbar);
+        
+        c.insets = new Insets(20, 20, 4, 0);
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = 2;
+        gridbag.setConstraints(pbar, c);
+        ct.add(pbar);
+        
+        subInnerCore.add(AppUI.hr(120));
+        
+        Thread t = new Thread(new Runnable() {
+            public void run(){
+                pbar.setVisible(false);
+                ps.isEchoFinished = false;
+                setRAIDAEchoProgressCoins(0);                
+                sm.startEchoService(new EchoCb());
+                while (!ps.isEchoFinished) {
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException e) {}
+
+                }
+                
+                if (!sm.isRAIDAOK()) {
+                    ps.errText = "RAIDA cannot be contacted. "
+                            + "This is usually caused by company routers blocking outgoing traffic. "
+                            + "Please Echo RAIDA and try again.";
+                    ps.isEchoFinished = false;
+                    ps.currentScreen = ProgramState.SCREEN_RECOVERY_DONE;
+                    showScreen();
+                    return;
+                }
+
+                /*
+                ps.dstWallet.setPassword(ps.typedPassword);
+                sm.setActiveWalletObj(ps.dstWallet);
+                
+                pbarText.setText("Moving coins ...");
+                for (String filename : ps.files) {
+                    String name = sm.getActiveWallet().getName();
+                    
+                    AppCore.moveToFolderNoTs(filename, Config.DIR_IMPORT, name);
+                }
+
+                pbarText.setText("Unpacking coins ...");
+                pbarText.repaint();
+                
+                wl.debug(ltag, "issky " + ps.isSkyDeposit);
+                if (ps.isSkyDeposit) {
+                    sm.startUnpackerService(new UnpackerSenderCb());
+                } else {
+                    sm.startUnpackerService(new UnpackerCb());
+                }
+                */
+            }
+        });
+        
+        t.start();
+        
+    }
+    public void showRecoveryDoneScreen() {
+        boolean isError = !ps.errText.equals("");
+        JPanel subInnerCore;
+        
+        if (isError) {
+            subInnerCore = getPanel("Error");
+            resetState();
+            return;
+        }
+             
+        int y = 0;
+        JLabel fname, value;
+        ps.dstWallet.setNotUpdated();
+        if (ps.srcWallet != null)
+            ps.srcWallet.setNotUpdated();
+
+        subInnerCore = getPanel("Recovery Complete");                
+        GridBagLayout gridbag = new GridBagLayout();
+        subInnerCore.setLayout(gridbag);
+      
+        String totalRecoveredValue = AppCore.formatNumber(ps.recoveredCoins);
+        String totalRecoveredFailedValue = AppCore.formatNumber(ps.recoveredFailedCoins);
+        
+        
+        //fname = AppUI.wrapDiv("Deposited <b>" +  total +  " CloudCoins</b> to <b>" + ps.dstWallet.getName() + " </b>");  
+        //AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
+        //y++;     
+        
+        fname = new JLabel("Total Recovered Coins:");
+        value = new JLabel(totalRecoveredValue);
+        AppUI.getGBRow(subInnerCore, fname, value, y, gridbag);
+        y++; 
+        
+        fname = new JLabel("Failed to Recover Coins:");
+        value = new JLabel(totalRecoveredFailedValue);
+        AppUI.getGBRow(subInnerCore, fname, value, y, gridbag);
+        y++; 
+              
+        AppUI.GBPad(subInnerCore, y, gridbag);        
+        y++;
+        
+
+        AppUI.getTwoButtonPanel(subInnerCore, "Next Recovery", "Continue", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                resetState(true);
+                ps.currentScreen = ProgramState.SCREEN_RECOVERY;
+                showScreen();
+            }
+        },  new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                //setActiveWallet(ps.dstWallet);
+                ps.sendType = 0;
+                ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
+                //ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                showScreen();
+            }
+        }, y, gridbag);
+        
+    }
+    
+    public void showRecoveryScreen() {
+        int y = 0;
+        JLabel fname;
+        MyTextField email = null;
+
+        JPanel subInnerCore = getPanel("Recover Lost Coins");                
+        GridBagLayout gridbag = new GridBagLayout();
+        subInnerCore.setLayout(gridbag);
+
+
+        
+        String txt;
+        String fdir = AppCore.getRecoveredDir();
+        CloudCoin[] ccs = AppCore.getCoinsInDir(fdir);
+        if (ccs == null || ccs.length == 0) {
+            txt =  "You have no coins to recover. Click on the Folder name and put coins there";
+        } else {
+            txt = "Total Notes in Recovery Folder: " + ccs.length;
+        }
+
+        fname = new JLabel(txt);
+        AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
+        y++; 
+        
+        fname = new JLabel("Email Address");
+        email = new MyTextField("Email Address", false);
+        email.requestFocus();        
+        AppUI.getGBRow(subInnerCore, fname, email.getTextField(), y, gridbag);
+        y++;     
+        
+        JLabel sl = new JLabel("Recovery Folder");
+        JLabel link = AppUI.getHyperLink(fdir, "javascript:void(0); return false", 20);
+        AppUI.getGBRow(subInnerCore, sl, link, y, gridbag);
+        AppUI.setColor(link, brand.getHyperlinkColor());
+        AppUI.underLine(link);
+        link.addMouseListener(new MouseAdapter() {
+            public void mouseReleased(MouseEvent e) {
+                if (!Desktop.isDesktopSupported())
+                    return;
+                try {
+                    Desktop.getDesktop().open(new File(fdir));
+                } catch (IOException ie) {
+                    wl.error(ltag, "Failed to open browser: " + ie.getMessage());
+                }
+            }
+        });
+        y++;
+        
+        AppUI.GBPad(subInnerCore, y, gridbag);        
+        y++;
+
+        final MyTextField femail = email;
+        AppUI.getTwoButtonPanel(subInnerCore, "Refresh", "Continue", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                ps.currentScreen = ProgramState.SCREEN_RECOVERY;
+                showScreen();
+            }
+        }, new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                String p0 = femail.getText();        
+                if (p0.isEmpty()) {
+                    ps.errText = "Email must be set";
+                    showScreen();
+                    return;
+                }
+                
+                p0 = p0.toLowerCase();                
+                if (!Validator.email(p0)) {
+                    ps.errText = "Email is invalid";
+                    showScreen();
+                    return;                  
+                }
+
+                showScreen();
+            }
+        }, y, gridbag);
+
     }
     
     public void showCreateWalletScreen() {

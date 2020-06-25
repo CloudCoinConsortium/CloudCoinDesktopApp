@@ -33,6 +33,7 @@ public class Config {
     public static String DIR_VAULT = "Vault";
 
 
+
     public static String DIR_TEMPLATES = "Templates";
     public static String DIR_EMAIL_TEMPLATES = "EmailTemplates";
     public static String DIR_ACCOUNTS = "Accounts";
@@ -43,6 +44,8 @@ public class Config {
     public static String DIR_DOWNLOADS = "Downloads";
     public static String DIR_BRANDS = "Brands";
     public static String DIR_CLOUDBANK = "CloudBank";
+    public static String DIR_RECOVERY = "Recovery";
+    public static String DIR_RECOVERED = "Recovered";
     
     public static String DIR_CLOUDBANK_KEYS = "Keys";
 

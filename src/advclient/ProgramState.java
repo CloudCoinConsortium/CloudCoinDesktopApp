@@ -83,6 +83,9 @@ public class ProgramState {
     final public static int SCREEN_CHECKING_SKYWALLETS_DONE = 64;
     final public static int SCREEN_CLOUDBANK_SETTINGS_SAVED = 65;
     final public static int SCREEN_PRE_DELETE_WALLET = 66;
+    final public static int SCREEN_RECOVERY = 67;
+    final public static int SCREEN_RECOVERING = 68;
+    final public static int SCREEN_RECOVERY_DONE = 69;
     
     
     final static int CB_STATE_INIT = 1;
@@ -204,6 +207,10 @@ public class ProgramState {
     
     int statTotalLostFixedValue;
     
+    
+    int recoveredCoins;
+    int recoveredFailedCoins;
+    
     public ProgramState() {
         currentScreen = SCREEN_AGREEMENT;
         cwalletRecoveryRequested = cwalletPasswordRequested = false;
@@ -295,6 +302,8 @@ public class ProgramState {
         myIp = "";
         
         fixPownstrings = null;
+        
+        recoveredCoins = recoveredFailedCoins = 0;
     }
  
     public String toString() {
