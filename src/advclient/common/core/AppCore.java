@@ -146,6 +146,9 @@ public class AppCore {
             if (!createDirectory(Config.DIR_RECOVERED))
                 return false;
             
+            if (!createDirectory(Config.DIR_PAID_FOR_RECOVERED))
+                return false;
+            
             if (!createDirectory(Config.DIR_CLOUDBANK + File.separator + Config.DIR_CLOUDBANK_KEYS))
                 return false;
             
@@ -216,6 +219,12 @@ public class AppCore {
     
     static public String getRecoveredDir() {
        File f = new File(rootPath, Config.DIR_RECOVERED);
+       
+       return f.toString();
+    }
+    
+    static public String getPaidRecoveredDir() {
+       File f = new File(rootPath, Config.DIR_PAID_FOR_RECOVERED);
        
        return f.toString();
     }
@@ -430,6 +439,10 @@ public class AppCore {
     static public void moveToImported(String fileName, String user) {
         moveToFolderNoTs(fileName, Config.DIR_IMPORTED, user, true);
     }
+    
+    static public void moveToSent(String fileName, String user) {
+        moveToFolderNoTs(fileName, Config.DIR_SENT, user, true);
+    }
 
     static public boolean copyFile(InputStream is, String fdst) {
         File dest = new File(fdst);
@@ -611,6 +624,30 @@ public class AppCore {
         logger.debug(ltag, "Deleting " + path);
         f.delete();
     }
+    
+    static public int getFilesCountPath(String path) {
+        File rFile;
+        int rv;
+
+        try {
+            rFile = new File(path);
+            rv = 0;
+            for (File file: rFile.listFiles()) {
+                if (file.isDirectory())
+                    continue;
+            
+                if (!AppCore.hasCoinExtension(file))
+                    continue;
+                
+                rv++;
+            }               
+        } catch (Exception e) {
+           logger.error(ltag, "Failed to read directory: " + e.getMessage());
+           return 0;
+        }
+
+        return rv;
+    }
 
     static public int getFilesCount(String dir, String user) {
         String path = getUserDir(dir, user);
@@ -619,8 +656,6 @@ public class AppCore {
 
         try {
             rFile = new File(path);
-            //rv = rFile.listFiles().length;
-           
             rv = 0;
             for (File file: rFile.listFiles()) {
                 if (file.isDirectory())

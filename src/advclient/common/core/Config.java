@@ -46,6 +46,7 @@ public class Config {
     public static String DIR_CLOUDBANK = "CloudBank";
     public static String DIR_RECOVERY = "Recovery";
     public static String DIR_RECOVERED = "Recovered";
+    public static String DIR_PAID_FOR_RECOVERED = "PaidForRecovered";
     
     public static String DIR_CLOUDBANK_KEYS = "Keys";
 

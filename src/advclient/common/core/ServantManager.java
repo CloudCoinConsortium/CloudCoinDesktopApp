@@ -29,6 +29,7 @@ import global.cloudcoin.ccbank.Transfer.Transfer;
 import global.cloudcoin.ccbank.Transfer.TransferResult;
 import global.cloudcoin.ccbank.Emailer.Emailer;
 import global.cloudcoin.ccbank.Emailer.EmailerResult;
+import global.cloudcoin.ccbank.Recoverer.Recoverer;
 import global.cloudcoin.ccbank.ShowCoins.ShowCoins;
 import global.cloudcoin.ccbank.ShowEnvelopeCoins.ShowEnvelopeCoins;
 import global.cloudcoin.ccbank.ShowEnvelopeCoins.ShowEnvelopeCoinsResult;
@@ -145,7 +146,8 @@ public class ServantManager {
                 "Eraser",
                 "Backupper",
                 "Transfer",
-                "Emailer"
+                "Emailer",
+                "Recoverer"
         }, AppCore.getRootPath() + File.separator + user, logger);
    
 
@@ -320,6 +322,14 @@ public class ServantManager {
 
 	Authenticator at = (Authenticator) sr.getServant("Authenticator");
 	at.launch(cb);
+    }
+    
+    public void startRecovererService(String email, CloudCoin cc, CallbackInterface cb) {
+        if (sr.isRunning("Recoverer"))
+            return;
+
+	Recoverer rv = (Recoverer) sr.getServant("Recoverer");
+	rv.launch(email, cc, cb);
     }
     
     public void startAuthenticatorService(CloudCoin cc, CallbackInterface cb) {

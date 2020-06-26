@@ -11,6 +11,7 @@ import global.cloudcoin.ccbank.FrackFixer.FrackFixerResult;
 import global.cloudcoin.ccbank.Grader.GraderResult;
 import global.cloudcoin.ccbank.LossFixer.LossFixerResult;
 import global.cloudcoin.ccbank.Receiver.ReceiverResult;
+import global.cloudcoin.ccbank.Recoverer.RecovererResult;
 import global.cloudcoin.ccbank.Sender.SenderResult;
 import global.cloudcoin.ccbank.ServantManager.ServantManager;
 import global.cloudcoin.ccbank.ServantManager.ServantManager.makeChangeResult;
@@ -1278,6 +1279,21 @@ public class AdvancedClient  {
         String tc = AppCore.formatNumber(totalCoins);
         
         pbarText.setText("Deposited " + stc + " / " + tc + " CloudCoins");
+        pbarText.repaint();
+        
+    }
+    
+    private void setRAIDARecoveryProgressCoins(int raidaProcessed, int totalCoinsProcessed, int totalCoins) {
+        pbar.setVisible(true);
+        pbar.setValue(raidaProcessed);
+        
+        if (totalCoins == 0)
+            return;
+
+        String stc = AppCore.formatNumber(totalCoinsProcessed);
+        String tc = AppCore.formatNumber(totalCoins);
+        
+        pbarText.setText("Recovered " + stc + " / " + tc + " CloudCoins");
         pbarText.repaint();
         
     }
@@ -8341,7 +8357,7 @@ public class AdvancedClient  {
         subInnerCore.setLayout(gridbag);
         
         final JFileChooser chooser = new JFileChooser();
-        FileNameExtensionFilter filter = new FileNameExtensionFilter("CloudCoins", "jpg", "jpeg", "stack", "json", "txt");
+        FileNameExtensionFilter filter = new FileNameExtensionFilter("CloudCoins", "jpg", "jpeg", "png", "stack", "json", "txt");
         chooser.setFileFilter(filter);
         
         
@@ -8716,27 +8732,43 @@ public class AdvancedClient  {
                     return;
                 }
 
-                /*
-                ps.dstWallet.setPassword(ps.typedPassword);
-                sm.setActiveWalletObj(ps.dstWallet);
+                sm.startRecovererService(ps.typedEmail, ps.chosenCoinCC, new CallbackInterface() {
+                    public void callback(Object o) {
+                        RecovererResult rr = (RecovererResult) o;
+                        wl.debug(ltag, "Recoverer finished " + rr.status);
+                        if (rr.status == RecovererResult.STATUS_ERROR) {
+                            ps.recoveredCoins = rr.recoveredCoins;
+                            ps.recoveredFailedCoins = rr.recoveredFailedCoins;
+                            EventQueue.invokeLater(new Runnable() {         
+                                public void run() {
+                                    ps.errText = "Recovery Failed. Make sure your email is correct";
+                                    ps.currentScreen = ProgramState.SCREEN_RECOVERY_DONE;
+                                    showScreen();
+                                }
+                            });
+                            
+                            return;
+                        }
+                        
+                        if (rr.status == RecovererResult.STATUS_FINISHED) {
+                            ps.recoveredCoins = rr.recoveredCoins;
+                            ps.recoveredFailedCoins = rr.recoveredFailedCoins;
+                            if (rr.recoveredFailedCoins > 0) {
+                                ps.errText = "PaidCoin pownstring " + rr.pownString;
+                            }
+                            EventQueue.invokeLater(new Runnable() {         
+                                public void run() {
+                                    ps.currentScreen = ProgramState.SCREEN_RECOVERY_DONE;
+                                    showScreen();
+                                }
+                            });
+                        }
+                        
+                        setRAIDARecoveryProgressCoins(rr.totalRAIDAProcessed, rr.totalCoinsProcessed, rr.totalCoins);
+                    }
                 
-                pbarText.setText("Moving coins ...");
-                for (String filename : ps.files) {
-                    String name = sm.getActiveWallet().getName();
-                    
-                    AppCore.moveToFolderNoTs(filename, Config.DIR_IMPORT, name);
-                }
+                });
 
-                pbarText.setText("Unpacking coins ...");
-                pbarText.repaint();
-                
-                wl.debug(ltag, "issky " + ps.isSkyDeposit);
-                if (ps.isSkyDeposit) {
-                    sm.startUnpackerService(new UnpackerSenderCb());
-                } else {
-                    sm.startUnpackerService(new UnpackerCb());
-                }
-                */
             }
         });
         
@@ -8755,16 +8787,13 @@ public class AdvancedClient  {
              
         int y = 0;
         JLabel fname, value;
-        ps.dstWallet.setNotUpdated();
-        if (ps.srcWallet != null)
-            ps.srcWallet.setNotUpdated();
 
         subInnerCore = getPanel("Recovery Complete");                
         GridBagLayout gridbag = new GridBagLayout();
         subInnerCore.setLayout(gridbag);
       
         String totalRecoveredValue = AppCore.formatNumber(ps.recoveredCoins);
-        String totalRecoveredFailedValue = AppCore.formatNumber(ps.recoveredFailedCoins);
+        //String totalRecoveredFailedValue = AppCore.formatNumber(ps.recoveredFailedCoins);
         
         
         //fname = AppUI.wrapDiv("Deposited <b>" +  total +  " CloudCoins</b> to <b>" + ps.dstWallet.getName() + " </b>");  
@@ -8776,10 +8805,11 @@ public class AdvancedClient  {
         AppUI.getGBRow(subInnerCore, fname, value, y, gridbag);
         y++; 
         
+        /*
         fname = new JLabel("Failed to Recover Coins:");
         value = new JLabel(totalRecoveredFailedValue);
         AppUI.getGBRow(subInnerCore, fname, value, y, gridbag);
-        y++; 
+        y++; */
               
         AppUI.GBPad(subInnerCore, y, gridbag);        
         y++;
@@ -8815,10 +8845,12 @@ public class AdvancedClient  {
 
         
         String txt;
-        String fdir = AppCore.getRecoveredDir();
+        String fdir = AppCore.getRecoveryDir();
         CloudCoin[] ccs = AppCore.getCoinsInDir(fdir);
+        boolean nocoins = false;
         if (ccs == null || ccs.length == 0) {
             txt =  "You have no coins to recover. Click on the Folder name and put coins there";
+            nocoins = true;
         } else {
             txt = "Total Notes in Recovery Folder: " + ccs.length;
         }
@@ -8831,7 +8863,46 @@ public class AdvancedClient  {
         email = new MyTextField("Email Address", false);
         email.requestFocus();        
         AppUI.getGBRow(subInnerCore, fname, email.getTextField(), y, gridbag);
+        if (!ps.typedEmail.isEmpty())
+            email.setData(ps.typedEmail);
         y++;     
+        
+        
+        
+        
+        final JFileChooser chooser = new JFileChooser();
+        FileNameExtensionFilter filter = new FileNameExtensionFilter("CloudCoins", "jpg", "jpeg", "png", "stack", "json", "txt");
+        chooser.setFileFilter(filter);
+
+        
+        fname = new JLabel("CloudCoin for Payment");
+        final MyTextField tf1 = new MyTextField("", false, true);
+        final boolean fnocoins = nocoins;
+        tf1.disable();
+        tf1.setFilepickerListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                Wallet w = sm.getFirstFullNonSkyWallet();
+                if (w != null) {
+                    String dir = AppCore.getUserDir(Config.DIR_BANK, w.getName());
+                    chooser.setCurrentDirectory(new File(dir));
+                } else {
+                    chooser.setCurrentDirectory(null);
+                }
+                
+                int returnVal = chooser.showOpenDialog(null);
+                if (returnVal == JFileChooser.APPROVE_OPTION) {       
+                    ps.chosenCoin = chooser.getSelectedFile().getAbsolutePath();
+                    tf1.setData(chooser.getSelectedFile().getName());
+                }
+            }
+        });
+        
+        if (ps.chosenCoin != null && !ps.chosenCoin.isEmpty()) 
+            tf1.setData(new File(ps.chosenCoin).getName());
+        
+        AppUI.getGBRow(subInnerCore, fname, tf1.getTextField(), y, gridbag);
+        y++; 
         
         JLabel sl = new JLabel("Recovery Folder");
         JLabel link = AppUI.getHyperLink(fdir, "javascript:void(0); return false", 20);
@@ -8862,6 +8933,12 @@ public class AdvancedClient  {
             }
         }, new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+                if (fnocoins) {
+                    ps.errText = "Recovery Folder is empty";
+                    showScreen();
+                    return;
+                }
+                
                 String p0 = femail.getText();        
                 if (p0.isEmpty()) {
                     ps.errText = "Email must be set";
@@ -8875,7 +8952,22 @@ public class AdvancedClient  {
                     showScreen();
                     return;                  
                 }
-
+                ps.typedEmail = p0;
+                
+                if (ps.chosenCoin.isEmpty()) {
+                    ps.errText = "CloudCoin is not chosen";
+                    showScreen();
+                    return;
+                }
+                
+                ps.chosenCoinCC = AppCore.getCoin(ps.chosenCoin);
+                if (ps.chosenCoinCC == null) {
+                    ps.errText = "Failed to parse CloudCoin. Make sure it is a valid stack file";
+                    showScreen();
+                    return;
+                }
+                
+                ps.currentScreen = ProgramState.SCREEN_RECOVERING;
                 showScreen();
             }
         }, y, gridbag);

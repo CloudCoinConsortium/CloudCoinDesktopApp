@@ -211,6 +211,9 @@ public class ProgramState {
     int recoveredCoins;
     int recoveredFailedCoins;
     
+    String chosenCoin;
+    CloudCoin chosenCoinCC;
+    
     public ProgramState() {
         currentScreen = SCREEN_AGREEMENT;
         cwalletRecoveryRequested = cwalletPasswordRequested = false;
@@ -304,6 +307,9 @@ public class ProgramState {
         fixPownstrings = null;
         
         recoveredCoins = recoveredFailedCoins = 0;
+        
+        chosenCoin = "";
+        chosenCoinCC = null;
     }
  
     public String toString() {

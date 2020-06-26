@@ -17,10 +17,18 @@ public class RecovererResult {
 
     public String errText;
     
+    public int recoveredFailedCoins;
+    public int recoveredCoins;
+    
+    public String pownString;
+    
     public RecovererResult() {
         totalFilesProcessed = totalRAIDAProcessed = 0;
         totalFiles = 0;
         totalCoins = totalCoinsProcessed = 0;
         status = STATUS_PROCESSING;
+        recoveredFailedCoins = 0;
+        recoveredCoins = 0;
+        pownString = "";
     }
 }

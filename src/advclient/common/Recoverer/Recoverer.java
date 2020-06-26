@@ -15,9 +15,7 @@ import global.cloudcoin.ccbank.core.Config;
 import global.cloudcoin.ccbank.core.GLogger;
 import global.cloudcoin.ccbank.core.RAIDA;
 import global.cloudcoin.ccbank.core.Servant;
-//import global.cloudcoin.ccbank.Authenticator.AuthenticatorResult;
 
-//import global.cloudcoin.ccbank.common.core.Authenticator.AuthenticatorResult;
 
 public class Recoverer extends Servant {
 
@@ -29,77 +27,24 @@ public class Recoverer extends Servant {
         super("Recoverer", rootDir, logger);    
     }
 
-    public void launch(CallbackInterface icb) {
+    
+   public void launch(String email, CloudCoin cc, CallbackInterface icb) {
         this.cb = icb;
     
         globalResult = new RecovererResult();
         launchThread(new Runnable() {
             @Override
             public void run() {
-                logger.info(ltag, "RUN Authenticator");
-                doAuthencticate();
+                logger.info(ltag, "RUN Recoverer");
+                doRecover(email, cc);
                 
                 raida.setReadTimeout(Config.READ_TIMEOUT);
             }
         });
     }
-
-    
-    public void launch(CloudCoin cc, CallbackInterface icb) {
-        this.cb = icb;
-        final CloudCoin fcc = cc;
-
-        globalResult = new RecovererResult();
-        launchThread(new Runnable() {
-            @Override
-            public void run() {
-                logger.info(ltag, "RUN CloudCoin Authenticator for " + fcc.sn);
-
-                ArrayList<CloudCoin> ccs = new ArrayList<CloudCoin>();
-                ccs.add(fcc);
-
-                RecovererResult ar = new RecovererResult();
-                if (!processDetect(ccs, false)) {
-                    logger.error(ltag, "Failed to detect");
-                    globalResult.status = RecovererResult.STATUS_ERROR;
-                } else {
-                    globalResult.status = RecovererResult.STATUS_FINISHED;
-                }
-
-                copyFromGlobalResult(ar);
-                if (cb != null)
-                    cb.callback(ar);
-            }
-        });
-    }
-    
-    public void launch(ArrayList<CloudCoin> ccs, CallbackInterface icb) {
-        this.cb = icb;
-        final ArrayList<CloudCoin> fccs = ccs;
-
-        globalResult = new RecovererResult();
-        launchThread(new Runnable() {
-            @Override
-            public void run() {
-                logger.info(ltag, "RUN CloudCoins Authenticator");
-
-                RecovererResult ar = new RecovererResult();
-                if (!processDetect(fccs, false)) {
-                    logger.error(ltag, "Failed to detect");
-                    globalResult.status = RecovererResult.STATUS_ERROR;
-                } else {
-                    globalResult.status = RecovererResult.STATUS_FINISHED;
-                }
-
-                copyFromGlobalResult(ar);
-                if (cb != null)
-                    cb.callback(ar);
-            }
-        });
-    }
     
     
-    
+
     // Need this
     public void setConfig() {
 
@@ -113,66 +58,44 @@ public class Recoverer extends Servant {
         aResult.totalCoinsProcessed = globalResult.totalCoinsProcessed;
         aResult.status = globalResult.status;
         aResult.errText = globalResult.errText;
+        aResult.recoveredFailedCoins = globalResult.recoveredFailedCoins;
+        aResult.recoveredCoins = globalResult.recoveredCoins;
     }
 
-    private void setCoinStatus(ArrayList<CloudCoin> ccs, int idx, int status) {
-        for (CloudCoin cc : ccs) {
-            cc.setDetectStatus(idx, status);
-        }
-    }
-
-    public boolean processDetect(ArrayList<CloudCoin> ccs, boolean needGeneratePans) {
+    public boolean processRecovery(String email, CloudCoin rcc, ArrayList<CloudCoin> ccs, boolean needGeneratePans) {
         String[] results;
         String[] requests;
         StringBuilder[] sbs;
-        String[] posts;
-
         int i;
-        boolean first = true;
 
-        posts = new String[RAIDA.TOTAL_RAIDA_COUNT];
+
         requests = new String[RAIDA.TOTAL_RAIDA_COUNT];
         sbs = new StringBuilder[RAIDA.TOTAL_RAIDA_COUNT];
         for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
-            requests[i] = "multi_detect";
             sbs[i] = new StringBuilder();
-            sbs[i].append("b=t");
+            sbs[i].append("recover_by_email?");
+            sbs[i].append("nn=");
+            sbs[i].append(rcc.nn);
+            sbs[i].append("&sn=");
+            sbs[i].append(rcc.sn);
+            sbs[i].append("&an=");
+            sbs[i].append(rcc.ans[i]);
+            sbs[i].append("&email=");
+            sbs[i].append(email);
         }
 
         for (CloudCoin cc : ccs) {
-            if (needGeneratePans)
-                cc.generatePans(this.email);
-            else
-                cc.setPansToAns();
-
             for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
-                //if (!first)
-                //    sbs[i].append("&");
-
-                sbs[i].append("&nns[]=");
-                sbs[i].append(cc.nn);
-
                 sbs[i].append("&sns[]=");
                 sbs[i].append(cc.sn);
-
-                sbs[i].append("&denomination[]=");
-                sbs[i].append(cc.getDenomination());
-
-                sbs[i].append("&ans[]=");
-                sbs[i].append(cc.ans[i]);
-
-                sbs[i].append("&pans[]=");
-                sbs[i].append(cc.pans[i]);
             }
-
-            first = false;
         }
 
         for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
-            posts[i] = sbs[i].toString();
+            requests[i] = sbs[i].toString();
         }
 
-        results = raida.query(requests, posts, new CallbackInterface() {
+        results = raida.query(requests, null, new CallbackInterface() {
             final GLogger gl = logger;
             final CallbackInterface myCb = cb;
 
@@ -188,7 +111,7 @@ public class Recoverer extends Servant {
         });
 
         if (results == null) {
-            logger.error(ltag, "Failed to query multi_detect");
+            logger.error(ltag, "Failed to query recover");
             return false;
         }
 
@@ -205,14 +128,14 @@ public class Recoverer extends Servant {
             if (results[i] != null) {
                 if (results[i].equals("")) {
                     logger.error(ltag, "Skipped raida" + i);
-                    setCoinStatus(ccs, i, CloudCoin.STATUS_UNTRIED);
+                    rcc.setDetectStatus(i, CloudCoin.STATUS_UNTRIED);
                     continue;
                 }
             }
             
             if (results[i] == null) {
                 logger.error(ltag, "Skipped raida due to zero response: " + i);
-                setCoinStatus(ccs, i, CloudCoin.STATUS_NORESPONSE);
+                rcc.setDetectStatus(i, CloudCoin.STATUS_NORESPONSE);
                 continue;
             }
   
@@ -220,7 +143,7 @@ public class Recoverer extends Servant {
             o = parseResponse(results[i], RecovererResponse.class);
             if (o == null) {
                 errorResponse = (CommonResponse) parseResponse(results[i], CommonResponse.class);
-                setCoinStatus(ccs, i, CloudCoin.STATUS_ERROR);
+                rcc.setDetectStatus(i, CloudCoin.STATUS_ERROR);
                 if (errorResponse == null) {
                     logger.error(ltag, "Failed to get error");
                     continue;
@@ -232,100 +155,53 @@ public class Recoverer extends Servant {
             
             RecovererResponse ars = (RecovererResponse) o;           
             logger.debug(ltag, "raida" + i + " status: " + ars.status);
-            if (ars.status.equals("allpass")) {
-                logger.debug(ltag, "allpass");
-                setCoinStatus(ccs, i, CloudCoin.STATUS_PASS);
+            if (ars.status.equals("success")) {
+                logger.debug(ltag, "pass");
+                rcc.setDetectStatus(i, CloudCoin.STATUS_PASS);
                 continue;
-            } else if (ars.status.equals("allfail")) {
-                logger.debug(ltag, "allfail");
-                setCoinStatus(ccs, i, CloudCoin.STATUS_FAIL);
+            } else if (ars.status.equals("fail")) {
+                logger.debug(ltag, "fail");
+                rcc.setDetectStatus(i, CloudCoin.STATUS_FAIL);
                 continue;
-            } else if (ars.status.equals("mixed")) {
-                logger.debug(ltag, "mixed " + ars.message);
-                String[] rss = ars.message.split(",");
-                if (rss.length != ccs.size()) {
-                    logger.error(ltag, "Invalid length returned: " + rss.length + ", expected: " + ccs.size());
-                    setCoinStatus(ccs, i, CloudCoin.STATUS_ERROR);
-                    continue;
-                }
-                
-                for (int j = 0; j < rss.length; j++) {
-                    String strStatus = rss[j];
-                    int status;
-                    if (strStatus.equals(Config.REQUEST_STATUS_PASS)) {
-                        status = CloudCoin.STATUS_PASS;
-                    } else if (strStatus.equals(Config.REQUEST_STATUS_FAIL)) {
-                        status = CloudCoin.STATUS_FAIL;
-                    } else {
-                        status = CloudCoin.STATUS_ERROR;
-                        logger.error(ltag, "Unknown coin status from RAIDA" + i + ": " + strStatus);
-                    }
-                    
-                    ccs.get(j).setDetectStatus(i, status);
-                }
             } else {
                 logger.error(ltag, "Invalid status: " + ars.status);
-                setCoinStatus(ccs, i, CloudCoin.STATUS_ERROR);
+                rcc.setDetectStatus(i, CloudCoin.STATUS_ERROR);
                 continue;
             }
 
-            /*
-            for (int j = 0; j < o.length; j++) {
-                String strStatus;
-                int status;
-
-                ar[i] = new AuthenticatorResponse[o.length];
-                ar[i][j] = (AuthenticatorResponse) o[j];
-
-                strStatus = ar[i][j].status;
-
-                if (strStatus.equals(Config.REQUEST_STATUS_PASS)) {
-                    status = CloudCoin.STATUS_PASS;
-                } else if (strStatus.equals(Config.REQUEST_STATUS_FAIL)) {
-                    status = CloudCoin.STATUS_FAIL;
-                } else {
-                    status = CloudCoin.STATUS_ERROR;
-                    logger.error(ltag, "Unknown coin status from RAIDA" + i + ": " + strStatus);
-                }
-
-                ccs.get(j).setDetectStatus(i, status);
-                //logger.info(ltag, "raida" + i + " v=" + ar[i][j].status + " m="+ar[i][j].message + " j= " + j + " st=" + status);
-            }
-            */
         }
+        
+        rcc.setPownStringFromDetectStatus();
+        
+        String pownString = rcc.getPownString();
+        logger.debug(ltag, "Pownstring " + pownString);
+        
+        for (CloudCoin cc : ccs) {
+            if (rcc.isSentFixable()) {
+                globalResult.recoveredCoins += cc.getDenomination(); 
+                File f = new File(cc.originalFile);
+                if (f.exists())
+                    AppCore.renameFile(cc.originalFile, AppCore.getPaidRecoveredDir() + File.separator + cc.getFileName());
+            } else {
+                globalResult.recoveredFailedCoins += cc.getDenomination();
+            } 
+        }
+        
+        globalResult.pownString = pownString;
 
         return true;
     }
 
-    private void moveCoinsToLost(ArrayList<CloudCoin> ccs) {
-        String dir = AppCore.getUserDir(Config.DIR_LOST, user);
-        String file;
-
-        for (CloudCoin cc : ccs) {
-            logger.debug(ltag, "cc " + cc.sn + " pown " + cc.getPownString());
-            if (!cc.originalFile.equals("")) {
-                file = dir + File.separator + cc.getFileName();
-                logger.info(ltag, "Saving coin to Lost " + file);
-                if (!AppCore.saveFile(file, cc.getJson())) {
-                    logger.error(ltag, "Failed to move coin to move to Lost: " + cc.getFileName());
-                    continue;
-                }
-
-                logger.debug(ltag, "Deleting " + cc.sn);
-                AppCore.deleteFile(cc.originalFile);
-            }
-        }
-    }
-
     private void moveCoins(ArrayList<CloudCoin> ccs) {
+        System.out.println("moving" + ccs.size());
+        if (1==1)
+            return;
         for (CloudCoin cc : ccs) {
             logger.debug(ltag, "pre cc " + cc.sn + " pown " + cc.getPownString());
             cc.setPownStringFromDetectStatus();
             logger.debug(ltag, "post cc " + cc.sn + " pown " + cc.getPownString());
 
-            String ccFile = AppCore.getUserDir(Config.DIR_DETECTED, user) +
-                    File.separator + cc.getFileName();
-
+            String ccFile = AppCore.getRecoveredDir() + File.separator + cc.getFileName();
             logger.info(ltag, "Saving " + ccFile);
             if (!AppCore.saveFile(ccFile, cc.getJson())) {
                 logger.error(ltag, "Failed to save file: " + ccFile);
@@ -336,7 +212,8 @@ public class Recoverer extends Servant {
         }
     }
 
-    public void doAuthencticate() {
+    public void doRecover(String email, CloudCoin rcc) {
+        logger.debug(ltag, "Doing recovery for email " + email + " cc " + rcc.sn);
         if (!updateRAIDAStatus()) {
             globalResult.status = RecovererResult.STATUS_ERROR;
             globalResult.errText = AppCore.raidaErrText;
@@ -347,8 +224,7 @@ public class Recoverer extends Servant {
             return;
         }
 
-        String fullPath = AppCore.getUserDir(Config.DIR_SUSPECT, user);
-
+        String fullPath = AppCore.getRecoveryDir();
         CloudCoin cc;
         ArrayList<CloudCoin> ccs;
         ccs = new ArrayList<CloudCoin>();
@@ -357,15 +233,9 @@ public class Recoverer extends Servant {
         if (maxCoins == -1)
             maxCoins = Config.DEFAULT_MAX_COINS_MULTIDETECT;
         
-        String email = getConfigValue("email");
-        if (email != null)
-            this.email = email.toLowerCase();
-        else
-            this.email = "";
-
-        globalResult.totalFiles = AppCore.getFilesCount(Config.DIR_SUSPECT, user);
+        globalResult.totalFiles = AppCore.getFilesCountPath(fullPath);
         if (globalResult.totalFiles == 0) {
-            logger.info(ltag, "The Suspect folder is empty");
+            logger.info(ltag, "The Recovery folder is empty");
             globalResult.status = RecovererResult.STATUS_FINISHED;
             cb.callback(globalResult);
             return;
@@ -433,8 +303,7 @@ public class Recoverer extends Servant {
                 logger.info(ltag, "Processing");
 
                 RecovererResult ar = new RecovererResult();
-                if (!processDetect(ccs, true)) {
-                    moveCoinsToLost(ccs);
+                if (!processRecovery(email, rcc, ccs, true)) {
                     globalResult.status = RecovererResult.STATUS_ERROR;
                     copyFromGlobalResult(ar);
                     if (cb != null)
@@ -459,8 +328,7 @@ public class Recoverer extends Servant {
         RecovererResult ar = new RecovererResult();
         if (ccs.size() > 0) {
             logger.info(ltag, "adding + " + ccs.size());
-            if (!processDetect(ccs, true)) {
-                moveCoinsToLost(ccs);
+            if (!processRecovery(email, rcc, ccs, true)) {
                 globalResult.status = RecovererResult.STATUS_ERROR;
             } else {
                 moveCoins(ccs);

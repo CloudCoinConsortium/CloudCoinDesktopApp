@@ -251,24 +251,7 @@ public class Transfer extends Servant {
                 globalResult.totalFilesProcessed += ccs.size();
             }
         } 
-    
-        /*
-        if (extraCoin != null) {
-            int remained = amount - curValProcessed;
-            logger.debug(ltag, "Changing coin " + extraCoin.sn + " alreadyProcessed=" + curValProcessed + " needed=" + amount);
-            if (!processTransferWithChange(extraCoin, idcc, tag, tosn, remained)) {
-                tr = new TransferResult();
-                globalResult.status = TransferResult.STATUS_ERROR;
-                globalResult.errText = "Failed to make change";
-                copyFromGlobalResult(tr);
-                if (cb != null)
-                    cb.callback(tr);
-                
-                return;
-            }
-        }
-        */
-        
+            
         globalResult.status = TransferResult.STATUS_FINISHED;
         copyFromGlobalResult(tr);
         if (cb != null)
