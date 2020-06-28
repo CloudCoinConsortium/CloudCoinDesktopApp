@@ -60,6 +60,7 @@ public class Recoverer extends Servant {
         aResult.errText = globalResult.errText;
         aResult.recoveredFailedCoins = globalResult.recoveredFailedCoins;
         aResult.recoveredCoins = globalResult.recoveredCoins;
+        aResult.pownString = globalResult.pownString;
     }
 
     public boolean processRecovery(String email, CloudCoin rcc, ArrayList<CloudCoin> ccs, boolean needGeneratePans) {
@@ -180,8 +181,9 @@ public class Recoverer extends Servant {
             if (rcc.isSentFixable()) {
                 globalResult.recoveredCoins += cc.getDenomination(); 
                 File f = new File(cc.originalFile);
-                if (f.exists())
+                if (f.exists()) {
                     AppCore.renameFile(cc.originalFile, AppCore.getPaidRecoveredDir() + File.separator + cc.getFileName());
+                }
             } else {
                 globalResult.recoveredFailedCoins += cc.getDenomination();
             } 
@@ -193,9 +195,6 @@ public class Recoverer extends Servant {
     }
 
     private void moveCoins(ArrayList<CloudCoin> ccs) {
-        System.out.println("moving" + ccs.size());
-        if (1==1)
-            return;
         for (CloudCoin cc : ccs) {
             logger.debug(ltag, "pre cc " + cc.sn + " pown " + cc.getPownString());
             cc.setPownStringFromDetectStatus();

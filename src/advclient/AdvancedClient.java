@@ -70,7 +70,7 @@ import org.json.JSONObject;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "3.0.16";
+    public static String version = "3.0.18";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -3225,6 +3225,11 @@ public class AdvancedClient  {
         
         if (Config.CLOUDBANK_PASSWORD.isEmpty())
             Config.CLOUDBANK_PASSWORD = AppCore.generateHex();
+        
+        if (Config.CLOUDBANK_ENABLED) {
+            if (!httpServer.isOnline() && ps.errText.isEmpty())
+                ps.errText = "CloudBank Server failed to start. See the main.log file " + httpServer.isOnline();
+        }
     }
     
     public void showCloudbankScreen() {
@@ -3233,6 +3238,7 @@ public class AdvancedClient  {
         MyTextField walletName = null;
         
         preCloudbank();
+        
         
         JPanel subInnerCore = getPanel("CloudBank Server");                
         GridBagLayout gridbag = new GridBagLayout();
@@ -3258,6 +3264,7 @@ public class AdvancedClient  {
 
         fname = new JLabel("Server Enabled");
         final MyCheckBoxToggle cb1 = new MyCheckBoxToggle();
+
         cb1.setSelected(Config.CLOUDBANK_ENABLED);
         AppUI.getGBRow(subInnerCore, fname, cb1.getCheckBox(), y, gridbag);
         y++;
@@ -8754,7 +8761,7 @@ public class AdvancedClient  {
                             ps.recoveredCoins = rr.recoveredCoins;
                             ps.recoveredFailedCoins = rr.recoveredFailedCoins;
                             if (rr.recoveredFailedCoins > 0) {
-                                ps.errText = "PaidCoin pownstring " + rr.pownString;
+                                ps.errText = "Failed to authenticate Payment Coin. The Pownstring is " + rr.pownString;
                             }
                             EventQueue.invokeLater(new Runnable() {         
                                 public void run() {
@@ -8845,7 +8852,7 @@ public class AdvancedClient  {
 
         
         String txt;
-        String fdir = AppCore.getRecoveryDir();
+        final String fdir = AppCore.getRecoveryDir();
         CloudCoin[] ccs = AppCore.getCoinsInDir(fdir);
         boolean nocoins = false;
         if (ccs == null || ccs.length == 0) {
@@ -8933,7 +8940,8 @@ public class AdvancedClient  {
             }
         }, new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                if (fnocoins) {
+                CloudCoin[] ccs = AppCore.getCoinsInDir(fdir);
+                if (ccs.length == 0) {
                     ps.errText = "Recovery Folder is empty";
                     showScreen();
                     return;

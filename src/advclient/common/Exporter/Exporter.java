@@ -104,7 +104,7 @@ public class Exporter extends Servant {
         logger.debug(ltag, "Export type " + type + " amount " + amount + " dir " + dir + " tag " + tag + " user " + user);
 
         if (!keepSrc) {
-            if (tag.indexOf('.') != -1 || tag.indexOf('/') != -1 || tag.indexOf('\\') != -1) {
+            if (tag.indexOf('/') != -1 || tag.indexOf('\\') != -1) {
                 logger.error(ltag, "Invalid tag");
                 er.status = ExporterResult.STATUS_ERROR;
                 if (cb != null)

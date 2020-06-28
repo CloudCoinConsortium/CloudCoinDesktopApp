@@ -68,6 +68,8 @@ public class MyHttpServer {
     
     String myIP;
     
+    boolean online;
+    
     public MyHttpServer(String myIP, int port, String password, CloudBank cloudbank, GLogger logger) {
         this.logger = logger;
         this.port = port;
@@ -78,6 +80,7 @@ public class MyHttpServer {
         
         //myIP = "10.1.1.249";
         this.myIP = myIP;
+        this.online = false;
         //ks.store( new FileOutputStream( "NewClientKeyStore" ), "MyPass".toCharArray() );
     }
     
@@ -184,6 +187,8 @@ public class MyHttpServer {
         
        // HttpsServer httpsServer = HttpsServer.create(address, 0);
         
+        this.online = true;
+        
         return true;
     }
     
@@ -192,9 +197,15 @@ public class MyHttpServer {
         if (httpsServer != null)
             httpsServer.stop(1);
         
+        this.online = false;
+        
         return true;
     }
 
+    public boolean isOnline() {
+        return this.online;
+    }
+    
 }
 
 class MyHandler implements HttpHandler {

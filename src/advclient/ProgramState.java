@@ -97,7 +97,7 @@ public class ProgramState {
     final static int SEND_TYPE_FOLDER = 3;
     
     public int currentScreen;
-    
+
     public boolean cwalletRecoveryRequested, cwalletPasswordRequested;
     
     String errText;
@@ -310,6 +310,7 @@ public class ProgramState {
         
         chosenCoin = "";
         chosenCoinCC = null;
+
     }
  
     public String toString() {
