@@ -1848,21 +1848,27 @@ public class AppCore {
     
     public static Map<String, Properties> parseINI(Reader reader) throws IOException {
         Map<String, Properties> result = new HashMap();
-        new Properties() {
-            private Properties section;
+        try {
+            new Properties() {
+                private Properties section;
 
-            @Override
-            public Object put(Object key, Object value) {
-                String header = (((String) key) + " " + value).trim();
-                if (header.startsWith("[") && header.endsWith("]")) {
-                    return result.put(header.substring(1, header.length() - 1), 
-                        section = new Properties());
+                @Override
+                public Object put(Object key, Object value) {
+                    String header = (((String) key) + " " + value).trim();
+                    if (header.startsWith("[") && header.endsWith("]")) {
+                        return result.put(header.substring(1, header.length() - 1), 
+                            section = new Properties());
+                    }
+                    else {
+                        return section.put(key, value);
+                    }
                 }
-                else {
-                    return section.put(key, value);
-                }
-            }
-        }.load(reader);
+            }.load(reader);
+        } catch(Exception e) {
+            logger.debug(ltag, "Failed to parse config: " + e.getMessage());
+            return null;
+        }
+        
         return result;
     }
     

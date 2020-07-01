@@ -5222,7 +5222,7 @@ public class AdvancedClient  {
         chooser.setAcceptAllFileFilterUsed(false);
         
      
-        final MyTextField localFolder = new MyTextField("CSV File", false, true);
+        final MyTextField localFolder = new MyTextField("CSV File*", false, true);
         chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         localFolder.setData(new File(ps.chosenFile).getName());
         FileNameExtensionFilter filter = new FileNameExtensionFilter("CloudCoins", "csv");
@@ -8406,7 +8406,6 @@ public class AdvancedClient  {
     public void showCreateSkyWalletScreen() {
         int y = 0;
         JLabel fname0, fname1, fname2, fname3, fname4;
-        MyTextField walletName = null;
 
         JPanel subInnerCore = getPanel("Create Sky Wallet");                
         GridBagLayout gridbag = new GridBagLayout();
@@ -8416,12 +8415,37 @@ public class AdvancedClient  {
         FileNameExtensionFilter filter = new FileNameExtensionFilter("CloudCoins", "jpg", "jpeg", "png", "stack", "json", "txt");
         chooser.setFileFilter(filter);
         
-        
+        /*
         JLabel tw = AppUI.wrapDiv("The coin that you use for ID will be placed into your ID folder. "
-                + "It will not be available for spending until you close your SkyWallet");
+                + "It will not be available for spending until you close your SkyWallet");*/
+        JLabel tw = AppUI.wrapDiv("You will need a CloudCoin to act as a key to your new Skywallet. "
+                + "Please choose a coin from your wallet. If you want to use a coin that is "
+                + "in a password protected wallet, you will first need to withdraw a coin "
+                + "so that it is unencrypted. If you have a skywallet already, you can add it "
+                + "to this wallet by dropping the ID coin here:");
         AppUI.getGBRow(subInnerCore, null, tw, y, gridbag);
         y++;
         
+        JLabel sl = AppUI.getHyperLink(AppCore.getIDDir(), "javascript:void(0); return false", 20);
+        sl.addMouseListener(new MouseAdapter() {
+            public void mouseReleased(MouseEvent e) {
+                if (!Desktop.isDesktopSupported())
+                    return;
+                try {
+                    Desktop.getDesktop().open(new File(AppCore.getIDDir()));
+                    ps.needInitWallets = true;
+                } catch (IOException ie) {
+                    wl.error(ltag, "Failed to open browser: " + ie.getMessage());
+                }
+            }
+        });
+         
+        AppUI.getGBRow(subInnerCore, null, sl, y, gridbag);
+        AppUI.setColor(sl, brand.getHyperlinkColor());
+        AppUI.underLine(sl);
+        y++;
+        
+        /*
         fname0 = new JLabel("Add Existing");
         final MyCheckBoxToggle cb1 = new MyCheckBoxToggle();
         if (ps.isCreatingNewSkyWallet)
@@ -8430,12 +8454,13 @@ public class AdvancedClient  {
             cb1.setSelected(true);
         AppUI.getGBRow(subInnerCore, fname0, cb1.getCheckBox(), y, gridbag);
         y++; 
-        
+        */
         String[] options = {
             Config.DDNS_DOMAIN,
         };
    
-        fname1 = new JLabel("DNS Name or IP Address of Trusted Server");
+        /*
+        fname1 = new JLabel("Domain Name");
         final RoundedCornerComboBox cbox = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "Select Server", options);
         cbox.setDefault(null);
         AppUI.getGBRow(subInnerCore, fname1, cbox.getComboBox(), y, gridbag);
@@ -8447,14 +8472,34 @@ public class AdvancedClient  {
             tf0.setData(ps.skyVaultDomain);
         AppUI.getGBRow(subInnerCore, fname2, tf0.getTextField(), y, gridbag);
         y++;     
+        */
         
-        fname3 = new JLabel("Select CloudCoin to be used as ID*");
+        
+        
+        
+        fname1 = new JLabel("Your Proposed Address*");
+        fname2 = new JLabel("Domain Name*");
+        AppUI.getGBRow(subInnerCore, fname1, fname2, y, gridbag);
+        y++; 
+        
+        
+        final RoundedCornerComboBox cbox = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "Select Server", options);
+        cbox.setDefault(null);  
+        final MyTextField tf0 = new MyTextField("JohnDoe", false);   
+        if (!ps.skyVaultDomain.isEmpty())
+            tf0.setData(ps.skyVaultDomain);
+
+        AppUI.getGBRow(subInnerCore, tf0.getTextField(), cbox.getComboBox(),  y, gridbag);
+        y++;     
+                
+        
+        fname3 = new JLabel("CloudCoin to be used as ID*");
         final MyTextField tf1 = new MyTextField("", false, true);
         tf1.disable();
         tf1.setFilepickerListener(new MouseAdapter() {
             @Override
             public void mouseReleased(MouseEvent e) {
-                if (!cb1.isChecked()) {
+               // if (!cb1.isChecked()) {
                     Wallet w = sm.getFirstFullNonSkyWallet();
                     if (w != null) {
                         String dir = AppCore.getUserDir(Config.DIR_BANK, w.getName());
@@ -8462,9 +8507,9 @@ public class AdvancedClient  {
                     } else {
                         chooser.setCurrentDirectory(null);
                     }
-                } else {
-                    chooser.setCurrentDirectory(null);
-                }
+                //} else {
+                //    chooser.setCurrentDirectory(null);
+                //}
 
                 int returnVal = chooser.showOpenDialog(null);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {       
@@ -8481,6 +8526,7 @@ public class AdvancedClient  {
         y++; 
    
         
+        /*
         fname4 = new JLabel("Please put your ID coin here:                           ");
         JLabel sl = AppUI.getHyperLink(AppCore.getIDDir(), "javascript:void(0); return false", 20);
         sl.addMouseListener(new MouseAdapter() {
@@ -8500,15 +8546,17 @@ public class AdvancedClient  {
         AppUI.setColor(sl, brand.getHyperlinkColor());
         AppUI.underLine(sl);
         y++;
+        */
         
+        /*
         if (ps.isCreatingNewSkyWallet) {
-            fname4.setVisible(false);
+           //fname4.setVisible(false);
             sl.setVisible(false);
         } else {
-            fname4.setVisible(true);
+            //fname4.setVisible(true);
             sl.setVisible(true);  
         }
-        
+        */
         
         AppUI.GBPad(subInnerCore, y, gridbag);        
         y++;
@@ -8524,7 +8572,7 @@ public class AdvancedClient  {
         }, new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 
-                ps.isCreatingNewSkyWallet = !cb1.isChecked();
+                //ps.isCreatingNewSkyWallet = !cb1.isChecked();
                 ps.skyVaultDomain = tf0.getText();
                 
                 int srcIdx = cbox.getSelectedIndex();
@@ -8583,9 +8631,9 @@ public class AdvancedClient  {
                 int sn = d.getSN();
                 
                 ps.domain = domain;
-                if (!cb1.isChecked()) {                 
+                //if (!cb1.isChecked()) {                 
                     if (sn >= 0) {
-                        ps.errText = "DNS name already exists";
+                        ps.errText = "Domain name already exists";
                         showScreen();
                         return;
                     }
@@ -8620,7 +8668,7 @@ public class AdvancedClient  {
                         }
                     });
 
-                } else {
+                /*} else {
                     if (sn <= 0) {
                         ps.errText = "Wallet does not exist or network error occured";
                         showScreen();
@@ -8685,9 +8733,11 @@ public class AdvancedClient  {
                     showScreen();
 
                 }
+                    */
             }
         }, y, gridbag);
        
+        /*
         cb1.addListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {
                 boolean isChecked = e.getStateChange() == ItemEvent.SELECTED;
@@ -8715,6 +8765,7 @@ public class AdvancedClient  {
                 }
             }
         });
+        */
     }
     
     public void showRecoveringScreen() {

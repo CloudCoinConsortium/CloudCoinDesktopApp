@@ -443,7 +443,7 @@ public class Brand {
             cb.callback(br);
             return false;
         }
-        
+
         br.totalSteps = datamap.entrySet().size();
         int i = 0;
         for (Map.Entry<String,dlResult> entry : datamap.entrySet()) {

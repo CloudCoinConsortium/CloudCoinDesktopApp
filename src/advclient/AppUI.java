@@ -530,7 +530,8 @@ public class AppUI {
         c.gridy = y;
         c.weightx = 0;
         c.weighty = 0;
-        
+                    
+                
         if (left != null) {
             if (left instanceof JLabel) {
                 AppUI.setCommonFont(left);
@@ -542,13 +543,14 @@ public class AppUI {
             c.gridwidth = 2;
         }
         
-        c.insets = new Insets(8, 0, 0, 0);
-        c.weightx = 10;       
+        if (right instanceof JLabel || left instanceof JLabel)
+            c.insets = new Insets(8, 0, 0, 0);
         
+        c.weightx = 10;       
         if (right != null) {
             if (right instanceof JLabel) {
                 if (left == null)
-                    c.insets = new Insets(20, 0, 20, 0); 
+                    c.insets = new Insets(10, 0, 10, 0); 
                 else
                     c.insets = new Insets(20, 0, 0, 0);
                 AppUI.setCommonFont(right);
