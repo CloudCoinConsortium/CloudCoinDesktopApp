@@ -788,11 +788,7 @@ public class AdvancedClient  {
         c.fill = GridBagConstraints.CENTER;
         gridbag.setConstraints(advText, c);
         p.add(advText);
-        
-        System.out.println("adv="+Config.REQUESTED_ADVANCED_VIEW);
-        
-
-        
+ 
         // Mode
         final MyCheckBoxToggle cbx1 = new MyCheckBoxToggle();
         cbx1.addListener(new ItemListener() {
@@ -1066,9 +1062,7 @@ public class AdvancedClient  {
     public void showScreen() {
         wl.debug(ltag, "SCREEN " + ps.currentScreen + ": " + ps.toString());
 
-        //ps.currentScreen = ProgramState.SCREEN_DEPOSIT;
-        //ps.currentScreen = ProgramState.SCREEN_WITHDRAW;
-        
+        //ps.currentScreen = ProgramState.SCREEN_DEPOSIT;        
         clear();   
         if (ps.needInitWallets) {
             sm.initWallets();
@@ -3325,7 +3319,7 @@ public class AdvancedClient  {
         AppUI.getGBRow(subInnerCore, fname, cb1.getCheckBox(), y, gridbag);
         y++;
                 
-        fname = new JLabel("Server Port");
+        fname = new JLabel("Server Port*");
         final MyTextField serverPort = new MyTextField("Server Port", false);         
         AppUI.getGBRow(subInnerCore, fname, serverPort.getTextField(), y, gridbag);
         serverPort.setData(Integer.toString(Config.CLOUDBANK_PORT));
@@ -3345,12 +3339,12 @@ public class AdvancedClient  {
         y++;
         */
 
-        fname = new JLabel("Local Wallet");
+        fname = new JLabel("Local Wallet*");
         final RoundedCornerComboBox cboxlocal = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "Make Selection", rvLocal.options);
         AppUI.getGBRow(subInnerCore, fname, cboxlocal.getComboBox(), y, gridbag);
         y++;    
         
-        final JLabel spText = new JLabel("Wallet Password");
+        final JLabel spText = new JLabel("Wallet Password*");
         final MyTextField passwordSrc = new MyTextField("Wallet Password", true);
         AppUI.getGBRow(subInnerCore, spText, passwordSrc.getTextField(), y, gridbag);
         passwordSrc.setData(Config.CLOUDBANK_LWALLET_PASSWORD);
@@ -3360,7 +3354,7 @@ public class AdvancedClient  {
         spText.setVisible(false);
         
         
-        fname = new JLabel("Sky Wallet");
+        fname = new JLabel("Sky Wallet*");
         final RoundedCornerComboBox cboxsky = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "Make Selection", rvSky.options);
         AppUI.getGBRow(subInnerCore, fname, cboxsky.getComboBox(), y, gridbag);
         y++; 
@@ -3440,7 +3434,7 @@ public class AdvancedClient  {
                 MyButton mb = (MyButton) jb.getClientProperty("ref");
                 
                 
-                                int lIdx = cboxlocal.getSelectedIndex() - 1;
+                int lIdx = cboxlocal.getSelectedIndex() - 1;
                 if (lIdx < 0 || lIdx >= rvLocal.idxs.length) {                    
                     ps.errText = "Please select Local Wallet";
                     showScreen();
@@ -5387,13 +5381,12 @@ public class AdvancedClient  {
     public void showWithdrawScreen() {
         int y = 0;
         JLabel fname;
-        MyTextField walletName = null;
 
         JPanel subInnerCore = getPanel("Withdraw from " + ps.currentWallet.getName());                
         GridBagLayout gridbag = new GridBagLayout();
         subInnerCore.setLayout(gridbag);
 
-        final JLabel spText = new JLabel("Password");;
+        final JLabel spText = new JLabel("Password*");;
         final MyTextField passwordSrc = new MyTextField("Wallet Password", true);
         
         if (ps.currentWallet.isEncrypted()) {
@@ -5416,7 +5409,7 @@ public class AdvancedClient  {
         
         
         
-        final JLabel lfText = new JLabel("Local folder");
+        final JLabel lfText = new JLabel("Local folder*");
         final JFileChooser chooser = new JFileChooser();
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         chooser.setAcceptAllFileFilterUsed(false);
@@ -5441,7 +5434,7 @@ public class AdvancedClient  {
         AppUI.getGBRow(subInnerCore, lfText, localFolder.getTextField(), y, gridbag);
         y++;
        
-        fname = new JLabel("Amount");
+        fname = new JLabel("Amount*");
         final MyTextField amount = new MyTextField("0 CC", false);
         if (ps.typedAmount > 0)
             amount.setData("" + ps.typedAmount);
@@ -5600,7 +5593,7 @@ public class AdvancedClient  {
 
         final optRv rvTo = setOptionsForWalletsAll(ps.currentWallet.getName());
         
-        final JLabel spText = new JLabel("Password From");;
+        final JLabel spText = new JLabel("Password*");;
         final MyTextField passwordSrc = new MyTextField("Wallet Password", true);
         if (ps.currentWallet.isEncrypted()) {
             AppUI.getGBRow(subInnerCore, spText, passwordSrc.getTextField(), y, gridbag);
@@ -5614,14 +5607,14 @@ public class AdvancedClient  {
         //passwordSrc.getTextField().setVisible(false);
         //spText.setVisible(false);
         
-        fname = new JLabel("Transfer To");
+        fname = new JLabel("Transfer To*");
         final RoundedCornerComboBox cboxto = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "Make Selection", rvTo.options);
         cboxto.addOption("Send to " + AppUI.getRemoteUserOption());
         //cboxto.addOption(AppUI.getLocalFolderOption());
         AppUI.getGBRow(subInnerCore, fname, cboxto.getComboBox(), y, gridbag);
         y++; 
 
-        final JLabel dpText = new JLabel("Password To");;
+        final JLabel dpText = new JLabel("Password* ");
         final MyTextField passwordDst = new MyTextField("Wallet Password", true);
         AppUI.getGBRow(subInnerCore, dpText, passwordDst.getTextField(), y, gridbag);
         y++; 
@@ -5657,7 +5650,7 @@ public class AdvancedClient  {
             }       
         }
 
-        final JLabel rwText = new JLabel("To SkyWallet");
+        final JLabel rwText = new JLabel("To SkyWallet*");
         final RoundedCornerComboBox remoteWalledId = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "JohnDoe.SkyWallet.cc", rv.options);
         remoteWalledId.setEditable();
         if (!ps.typedRemoteWallet.isEmpty())
@@ -5667,18 +5660,11 @@ public class AdvancedClient  {
         rwText.setVisible(false);
         y++; 
         
-        
-        
-        
-        
-        
-        
-        
-    
+
         if (ps.chosenFile.isEmpty()) 
             ps.chosenFile = Config.DEFAULT_EXPORT_DIR;
         
-        final JLabel lfText = new JLabel("Local folder");
+        final JLabel lfText = new JLabel("Local folder*");
         final JFileChooser chooser = new JFileChooser();
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         chooser.setAcceptAllFileFilterUsed(false);
@@ -5708,7 +5694,7 @@ public class AdvancedClient  {
         localFolder.getTextField().setVisible(false);
         lfText.setVisible(false);
         
-        fname = new JLabel("Amount");
+        fname = new JLabel("Amount*");
         final MyTextField amount = new MyTextField("0 CC", false);
         if (ps.typedAmount > 0)
             amount.setData("" + ps.typedAmount);
@@ -5719,11 +5705,11 @@ public class AdvancedClient  {
             amount.requestFocus();
         
         
-        fname = new JLabel("Memo (Note)");
+        final JLabel memoLabel = new JLabel("Memo (Note)");
         final MyTextField memo = new MyTextField("Optional", false);
         if (!ps.typedMemo.isEmpty())
             memo.setData(ps.typedMemo);
-        AppUI.getGBRow(subInnerCore, fname, memo.getTextField(), y, gridbag);
+        AppUI.getGBRow(subInnerCore, memoLabel, memo.getTextField(), y, gridbag);
         y++;
         
         
@@ -5754,10 +5740,14 @@ public class AdvancedClient  {
                     localFolder.getTextField().setVisible(false);
                     lfText.setVisible(false);
                     
-                    memo.setPlaceholder("From John Doe for May rent");
+                    memoLabel.setText("Memo (Note)*");
+                    memoLabel.revalidate();
+                    memo.setPlaceholder("From John Doe for May rent2");
                     
                     return;
                 } else {
+                    memoLabel.setText("Memo (Note)");
+                    memoLabel.revalidate();
                     memo.setPlaceholder("Optional");
                 } 
                 
@@ -5784,8 +5774,12 @@ public class AdvancedClient  {
                     return;
                 
                 if (dstWallet.isSkyWallet()) {
+                    memoLabel.setText("Memo (Note)*");
+                    memoLabel.revalidate();
                     memo.setPlaceholder("From John Doe for May rent");
                 } else {
+                    memoLabel.setText("Memo (Note)");
+                    memoLabel.revalidate();
                     memo.setPlaceholder("Optional");
                 }
 
@@ -5834,7 +5828,7 @@ public class AdvancedClient  {
                 ps.srcWallet = w;
             
                 if (dstIdx < 0 || dstIdx >= rvTo.idxs.length + 2) {             
-                    ps.errText = "Please select To Wallet";
+                    ps.errText = "Please choose Wallet";
                     showScreen();
                     return;
                 }
@@ -5876,7 +5870,7 @@ public class AdvancedClient  {
 
                 if (w.isEncrypted()) {
                     if (passwordSrc.getText().isEmpty()) {
-                        ps.errText = "From Password is empty";
+                        ps.errText = "Password is empty";
                         showScreen();
                         return;
                     }
@@ -5884,13 +5878,13 @@ public class AdvancedClient  {
                     String wHash = w.getPasswordHash();
                     String providedHash = AppCore.getMD5(passwordSrc.getText());
                     if (wHash == null) {
-                        ps.errText = "From Wallet is corrupted";
+                        ps.errText = "Your Wallet is corrupted";
                         showScreen();
                         return;
                     }
                     
                     if (!wHash.equals(providedHash)) {
-                        ps.errText = "From Password is incorrect";
+                        ps.errText = "Password is incorrect";
                         showScreen();
                         return;
                     } 
@@ -5921,7 +5915,7 @@ public class AdvancedClient  {
                     }
                     
                     if (ps.typedMemo.isEmpty()) {
-                        ps.errText = " nnot be empty";
+                        ps.errText = "Memo must not be empty";
                         showScreen();
                         return; 
                     }     
@@ -6002,7 +5996,7 @@ public class AdvancedClient  {
                     Wallet dstWallet = wallets[dstIdx];
                     if (dstWallet.isEncrypted()) {
                         if (passwordDst.getText().isEmpty()) {
-                            ps.errText = "To Password is empty";
+                            ps.errText = "Password is empty";
                             showScreen();
                             return;
                         }
@@ -6056,7 +6050,7 @@ public class AdvancedClient  {
         GridBagLayout gridbag = new GridBagLayout();
         subInnerCore.setLayout(gridbag);
 
-        fname = new JLabel("Password");
+        fname = new JLabel("Password*");
         final JLabel pText = fname;
         final MyTextField password = new MyTextField("Wallet Password", true);
 
@@ -6625,14 +6619,14 @@ public class AdvancedClient  {
         AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
         y++;     
         
-        fname = new JLabel("From Wallet");
+        fname = new JLabel("From Wallet*");
         final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "Make Selection", rv.options);
         cboxfrom.setDefault(null);
         AppUI.getGBRow(subInnerCore, fname, cboxfrom.getComboBox(), y, gridbag);
         cboxfrom.addOption(AppUI.getLocalFolderOption());
         y++;
         
-        final JLabel lfText = new JLabel("Local folder");
+        final JLabel lfText = new JLabel("Local folder*");
         final JFileChooser chooser = new JFileChooser();
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         chooser.setAcceptAllFileFilterUsed(false);
@@ -6725,13 +6719,13 @@ public class AdvancedClient  {
 
         //final optRv rv = setOptionsForWallets(true, false);   
         final optRv rv = setOptionsForWalletsFix();
-        fname = new JLabel("From Wallet");
+        fname = new JLabel("Wallet*");
         final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "Make Selection", rv.options);
         cboxfrom.addOption("Sky Wallets");
         AppUI.getGBRow(subInnerCore, fname, cboxfrom.getComboBox(), y, gridbag);
         y++; 
         
-        final JLabel spText = new JLabel("Password");
+        final JLabel spText = new JLabel("Password*");
         final MyTextField passwordSrc = new MyTextField("Wallet Password", true);
         AppUI.getGBRow(subInnerCore, spText, passwordSrc.getTextField(), y, gridbag);
         y++;
@@ -7170,7 +7164,6 @@ public class AdvancedClient  {
     public void showBackupScreen() {
         int y = 0;
         JLabel fname;
-        MyTextField walletName = null;
 
         JPanel subInnerCore = getPanel("Backup");                
         GridBagLayout gridbag = new GridBagLayout();
@@ -7189,13 +7182,13 @@ public class AdvancedClient  {
         AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
         y++; 
         
-        fname = new JLabel("Wallet");
+        fname = new JLabel("Wallet*");
         final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "Make Selection", rv.options);
         cboxfrom.addOption(AppUI.getBackupKeysOption());
         AppUI.getGBRow(subInnerCore, fname, cboxfrom.getComboBox(), y, gridbag);
         y++; 
         
-        final JLabel spText = new JLabel("Password");
+        final JLabel spText = new JLabel("Password*");
         final MyTextField passwordSrc = new MyTextField("Wallet Password", true);
         AppUI.getGBRow(subInnerCore, spText, passwordSrc.getTextField(), y, gridbag);
         y++; 
@@ -7235,7 +7228,7 @@ public class AdvancedClient  {
             }
         });
         
-        fname = new JLabel("Backup Folder");
+        fname = new JLabel("Backup Folder*");
         final JFileChooser chooser = new JFileChooser();
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         chooser.setAcceptAllFileFilterUsed(false);
@@ -8448,14 +8441,14 @@ public class AdvancedClient  {
         AppUI.getGBRow(subInnerCore, fname1, cbox.getComboBox(), y, gridbag);
         y++; 
 
-        fname2 = new JLabel("Your Proposed Address");
+        fname2 = new JLabel("Your Proposed Address*");
         final MyTextField tf0 = new MyTextField("JohnDoe", false);   
         if (!ps.skyVaultDomain.isEmpty())
             tf0.setData(ps.skyVaultDomain);
         AppUI.getGBRow(subInnerCore, fname2, tf0.getTextField(), y, gridbag);
         y++;     
         
-        fname3 = new JLabel("Select CloudCoin to be used as ID");
+        fname3 = new JLabel("Select CloudCoin to be used as ID*");
         final MyTextField tf1 = new MyTextField("", false, true);
         tf1.disable();
         tf1.setFilepickerListener(new MouseAdapter() {
@@ -8931,7 +8924,7 @@ public class AdvancedClient  {
         AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
         y++; 
         
-        fname = new JLabel("Email Address");
+        fname = new JLabel("Email Address*");
         email = new MyTextField("Email Address", false);
         email.requestFocus();        
         AppUI.getGBRow(subInnerCore, fname, email.getTextField(), y, gridbag);
@@ -8947,7 +8940,7 @@ public class AdvancedClient  {
         chooser.setFileFilter(filter);
 
         
-        fname = new JLabel("CloudCoin for Payment");
+        fname = new JLabel("CloudCoin for Payment*");
         final MyTextField tf1 = new MyTextField("", false, true);
         final boolean fnocoins = nocoins;
         tf1.disable();
@@ -8976,7 +8969,7 @@ public class AdvancedClient  {
         AppUI.getGBRow(subInnerCore, fname, tf1.getTextField(), y, gridbag);
         y++; 
         
-        JLabel sl = new JLabel("Recovery Folder");
+        JLabel sl = new JLabel("Recovery Folder*");
         JLabel link = AppUI.getHyperLink(fdir, "javascript:void(0); return false", 20);
         AppUI.getGBRow(subInnerCore, sl, link, y, gridbag);
         AppUI.setColor(link, brand.getHyperlinkColor());
@@ -9056,7 +9049,7 @@ public class AdvancedClient  {
         GridBagLayout gridbag = new GridBagLayout();
         subInnerCore.setLayout(gridbag);
 
-        fname = new JLabel("Wallet Name");
+        fname = new JLabel("Wallet Name*");
         walletName = new MyTextField("Wallet Name", false);
         walletName.requestFocus();        
         AppUI.getGBRow(subInnerCore, fname, walletName.getTextField(), y, gridbag);
