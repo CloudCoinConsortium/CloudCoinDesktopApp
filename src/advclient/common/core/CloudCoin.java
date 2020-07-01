@@ -6,6 +6,8 @@ import org.json.JSONObject;
 
 import java.util.Date;
 import java.util.Calendar;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class CloudCoin {
 
@@ -15,11 +17,11 @@ public class CloudCoin {
     public String[] pans;
     private int[] detectStatus;
  
+    public String fileName;
+    
     private String ed;
-    private String edHex;
     private String pownString;
     private String[] aoid;
-    private String fileName;
 
     public static final int YEARSTILEXPIRE = 2;
     public String tag;
@@ -73,6 +75,7 @@ public class CloudCoin {
 
         JSONArray an = childJSONObject.getJSONArray("an");
 
+
         ed = childJSONObject.optString("ed");
         JSONArray aoidJson = childJSONObject.optJSONArray("aoid");
         if (aoidJson != null)
@@ -81,6 +84,16 @@ public class CloudCoin {
         ans = toStringArray(an);
         if (ans.length != RAIDA.TOTAL_RAIDA_COUNT)
             throw(new JSONException("Wrong an count"));
+
+        // Direct validation instead of Validator
+        Pattern p = Pattern.compile("^[A-Fa-f0-9]{32}$", Pattern.UNICODE_CHARACTER_CLASS);
+        Matcher m; 
+        for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+            m = p.matcher(ans[i]);
+            if (!m.matches()) {
+                ans[i] = "00000000000000000000000000000000";
+            }
+        }
 
         pownString = childJSONObject.optString("pown");
         originalFile = fileName;
@@ -437,8 +450,8 @@ public class CloudCoin {
 	year = year + YEARSTILEXPIRE;
 
 	ed = month + "-" + year;
-	edHex = Integer.toHexString(month);
-	edHex += Integer.toHexString(year);
+	//edHex = Integer.toHexString(month);
+	//edHex += Integer.toHexString(year);
     }
     
         

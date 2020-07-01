@@ -336,6 +336,10 @@ public class Transfer extends Servant {
                     logger.error(ltag, "Skipped raida" + i);
                     setCoinStatus(ccs, i, CloudCoin.STATUS_UNTRIED);
                     continue;
+                } else if (results[i].equals("E")) {
+                    logger.error(ltag, "ERROR RAIDA " + i);
+                    setCoinStatus(ccs, i, CloudCoin.STATUS_ERROR);
+                    continue;
                 }
             }
             

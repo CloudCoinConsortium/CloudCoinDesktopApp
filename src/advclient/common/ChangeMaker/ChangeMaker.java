@@ -149,6 +149,10 @@ public class ChangeMaker extends Servant {
                     logger.error(ltag, "Skipped raida" + i);
                     setCoinsStatus(chccs, i, CloudCoin.STATUS_UNTRIED);
                     continue;
+                } else if (results[i].equals("E")) {
+                    logger.error(ltag, "ERROR RAIDA " + i);
+                    setCoinsStatus(chccs, i, CloudCoin.STATUS_ERROR);
+                    continue;
                 }
             }
    

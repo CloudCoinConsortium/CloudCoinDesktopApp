@@ -254,4 +254,6 @@ public class Config {
     public static int STEP_BREAK = 0;
     public static int STEP_NORMAL = 1;
     public static int STEP_AGAIN = 3;
+    
+    public static boolean REQUESTED_ADVANCED_VIEW = false;
 }

@@ -207,6 +207,10 @@ public class Authenticator extends Servant {
                     logger.error(ltag, "Skipped raida" + i);
                     setCoinStatus(ccs, i, CloudCoin.STATUS_UNTRIED);
                     continue;
+                } else if (results[i].equals("E")) {
+                    logger.error(ltag, "ERROR RAIDA " + i);
+                    setCoinStatus(ccs, i, CloudCoin.STATUS_ERROR);
+                    continue;
                 }
             }
             
@@ -358,6 +362,7 @@ public class Authenticator extends Servant {
             maxCoins = Config.DEFAULT_MAX_COINS_MULTIDETECT;
         
         String email = getConfigValue("email");
+        logger.debug(ltag, "email:" + email);
         if (email != null)
             this.email = email.toLowerCase();
         else

@@ -131,6 +131,10 @@ public class Recoverer extends Servant {
                     logger.error(ltag, "Skipped raida" + i);
                     rcc.setDetectStatus(i, CloudCoin.STATUS_UNTRIED);
                     continue;
+                } else if (results[i].equals("E")) {
+                    logger.error(ltag, "ERROR RAIDA " + i);
+                    rcc.setDetectStatus(i, CloudCoin.STATUS_ERROR);
+                    continue;
                 }
             }
             

@@ -177,6 +177,8 @@ public class ProgramState {
     
     boolean needInitWallets;
     
+    boolean isAdvancedView;
+    
     int rrAmount;
     
     int failedFiles;

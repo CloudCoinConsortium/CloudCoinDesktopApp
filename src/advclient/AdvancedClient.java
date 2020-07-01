@@ -70,7 +70,7 @@ import org.json.JSONObject;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "3.0.18";
+    public static String version = "3.0.19";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -121,6 +121,10 @@ public class AdvancedClient  {
     MyHttpServer httpServer;
     
     JLabel mainTitleText;
+    
+    public boolean isAdvancedMode() {
+        return Config.REQUESTED_ADVANCED_VIEW;
+    }
     
     public AdvancedClient(String[] args) {
         wl = new WLogger();
@@ -771,7 +775,59 @@ public class AdvancedClient  {
 
         }
 
-        c.insets = new Insets(0, 412, 0, 0);
+        //
+        
+
+        
+        JLabel advText = new JLabel("Advanced View");
+        AppUI.setTitleFont(advText, 12);
+        //c.insets = new Insets(0, 112, 0, 0);
+        c.insets = new Insets(26, 124, 0, 10); 
+        c.gridwidth = 1;
+        c.weightx = 0;
+        c.fill = GridBagConstraints.CENTER;
+        gridbag.setConstraints(advText, c);
+        p.add(advText);
+        
+        System.out.println("adv="+Config.REQUESTED_ADVANCED_VIEW);
+        
+
+        
+        // Mode
+        final MyCheckBoxToggle cbx1 = new MyCheckBoxToggle();
+        cbx1.addListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+                Object o = e.getSource();
+                
+                if (o instanceof JCheckBox) {
+                    JCheckBox cb = (JCheckBox) o;
+                    if (cb.isSelected()) {
+                        Config.REQUESTED_ADVANCED_VIEW = true;
+                        //fbutton.enable();
+                    } else {
+                        Config.REQUESTED_ADVANCED_VIEW = false;
+                        //fbutton.disable();
+                    }
+                     
+                    AppCore.writeConfig();
+                }              
+            }
+        });
+        
+        if (Config.REQUESTED_ADVANCED_VIEW) {
+            cbx1.setSelected(true);
+        } else {
+            cbx1.setSelected(false);
+        }
+        
+        c.insets = new Insets(16, 4, 0, 0); 
+        gridbag.setConstraints(cbx1.getCheckBox(), c);
+        //AppUI.setSize(cbx1.getCheckBox(), 52, 72);
+        p.add(cbx1.getCheckBox());
+        
+        
+                
+        c.insets = new Insets(0, 62, 0, 0);
         c.gridwidth = 1;
         c.weightx = 0;
         c.fill = GridBagConstraints.NORTH;
@@ -8798,11 +8854,20 @@ public class AdvancedClient  {
         subInnerCore = getPanel("Recovery Complete");                
         GridBagLayout gridbag = new GridBagLayout();
         subInnerCore.setLayout(gridbag);
+        
+        if (ps.recoveredCoins > 0) {
+            fname = AppUI.wrapDiv(" If your coins were associated with the email you provided, "
+                    + "you will receive your authenticity numbers at that email. You will need "
+                    + "to assemble your Authenticity numbers into a CloudCoin stack file.");  
+                    
+            AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
+            y++;
+        }
+
       
         String totalRecoveredValue = AppCore.formatNumber(ps.recoveredCoins);
         //String totalRecoveredFailedValue = AppCore.formatNumber(ps.recoveredFailedCoins);
-        
-        
+       
         //fname = AppUI.wrapDiv("Deposited <b>" +  total +  " CloudCoins</b> to <b>" + ps.dstWallet.getName() + " </b>");  
         //AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
         //y++;     

@@ -63,7 +63,6 @@ public class AppCore {
             + "Check that local routers are not blocking your connection.";
     
     public static int currentMode;
-
     static public boolean createDirectory(String dirName) {
         String idPath;
 
@@ -1377,6 +1376,12 @@ public class AppCore {
                 Config.REQUESTED_MODE = oi;
             }
             
+            ob = o.optBoolean("advanced_view");
+            if (ob != false) {
+                logger.debug(ltag, "Use Advanced Domain: " + ob);
+                Config.REQUESTED_ADVANCED_VIEW = ob;
+            }
+            
         } catch (JSONException e) {
             logger.error(ltag, "Failed to parse config file: " + e.getMessage());
             return;
@@ -1395,7 +1400,7 @@ public class AppCore {
         
         logger.debug(ltag, "Mode Set: " + AppCore.currentMode);
     }
-    
+ 
     public static String getModeStr() {
         if (AppCore.currentMode == Config.OPERATION_MODE_FAST)
             return "Parallel";
@@ -1430,6 +1435,7 @@ public class AppCore {
                 + "\"ddnssn_server\": \"" + Config.DDNSSN_SERVER + "\", "
                 + "\"custom_raida_domain\": \"" + Config.CUSTOM_RAIDA_DOMAIN + "\", "
                 + "\"use_custom_domain\": " + Config.USE_CUSTOM_DOMAIN + ", "
+                + "\"advanced_view\": " + Config.REQUESTED_ADVANCED_VIEW + ", "
                 + "\"mode\": " + Config.REQUESTED_MODE + ""
                 + "}";
         
