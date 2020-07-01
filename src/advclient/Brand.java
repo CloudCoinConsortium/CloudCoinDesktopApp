@@ -319,7 +319,7 @@ public class Brand {
         daFake.setExactFullUrl(url);
 
         String result = daFake.doRequest("", null);
-        if (result == null) {
+        if (result == null || result.equals("E")) {
             logger.error(ltag, "Failed to receive response from Brand Server");
             return false;
         }

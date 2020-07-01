@@ -72,7 +72,7 @@ import org.json.JSONObject;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "3.0.19";
+    public static String version = "3.0.22";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -734,7 +734,7 @@ public class AdvancedClient  {
         
         JPanel wrp = new JPanel();
         AppUI.setBoxLayout(wrp, false);
-        AppUI.setSize(wrp, 386, headerHeight);
+        AppUI.setSize(wrp, 376, headerHeight);
         AppUI.noOpaque(wrp);
  
         if (ps.currentScreen == ProgramState.SCREEN_AGREEMENT) {
@@ -850,7 +850,7 @@ public class AdvancedClient  {
         final JLabel ficon = icon0;
    
         // Do stuff popup menu
-        final int mWidth = 172;
+        final int mWidth = 192;
         final int mHeight = 42;
         final JPopupMenu popupMenu = new JPopupMenu() {
             @Override
@@ -6086,11 +6086,13 @@ public class AdvancedClient  {
             ddPanel.setBorder(new DashedBorder(40, brand.getSecondTextColor()));
             l.setText("Dropped " + ps.files.size() + " file(s)");
             wrp.setOpaque(true);
+            AppUI.roundCorners(wrp, brand.getThirdTextColor(), 12, null);
         } else {
             t2.setVisible(false);
             ddPanel.setBorder(new DashedBorder(40, brand.getThirdTextColor()));
             l.setText("<html><div style='text-align:center; width:" + ddWidth  +"'><b>Drop files here or click<br>to select files</b></div></html>");
             wrp.setOpaque(false);
+            AppUI.setMargin(wrp, 12, 0, 0, 0);
         }
     }
     
@@ -6135,7 +6137,7 @@ public class AdvancedClient  {
 
         JPanel wrp = new JPanel();
         AppUI.setSize(wrp, ddWidth, 42);
-        AppUI.roundCorners(wrp, brand.getThirdTextColor(), 12, null);
+        
         AppUI.setBoxLayout(wrp, false);
         AppUI.setBackground(wrp, brand.getThirdTextColor());
         //AppUI.setMargin(wrp, 10);

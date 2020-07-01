@@ -186,7 +186,7 @@ public class Recoverer extends Servant {
                 globalResult.recoveredCoins += cc.getDenomination(); 
                 File f = new File(cc.originalFile);
                 if (f.exists()) {
-                    AppCore.renameFile(cc.originalFile, AppCore.getPaidRecoveredDir() + File.separator + cc.getFileName());
+                    AppCore.renameFile(rcc.originalFile, AppCore.getPaidRecoveredDir() + File.separator + rcc.getFileName());
                 }
             } else {
                 globalResult.recoveredFailedCoins += cc.getDenomination();
