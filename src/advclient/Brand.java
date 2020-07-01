@@ -51,6 +51,7 @@ public class Brand {
 
     String supportEmail;
     String supportPage;
+    String supportVideoPage;
     String supportTime;
     String supportPhone;
     String supportPortal;
@@ -102,7 +103,7 @@ public class Brand {
             "terms","logo","logoText","backgroundImage","icon","depositIcon",
             "withdrawIcon","transferIcon","depositIconHover","withdrawIconHover","transferIconHover",
             "supportIcon","settingsIcon","coinsIcon","supportHtmlIcon","supportTimeIcon","supportPhoneIcon",
-            "supportEmailIcon","supportPortalIcon","walletLocalIcon","walletSkyIcon","vaultIcon",
+            "supportEmailIcon","supportPortalIcon","supportTermsIcon", "supportVideoIcon", "walletLocalIcon","walletSkyIcon","vaultIcon",
             "vaultIconActive","lockIcon","lockIconActive","cloudIcon","cloudIconActive","coinsInventoryIcon",
             "templatePng","templateJpeg1","templateJpeg5","templateJpeg25","templateJpeg100",
             "templateJpeg250","mainFont","mainFontSemiBold","mainFontBold","secondFont","secondFontSemiBold",
@@ -236,7 +237,7 @@ public class Brand {
         
         File fd = new File(dst);
         if (fd.exists()) {
-            return;
+            fd.delete();
         }
         
         logger.debug(ltag, "Copying " + path + " to " + dst);
@@ -545,7 +546,7 @@ public class Brand {
         try {
             fr = new FileReader(f);
         } catch (Exception e) {
-            logger.error(ltag, "Failed to read mail config: " + configFile);
+            logger.error(ltag, "Failed to read config: " + configFile);
             return false;
         }
         
@@ -553,7 +554,12 @@ public class Brand {
         try {
             data = AppCore.parseINI(fr);
         } catch (IOException e) {
-            logger.error(ltag, "Failed to parse mail config: " + configFile);
+            logger.error(ltag, "Failed to parse config: " + configFile);
+            return false;
+        }
+        
+        if (data == null) {
+            logger.error(ltag, "Failed to parse config: " + configFile);
             return false;
         }
         
@@ -656,6 +662,14 @@ public class Brand {
         p = getProperty(ms, "supportportalicon");
         if (p != null)
             datamap.get("supportPortalIcon").name = p;
+        
+        p = getProperty(ms, "supporttermsicon");
+        if (p != null)
+            datamap.get("supportTermsIcon").name = p;
+        
+        p = getProperty(ms, "supportvideoicon");
+        if (p != null)
+            datamap.get("supportVideoIcon").name = p;
         
         p = getProperty(ms, "walletskyicon");
         if (p != null)
@@ -922,6 +936,10 @@ public class Brand {
         if (p != null)
             supportPage = p;
         
+        p = getProperty(ms, "supportvideopage");
+        if (p != null)
+            supportVideoPage = p;
+        
         p = getProperty(ms, "supporttime");
         if (p != null)
             supportTime = p;
@@ -1014,6 +1032,15 @@ public class Brand {
     public Image scaleLogo(Image img) {
         return getScaledImage(img, 54, 54);
     }
+    
+    public Image scaleSupportScreenIcon(Image img) {
+        return getScaledImage(img, 29, 29);
+    }
+    
+    public Image scaleSupportIcon(Image img) {
+        return getScaledImage(img, 39, 42);
+    }
+    
     
     public Image scaleLogoText(Image img) {
         return getScaledImage(img, 135, 23);
@@ -1264,6 +1291,14 @@ public class Brand {
     public URL getImgSupportPortalIcon() {
         return getAssetPathByName("supportPortalIcon");
     }
+    
+    public URL getImgSupportTermsIcon() {
+        return getAssetPathByName("supportTermsIcon");
+    }
+    
+    public URL getImgSupportVideoIcon() {
+        return getAssetPathByName("supportVideoIcon");
+    }
 
     public URL getImgCoinsInventoryIcon() {
         return getAssetPathByName("coinsInventoryIcon");
@@ -1318,18 +1353,16 @@ public class Brand {
         return getAssetPathByNameText("terms");
     }
     
-    
-    
-    
-    
-    
-    
     public String getSupportEmail() {
         return this.supportEmail;
     }
     
     public String getSupportPage() {
         return this.supportPage;
+    }
+    
+    public String getSupportVideoPage() {
+        return this.supportVideoPage;
     }
     
     public String getSupportTime() {

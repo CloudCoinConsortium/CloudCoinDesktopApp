@@ -1865,7 +1865,7 @@ public class AppCore {
                 }
             }.load(reader);
         } catch(Exception e) {
-            logger.debug(ltag, "Failed to parse config: " + e.getMessage());
+            logger.debug(ltag, "INI File is corrupted");
             return null;
         }
         

@@ -144,7 +144,6 @@ public class Wallet implements Comparable<Wallet> {
     
     public String getTransactionsFileName() {
         String tfFileName = Config.TRANSACTION_FILENAME;
-        String rname;
         
         if (isSkyWallet())
             return "";

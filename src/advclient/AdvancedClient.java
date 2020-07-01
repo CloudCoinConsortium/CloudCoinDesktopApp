@@ -1,5 +1,6 @@
 package advclient;
 
+import static advclient.AppUI.brand;
 import advclient.common.core.Validator;
 import global.cloudcoin.ccbank.Authenticator.AuthenticatorResult;
 import global.cloudcoin.ccbank.Backupper.BackupperResult;
@@ -52,6 +53,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.*;
+import javafx.stage.FileChooser;
 import javax.imageio.ImageIO;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.PopupMenuEvent;
@@ -680,15 +682,23 @@ public class AdvancedClient  {
         JLabel icon0, icon1, icon2, icon3;
         final JLabel coinsIcon;
         ImageIcon ii;
+        ImageIcon iconSupportHovered, iconSupport;
         try {
             Image img;
                    
             img = ImageIO.read(brand.getImgSettingsIcon());
             icon0 = new JLabel(new ImageIcon(img));            
             ii = new ImageIcon(img);
+ 
+            BufferedImage img2 = ImageIO.read(brand.getImgSupportIcon());
+            img = brand.scaleMainMenuIcon(img2);            
+            iconSupport = new ImageIcon(img);
+            icon1 = new JLabel(iconSupport);
             
-            img = ImageIO.read(brand.getImgSupportIcon());
-            icon1 = new JLabel(new ImageIcon(img));
+            img2 = ImageIO.read(brand.getImgSupportIcon());
+            AppUI.whiteImage(img2);
+            img = brand.scaleMainMenuIcon(img2);            
+            iconSupportHovered = new ImageIcon(img);
 
             img = ImageIO.read(brand.getImgLogoText());
             img = brand.scaleLogoText(img);
@@ -782,7 +792,7 @@ public class AdvancedClient  {
         JLabel advText = new JLabel("Advanced View");
         AppUI.setTitleFont(advText, 12);
         //c.insets = new Insets(0, 112, 0, 0);
-        c.insets = new Insets(26, 124, 0, 10); 
+        c.insets = new Insets(26, 104, 0, 10); 
         c.gridwidth = 1;
         c.weightx = 0;
         c.fill = GridBagConstraints.CENTER;
@@ -832,7 +842,7 @@ public class AdvancedClient  {
         AppUI.setHandCursor(icon0); 
         
         gridbag.setConstraints(icon0, c);
-        AppUI.setSize(icon0, 52, 72);
+        AppUI.setSize(icon0, 70, 72);
         p.add(icon0);
  
         
@@ -1009,12 +1019,30 @@ public class AdvancedClient  {
         
         
         // Icon Support
-        c.insets = new Insets(30, 24, 0, 20); 
+        //c.insets = new Insets(30, 24, 0, 20); 
+        AppUI.setSize(icon1, 70, 72);
+        c.insets = new Insets(0, 0, 0, 0); 
         AppUI.noOpaque(icon1);
         AppUI.setHandCursor(icon1);
         gridbag.setConstraints(icon1, c);
         p.add(icon1);
+        final Color isavedColor = icon1.getBackground();
         icon1.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent evt) {
+                icon1.setOpaque(true);
+                icon1.setIcon(iconSupportHovered);
+                AppUI.setBackground(icon1, brand.getSettingsMenuBackgroundColor());
+                icon1.repaint();
+
+            }
+                
+            public void mouseExited(MouseEvent evt) {
+                icon1.setOpaque(false);
+                icon1.setIcon(iconSupport);
+                AppUI.setBackground(icon1, isavedColor);
+                icon1.repaint();
+            }
+            
             public void mouseReleased(MouseEvent e) {
                 ps.currentScreen = ProgramState.SCREEN_SUPPORT;
                 showScreen();
@@ -4606,7 +4634,8 @@ public class AdvancedClient  {
         
         AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Confirm", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                sm.setActiveWalletObj(ps.srcWallet);
+                ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
                 showScreen();
             }
         }, new ActionListener() {
@@ -4708,7 +4737,9 @@ public class AdvancedClient  {
         
         AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Confirm", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+                Wallet cw = ps.currentWallet;
                 resetState(true);
+                sm.setActiveWalletObj(cw);
                 ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
                 showScreen();
             }
@@ -5467,7 +5498,9 @@ public class AdvancedClient  {
 
         AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Continue", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+                Wallet cw = ps.currentWallet;
                 resetState(true);
+                sm.setActiveWalletObj(cw);
                 ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
                 showScreen();
             }
@@ -5807,7 +5840,9 @@ public class AdvancedClient  {
 
         AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Continue", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+                Wallet cw = ps.currentWallet;
                 resetState(true);
+                sm.setActiveWalletObj(cw);
                 ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
                 showScreen();
             }
@@ -6041,17 +6076,33 @@ public class AdvancedClient  {
              
     }
     
+    public void setDD(JPanel wrp, JPanel ddPanel, JLabel tl, JLabel t2, JLabel l, int ddWidth) {
+        String totalCloudCoins = AppCore.calcCoinsFromFilenames(ps.files);
+        String text = "Selected " + ps.files.size() + " files - " + totalCloudCoins + " CloudCoins    "; 
+        tl.setText(text);      
+        l.setText("Dropped " + ps.files.size() + " file(s)");
+        if (ps.files.size() > 0) {
+            t2.setVisible(true);
+            ddPanel.setBorder(new DashedBorder(40, brand.getSecondTextColor()));
+            l.setText("Dropped " + ps.files.size() + " file(s)");
+            wrp.setOpaque(true);
+        } else {
+            t2.setVisible(false);
+            ddPanel.setBorder(new DashedBorder(40, brand.getThirdTextColor()));
+            l.setText("<html><div style='text-align:center; width:" + ddWidth  +"'><b>Drop files here or click<br>to select files</b></div></html>");
+            wrp.setOpaque(false);
+        }
+    }
+    
     public void showDepositScreen() {
         int y = 0;
         JLabel fname;
-        MyTextField walletName = null;
 
         JPanel subInnerCore = getPanel("Deposit to " + ps.currentWallet.getName());                
         GridBagLayout gridbag = new GridBagLayout();
         subInnerCore.setLayout(gridbag);
 
         fname = new JLabel("Password*");
-        final JLabel pText = fname;
         final MyTextField password = new MyTextField("Wallet Password", true);
 
         if (ps.currentWallet.isEncrypted()) {
@@ -6077,32 +6128,38 @@ public class AdvancedClient  {
         y++; 
  
         int ddWidth = 701;
-        String dropText = "<html><div style='text-align:center; width:" + ddWidth  +"'><b>Drop files here or click<br>to select files</b></div></html>";
-        JLabel l = new JLabel(dropText);
+        
+        JLabel l = new JLabel();
         JPanel ddPanel = new JPanel();
         ddPanel.setLayout(new GridBagLayout());
+
+        JPanel wrp = new JPanel();
+        AppUI.setSize(wrp, ddWidth, 42);
+        AppUI.roundCorners(wrp, brand.getThirdTextColor(), 12, null);
+        AppUI.setBoxLayout(wrp, false);
+        AppUI.setBackground(wrp, brand.getThirdTextColor());
+        //AppUI.setMargin(wrp, 10);
         
-        String totalCloudCoins = AppCore.calcCoinsFromFilenames(ps.files);
-        final JLabel tl = new JLabel("Selected " + ps.files.size() + " files - " + totalCloudCoins + " CloudCoins");
-        final JLabel t2 = new JLabel("  Clear");
-        AppUI.underLine(t2);
+        
+        final JLabel tl = new JLabel();
+        final JLabel t2 = new JLabel("Clear");
+        AppUI.setCommonFont(tl);
+        AppUI.setCommonFont(t2);
         AppUI.setHandCursor(t2);
+        AppUI.underLine(t2);
+        AppUI.setColor(t2, brand.getHyperlinkColor());
         t2.setVisible(false);
         t2.addMouseListener(new MouseAdapter() {
             public void mouseReleased(MouseEvent e) {
                 ps.files.clear();
-                l.setText(dropText);
-                String text = "Selected " + ps.files.size() + " files - " + totalCloudCoins + " CloudCoins";                              
-                tl.setText(text);    
-                t2.setVisible(false);
-                ddPanel.setBorder(new DashedBorder(40, brand.getThirdTextColor()));
+                setDD(wrp, ddPanel, tl, t2, l, ddWidth);
             }
         });
-  
         
-        
-        
-        AppUI.getGBRow(subInnerCore, tl, t2, y, gridbag);
+        wrp.add(tl);
+        wrp.add(t2);
+
+        AppUI.getGBRow(subInnerCore, null, wrp, y, gridbag);
         y++;
 
         AppUI.setColor(l, brand.getThirdTextColor());
@@ -6147,26 +6204,14 @@ public class AdvancedClient  {
 
                     ps.files.add(files[i].getAbsolutePath());
                 }
-                             
-                String totalCloudCoins = AppCore.calcCoinsFromFilenames(ps.files);
-                String text = "Selected " + ps.files.size() + " files - " + totalCloudCoins + " CloudCoins";                              
-                tl.setText(text);      
-                
-                l.setText("Dropped " + ps.files.size() + " file(s)");
-                if (ps.files.size() > 0) {
-                    t2.setVisible(true);
-                } else
-                    t2.setVisible(false);
+                           
+                setDD(wrp, ddPanel, tl, t2, l, ddWidth);
+
             } 
         }); 
 
-        if (ps.files.size() > 0) {
-            l.setText("Dropped " + ps.files.size() + " file(s)");
-            t2.setVisible(true);
-            ddPanel.setBorder(new DashedBorder(40, brand.getSecondTextColor()));
-        }
+        setDD(wrp, ddPanel, tl, t2, l, ddWidth);
 
-    
        // final JFileChooser chooser = new JFileChooser();
         FileNameExtensionFilter filter = new FileNameExtensionFilter(
                 "CloudCoins", "jpg", "jpeg", "png", "stack", "json", "txt");
@@ -6179,7 +6224,7 @@ public class AdvancedClient  {
             public void mouseReleased(MouseEvent e) {
                 if (!Config.DEFAULT_DEPOSIT_DIR.isEmpty())
                     chooser.setCurrentDirectory(new File(Config.DEFAULT_DEPOSIT_DIR));
-                
+                                
                 int returnVal = chooser.showOpenDialog(null);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     File[] files = chooser.getSelectedFiles();
@@ -6201,19 +6246,8 @@ public class AdvancedClient  {
                         ps.files.add(files[i].getAbsolutePath());
                     }
                     
-                    String totalCloudCoins = AppCore.calcCoinsFromFilenames(ps.files);
-                    String text = "Selected " + ps.files.size() + " files - " + totalCloudCoins + " CloudCoins";
-                        
-                    l.setText("Dropped " + ps.files.size() + " file(s)");
-                    tl.setText(text);  
-                    if (ps.files.size() > 0) {
-                        t2.setVisible(true);
-                        ddPanel.setBorder(new DashedBorder(40, brand.getSecondTextColor()));
-                    }
-                    else
-                        t2.setVisible(false);
-
-                    
+                    setDD(wrp, ddPanel, tl, t2, l, ddWidth);
+                   
                     Config.DEFAULT_DEPOSIT_DIR = chooser.getCurrentDirectory().getAbsolutePath();
                     AppCore.writeConfig();
                 }
@@ -6223,10 +6257,10 @@ public class AdvancedClient  {
 
         AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Continue", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                //ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                Wallet cw = ps.currentWallet;
                 resetState(true);
+                sm.setActiveWalletObj(cw);
                 ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
-                //ps.files = new ArrayList<String>();
                 showScreen();
             }
         }, new ActionListener() {
@@ -6236,14 +6270,6 @@ public class AdvancedClient  {
                 
                 ps.typedMemo = memo.getText().trim();
                 ps.typedPassword = password.getText();
-                /*
-                w = sm.getWalletByName(walletName);
-                if (w == null) {
-                    ps.errText = "Wallet is not selected";
-                    showScreen();
-                    return;
-                }
-                */
                 ps.dstWallet = w;
                 if (ps.files.size() == 0) {
                     ps.errText = "No files selected";
@@ -6312,8 +6338,19 @@ public class AdvancedClient  {
         int y = 0;
         JLabel value;
         JPanel subInnerCore = getPanel("Folders");                
+        //GridBagLayout gridbag = new GridBagLayout();
+        //subInnerCore.setLayout(gridbag);
+        
+        
+        GridBagLayout gridbagjp = new GridBagLayout();
+        subInnerCore.setLayout(gridbagjp);
+        
+        
+        JPanel jp = new JPanel();
         GridBagLayout gridbag = new GridBagLayout();
-        subInnerCore.setLayout(gridbag);
+        jp.setLayout(gridbag);
+        AppUI.noOpaque(jp);
+        
       
         for (int i = 0; i < wallets.length; i++) {
             if (wallets[i].isSkyWallet()) 
@@ -6334,22 +6371,89 @@ public class AdvancedClient  {
                 }
             });
             
-            AppUI.getGBRow(subInnerCore, sl, link, y, gridbag);
+            AppUI.getGBRow(jp, sl, link, y, gridbag);
             AppUI.setColor(link, brand.getHyperlinkColor());
             AppUI.underLine(link);
             y++;
  
         }
-
-        AppUI.GBPad(subInnerCore, y, gridbag);        
-        y++;
         
+        
+         JScrollBar scrollBar = new JScrollBar(JScrollBar.VERTICAL) {
+            @Override
+            public boolean isVisible() {
+                return true;
+            }
+        };
+
+        JScrollPane scrollPane = new JScrollPane(jp);
+        scrollPane.setVerticalScrollBar(scrollBar);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(42);
+        scrollPane.getViewport().setOpaque(false);
+        scrollPane.setOpaque(false);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(10, 0));
+        scrollPane.getVerticalScrollBar().setUI(new BasicScrollBarUI() {  
+            protected JButton createDecreaseButton(int orientation) {
+                TriangleButton jbutton = new TriangleButton(false);
+                AppUI.setHandCursor(jbutton);
+                jbutton.setContentAreaFilled(false);
+                jbutton.setFocusPainted(false);
+            
+                JButton b = new JButton();
+                AppUI.setSize(b, 0, 0);
+                
+                return b;
+            }
+
+            @Override    
+            protected JButton createIncreaseButton(int orientation) {
+                TriangleButton jbutton = new TriangleButton(true);
+                AppUI.setHandCursor(jbutton);
+                jbutton.setContentAreaFilled(false);
+                jbutton.setFocusPainted(false);
+            
+                JButton b = new JButton();
+                AppUI.setSize(b, 0, 0);
+                
+                return b;
+            }
+            
+            @Override 
+            protected void configureScrollBarColors(){
+                this.trackColor = brand.getScrollbarTrackColor();
+                this.thumbColor = brand.getScrollbarThumbColor();
+            }
+        });
+        AppUI.setSize(scrollPane, 800, 460);
+      
+        AppUI.getGBRow(subInnerCore, null, scrollPane, y, gridbagjp);
+        y++; 
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+
+        AppUI.GBPad(jp, y, gridbag);        
+        y++;
+        /*
         AppUI.getTwoButtonPanel(subInnerCore, "", "Continue", null,  new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 ps.currentScreen = ProgramState.SCREEN_DEFAULT;
                 showScreen();
             }
-        }, y, gridbag);
+        }, y, gridbag);*/
        
     }
     
@@ -6363,23 +6467,36 @@ public class AdvancedClient  {
         subInnerCore.setLayout(gridbag);
       
         Image img;
-        JLabel i0, i1, i2, i3, i4;
+        JLabel i0, i1, i2, i3, i4, i5, i6;
         try {     
             img = ImageIO.read(brand.getImgSupportHtmlIcon());
+            img = brand.scaleSupportScreenIcon(img);
             i0 = new JLabel(new ImageIcon(img));
 
             img = ImageIO.read(brand.getImgSupportTimeIcon());
+            img = brand.scaleSupportScreenIcon(img);
             i1 = new JLabel(new ImageIcon(img));
             
             img = ImageIO.read(brand.getImgSupportPhoneIcon());
+            img = brand.scaleSupportScreenIcon(img);
             i2 = new JLabel(new ImageIcon(img));
             
             img = ImageIO.read(brand.getImgSupportEmailIcon());
+            img = brand.scaleSupportScreenIcon(img);
             i3 = new JLabel(new ImageIcon(img)); 
             
             img = ImageIO.read(brand.getImgSupportPortalIcon());
+            img = brand.scaleSupportScreenIcon(img);
             i4 = new JLabel(new ImageIcon(img)); 
             
+            img = ImageIO.read(brand.getImgSupportTermsIcon());
+            img = brand.scaleSupportScreenIcon(img);
+            i5 = new JLabel(new ImageIcon(img)); 
+            
+            img = ImageIO.read(brand.getImgSupportVideoIcon());
+            img = brand.scaleSupportScreenIcon(img);
+            i6 = new JLabel(new ImageIcon(img)); 
+
         } catch (Exception ex) {              
             return;
         }
@@ -6466,7 +6583,7 @@ public class AdvancedClient  {
             // Support Portal
             JLabel sp = new JLabel("Support Portal");
             urlName = brand.getSupportPortal();
-            link = AppUI.getHyperLink(urlName, urlName, 14);
+            link = AppUI.getHyperLink(urlName, urlName, 0);
             AppUI.setCommonFont(sp);
             wr = new JPanel();
             AppUI.noOpaque(wr);
@@ -6478,23 +6595,11 @@ public class AdvancedClient  {
             y++;
         }
  
-        
-        
-        AppUI.GBPad(subInnerCore, y, gridbag);        
-        y++;
-        
-        GridBagConstraints c = new GridBagConstraints();
-        c.anchor = GridBagConstraints.CENTER;
-        c.insets = new Insets(20, 0, 0, 10);    
-        c.gridy = y;
-        c.weightx = 1;
-        c.weighty = 0;
-        c.gridwidth = 2;
-        
-        JLabel l = AppUI.getHyperLink("Instructions, Terms and Conditions", "javascript:void(0); return false", 20);
+        // Terms
+        JLabel l = AppUI.getHyperLink("Terms and Conditions", "javascript:void(0); return false", 0);
         l.addMouseListener(new MouseAdapter() {
             public void mouseReleased(MouseEvent e) {
-                final JDialog f = new JDialog(mainFrame, "Instructions, Terms and Conditions", true);
+                final JDialog f = new JDialog(mainFrame, "Terms and Conditions", true);
                 f.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
                 AppUI.noOpaque((JComponent) f.getContentPane());
                 AppUI.setSize(f, (int) (tw / 1.2), (int) (th / 1.2)); 
@@ -6505,8 +6610,10 @@ public class AdvancedClient  {
                 AppUI.setFont(tp, 12);
                 String fontfamily = tp.getFont().getFamily();
 
+                String aText = brand.getTerms();
+                aText = aText.replaceAll("<span class=\"instructions\">.+</span>", "");
                 tp.setContentType("text/html"); 
-                tp.setText("<html><div style=' font-family:"+fontfamily+"; font-size: 12px'>" + AppUI.getAgreementText() + "</div></html>"); 
+                tp.setText("<html><div style=' font-family:"+fontfamily+"; font-size: 12px'>" + aText + "</div></html>"); 
                 tp.setEditable(false); 
                 tp.setBackground(null);
                 tp.setCaretPosition(0);
@@ -6524,8 +6631,44 @@ public class AdvancedClient  {
             }
         }); 
         
-        gridbag.setConstraints(l, c);
-        subInnerCore.add(l);
+        wr = new JPanel();
+        AppUI.noOpaque(wr);
+        wr.add(i5);
+        wr.add(AppUI.vr(10));
+        wr.add(l);
+        AppUI.getGBRow(subInnerCore, null, wr, y, gridbag);
+        y++;
+        
+        // Video
+        wr = new JPanel();
+        JLabel sp = new JLabel("Video");
+        urlName = brand.getSupportVideoPage();
+        link = AppUI.getHyperLink(urlName, urlName, 0);
+        AppUI.setCommonFont(sp);
+        AppUI.noOpaque(wr);
+        wr.add(i6);
+        wr.add(AppUI.vr(10));
+        wr.add(sp);
+        wr.add(link);     
+        AppUI.getGBRow(subInnerCore, null, wr, y, gridbag);
+        y++;
+        
+        AppUI.GBPad(subInnerCore, y, gridbag);        
+        y++;
+        
+        /*
+        GridBagConstraints c = new GridBagConstraints();
+        c.anchor = GridBagConstraints.CENTER;
+        c.insets = new Insets(20, 0, 0, 10);    
+        c.gridy = y;
+        c.weightx = 1;
+        c.weighty = 0;
+        c.gridwidth = 2;
+        
+        */
+        
+        //gridbag.setConstraints(l, c);
+        //subInnerCore.add(l);
     }
     
     public void showClearScreen() {
@@ -8524,46 +8667,10 @@ public class AdvancedClient  {
         
         AppUI.getGBRow(subInnerCore, fname3, tf1.getTextField(), y, gridbag);
         y++; 
-   
-        
-        /*
-        fname4 = new JLabel("Please put your ID coin here:                           ");
-        JLabel sl = AppUI.getHyperLink(AppCore.getIDDir(), "javascript:void(0); return false", 20);
-        sl.addMouseListener(new MouseAdapter() {
-            public void mouseReleased(MouseEvent e) {
-                if (!Desktop.isDesktopSupported())
-                    return;
-                try {
-                    Desktop.getDesktop().open(new File(AppCore.getIDDir()));
-                    ps.needInitWallets = true;
-                } catch (IOException ie) {
-                    wl.error(ltag, "Failed to open browser: " + ie.getMessage());
-                }
-            }
-        });
-         
-        AppUI.getGBRow(subInnerCore, fname4, sl, y, gridbag);
-        AppUI.setColor(sl, brand.getHyperlinkColor());
-        AppUI.underLine(sl);
-        y++;
-        */
-        
-        /*
-        if (ps.isCreatingNewSkyWallet) {
-           //fname4.setVisible(false);
-            sl.setVisible(false);
-        } else {
-            //fname4.setVisible(true);
-            sl.setVisible(true);  
-        }
-        */
-        
+           
         AppUI.GBPad(subInnerCore, y, gridbag);        
         y++;
-        
-        
-        
-        
+   
         MyButton cb = AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Continue", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 ps.currentScreen = ProgramState.SCREEN_DEFAULT;
@@ -9364,7 +9471,7 @@ public class AdvancedClient  {
             wpanel.add(icon);
             
             
-            
+            AppUI.setSize(labelName, 120, 20);
             c.insets = new Insets(10, 16, 0, 0);
             c.gridx = GridBagConstraints.RELATIVE;
             c.weightx = 1;
