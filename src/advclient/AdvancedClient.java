@@ -72,7 +72,7 @@ import org.json.JSONObject;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "3.0.22";
+    public static String version = "3.0.24";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -4684,8 +4684,7 @@ public class AdvancedClient  {
     
     public void showConfirmWithdrawScreen() {
         int y = 0;
-        JLabel fname, value;
-        MyTextField walletName = null;
+        JLabel fname;
 
         JPanel subInnerCore = getPanel("Withdraw Confirmation");                
         GridBagLayout gridbag = new GridBagLayout();
@@ -4755,6 +4754,10 @@ public class AdvancedClient  {
                 sm.setActiveWalletObj(ps.srcWallet);
                 ps.isSkyDeposit = false;
                 ps.currentScreen = ProgramState.SCREEN_EXPORTING;
+                
+                if (ps.typedMemo.isEmpty())
+                    ps.typedMemo = "random";
+                
                 if (ps.srcWallet.isEncrypted()) {
                     sm.startSecureExporterService(ps.exportType, ps.typedAmount, ps.typedMemo, ps.chosenFile, false, new ExporterCb());
                 } else {
@@ -5480,8 +5483,6 @@ public class AdvancedClient  {
         final MyTextField memo = new MyTextField("Optional", false);
         if (!ps.typedMemo.isEmpty())
             memo.setData(ps.typedMemo);
-        else
-            memo.setData("random");
         AppUI.getGBRow(subInnerCore, fname, memo.getTextField(), y, gridbag);
         y++;
             
@@ -5569,13 +5570,15 @@ public class AdvancedClient  {
                     return;
                 }
 
-                if (ps.typedMemo.isEmpty())
-                    ps.typedMemo = "Export";
+                //if (ps.typedMemo.isEmpty())
+                //    ps.typedMemo = "";
                 
-                if (!Validator.memo(ps.typedMemo)) {
-                    ps.errText = "Memo: special characters not allowed! Use numbers and letters only";
-                    showScreen();
-                    return;
+                if (!ps.typedMemo.isEmpty()) {
+                    if (!Validator.memo(ps.typedMemo)) {
+                        ps.errText = "Memo: special characters not allowed! Use numbers and letters only";
+                        showScreen();
+                        return;
+                    }
                 }
    
                 // Local folder
