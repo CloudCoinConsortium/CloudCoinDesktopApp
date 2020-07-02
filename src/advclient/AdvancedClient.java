@@ -4346,7 +4346,7 @@ public class AdvancedClient  {
         y++;
         
         final MyTextField mtf0 = tf0;
-        AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Confrim", new ActionListener() {
+        AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Confirm", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 ps.currentScreen = ProgramState.SCREEN_DEFAULT;
                 showScreen();
@@ -7242,7 +7242,6 @@ public class AdvancedClient  {
     public void showDeleteWalletScreen() {
         int y = 0;
         JLabel fname;
-        MyTextField tf0, tf1;
 
         JPanel subInnerCore = getPanel("Delete Wallet");                
         GridBagLayout gridbag = new GridBagLayout();
