@@ -1749,17 +1749,6 @@ public class AdvancedClient  {
 
         Thread t = new Thread(new Runnable() {
             public void run() {
-                if (!ps.isEchoFinished) {
-                    pbarText.setText("Checking RAIDA ...");
-                    pbarText.repaint();
-                }
-
-                while (!ps.isEchoFinished) {
-                    try {
-                        Thread.sleep(300);
-                    } catch (InterruptedException e) {}
-                }
-                
                 pbarText.setText("Querying coins ...");
                 pbarText.repaint();
 
@@ -1802,19 +1791,19 @@ public class AdvancedClient  {
                         }
                         
                         if (!mcr.errText.isEmpty()) {
-                             EventQueue.invokeLater(new Runnable() {         
-                                    public void run() {
-                                        ps.errText = mcr.errText;
-                                        if (ps.frombillpay) {
-                                            ps.currentScreen = ProgramState.SCREEN_BILL_PAY_DONE;
-                                            return;
-                                        }
-
-                                        ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
-                                        showScreen();
+                            EventQueue.invokeLater(new Runnable() {         
+                                public void run() {
+                                    ps.errText = mcr.errText;
+                                    if (ps.frombillpay) {
+                                        ps.currentScreen = ProgramState.SCREEN_BILL_PAY_DONE;
                                         return;
                                     }
-                             });
+
+                                    ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                                    showScreen();
+                                    return;
+                                }
+                            });
                         }
                     }                   
                 });

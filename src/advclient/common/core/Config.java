@@ -156,6 +156,7 @@ public class Config {
     final public static int CHANGE_METHOD_250C = 13;
     final public static int CHANGE_METHOD_250D = 14;
     final public static int CHANGE_METHOD_250E = 15;
+    final public static int CHANGE_METHOD_250F = 16;
 
     final public static int VAULTER_OP_VAULT = 1;
     final public static int VAULTER_OP_UNVAULT = 2;

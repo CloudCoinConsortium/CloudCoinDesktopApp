@@ -1497,7 +1497,7 @@ public class AppCore {
         
         switch (denomination) {
             case 250:
-                method = Config.CHANGE_METHOD_250E;
+                method = Config.CHANGE_METHOD_250F;
                 break;
             case 100:
                 method = Config.CHANGE_METHOD_100E;

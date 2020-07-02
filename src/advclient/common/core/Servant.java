@@ -1419,6 +1419,40 @@ public class Servant {
         return rsns;
     }
     
+    protected int[] get250F(int[] sb, int[] ss, int[] sss, int[] ssss) {
+        int[] sns, rsns;
+
+        rsns = new int[15];
+        sns = getA(sb, 1);
+        if (sns == null)
+            return null;        
+        rsns[0] = sns[0];
+
+
+        sns = getA(ss, 5);
+        if (sns == null)
+            return null;
+        for (int i = 0; i < 5; i++)
+            rsns[i + 1] = sns[i];
+
+        sns = getA(sss, 4);
+        if (sns == null)
+            return null;
+
+        for (int i = 0; i < 4; i++)
+            rsns[i + 6] = sns[i];
+
+        sns = getA(ssss, 5);
+        if (sns == null)
+            return null;
+
+        for (int i = 0; i < 5; i++)
+            rsns[i + 10] = sns[i];
+
+        return rsns;
+    }
+    
+    
     protected int[] showChange(int method, CloudCoin cc) {
         String resultMain;
         String[] results;
@@ -1553,6 +1587,9 @@ public class Servant {
                 break;
             case Config.CHANGE_METHOD_250E:
                 sns = get250E(vsns100, vsns25, vsns5, vsns1);
+                break;
+            case Config.CHANGE_METHOD_250F:
+                sns = get250F(vsns100, vsns25, vsns5, vsns1);
                 break;
             default:
                 logger.error(ltag, "Invalid method: " + method);
