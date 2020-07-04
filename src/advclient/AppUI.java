@@ -445,7 +445,10 @@ public class AppUI {
         
         //This is the wallet table size 
         JScrollPane scrollPane = new JScrollPane(table);
-        AppUI.setSize(scrollPane, 880, 294);
+        if (Config.REQUESTED_ADVANCED_VIEW == true)
+            AppUI.setSize(scrollPane, 880, 294);
+        else
+            AppUI.setSize(scrollPane, 1080, 294);
         scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(10, 0));
         scrollPane.getVerticalScrollBar().setUI(new BasicScrollBarUI() {       
             @Override

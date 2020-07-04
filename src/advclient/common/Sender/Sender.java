@@ -706,22 +706,10 @@ public class Sender extends Servant {
 
         }
 
-        for (CloudCoin cc : ccs) {
-            cc.setDetectStatus(0, CloudCoin.STATUS_ERROR);
-            cc.setDetectStatus(7, CloudCoin.STATUS_ERROR);
-            cc.setDetectStatus(9, CloudCoin.STATUS_ERROR);
-            cc.setDetectStatus(14, CloudCoin.STATUS_ERROR);
-            cc.setDetectStatus(18, CloudCoin.STATUS_ERROR);
-            cc.setDetectStatus(19, CloudCoin.STATUS_ERROR);
-            cc.setDetectStatus(20, CloudCoin.STATUS_ERROR);
-            cc.setDetectStatus(21, CloudCoin.STATUS_ERROR);
-        }
-
         ArrayList<CloudCoin> againCCs = new ArrayList<CloudCoin>();
         for (CloudCoin cc : ccs) {
             cc.setPownStringFromDetectStatus();
             logger.info(ltag, "Doing " + cc.originalFile + " pown=" + cc.getPownString());
-            System.out.println("sss=" + cc.sn + " p="+cc.getPownString());
             if (cc.isSentFixable()) {
                 logger.info(ltag, "Moving to Sent: " + cc.sn);
                 globalResult.amount += cc.getDenomination();

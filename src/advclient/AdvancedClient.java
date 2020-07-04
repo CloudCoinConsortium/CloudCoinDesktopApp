@@ -72,7 +72,7 @@ import org.json.JSONObject;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "3.0.24";
+    public static String version = "3.0.26";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -226,8 +226,7 @@ public class AdvancedClient  {
                     }
                 }
 
-                showScreen();
-                
+                showScreen();               
             }
         });
 
@@ -298,8 +297,7 @@ public class AdvancedClient  {
         AppCore.syncMode();
         //AppCore.copyTemplatesFromJar();
         
-        brand.copyTemplates();
-        
+        brand.copyTemplates();      
         startHttpServer();
         
         resetState();
@@ -377,8 +375,7 @@ public class AdvancedClient  {
         if (ps.currentWalletIdx <= 0)
             return;
         
-        Wallet w = wallets[ps.currentWalletIdx - 1];
-        
+        Wallet w = wallets[ps.currentWalletIdx - 1];       
         w.setEnvelopes(envelopes);
     }
     
@@ -393,8 +390,7 @@ public class AdvancedClient  {
     
     public void walletSetTotal(Wallet w, int total) {
         JLabel cntLabel = (JLabel) w.getuiRef();
-             
-        //wl.debug(ltag, "Set Total: " + w.getName() + " total = " + total);        
+                    
         w.setTotal(total);
         w.setUpdated();
         String strCnt = AppCore.formatNumber(total);
@@ -419,12 +415,10 @@ public class AdvancedClient  {
         
         
         if (ps.currentScreen == ProgramState.SCREEN_SHOW_TRANSACTIONS) {
-            //if (w == sm.getActiveWallet()) {
             if (w == ps.currentWallet) {
                 updateTransactionWalletData(w, "thread");
             }
-        }     
-        
+        }            
     }
     
     public String getSkyIDError(String name, String pownString) {
@@ -721,6 +715,22 @@ public class AdvancedClient  {
         gridbag.setConstraints(icon3, c);
         p.add(icon3);
         
+        AppUI.setHandCursor(icon3);
+        icon3.addMouseListener(new MouseAdapter() {
+            public void mouseReleased(MouseEvent e) {
+                if (ps.currentWallet != null) {
+                    EventQueue.invokeLater(new Runnable() {
+                        public void run(){
+                            sm.setActiveWalletObj(ps.currentWallet);
+                            ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
+                            showScreen();
+                        }
+                    });
+                }
+            }
+        });
+        
+        
         c.insets = new Insets(0, 20, 0, 0); 
         gridbag.setConstraints(icon2, c);
         p.add(icon2);
@@ -754,26 +764,29 @@ public class AdvancedClient  {
             wrp.add(coinsIcon);
             wrp.add(AppUI.vr(16));
             
-            JLabel titleText = new JLabel("Coins: ");
-            AppUI.setTitleFont(titleText, 20);
-            wrp.add(titleText);
-            
+            JLabel titleText;
             totalText = new JLabel("0");
-            AppUI.setTitleFont(totalText, 26);
-            AppUI.setMargin(totalText, 0, 0, 4, 0);
-            wrp.add(totalText);
-                       
-            titleText = new JLabel("cc");
-            AppUI.setTitleFont(titleText, 16);
-            AppUI.setMargin(titleText, 0, 6, 16, 0);
-            wrp.add(titleText);
-            
-            
+            if (isAdvancedMode()) {
+                titleText = new JLabel("Coins: ");
+                AppUI.setTitleFont(titleText, 20);
+                wrp.add(titleText);
+
+                AppUI.setTitleFont(totalText, 26);
+                AppUI.setMargin(totalText, 0, 0, 4, 0);
+                wrp.add(totalText);
+                   
+                titleText = new JLabel("cc");
+                AppUI.setTitleFont(titleText, 16);
+                AppUI.setMargin(titleText, 0, 6, 16, 0);
+                wrp.add(titleText);
+            }
             
             modeText = new JLabel("mode: " + AppCore.getModeStr());
-            AppUI.setTitleFont(modeText, 12);
-            AppUI.setMargin(modeText, 12, 16, 16, 0);
-            wrp.add(modeText);
+            if (isAdvancedMode()) {
+                AppUI.setTitleFont(modeText, 12);
+                AppUI.setMargin(modeText, 12, 16, 16, 0);
+                wrp.add(modeText);
+            }
             
             
             
@@ -800,9 +813,9 @@ public class AdvancedClient  {
         p.add(advText);
  
         // Mode
-        final MyCheckBoxToggle cbx1 = new MyCheckBoxToggle();
-        cbx1.addListener(new ItemListener() {
-            public void itemStateChanged(ItemEvent e) {
+        final MyCheckBoxToggle cbx1 = new MyCheckBoxToggle();       
+        cbx1.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
                 Object o = e.getSource();
                 
                 if (o instanceof JCheckBox) {
@@ -816,6 +829,12 @@ public class AdvancedClient  {
                     }
                      
                     AppCore.writeConfig();
+                    
+                    EventQueue.invokeLater(new Runnable() {
+                        public void run(){
+                            showScreen();
+                        }
+                    });                   
                 }              
             }
         });
@@ -862,8 +881,17 @@ public class AdvancedClient  {
  
         String[] items = {"Backup", "List serials", "Clear History", "Fix Fracked", 
             "Delete a Wallet", "Show Folders", "Echo RAIDA", "Settings", "Sent Coins", 
-             "Bill Pay", "Cloud Bank", "Recovery"};
+            "Bill Pay", "Cloud Bank", "Recovery"};
+        
+        if (!isAdvancedMode()) {
+            items[0] = items[1] = items[2] = items[3] = items[4] = items[5] = items[8] 
+                    = items[9] = items[10] = items[11] = null;
+        }
+        
         for (int i = 0; i < items.length; i++) {
+            if (items[i] == null)
+                continue;
+            
             JMenuItem menuItem = new JMenuItem(items[i]);
             menuItem.setActionCommand("" + i);
             AppUI.setHandCursor(menuItem);
@@ -1417,7 +1445,7 @@ public class AdvancedClient  {
         if (step == Config.STEP_BREAK) {
             pbarText.setText("Breaking Coin");
         } else if (step == Config.STEP_AGAIN) {
-            s = "Sent Again";
+            s = "Sending Again";
             pbarText.setText(s + " " + stc + " / " + tc + " CloudCoins");
         } else {
             pbarText.setText(s + " " + stc + " / " + tc + " CloudCoins");
@@ -5634,7 +5662,7 @@ public class AdvancedClient  {
         
         fname = new JLabel("Transfer To*");
         final RoundedCornerComboBox cboxto = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "Make Selection", rvTo.options);
-        cboxto.addOption("Send to " + AppUI.getRemoteUserOption());
+        cboxto.addOption(AppUI.getRemoteUserOption());
         //cboxto.addOption(AppUI.getLocalFolderOption());
         AppUI.getGBRow(subInnerCore, fname, cboxto.getComboBox(), y, gridbag);
         y++; 
@@ -5670,7 +5698,8 @@ public class AdvancedClient  {
             rv.idxs = new int[len];
             
             for (int i = 0; i < len; i++) {
-                rv.options[i] = "Send to " + skyWalletNames[i];
+                //rv.options[i] = "Send to " + skyWalletNames[i];
+                rv.options[i] = skyWalletNames[i];
                 rv.idxs[i] = i;         
             }       
         }
@@ -6997,7 +7026,7 @@ public class AdvancedClient  {
             if (name != null && wallets[i].getName().equals(name))
                 continue;
 
-            rv.options[j] = "Transfer to " + wallets[i].getName() + " - " + AppCore.formatNumber(wallets[i].getTotal()) + " CC";
+            rv.options[j] = wallets[i].getName() + " - " + AppCore.formatNumber(wallets[i].getTotal()) + " CC";
             rv.idxs[j] = i;
             j++;
         }
@@ -7962,8 +7991,14 @@ public class AdvancedClient  {
         AppUI.alignLeft(bpanel);
         AppUI.alignTop(bpanel);
         bpanel.setAlignmentY(Component.CENTER_ALIGNMENT);
+        
+        int simpleViewoffset = 0;
+        if (!isAdvancedMode())
+            simpleViewoffset += 214;
+            
+        
         //if (!isSky) {
-            AppUI.setSize(bpanel, 620, layerHeight);  
+            AppUI.setSize(bpanel, 620 + simpleViewoffset, layerHeight);  
         //} else {
         //    AppUI.setSize(bpanel, 520, layerHeight); 
         //    bpanel.setAlignmentY(Component.TOP_ALIGNMENT);
@@ -7973,7 +8008,7 @@ public class AdvancedClient  {
         
         // Padding
         JPanel paddingPanel = new JPanel();
-        AppUI.setSize(paddingPanel, 106, layerHeight);
+        AppUI.setSize(paddingPanel, 106 + simpleViewoffset, layerHeight);
         AppUI.noOpaque(paddingPanel);
         bpanel.add(paddingPanel);
         
@@ -9016,6 +9051,7 @@ public class AdvancedClient  {
         //AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
         //y++;     
         
+        
         fname = new JLabel("Total Recovered Coins:");
         value = new JLabel(totalRecoveredValue);
         AppUI.getGBRow(subInnerCore, fname, value, y, gridbag);
@@ -9274,7 +9310,10 @@ public class AdvancedClient  {
         AppUI.setBackground(mwrapperPanel, color);
         AppUI.setMargin(mwrapperPanel, 32);
 
-        AppUI.setSize(mwrapperPanel, tw - 260, th - headerHeight - 70);
+        if (!isAdvancedMode())
+            AppUI.setSize(mwrapperPanel, tw - 46, th - headerHeight - 70);
+        else
+            AppUI.setSize(mwrapperPanel, tw - 260, th - headerHeight - 70);
 
         corePanel.add(mwrapperPanel);
         updateWalletAmount();
@@ -9282,7 +9321,11 @@ public class AdvancedClient  {
         return mwrapperPanel;
     }
     
-    public void showLeftScreen() {
+    public void showLeftScreen() {  
+        wallets = sm.getWallets();
+        
+
+        
         lwrapperPanel = new JPanel();
         
         AppUI.setBoxLayout(lwrapperPanel, true);
@@ -9297,7 +9340,7 @@ public class AdvancedClient  {
         AppUI.setBoxLayout(wpanel, true);
 
         // List wallets
-        wallets = sm.getWallets();
+        //wallets = sm.getWallets();
         int activeWalletIdx = -1;
         for (int i = 0; i < wallets.length; i++) {
             if (this.isActiveWallet(wallets[i])) {
@@ -9305,9 +9348,12 @@ public class AdvancedClient  {
                 wpanel.add(getWallet(wallets[i], 0));
                 wpanel.add(AppUI.hr(10));
                 break;
-            }
-                
+            }                
         }
+
+                
+        if (!isAdvancedMode()) 
+            return;
         
         for (int i = 0; i < wallets.length; i++) {
             if (i == activeWalletIdx)
@@ -9316,6 +9362,7 @@ public class AdvancedClient  {
             wpanel.add(getWallet(wallets[i], 0));
             wpanel.add(AppUI.hr(10));
         }
+
  
         // "Add" Button
         wpanel.add(getWallet(null, TYPE_ADD_BUTTON));
@@ -9358,8 +9405,6 @@ public class AdvancedClient  {
                 wpanel.requestFocus();
             }
         });
-        
-        
         
         corePanel.add(lwrapperPanel);
     }

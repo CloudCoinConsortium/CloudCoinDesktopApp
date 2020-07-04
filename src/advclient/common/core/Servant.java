@@ -635,6 +635,7 @@ public class Servant {
             if (file.isDirectory())
                 continue;
 
+            /*
             if (!AppCore.hasCoinExtension(file))
                 continue;
             
@@ -645,7 +646,23 @@ public class Servant {
                         " error: " + e.getMessage());
 
                 continue;
+            }*/
+            
+            String[] parts = file.getName().split("\\.");
+            if (parts.length < 4) {
+                continue;
             }
+            
+            int sn;
+            try {
+                sn = Integer.parseInt(parts[3]);
+            } catch (NumberFormatException e) {
+                continue;
+            }
+            
+            cc = new CloudCoin(Config.DEFAULT_NN, sn);
+            
+            
 
             denomination = cc.getDenomination();
             if (denomination == 1)

@@ -12,6 +12,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.RenderingHints;
+import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import javax.imageio.ImageIO;
@@ -44,6 +45,10 @@ public class MyCheckBoxToggle {
     
     public void addListener(ItemListener i) {
         cb.addItemListener(i);
+    }
+    
+    public void addActionListener(ActionListener i) {
+        cb.addActionListener(i);
     }
     
     public boolean isChecked() {

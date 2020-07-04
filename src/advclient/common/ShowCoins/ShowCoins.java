@@ -1,7 +1,5 @@
 package global.cloudcoin.ccbank.ShowCoins;
 
-import org.json.JSONException;
-
 import java.io.File;
 import java.io.IOException;
 
