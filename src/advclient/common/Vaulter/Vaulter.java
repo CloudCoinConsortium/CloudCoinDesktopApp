@@ -194,8 +194,7 @@ public class Vaulter extends Servant {
 
             for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
                 String van = tcc.ans[i];
-                
-                                
+               
                 if (van.length() < 32) {
                     logger.error(ltag, "Invalid van for coin " + tcc.sn + ". Skip it " + van);
                     continue;
@@ -241,6 +240,7 @@ public class Vaulter extends Servant {
                 logger.debug(ltag, decimal1 + ", " + decimal2);
                 logger.debug(ltag, decimal3 + ", " + decimal4);
 
+
                 // Subtract numbers and convert to Hex
                 long van1 = decimal1 + decimal3;
                 long van2 = decimal2 + decimal4;
@@ -248,6 +248,7 @@ public class Vaulter extends Servant {
                 String hex2 = AppCore.padString(Long.toHexString(van2), 8, '0');
 
                 logger.debug(ltag, van1 + ", " + van2);
+
 
                 // Update new AN
                 StringBuilder builder = new StringBuilder();

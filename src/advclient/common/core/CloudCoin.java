@@ -86,7 +86,7 @@ public class CloudCoin {
             throw(new JSONException("Wrong an count"));
 
         // Direct validation instead of Validator
-        Pattern p = Pattern.compile("^[A-Fa-f0-9]{32}$", Pattern.UNICODE_CHARACTER_CLASS);
+        Pattern p = Pattern.compile("^[A-Fa-f0-9()]{32,36}$", Pattern.UNICODE_CHARACTER_CLASS);
         Matcher m; 
         for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
             m = p.matcher(ans[i]);

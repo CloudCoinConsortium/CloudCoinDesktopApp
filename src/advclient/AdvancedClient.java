@@ -72,7 +72,7 @@ import org.json.JSONObject;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "3.0.26";
+    public static String version = "3.0.27";
 
     JPanel headerPanel;
     JPanel mainPanel;
