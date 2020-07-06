@@ -49,6 +49,8 @@ import java.awt.image.BufferedImage;
 import java.awt.print.PrinterException;
 import java.io.File;
 import java.io.IOException;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -94,6 +96,7 @@ public class AdvancedClient  {
     ServantManager sm;
     WLogger wl;
     
+    String hwId;
     
     String[] args;
     Wallet[] wallets; 
@@ -188,6 +191,9 @@ public class AdvancedClient  {
         System.out.println("canberecovered=" + cc.canbeRecoveredFromLost());
         System.exit(1);
         */
+        
+        hwId = AppCore.getHwID();
+        
         chooser = new JFileChooser();
         AppUI.init(tw, th, brand); 
         SwingUtilities.invokeLater(new Runnable() {

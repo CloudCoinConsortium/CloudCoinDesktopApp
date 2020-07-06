@@ -16,6 +16,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.ByteBuffer;
@@ -2127,6 +2129,49 @@ public class AppCore {
         }
         //System.exit(1);
         return rcc;
+        
+        
+    }
+    
+    public static String getHwID() {
+        Enumeration<NetworkInterface> nis = null;
+        try {
+            nis = NetworkInterface.getNetworkInterfaces();
+        } catch (SocketException e)  {
+            logger.debug(ltag, "Failed to get interfaces");
+            return null;
+        }
+        
+        StringBuilder sb = new StringBuilder();
+        if (nis != null) {
+            while (nis.hasMoreElements()) {
+                NetworkInterface ni = nis.nextElement();
+                try {
+                    if (!ni.isUp())
+                        continue;
+                    
+                    byte[] macBytes = ni.getHardwareAddress();
+                    if (macBytes == null || macBytes.length == 0)
+                        continue;
+                    
+                    StringBuilder ssb = new StringBuilder();
+                    for (byte b : macBytes) {
+                        ssb.append(String.format("%02x:", b));
+                    }
+                
+                    String mac = ssb.toString();
+                    
+                    System.out.println(ni.getName() + " " + ni.getDisplayName() + " mc=" + mac + " v=" + ni.isUp());
+                    sb.append(mac);
+                } catch (SocketException e)  {}
+            }
+        }
+        
+        String hwId = AppCore.getMD5(sb.toString());
+        logger.debug(ltag, "hwID " + hwId);
+        System.out.println("hwId=" + hwId);
+        
+        return hwId;
         
         
     }
