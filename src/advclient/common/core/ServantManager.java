@@ -1271,6 +1271,21 @@ public class ServantManager {
         return null;
     }
     
+    public Wallet getFirstSkyWallet() {
+        Collection c = wallets.values();
+
+        Iterator itr = c.iterator();
+        while (itr.hasNext()) {
+            Wallet tw = (Wallet) itr.next();
+            
+            if (tw.isSkyWallet())
+               return tw;
+        }
+        
+        return null;
+    }
+    
+    
     public Wallet getFirstFullNonSkyWallet() {
         Collection c = wallets.values();
 

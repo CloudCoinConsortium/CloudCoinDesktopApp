@@ -115,6 +115,8 @@ public class AdvancedClient  {
     JLabel trTitle;
     JPanel invPanel;
     
+    boolean triedFreeCoin = false;
+    
     JLabel modeText;
     
     Brand brand;
@@ -1326,6 +1328,9 @@ public class AdvancedClient  {
                 break;
             case ProgramState.SCREEN_RECOVERY_DONE:
                 showRecoveryDoneScreen();
+                break;
+            case ProgramState.SCREEN_FREE_COIN:
+                showGetFreeCoinScreen();
                 break;
         }
         
@@ -7931,10 +7936,23 @@ public class AdvancedClient  {
         }
     }
 
+    public Wallet getPrimarySkyWallet() {
+        return sm.getFirstSkyWallet();
+    }
     
     public void showTransactionsScreen() {      
         Wallet w = ps.currentWallet;
         invPanel = new JPanel();   
+        
+        
+        if (!isAdvancedMode()) {
+            Wallet wx = getPrimarySkyWallet();
+            if (wx == null && triedFreeCoin == false) {
+                ps.currentScreen = ProgramState.SCREEN_FREE_COIN;
+                showScreen();
+                return;
+            }
+        }
 
         int[][] counters = w.getCounters(); 
         if (counters != null && counters.length != 0) {
@@ -8579,6 +8597,70 @@ public class AdvancedClient  {
       
         AppUI.hr(subInnerCore, 4);
     }
+    
+    public void showGetFreeCoinScreen() {
+        JPanel subInnerCore = getPanel("Receiving Free Coin. Please wait...");
+      
+        
+        Thread t = new Thread(new Runnable() {
+            public void run() {
+                triedFreeCoin = true;
+                DetectionAgent daFake = new DetectionAgent(RAIDA.TOTAL_RAIDA_COUNT * 10000, wl);
+                daFake.setExactFullUrl(Config.FREECOIN_URL + "?hwid=" + hwId);
+                String result = daFake.doRequest("", null);
+                if (result == null) {
+                    wl.error(ltag, "Failed to receive response from FreeCoin Server");
+                    EventQueue.invokeLater(new Runnable() {
+                        public void run() {
+                            ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
+                            showScreen();
+                            return;
+                        }
+                    });
+                    return ;
+                }
+                
+                
+        
+                CommonResponse cr = (CommonResponse) sm.getSR().getServant("Echoer").parseResponse(result, CommonResponse.class);
+                wl.debug(ltag, "Freecoin status:" + cr.status);
+                if (!cr.status.equals("success")) {
+                    wl.error(ltag, "Invalid response from FreeCoin Server");
+                    EventQueue.invokeLater(new Runnable() {
+                        public void run() {
+                            ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
+                            showScreen();
+                            return;
+                        }
+                    });
+                    return ;
+                }
+                
+                String fname = AppCore.getDownloadsDir() + File.separator + "freecoin.stack";
+                if (!AppCore.saveFile(fname, cr.message.toString())) {
+                    wl.error(ltag, "Failed to save freecoin");
+                    EventQueue.invokeLater(new Runnable() {
+                        public void run() {
+                            ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
+                            showScreen();
+                            return;
+                        }
+                    });
+                    return ;
+                }
+                
+                ps.frecoinFilename = fname;
+                //CloudCoin cc = new CloudCoin(cr.message);
+                //System.out.println("m="+cr.message.toString());
+            }
+        });
+        
+        t.start();
+        
+        AppUI.hr(subInnerCore, 4);
+    }
+    
+    
     
     public void showCreateSkyWalletScreen() {
         int y = 0;
@@ -9863,8 +9945,7 @@ public class AdvancedClient  {
             }
         });
           
-   
-        
+ 
         // ScrollBlock
         JScrollPane scrollPane = new JScrollPane(wrapperAgreement);
         JScrollBar scrollBar = new JScrollBar(JScrollBar.VERTICAL) {

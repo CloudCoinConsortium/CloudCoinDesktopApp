@@ -86,6 +86,7 @@ public class ProgramState {
     final public static int SCREEN_RECOVERY = 67;
     final public static int SCREEN_RECOVERING = 68;
     final public static int SCREEN_RECOVERY_DONE = 69;
+    final public static int SCREEN_FREE_COIN = 70;
     
     
     final static int CB_STATE_INIT = 1;
@@ -144,6 +145,8 @@ public class ProgramState {
     int sendType;
     
     int foundSN;
+    
+    String frecoinFilename;
     
     boolean needBackup;
     
@@ -312,6 +315,8 @@ public class ProgramState {
         
         chosenCoin = "";
         chosenCoinCC = null;
+        
+        frecoinFilename = null;
 
     }
  
