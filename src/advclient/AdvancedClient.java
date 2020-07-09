@@ -1111,7 +1111,11 @@ public class AdvancedClient  {
             return;
         
         if (sm.getWallets().length != 0) {
-            setActiveWallet(sm.getWallets()[0]);
+            if (isAdvancedMode()) {
+                setActiveWallet(sm.getWallets()[0]);
+            } else {
+                setActiveWallet(getPrimaryWallet());
+            }
             ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
         }        
         
@@ -1331,6 +1335,9 @@ public class AdvancedClient  {
                 break;
             case ProgramState.SCREEN_FREE_COIN:
                 showGetFreeCoinScreen();
+                break;
+            case ProgramState.SCREEN_GET_PASSWORD:
+                showGetPasswordScreen();
                 break;
         }
         
@@ -3128,8 +3135,7 @@ public class AdvancedClient  {
             ps.dstWallet.setNotUpdated();
              
         int y = 0;
-        JLabel fname, value;
-        MyTextField walletName = null;
+        JLabel fname;
 
         subInnerCore = getPanel("Transfer Complete");                
         GridBagLayout gridbag = new GridBagLayout();
@@ -3164,6 +3170,13 @@ public class AdvancedClient  {
             }
         },  new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+                if (!isAdvancedMode() && ps.srcWallet != null && ps.srcWallet.isSkyWallet()) {
+                    setActiveWallet(getPrimaryWallet());
+                    ps.sendType = 0;
+                    ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
+                    showScreen();
+                    return;
+                }
                 
                 if (ps.srcWallet != null && !ps.srcWallet.isSkyWallet()) {
                     setActiveWallet(ps.srcWallet);
@@ -3192,8 +3205,7 @@ public class AdvancedClient  {
             ps.dstWallet.setNotUpdated();
              
         int y = 0;
-        JLabel fname, value;
-        MyTextField walletName = null;
+        JLabel fname;
 
         subInnerCore = getPanel("Withdrawal Complete");                
         GridBagLayout gridbag = new GridBagLayout();
@@ -4599,8 +4611,7 @@ public class AdvancedClient  {
     
     public void showConfirmTransferScreen() {
         int y = 0;
-        JLabel fname, value;
-        MyTextField walletName = null;
+        JLabel fname;
 
         JPanel subInnerCore = getPanel("Transfer Confirmation");                
         GridBagLayout gridbag = new GridBagLayout();
@@ -6128,6 +6139,75 @@ public class AdvancedClient  {
         }
     }
     
+    
+    public void showGetPasswordScreen() {
+        int y = 0;
+        JLabel fname;
+        
+        JPanel subInnerCore = getPanel("Enter password");                
+        GridBagLayout gridbag = new GridBagLayout();
+        subInnerCore.setLayout(gridbag);
+
+        fname = new JLabel("Password*");
+        final MyTextField password = new MyTextField("Wallet Password", true);
+
+        if (ps.currentWallet.isEncrypted()) {
+            AppUI.getGBRow(subInnerCore, fname, password.getTextField(), y, gridbag);
+            y++;
+       
+            password.requestFocus(); 
+            if (!ps.currentWallet.getPassword().isEmpty()) {
+                password.setData(ps.currentWallet.getPassword());
+            }
+        }
+   
+        AppUI.GBPad(subInnerCore, y, gridbag);        
+        y++;
+                
+        AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Continue", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                Wallet cw = ps.currentWallet;
+                resetState(true);
+                sm.setActiveWalletObj(cw);
+                ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
+                showScreen();
+            }
+        }, new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                //String walletName = cbox.getSelectedValue();
+                Wallet w = ps.currentWallet;
+                ps.typedPassword = password.getText();
+               
+                if (w.isEncrypted()) {
+                    if (password.getText().isEmpty()) {
+                        ps.errText = "Password is empty";
+                        showScreen();
+                        return;
+                    }
+                    
+                    String wHash = w.getPasswordHash();
+                    String providedHash = AppCore.getMD5(password.getText());
+                    
+                    if (wHash == null) {
+                        ps.errText = "Wallet is corrupted";
+                        showScreen();
+                        return;
+                    }
+                    
+                    if (!wHash.equals(providedHash)) {
+                        ps.errText = "Password is incorrect";
+                        showScreen();
+                        return;
+                    } 
+                }
+                           
+                ps.currentScreen = ProgramState.SCREEN_SENDING;              
+                showScreen();
+            }
+        }, y, gridbag);      
+    }
+    
+    
     public void showDepositScreen() {
         int y = 0;
         JLabel fname;
@@ -7551,8 +7631,6 @@ public class AdvancedClient  {
     }
     
     public void showSentCoins() {
-        
-        JLabel fname;
         int y = 0;
         
         showLeftScreen();
@@ -7940,11 +8018,14 @@ public class AdvancedClient  {
         return sm.getFirstSkyWallet();
     }
     
+    public Wallet getPrimaryWallet() {
+        return sm.getFirstNonSkyWallet();
+    }
+    
     public void showTransactionsScreen() {      
         Wallet w = ps.currentWallet;
         invPanel = new JPanel();   
-        
-        
+   
         if (!isAdvancedMode()) {
             Wallet wx = getPrimarySkyWallet();
             if (wx == null && triedFreeCoin == false) {
@@ -8036,8 +8117,8 @@ public class AdvancedClient  {
         AppUI.noOpaque(paddingPanel);
         bpanel.add(paddingPanel);
         
-        final JLabel depositIcon, transferIcon, withdrawIcon, coinsIcon;
-        final ImageIcon depositIi, transferIi, withdrawIi, depositIiLight, transferIiLight, withdrawIiLight;
+        final JLabel depositIcon, transferIcon, withdrawIcon, refreshIcon;
+        final ImageIcon depositIi, transferIi, withdrawIi, refreshIi, depositIiLight, transferIiLight, withdrawIiLight, refreshIiLight;
         ImageIcon ii;
         try {
             Image img;
@@ -8054,6 +8135,16 @@ public class AdvancedClient  {
             transferIi = new ImageIcon(img);
             transferIcon = new JLabel(new ImageIcon(img));
             
+            if (!isAdvancedMode()) {
+                img = brand.scaleMainMenuIcon(ImageIO.read(brand.getImgRefreshIcon()));
+                refreshIi = new ImageIcon(img);
+                refreshIcon = new JLabel(new ImageIcon(img));
+            } else {
+                refreshIi = new ImageIcon();
+                refreshIcon = new JLabel(new ImageIcon(img));
+                //refreshIcon = new JLabel();
+            }
+            
             img = brand.scaleMainMenuIcon(ImageIO.read(brand.getImgDepositIconHover()));
             depositIiLight = new ImageIcon(img);
                       
@@ -8062,6 +8153,11 @@ public class AdvancedClient  {
             
             img = brand.scaleMainMenuIcon(ImageIO.read(brand.getImgWithdrawIconHover()));
             withdrawIiLight = new ImageIcon(img);
+            
+
+            img = brand.scaleMainMenuIcon(ImageIO.read(brand.getImgRefreshIconHover()));
+            refreshIiLight = new ImageIcon(img);
+           
             
         } catch (Exception ex) {
             wl.error(ltag, "Failed to open file: " + ex.getMessage());
@@ -8141,7 +8237,7 @@ public class AdvancedClient  {
         // Transfer
         JPanel wrpTransfer = new JPanel();
         AppUI.setBoxLayout(wrpTransfer, false);
-        AppUI.setSize(wrpTransfer, bwidth + 50, 56);
+        AppUI.setSize(wrpTransfer, bwidth + 60, 56);
         AppUI.setBackground(wrpTransfer, brand.getTopMenuHoverColor());
         AppUI.noOpaque(wrpTransfer);
             
@@ -8159,6 +8255,34 @@ public class AdvancedClient  {
         c.anchor = GridBagConstraints.NORTH;
         gridbag.setConstraints(wrpTransfer, c);
         wrp.add(wrpTransfer);
+        
+        JPanel wrpRefresh = new JPanel();
+        // Refresh
+        if (!isAdvancedMode()) {        
+            AppUI.setBoxLayout(wrpRefresh, false);
+            AppUI.setSize(wrpRefresh, bwidth, 56);
+            AppUI.setBackground(wrpRefresh, brand.getTopMenuHoverColor());
+            AppUI.noOpaque(wrpRefresh);
+            
+            wrpRefresh.add(AppUI.vr(12));            
+            AppUI.setHandCursor(wrpRefresh);
+            refreshIcon.setIcon(refreshIi);                    
+            wrpRefresh.add(refreshIcon);
+            wrpRefresh.add(AppUI.vr(12));
+            
+            titleText = new JLabel("Receive");
+            AppUI.setTitleFont(titleText, fsize);
+            wrpRefresh.add(titleText);
+            
+            c.insets = new Insets(0, 2, 0, 0);
+            c.anchor = GridBagConstraints.NORTH;
+            gridbag.setConstraints(wrpRefresh, c);
+            
+            Wallet wx = getPrimarySkyWallet();
+            if (wx != null)
+                wrp.add(wrpRefresh);
+            
+        }
             
         MouseAdapter ma0 = new MouseAdapter() {
             public void mouseReleased(MouseEvent e) {
@@ -8237,12 +8361,55 @@ public class AdvancedClient  {
                 }
             }
         };
+        
+        MouseAdapter ma3 = new MouseAdapter() {
+            public void mouseReleased(MouseEvent e) {
+                resetState(true);
+                                
+                Wallet w = getPrimarySkyWallet();
+                if (w == null)
+                    return;
+                
+                ps.srcWallet = w;
+                ps.dstWallet = ps.currentWallet;
+                ps.typedMemo = "Downloaded from SkyWallet";
+                ps.isSkyDeposit = true;
+                ps.typedAmount = 0;
+                
+                if (ps.currentWallet.isEncrypted())
+                    ps.currentScreen = ProgramState.SCREEN_GET_PASSWORD;
+                else
+                    ps.currentScreen = ProgramState.SCREEN_SENDING;
+                
+                showScreen();
+            }
+                
+            public void mouseEntered(MouseEvent e) {             
+                JPanel p = (JPanel) e.getSource();
+                AppUI.opaque(p);
+                refreshIcon.setIcon(refreshIiLight);
+                p.revalidate();
+                p.repaint();
+            }
+            
+            public void mouseExited(MouseEvent e) {                   
+                JPanel p = (JPanel) e.getSource();
+                AppUI.noOpaque(p);
+                refreshIcon.setIcon(refreshIi);
+                p.revalidate();
+                p.repaint();
+            }
+        };
 
         if (!isSky)
             wrpDeposit.addMouseListener(ma0);
         
         wrpTransfer.addMouseListener(ma1);
         wrpWithdraw.addMouseListener(ma2);
+        
+        if (!isAdvancedMode()) {
+            wrpRefresh.addMouseListener(ma3);
+        }
 
         bwrapper.add(bpanel);
 
@@ -8605,6 +8772,22 @@ public class AdvancedClient  {
         Thread t = new Thread(new Runnable() {
             public void run() {
                 triedFreeCoin = true;
+                
+                String fname = AppCore.getDownloadsDir() + File.separator + "freecoin.stack";
+                File f = new File(fname);
+                if (f.exists()) {
+                    ps.frecoinFilename = fname;
+                    EventQueue.invokeLater(new Runnable() {
+                        public void run() {
+                            ps.currentScreen = ProgramState.SCREEN_CREATE_SKY_WALLET;
+                            showScreen();
+                            return;
+                        }
+                    });
+                    
+                    return;
+                }
+                
                 DetectionAgent daFake = new DetectionAgent(RAIDA.TOTAL_RAIDA_COUNT * 10000, wl);
                 daFake.setExactFullUrl(Config.FREECOIN_URL + "?hwid=" + hwId);
                 String result = daFake.doRequest("", null);
@@ -8635,8 +8818,7 @@ public class AdvancedClient  {
                     });
                     return ;
                 }
-                
-                String fname = AppCore.getDownloadsDir() + File.separator + "freecoin.stack";
+
                 if (!AppCore.saveFile(fname, cr.message.toString())) {
                     wl.error(ltag, "Failed to save freecoin");
                     EventQueue.invokeLater(new Runnable() {
@@ -8648,8 +8830,16 @@ public class AdvancedClient  {
                     });
                     return ;
                 }
-                
+                        
                 ps.frecoinFilename = fname;
+                EventQueue.invokeLater(new Runnable() {
+                    public void run() {
+                        ps.currentScreen = ProgramState.SCREEN_CREATE_SKY_WALLET;
+                        showScreen();
+                        return;
+                    }
+                });
+                
                 //CloudCoin cc = new CloudCoin(cr.message);
                 //System.out.println("m="+cr.message.toString());
             }
@@ -8664,7 +8854,7 @@ public class AdvancedClient  {
     
     public void showCreateSkyWalletScreen() {
         int y = 0;
-        JLabel fname0, fname1, fname2, fname3, fname4;
+        JLabel fname1, fname2, fname3;
 
         JPanel subInnerCore = getPanel("Create Sky Wallet");                
         GridBagLayout gridbag = new GridBagLayout();
@@ -8778,8 +8968,14 @@ public class AdvancedClient  {
             }
         });
         
-        if (!ps.chosenFile.isEmpty()) 
+        if (!ps.chosenFile.isEmpty()) {
             tf1.setData(new File(ps.chosenFile).getName());
+        } else if (!isAdvancedMode() && ps.frecoinFilename != null) {
+            tf1.setData(ps.frecoinFilename);
+            tf1.getTextField().setVisible(false);
+            fname3.setVisible(false);
+            
+        }
         
         AppUI.getGBRow(subInnerCore, fname3, tf1.getTextField(), y, gridbag);
         y++; 
@@ -8806,13 +9002,15 @@ public class AdvancedClient  {
                 }
                   
                 ps.trustedServer = cbox.getSelectedValue();         
-                if (ps.chosenFile.isEmpty()) {
+                if (ps.chosenFile.isEmpty() && isAdvancedMode()) {
                     ps.errText = "Select the CloudCoin";
                     showScreen();
                     return;
                 }
                 
-                CloudCoin cc = AppCore.getCoin(ps.chosenFile);
+
+                String filename = isAdvancedMode() ? ps.chosenFile : ps.frecoinFilename;
+                CloudCoin cc = AppCore.getCoin(filename);
                 if (cc == null) {
                     ps.errText = "The coin is invalid. Format error";
                     showScreen();
@@ -8855,41 +9053,47 @@ public class AdvancedClient  {
                 
                 ps.domain = domain;
                 //if (!cb1.isChecked()) {                 
-                    if (sn >= 0) {
-                        ps.errText = "Domain name already exists";
-                        showScreen();
-                        return;
-                    }
+                if (sn >= 0) {
+                    ps.errText = "Domain name already exists";
+                    showScreen();
+                    return;
+                }
                     
-                    Thread t = new Thread(new Runnable() {
-                        public void run(){
-                            if (!d.setRecord(ps.chosenFile, sm.getSR())) {
-                                ps.errText = "Failed to set record. Check if the coin is valid";
-                                showScreen();
-                                return;
-                            } 
+                Thread t = new Thread(new Runnable() {
+                    public void run(){
+                        String file = isAdvancedMode() ? ps.chosenFile : ps.frecoinFilename;
+                        if (!d.setRecord(file, sm.getSR())) {
+                            ps.errText = "Failed to set record. Check if the coin is valid";
+                            showScreen();
+                            return;
+                        } 
 
-                            if (!AppCore.moveToFolderNewName(ps.chosenFile,  AppCore.getIDDir(), null, newFileName)) {
-                                ps.errText = "Failed to move ID Coin to the Default Wallet";
-                                showScreen();
-                                return;
-                            }
-                    
-                            sm.initWallets();                          
-                            ps.currentScreen = ProgramState.SCREEN_SKY_WALLET_CREATED;
-                            showScreen();    
-                        }
-                    });
-        
-                    t.start();
-
-                    EventQueue.invokeLater(new Runnable() {
-                        public void run() {
-                            ps.currentScreen = ProgramState.SCREEN_SETTING_DNS_RECORD;
+                        if (!AppCore.moveToFolderNewName(file,  AppCore.getIDDir(), null, newFileName)) {
+                            ps.errText = "Failed to move ID Coin to the Default Wallet";
                             showScreen();
                             return;
                         }
-                    });
+                    
+                        sm.initWallets();                          
+                        
+                        if (!isAdvancedMode()) {
+                            ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
+                        } else {
+                            ps.currentScreen = ProgramState.SCREEN_SKY_WALLET_CREATED;
+                        }
+                        showScreen();    
+                    }
+                });
+        
+                t.start();
+
+                EventQueue.invokeLater(new Runnable() {
+                    public void run() {
+                        ps.currentScreen = ProgramState.SCREEN_SETTING_DNS_RECORD;
+                        showScreen();
+                        return;
+                    }
+                });
 
                 /*} else {
                     if (sn <= 0) {
@@ -9411,9 +9615,6 @@ public class AdvancedClient  {
     
     public void showLeftScreen() {  
         wallets = sm.getWallets();
-        
-
-        
         lwrapperPanel = new JPanel();
         
         AppUI.setBoxLayout(lwrapperPanel, true);
@@ -10356,13 +10557,15 @@ public class AdvancedClient  {
                 }
             } else {
                 // StatToBank == 0
-                String memo = "";
-                if (ps.statFailedValue > 0) {
-                    memo = AppCore.formatNumber(ps.statFailedValue) + " Counterfeit";
-                } else {
-                    memo = "Failed to Import";
+                if (isAdvancedMode()) {
+                    String memo = "";
+                    if (ps.statFailedValue > 0) {
+                        memo = AppCore.formatNumber(ps.statFailedValue) + " Counterfeit";
+                    } else {
+                        memo = "Failed to Import";
+                    }
+                    w.appendTransaction(memo, 0, "COUNTERFEIT");
                 }
-                w.appendTransaction(memo, 0, "COUNTERFEIT");
             }
             
             EventQueue.invokeLater(new Runnable() {         
@@ -11015,7 +11218,7 @@ public class AdvancedClient  {
 		return;
             } 
             
-            if (rr.amount <= 0) {
+            if (rr.amount <= 0 && isAdvancedMode()) {
                 ps.typedAmount = 0;
                 ps.errText = "Coins were not received. Please check the logs";
                 EventQueue.invokeLater(new Runnable() {         
@@ -11031,6 +11234,11 @@ public class AdvancedClient  {
                 
                 return;
             }
+            
+            if (!isAdvancedMode()) {
+                ps.typedAmount = rr.amount;
+            }
+            
 
             String name = null;
             if (ps.srcWallet != null)

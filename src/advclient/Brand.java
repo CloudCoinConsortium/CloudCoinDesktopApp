@@ -1257,6 +1257,15 @@ public class Brand {
         return getAssetPathByName("withdrawIconHover");
     }
     
+    public URL getImgRefreshIconHover() {
+        return getAssetPathByName("withdrawIconHover");
+    }
+    
+    public URL getImgRefreshIcon() {
+        return getAssetPathByName("withdrawIcon");
+    }
+    
+    
     public URL getImgTransferIcon() {
         return getAssetPathByName("transferIcon");
     }

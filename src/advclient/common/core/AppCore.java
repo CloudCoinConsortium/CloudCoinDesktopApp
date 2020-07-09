@@ -2160,16 +2160,15 @@ public class AppCore {
                     }
                 
                     String mac = ssb.toString();
-                    
-                    System.out.println(ni.getName() + " " + ni.getDisplayName() + " mc=" + mac + " v=" + ni.isUp());
                     sb.append(mac);
-                } catch (SocketException e)  {}
+                } catch (SocketException e)  {
+                    logger.debug(ltag, "Socket exception: " +e.getMessage());
+                }
             }
         }
         
         String hwId = AppCore.getMD5(sb.toString());
         logger.debug(ltag, "hwID " + hwId);
-        System.out.println("hwId=" + hwId);
         
         return hwId;
         

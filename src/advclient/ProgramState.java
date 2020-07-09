@@ -87,6 +87,7 @@ public class ProgramState {
     final public static int SCREEN_RECOVERING = 68;
     final public static int SCREEN_RECOVERY_DONE = 69;
     final public static int SCREEN_FREE_COIN = 70;
+    final public static int SCREEN_GET_PASSWORD = 71;
     
     
     final static int CB_STATE_INIT = 1;

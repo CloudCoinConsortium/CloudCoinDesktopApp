@@ -98,6 +98,17 @@ public class Receiver extends Servant {
         }
 
         CloudCoin extraCoin = null;
+        if (amount == 0) {
+            logger.debug(ltag, "Amount is zero. Special casse. Downloading everything");
+            
+            for (int ii = 0; ii < sns.length; ii++) {
+                CloudCoin xcc = new CloudCoin(Config.DEFAULT_NN, sns[ii]);
+                amount += xcc.getDenomination();
+            }
+
+            logger.debug(ltag, "New amount " + amount);
+        } 
+        
         if (!pickCoinsAmountFromArray(sns, amount)) {
             logger.debug(ltag, "Not enough coins in the cloudfor amount " + amount + ". Picking extra");
             
