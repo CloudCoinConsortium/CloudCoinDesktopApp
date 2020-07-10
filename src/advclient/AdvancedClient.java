@@ -6176,7 +6176,8 @@ public class AdvancedClient  {
             public void actionPerformed(ActionEvent e) {
                 //String walletName = cbox.getSelectedValue();
                 Wallet w = ps.currentWallet;
-                ps.typedPassword = password.getText();
+                ps.typedDstPassword = password.getText();
+                ps.dstWallet.setPassword(ps.typedDstPassword);
                
                 if (w.isEncrypted()) {
                     if (password.getText().isEmpty()) {
