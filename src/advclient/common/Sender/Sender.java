@@ -741,7 +741,6 @@ public class Sender extends Servant {
             for (CloudCoin cc : againCCs) {            
                 cc.setPownStringFromDetectStatus();
                 logger.info(ltag, "SendAgain Doing " + cc.originalFile + " pown=" + cc.getPownString());
-                System.out.println("sss=" + cc.sn + " p="+cc.getPownString());
                 if (cc.isSentFixable()) {
                     logger.info(ltag, "Moving to Sent After SendAgain: " + cc.sn);
                     globalResult.amount += cc.getDenomination();

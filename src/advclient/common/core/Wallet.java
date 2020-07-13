@@ -7,9 +7,11 @@ package global.cloudcoin.ccbank.core;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.List;
 
 
 /**
@@ -176,7 +178,7 @@ public class Wallet implements Comparable<Wallet> {
         logger.debug(ltag, "Saving " + dstPath);
         AppCore.saveFile(dstPath, sb.toString());  
     }
-    
+
     public String[][] getTransactions() {
         String fileName = getTransactionsFileName();
 
@@ -196,8 +198,12 @@ public class Wallet implements Comparable<Wallet> {
             
             rv[i][3] = rv[i][3].replace("-", "");
         }
-        
-        return rv;            
+
+        List list = Arrays.asList(rv);
+        Collections.reverse(list);
+        String[][] rv2 = (String[][]) list.toArray();
+       
+        return rv2;            
     }
     
     public void appendTransaction(String memo, int amount, String receiptId) {
@@ -222,8 +228,9 @@ public class Wallet implements Comparable<Wallet> {
         int rest = 0;
         String[][] tr = getTransactions();
         if (tr != null) {        
-            String[] last = tr[tr.length - 1];
-            String rRest = last[4];
+            //String[] last = tr[tr.length - 1];
+            String[] first = tr[0];
+            String rRest = first[4];
             
             try {
                 rest = Integer.parseInt(rRest);

@@ -88,6 +88,7 @@ public class ProgramState {
     final public static int SCREEN_RECOVERY_DONE = 69;
     final public static int SCREEN_FREE_COIN = 70;
     final public static int SCREEN_GET_PASSWORD = 71;
+    final public static int SCREEN_TRANSFER_ANOTHER = 72;
     
     
     final static int CB_STATE_INIT = 1;
@@ -213,12 +214,15 @@ public class ProgramState {
     
     int statTotalLostFixedValue;
     
+    String typedReturnAddress;
     
     int recoveredCoins;
     int recoveredFailedCoins;
     
     String chosenCoin;
     CloudCoin chosenCoinCC;
+    
+    int typedReturnIdx;
     
     public ProgramState() {
         currentScreen = SCREEN_AGREEMENT;
@@ -319,6 +323,8 @@ public class ProgramState {
         
         frecoinFilename = null;
 
+        typedReturnAddress = "";
+        typedReturnIdx = -1;
     }
  
     public String toString() {

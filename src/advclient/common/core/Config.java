@@ -94,7 +94,7 @@ public class Config {
 
     public static int MAX_ALLOWED_LATENCY = 20000;
     
-    public static int AGG_LATENCY_FOR_SERIAL_MODE = 8000;
+    public static int AGG_LATENCY_FOR_SERIAL_MODE = 4000;
 
 
     public static int IDX_1 = 0;

@@ -74,7 +74,7 @@ import org.json.JSONObject;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "3.0.27";
+    public static String version = "3.0.32";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -430,7 +430,9 @@ public class AdvancedClient  {
     }
     
     public String getSkyIDError(String name, String pownString) {
-        return "Your Sky Coin ID <b>" + name + "</b> is not 100% authentic. It is not safe to use it.<br><br>"
+        return "Your Sky Coin ID <b>" + name + "</b> is not 100% authentic or there is a network problem. It is not safe to continue. "
+                + "Please check your bandwidth by \"echoing RAIDA\" in the Tools. "
+                + "Increase timeouts in your \"Settings\" tools and try again. <br><br>"
             + "The Pown String is <b>" + pownString + "</b>";
     }
 
@@ -683,14 +685,13 @@ public class AdvancedClient  {
 
         JLabel icon0, icon1, icon2, icon3;
         final JLabel coinsIcon;
-        ImageIcon ii;
         ImageIcon iconSupportHovered, iconSupport;
         try {
             Image img;
                    
             img = ImageIO.read(brand.getImgSettingsIcon());
             icon0 = new JLabel(new ImageIcon(img));            
-            ii = new ImageIcon(img);
+            //ii = new ImageIcon(img);
  
             BufferedImage img2 = ImageIO.read(brand.getImgSupportIcon());
             img = brand.scaleMainMenuIcon(img2);            
@@ -888,8 +889,10 @@ public class AdvancedClient  {
         };
  
         String[] items = {"Backup", "List serials", "Clear History", "Fix Fracked", 
-            "Delete a Wallet", "Show Folders", "Echo RAIDA", "Settings", "Sent Coins", 
-            "Bill Pay", "Cloud Bank", "Recovery"};
+            "Delete a Wallet", "Show Folders", "Echo RAIDA", "Settings", "Cloud Bank", "Recovery"};
+        
+        
+        
         
         if (!isAdvancedMode()) {
             items[0] = items[1] = items[2] = items[3] = items[4] = items[5] = items[8] 
@@ -957,12 +960,8 @@ public class AdvancedClient  {
                     } else if (action.equals("7")) {
                         ps.currentScreen = ProgramState.SCREEN_SETTINGS;
                     } else if (action.equals("8")) {
-                        ps.currentScreen = ProgramState.SCREEN_SHOW_SENT_COINS;
-                    } else if (action.equals("9")) {                      
-                        ps.currentScreen = ProgramState.SCREEN_SHOW_BILL_PAY;
-                    } else if (action.equals("10")) {
                         ps.currentScreen = ProgramState.SCREEN_CLOUDBANK;
-                    } else if (action.equals("11")) {
+                    } else if (action.equals("9")) {
                         ps.currentScreen = ProgramState.SCREEN_RECOVERY;
                     } 
 
@@ -1338,6 +1337,9 @@ public class AdvancedClient  {
                 break;
             case ProgramState.SCREEN_GET_PASSWORD:
                 showGetPasswordScreen();
+                break;    
+            case ProgramState.SCREEN_TRANSFER_ANOTHER:
+                showTransferAnotherScreen();
                 break;
         }
         
@@ -1978,7 +1980,7 @@ public class AdvancedClient  {
                     }
                     
                     // cc.setPownStringFromDetectStatus(); is set in the getPassedCount
-                   
+
                     if (AppCore.getErrorCount(skyCC) > Config.MAX_FAILED_RAIDAS_TO_SEND) {
                         ps.errText = getSkyIDErrorIfRAIDAFailed();
                         showScreen();
@@ -2029,6 +2031,9 @@ public class AdvancedClient  {
 
 
                 String dstName =  (ps.foundSN == 0) ? ps.dstWallet.getName() : "" + ps.foundSN;
+                String memo = ps.typedMemo;
+                if (!ps.typedReturnAddress.isEmpty() && !ps.typedReturnAddress.equals("None"))
+                    memo += " from " + ps.typedReturnAddress;
                 
                 // Remote wallet
                 if (ps.srcWallet.isSkyWallet()) {
@@ -2043,7 +2048,7 @@ public class AdvancedClient  {
                             tosn = ps.foundSN;
                         }
 
-                        sm.startTransferService(fromsn, tosn, ps.srcWallet.getSNs(), ps.typedAmount, ps.typedMemo, new TransferCb());
+                        sm.startTransferService(fromsn, tosn, ps.srcWallet.getSNs(), ps.typedAmount, memo, new TransferCb());
 
                         return;
                     }
@@ -2064,11 +2069,10 @@ public class AdvancedClient  {
                     sm.startShowSkyCoinsService(new ShowEnvelopeCoinsForReceiverCb(), sn);
                     return;
                 }
-                
 
                 wl.debug(ltag, "Sending to dst " + dstName);
                 sm.transferCoins(ps.srcWallet.getName(), dstName, 
-                        ps.typedAmount, ps.typedMemo, ps.typedRemoteWallet, new SenderCb(), new ReceiverCb());
+                        ps.typedAmount, memo, ps.typedRemoteWallet, new SenderCb(), new ReceiverCb());
             }
         });
         
@@ -5244,12 +5248,29 @@ public class AdvancedClient  {
     public void showBillPayScreen() {
         int y = 0;
         JLabel fname;
-        MyTextField walletName = null;
 
-        JPanel subInnerCore = getPanel("Bill Pay");                
+        JPanel subInnerCore = getPanel("Bill Pay from " + ps.currentWallet.getName());   
         GridBagLayout gridbag = new GridBagLayout();
         subInnerCore.setLayout(gridbag);
+        
+        if (ps.currentWallet.isSkyWallet()) {
+            fname = AppUI.wrapDiv("Bill Pay from SkyWallets is not supported");
+            AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
+            y++;
+            AppUI.GBPad(subInnerCore, y, gridbag);  
+            return;
+        }
+        
+        if (ps.currentWallet.getTotal() == 0) {
+            fname = AppUI.wrapDiv("Bill Pay is not possible. The Wallet is empty");
+            AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
+            y++;
+            AppUI.GBPad(subInnerCore, y, gridbag);  
+            return;
+        }
 
+
+        /*
         final optRv rvFrom = setOptionsForWalletsCommon(false, false, true, null);
         if (rvFrom.idxs.length == 0) {
             fname = AppUI.wrapDiv("No Wallets");
@@ -5258,6 +5279,8 @@ public class AdvancedClient  {
             AppUI.GBPad(subInnerCore, y, gridbag);  
             return;
         }
+        
+        */
         
         //JLabel infox = AppUI.wrapDiv("uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu");
         
@@ -5277,18 +5300,23 @@ public class AdvancedClient  {
         y++;
         
 
+        //System.out.println("cw="+ps.currentWallet.getName());
+        /*
         fname = new JLabel("From");
         final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "Make Selection", rvFrom.options);
         AppUI.getGBRow(subInnerCore, fname, cboxfrom.getComboBox(), y, gridbag);
         y++;     
+        */
         
         final JLabel spText = new JLabel("Password");
         final MyTextField passwordSrc = new MyTextField("Wallet Password", true);
-        AppUI.getGBRow(subInnerCore, spText, passwordSrc.getTextField(), y, gridbag);
-        y++; 
+        if (ps.currentWallet.isEncrypted()) {
+            AppUI.getGBRow(subInnerCore, spText, passwordSrc.getTextField(), y, gridbag);
+            y++; 
+        }
         
-        passwordSrc.getTextField().setVisible(false);
-        spText.setVisible(false);
+        //passwordSrc.getTextField().setVisible(false);
+        //spText.setVisible(false);
         
         final JLabel lfText = new JLabel("CSV File");
         final JFileChooser chooser = new JFileChooser();
@@ -5314,6 +5342,7 @@ public class AdvancedClient  {
         AppUI.getGBRow(subInnerCore, lfText, localFolder.getTextField(), y, gridbag);
         y++;
         
+        /*
         cboxfrom.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 int srcIdx = cboxfrom.getSelectedIndex() - 1;
@@ -5334,14 +5363,15 @@ public class AdvancedClient  {
                 }
             }
         });
+        */
 
         AppUI.GBPad(subInnerCore, y, gridbag);
         y++;
         
-        
+        /*
         if (ps.srcWallet != null && ps.selectedFromIdx > 0) {
             cboxfrom.setDefaultIdx(ps.selectedFromIdx);
-        }
+        }*/
 
         AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Continue", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -5350,18 +5380,18 @@ public class AdvancedClient  {
             }
         }, new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                int srcIdx = cboxfrom.getSelectedIndex() - 1;
+                //int srcIdx = cboxfrom.getSelectedIndex() - 1;
 
-                
+                /*
                 ps.selectedFromIdx = cboxfrom.getSelectedIndex();
                 if (srcIdx < 0 || srcIdx >= rvFrom.idxs.length) {                    
                     ps.errText = "Please select Wallet";
                     showScreen();
                     return;
-                }
+                }*/
                 
-                srcIdx = rvFrom.idxs[srcIdx];                  
-                Wallet srcWallet = wallets[srcIdx];
+                //srcIdx = rvFrom.idxs[srcIdx];                  
+                Wallet srcWallet = ps.currentWallet;
                 ps.srcWallet = srcWallet;
 
 
@@ -5684,7 +5714,7 @@ public class AdvancedClient  {
         
         fname = new JLabel("Transfer To*");
         final RoundedCornerComboBox cboxto = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "Make Selection", rvTo.options);
-        cboxto.addOption(AppUI.getRemoteUserOption());
+        //cboxto.addOption(AppUI.getRemoteUserOption());
         //cboxto.addOption(AppUI.getLocalFolderOption());
         AppUI.getGBRow(subInnerCore, fname, cboxto.getComboBox(), y, gridbag);
         y++; 
@@ -6112,6 +6142,219 @@ public class AdvancedClient  {
                 if (ps.typedMemo.isEmpty())
                     ps.typedMemo = "Transfer";
                 
+                ps.currentScreen = ProgramState.SCREEN_CONFIRM_TRANSFER;
+                showScreen();
+            }
+        }, y, gridbag);
+             
+    }
+    
+    public void showTransferAnotherScreen() {
+        int y = 0;
+        JLabel fname;
+
+        JPanel subInnerCore = getPanel("Send from " + ps.currentWallet.getName() + " to Another User");                
+        GridBagLayout gridbag = new GridBagLayout();
+        subInnerCore.setLayout(gridbag);
+
+        
+        
+        final JLabel spText = new JLabel("Password*");
+        final MyTextField passwordSrc = new MyTextField("Wallet Password", true);
+        if (ps.currentWallet.isEncrypted()) {
+            AppUI.getGBRow(subInnerCore, spText, passwordSrc.getTextField(), y, gridbag);
+            y++; 
+            passwordSrc.requestFocus();
+            if (!ps.currentWallet.getPassword().isEmpty()) {
+                passwordSrc.setData(ps.currentWallet.getPassword());
+            }
+        }
+
+        optRv rv = new optRv();
+        rv.options = new String[0];
+        rv.idxs = new int[0];
+        String[] skyWalletNames = AppCore.getSentSkyWallets();
+        if (skyWalletNames != null) {
+            int len = skyWalletNames.length;
+            rv.options = new String[len];
+            rv.idxs = new int[len];
+            
+            for (int i = 0; i < len; i++) {
+                //rv.options[i] = "Send to " + skyWalletNames[i];
+                rv.options[i] = skyWalletNames[i];
+                rv.idxs[i] = i;         
+            }       
+        }
+
+        final JLabel rwText = new JLabel("Send To*");
+        final RoundedCornerComboBox remoteWalledId = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "JohnDoe.SkyWallet.cc", rv.options);
+        remoteWalledId.setEditable();
+        if (!ps.typedRemoteWallet.isEmpty())
+            remoteWalledId.setData("" + ps.typedRemoteWallet);
+        AppUI.getGBRow(subInnerCore, rwText, remoteWalledId.getComboBox(), y, gridbag);
+        y++; 
+
+        fname = new JLabel("Amount*");
+        final MyTextField amount = new MyTextField("0 CC", false);
+        if (ps.typedAmount > 0)
+            amount.setData("" + ps.typedAmount);
+        AppUI.getGBRow(subInnerCore, fname, amount.getTextField(), y, gridbag);
+        y++;
+        
+        if (!ps.currentWallet.isEncrypted()) 
+            amount.requestFocus();
+                
+        final JLabel memoLabel = new JLabel("Memo (Note)*");
+        final MyTextField memo = new MyTextField("", false);
+        if (!ps.typedMemo.isEmpty())
+            memo.setData(ps.typedMemo);
+        AppUI.getGBRow(subInnerCore, memoLabel, memo.getTextField(), y, gridbag);
+        y++;
+        
+        final optRv rvReturn = setOptionsForWalletsSkyNoAmount();
+        final JLabel retText = new JLabel("Return Address*");
+        final RoundedCornerComboBox returnAddress = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "JohnDoe.SkyWallet.cc", rvReturn.options);
+        returnAddress.addOption("None");
+        if (ps.typedReturnIdx != -1)
+            returnAddress.setDefaultIdx(ps.typedReturnIdx);
+        
+
+        AppUI.getGBRow(subInnerCore, retText, returnAddress.getComboBox(), y, gridbag);
+        y++; 
+        
+        
+            
+        AppUI.GBPad(subInnerCore, y, gridbag);        
+        y++;
+
+        
+
+        AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Continue", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                Wallet cw = ps.currentWallet;
+                resetState(true);
+                sm.setActiveWalletObj(cw);
+                ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
+                showScreen();
+            }
+        }, new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                ps.typedReturnAddress = returnAddress.getSelectedValue();
+                ps.typedReturnIdx = returnAddress.getSelectedIndex();
+                ps.typedMemo = memo.getText().trim();
+                ps.typedRemoteWallet = remoteWalledId.getCustomValue();
+
+
+                Wallet w = ps.currentWallet;
+                ps.srcWallet = w;
+       
+                try {
+                    ps.typedAmount = Integer.parseInt(amount.getText());
+                } catch (NumberFormatException ex) {
+                    ps.errText = "Invalid amount";
+                    showScreen();
+                    return;   
+                };
+                
+                if (ps.typedAmount <= 0) {
+                    ps.errText = "Transfer must be higher than zero";
+                    showScreen();
+                    return;  
+                }
+                
+                if (ps.typedAmount >= Config.MAX_COINS_TO_SEND) {
+                    ps.errText = "You can't send " + AppCore.formatNumber(Config.MAX_COINS_TO_SEND) + " or more CloudCoins at a time";
+                    showScreen();
+                    return;
+                }
+                
+                
+                if (!Validator.memoLength(ps.typedMemo)) {
+                    ps.errText = "Memo too long. Only 64 characters are allowed";
+                    showScreen();
+                    return;
+                }
+                
+                if (ps.typedReturnIdx == 0) {
+                    ps.errText = "Please select Return Address";
+                    showScreen();
+                    return;
+                }
+
+                if (!ps.typedMemo.isEmpty()) {
+                    if (!Validator.memo(ps.typedMemo)) {
+                        ps.errText = "Memo: special characters not allowed!";
+                        showScreen();
+                        return;
+                    }
+                } else {
+                    ps.errText = "Memo must not be empty";
+                    showScreen();
+                    return; 
+                }
+
+                if (w.isEncrypted()) {
+                    if (passwordSrc.getText().isEmpty()) {
+                        ps.errText = "Password is empty";
+                        showScreen();
+                        return;
+                    }
+                    
+                    String wHash = w.getPasswordHash();
+                    String providedHash = AppCore.getMD5(passwordSrc.getText());
+                    if (wHash == null) {
+                        ps.errText = "Your Wallet is corrupted";
+                        showScreen();
+                        return;
+                    }
+                    
+                    if (!wHash.equals(providedHash)) {
+                        ps.errText = "Password is incorrect";
+                        showScreen();
+                        return;
+                    } 
+                    
+                    ps.typedSrcPassword = passwordSrc.getText();
+                }
+                
+                if (ps.typedAmount > w.getTotal()) {
+                    ps.errText = "Insufficient funds";
+                    showScreen();
+                    return;
+                }
+
+                // Remote User
+                if (remoteWalledId.getCustomValue().isEmpty()) {
+                    ps.errText = "Remote Wallet is empty";
+                    showScreen();
+                    return;
+                }
+
+                String dstName = remoteWalledId.getCustomValue().trim();
+                if (ps.srcWallet.isSkyWallet() && ps.srcWallet.getName().equals(dstName)) {
+                    ps.errText = "Wallets cannot be the same";
+                    showScreen();
+                    return;
+                }
+
+                ps.dstWallet = null;
+                ps.typedRemoteWallet = dstName;
+                ps.sendType = ProgramState.SEND_TYPE_REMOTE;
+                                        
+                if (!Validator.domain(ps.typedRemoteWallet)) {
+                    ps.errText = "Invalid SkyWallet Address";
+                    showScreen();
+                    return;
+                }
+                    
+                DNSSn d = new DNSSn(ps.typedRemoteWallet, null, wl);
+                if (!d.recordExists()) {
+                    ps.errText = "Sky Wallet " + ps.typedRemoteWallet + " doesn't exist. If it is a newly created wallet please wait and try again later";
+                    showScreen();
+                    return;
+                }   
+                    
+                AppCore.appendSentSkyWallet(ps.typedRemoteWallet, skyWalletNames);
                 ps.currentScreen = ProgramState.SCREEN_CONFIRM_TRANSFER;
                 showScreen();
             }
@@ -7155,7 +7398,36 @@ public class AdvancedClient  {
         return rv;
     }
     
-    
+    public optRv setOptionsForWalletsSkyNoAmount() {
+        optRv rv = new optRv();
+        
+        int cnt = 0;
+        for (int i = 0; i < wallets.length; i++) {
+            if (!wallets[i].isSkyWallet())
+                continue;
+            
+            cnt++;
+        }
+              
+        rv.options = new String[cnt];
+        rv.idxs = new int[cnt];
+        
+        if (cnt == 0)
+            return rv;
+        
+        int j = 0;
+        for (int i = 0; i < wallets.length; i++) {
+            if (!wallets[i].isSkyWallet())
+                continue;
+
+            rv.options[j] = wallets[i].getName();
+            rv.idxs[j] = i;
+            j++;
+            cnt++;
+        }
+         
+        return rv;
+    }
 
     public optRv setOptionsForWalletsSky() {
         optRv rv = new optRv();
@@ -8235,6 +8507,18 @@ public class AdvancedClient  {
         gridbag.setConstraints(wrpWithdraw, c);
         wrp.add(wrpWithdraw);
             
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         // Transfer
         JPanel wrpTransfer = new JPanel();
         AppUI.setBoxLayout(wrpTransfer, false);
@@ -8256,6 +8540,221 @@ public class AdvancedClient  {
         c.anchor = GridBagConstraints.NORTH;
         gridbag.setConstraints(wrpTransfer, c);
         wrp.add(wrpTransfer);
+        
+        final Color savedColor = wrpTransfer.getBackground();
+        //final JLabel ficon = icon0;
+        
+                // Do stuff popup menu
+        final int mWidth = bwidth + 100;
+        final int mHeight = 42;
+        final JPopupMenu popupMenu = new JPopupMenu() {
+            @Override
+            public void paintComponent(final Graphics g) {
+                g.setColor(brand.getSettingsMenuBackgroundColor());
+                g.fillRect(0,0,getWidth(), getHeight());
+            } 
+        };
+ 
+        String[] items = {"Send to Another User", "Transfer Within Wallet", "Bill Pay", "Sent Coins"};
+        if (!isAdvancedMode()) {
+            items[2] = items[3] = null;
+        }
+        
+        
+        for (int i = 0; i < items.length; i++) {
+            if (items[i] == null)
+                continue;
+            
+            JMenuItem menuItem = new JMenuItem(items[i]);
+            menuItem.setActionCommand("" + i);
+            AppUI.setHandCursor(menuItem);
+    
+            MouseAdapter ma = new MouseAdapter() {
+                public void mouseEntered(MouseEvent evt) {
+                    ps.popupVisible = true;
+                    JMenuItem jMenuItem = (JMenuItem) evt.getSource();
+                    jMenuItem.setBackground(brand.getSettingsMenuHoverColor());
+                }
+                
+                public void mouseExited(MouseEvent evt) {
+                    JMenuItem jMenuItem = (JMenuItem) evt.getSource();
+                    jMenuItem.setBackground(brand.getSettingsMenuBackgroundColor());
+                    
+                    ps.popupVisible = false;             
+                    EventQueue.invokeLater(new Runnable() {
+                        public void run(){
+                            try {
+                                Thread.sleep(40);
+                            } catch(InterruptedException ex) {           
+                            }
+                        
+                            if (ps.popupVisible)
+                                return;
+
+                            wrpTransfer.setOpaque(false);
+                            wrpTransfer.repaint();              
+                            popupMenu.setVisible(false);
+                        }
+                    });                   
+                }
+                
+                public void mouseReleased(MouseEvent evt) {
+                    JMenuItem jMenuItem = (JMenuItem) evt.getSource();
+                    popupMenu.setVisible(false);
+
+                    String action = jMenuItem.getActionCommand();
+                    if (action.equals("0")) {
+                        ps.currentScreen = ProgramState.SCREEN_TRANSFER_ANOTHER;
+                    } else if (action.equals("1")) {
+                        ps.currentScreen = ProgramState.SCREEN_TRANSFER;
+                    } else if (action.equals("2")) {
+                        ps.currentScreen = ProgramState.SCREEN_SHOW_BILL_PAY;
+                    } else if (action.equals("3")) {
+                        ps.currentScreen = ProgramState.SCREEN_SHOW_SENT_COINS;
+                    }
+
+
+                    showScreen();
+                }
+            };
+            
+            menuItem.addMouseListener(ma);
+            
+            AppUI.setSize(menuItem, mWidth, mHeight);
+            AppUI.setFont(menuItem, 20);
+            menuItem.setOpaque(true);
+
+            menuItem.setBackground(brand.getSettingsMenuBackgroundColor());
+            menuItem.setBorder(BorderFactory.createEmptyBorder(0,0,0,0));
+            menuItem.setUI(new MenuItemUI() {
+                public void paint (final Graphics g, final JComponent c) {
+                    final Graphics2D g2d = (Graphics2D) g;
+                    final JMenuItem menuItem = (JMenuItem) c;
+                    String ftext = menuItem.getText();
+ 
+                    g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                    int width = g.getFontMetrics().stringWidth(ftext);
+                    int cHeight = c.getHeight();
+
+                    g.setColor(Color.WHITE);     
+                    g.drawChars(ftext.toCharArray(), 0, ftext.length(), 12, cHeight/2 + 6);
+                }
+            });
+
+            popupMenu.add(menuItem);
+        }
+        
+        AppUI.setMargin(popupMenu, 0);
+        AppUI.noOpaque(popupMenu);
+        AppUI.setHandCursor(popupMenu);
+
+        popupMenu.addPopupMenuListener(new PopupMenuListener() {
+            @Override
+            public void popupMenuWillBecomeVisible(final PopupMenuEvent e) {
+                ps.popupVisible = true;
+            }
+            @Override
+            public void popupMenuWillBecomeInvisible(final PopupMenuEvent e) {
+                AppUI.setBackground(wrpTransfer, savedColor);
+                wrpTransfer.setOpaque(false);
+                wrpTransfer.repaint();
+                transferIcon.setIcon(transferIi);
+                ps.popupVisible = false;
+            }
+            
+            @Override
+            public void popupMenuCanceled(final PopupMenuEvent e) {
+                AppUI.setBackground(wrpTransfer, savedColor);
+                wrpTransfer.setOpaque(false);
+                wrpTransfer.repaint();
+                transferIcon.setIcon(transferIi);
+                ps.popupVisible = false;
+            }
+        });
+
+        wrpTransfer.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) {
+                wrpTransfer.setOpaque(true);
+                AppUI.setBackground(wrpTransfer, brand.getSettingsMenuBackgroundColor());
+
+                wrpTransfer.repaint();              
+                popupMenu.show(wrpTransfer, 0 - mWidth  + wrpTransfer.getWidth(), wrpTransfer.getHeight());
+                
+                //JPanel p = (JPanel) e.getSource();
+                //AppUI.opaque(p);
+                transferIcon.setIcon(transferIiLight);
+                //p.revalidate();
+                //p.repaint();
+                
+            }
+            
+            public void mouseExited(MouseEvent e) {
+                ps.popupVisible = false;             
+                EventQueue.invokeLater(new Runnable() {
+                    public void run(){
+                        try {
+                            Thread.sleep(40);
+                        } catch(InterruptedException ex) {           
+                        }
+                        
+                        if (ps.popupVisible)
+                            return;
+
+                        wrpTransfer.setOpaque(false);
+                        wrpTransfer.repaint();              
+                        popupMenu.setVisible(false);
+                        
+                        //JPanel p = (JPanel) e.getSource();
+                        //AppUI.opaque(p);
+                        transferIcon.setIcon(transferIi);
+                        //p.revalidate();
+                        //p.repaint();
+                    }
+                });
+            }          
+        });
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         
         JPanel wrpRefresh = new JPanel();
         // Refresh
@@ -8405,7 +8904,7 @@ public class AdvancedClient  {
         if (!isSky)
             wrpDeposit.addMouseListener(ma0);
         
-        wrpTransfer.addMouseListener(ma1);
+        //wrpTransfer.addMouseListener(ma1);
         wrpWithdraw.addMouseListener(ma2);
         
         if (!isAdvancedMode()) {
@@ -8446,7 +8945,7 @@ public class AdvancedClient  {
  
             Enumeration<String> enumeration = envelopes.keys();
             ArrayList<String> hlist = Collections.list(enumeration);
-            Collections.sort(hlist);
+            Collections.sort(hlist, Collections.reverseOrder());
 
 
             trs = new String[envelopes.size()][];
@@ -11149,8 +11648,12 @@ public class AdvancedClient  {
             
             Thread t = new Thread(new Runnable() {
                 public void run(){
+                    String memo = ps.typedMemo;
+                    if (!ps.typedReturnAddress.isEmpty() && !ps.typedReturnAddress.equals("None"))
+                        memo += " from " + ps.typedReturnAddress;
+                    
                     sm.transferCoins(ps.srcWallet.getName(), ps.dstWallet.getName(), 
-                        ps.typedAmount, ps.typedMemo, ps.typedRemoteWallet, new SenderCb(), new ReceiverCb());
+                        ps.typedAmount, memo, ps.typedRemoteWallet, new SenderCb(), new ReceiverCb());
                 }
             });
         
