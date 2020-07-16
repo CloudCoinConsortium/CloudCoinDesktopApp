@@ -828,14 +828,41 @@ public class AdvancedClient  {
                 Object o = e.getSource();
                 
                 if (o instanceof JCheckBox) {
+                    sm.cancelSecs();
                     JCheckBox cb = (JCheckBox) o;
+                    if (sm.getWallets().length != 0) {
+                        ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
+                    }
+                    
                     if (cb.isSelected()) {
                         Config.REQUESTED_ADVANCED_VIEW = true;
+                        
+                        //resetState();
+                        if (ps.currentScreen == ProgramState.SCREEN_AGREEMENT)
+                            ps.currentScreen = ProgramState.SCREEN_CREATE_WALLET;
+                        //showScreen();                        
                         //fbutton.enable();
+                        
                     } else {
                         Config.REQUESTED_ADVANCED_VIEW = false;
+                        //resetState();
                         //fbutton.disable();
                     }
+                    
+                    if (sm.getWallets().length != 0) {
+                        if (isAdvancedMode()) {
+                            setActiveWallet(sm.getWallets()[0]);
+                        } else {
+                            setActiveWallet(getPrimaryWallet());
+                        }
+                        
+                        
+                    }
+                    
+                        //System.out.println("w="+ps.currentWallet.getName());
+                        
+                  
+                    
                      
                     AppCore.writeConfig();
                     
@@ -895,7 +922,7 @@ public class AdvancedClient  {
         items[0] = items[1] = items[4] = items[5] = null;
         
         if (!isAdvancedMode()) {
-            items[0] = items[1] = items[2] = items[3] = items[4] = items[5] = items[8] 
+            items[0] = items[1] = items[2] = items[3] = items[4] = items[5] = items[7] = items[8] 
                     = items[9] = null;
         }
         
@@ -1115,6 +1142,7 @@ public class AdvancedClient  {
             } else {
                 setActiveWallet(getPrimaryWallet());
             }
+            //System.out.println("w="+ps.currentWallet.getName());
             ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
         }        
         
@@ -5185,6 +5213,7 @@ public class AdvancedClient  {
                 });
             } else {              
                 ShowCoins sc = new ShowCoins(rpath, wl);
+                sm.addSc(sc);
                 sc.launch(new CallbackInterface() {
                     public void callback(Object o) {
                         ShowCoinsResult scresult = (ShowCoinsResult) o;

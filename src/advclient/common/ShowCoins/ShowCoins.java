@@ -58,6 +58,9 @@ public class ShowCoins extends Servant {
         String fullPath = AppCore.getUserDir(folder, user);
 
         CloudCoin cc;
+        
+        if (isCancelled())
+            return;
 
         File dirObj = new File(fullPath);
         if (dirObj.listFiles() == null) {
@@ -86,14 +89,10 @@ public class ShowCoins extends Servant {
             }
             
             cc = new CloudCoin(Config.DEFAULT_NN, sn);
-/*          
-            try {
-                cc = new CloudCoin(file.toString());
-            } catch (JSONException e) {
-                logger.error(ltag, "Failed to parse JSON: " + e.getMessage());
-                continue;
+            if (isCancelled()) {
+                logger.error(ltag, "ShowCoins was cancelled");
+                return;
             }
-*/
 
             switch (cc.getDenomination()) {
                 case 1:

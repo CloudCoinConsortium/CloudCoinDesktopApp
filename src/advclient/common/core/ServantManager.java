@@ -73,6 +73,8 @@ public class ServantManager {
     private Hashtable<String, Wallet> wallets;
     
     ArrayList<ShowEnvelopeCoins> secs;
+    ArrayList<ShowCoins> scs;
+    
     
     public ServantManager(GLogger logger) {
         this.logger = logger;
@@ -1312,15 +1314,24 @@ public class ServantManager {
     
     public void initIsolatedSec() {
         secs = new ArrayList<ShowEnvelopeCoins>();
+        scs = new ArrayList<ShowCoins>();
     }
     
     public void addSec(ShowEnvelopeCoins sec) {
         secs.add(sec);
     }
     
+    public void addSc(ShowCoins sc) {
+        scs.add(sc);
+    }
+    
     public void cancelSecs() {
         for (ShowEnvelopeCoins sec : secs)
             sec.cancelForce();
+        
+        for (ShowCoins sc : scs) {
+            sc.cancelForce();
+        }
         
         initIsolatedSec();
     }
