@@ -101,7 +101,7 @@ public class Brand {
        
         String[] vals = {
             "terms","logo","logoText","backgroundImage","icon","depositIcon",
-            "withdrawIcon","transferIcon","depositIconHover","withdrawIconHover","transferIconHover",
+            "withdrawIcon","transferIcon","wsettingsIcon", "depositIconHover","withdrawIconHover","transferIconHover", "wsettingsIconHover",
             "supportIcon","settingsIcon","coinsIcon","supportHtmlIcon","supportTimeIcon","supportPhoneIcon",
             "supportEmailIcon","supportPortalIcon","supportTermsIcon", "supportVideoIcon", "walletLocalIcon","walletSkyIcon","vaultIcon",
             "vaultIconActive","lockIcon","lockIconActive","cloudIcon","cloudIconActive","coinsInventoryIcon",
@@ -619,6 +619,10 @@ public class Brand {
         if (p != null)
             datamap.get("transferIcon").name = p;
         
+        p = getProperty(ms, "wsettingsicon");
+        if (p != null)
+            datamap.get("wsettingsIcon").name = p;
+        
         p = getProperty(ms, "depositiconhover");
         if (p != null)
             datamap.get("depositIconHover").name = p;
@@ -630,6 +634,10 @@ public class Brand {
         p = getProperty(ms, "withdrawiconhover");
         if (p != null)
             datamap.get("withdrawIconHover").name = p;
+        
+        p = getProperty(ms, "wsettingsiconhover");
+        if (p != null)
+            datamap.get("wsettingsIconHover").name = p;
         
         p = getProperty(ms, "supporticon");
         if (p != null)
@@ -1273,6 +1281,16 @@ public class Brand {
     public URL getImgTransferIconHover() {
         return getAssetPathByName("transferIconHover");
     }
+    
+    public URL getImgWsettingsIcon() {
+        return getAssetPathByName("wsettingsIcon");
+    }
+    
+    public URL getImgWsettingsIconHover() {
+        return getAssetPathByName("wsettingsIconHover");
+    }
+    
+    
     public URL getImgCoinsIcon() {
         return getAssetPathByName("coinsIcon");
     }

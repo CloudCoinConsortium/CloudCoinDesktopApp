@@ -650,6 +650,31 @@ public class AppCore {
         return rv;
     }
 
+    public static String[] getDirsInDir(String directory) {
+        String[] rv;
+        int c = 0;
+
+        File dirObj = new File(directory);
+        for (File file: dirObj.listFiles()) {
+            if (!file.isDirectory())
+                continue;
+            
+            c++;
+        }
+        
+        rv = new String[c];
+        c = 0;
+        for (File file: dirObj.listFiles()) {
+            if (!file.isDirectory())
+                continue;
+            
+            rv[c++] = file.getAbsolutePath();
+        }
+        
+        return rv;       
+    }
+    
+    
     static public int getFilesCount(String dir, String user) {
         String path = getUserDir(dir, user);
         File rFile;

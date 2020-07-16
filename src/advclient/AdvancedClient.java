@@ -74,7 +74,7 @@ import org.json.JSONObject;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "3.0.32";
+    public static String version = "3.0.34";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -892,11 +892,11 @@ public class AdvancedClient  {
             "Delete a Wallet", "Show Folders", "Echo RAIDA", "Settings", "Cloud Bank", "Recovery"};
         
         
-        
+        items[0] = items[1] = items[4] = items[5] = null;
         
         if (!isAdvancedMode()) {
             items[0] = items[1] = items[2] = items[3] = items[4] = items[5] = items[8] 
-                    = items[9] = items[10] = items[11] = null;
+                    = items[9] = null;
         }
         
         for (int i = 0; i < items.length; i++) {
@@ -4514,15 +4514,24 @@ public class AdvancedClient  {
                     }                    
                 } else {
                     if (!AppCore.moveFolderToTrash(ps.srcWallet.getName())) {
-                        ps.errText = "Failed to delete Wallet";
-                        showScreen();
+                        
+                        EventQueue.invokeLater(new Runnable() {         
+                             public void run() {
+                                ps.errText = "Failed to delete Wallet";
+                                showScreen();
+                             }
+                        });
                         return;
                     }
                 }
                 
-                sm.initWallets();                
-                ps.currentScreen = ProgramState.SCREEN_DELETE_WALLET_DONE;
-                showScreen();
+                EventQueue.invokeLater(new Runnable() {         
+                    public void run() {
+                        sm.initWallets();                
+                        ps.currentScreen = ProgramState.SCREEN_DELETE_WALLET_DONE;
+                        showScreen();
+                    }
+                });
             }
         }, y, gridbag);   
     }
@@ -6694,8 +6703,7 @@ public class AdvancedClient  {
     
     public void showFoldersScreen() {  
         int y = 0;
-        JLabel value;
-        JPanel subInnerCore = getPanel("Folders");                
+        JPanel subInnerCore = getPanel("Folders. " + ps.currentWallet.getName());                
         //GridBagLayout gridbag = new GridBagLayout();
         //subInnerCore.setLayout(gridbag);
         
@@ -6703,13 +6711,25 @@ public class AdvancedClient  {
         GridBagLayout gridbagjp = new GridBagLayout();
         subInnerCore.setLayout(gridbagjp);
         
+        GridBagConstraints c = new GridBagConstraints();
+        c.anchor = GridBagConstraints.NORTH;
+        c.insets = new Insets(20, 0, 0, 10);    
+        c.gridy = 0;
+        c.gridx = 0;
+        
+        
+        
+        
         
         JPanel jp = new JPanel();
         GridBagLayout gridbag = new GridBagLayout();
+
         jp.setLayout(gridbag);
+        gridbagjp.setConstraints(jp, c);
         AppUI.noOpaque(jp);
         
       
+        /*
         for (int i = 0; i < wallets.length; i++) {
             if (wallets[i].isSkyWallet()) 
                 continue;
@@ -6735,9 +6755,36 @@ public class AdvancedClient  {
             y++;
  
         }
+        */
         
         
-         JScrollBar scrollBar = new JScrollBar(JScrollBar.VERTICAL) {
+        //JLabel sl = new JLabel(ps.currentWallet.getName());
+        final String fdir = AppCore.getRootUserDir(ps.currentWallet.getName());
+        String[] dirs = AppCore.getDirsInDir(fdir);
+        for (int i = 0; i < dirs.length; i++) {
+            JLabel link = AppUI.getHyperLink(dirs[i], "javascript:void(0); return false", 20);
+            final String fpath = dirs[i];
+            link.addMouseListener(new MouseAdapter() {
+                public void mouseReleased(MouseEvent e) {
+                    if (!Desktop.isDesktopSupported())
+                        return;
+                    try {
+                        Desktop.getDesktop().open(new File(fpath));
+                    } catch (IOException ie) {
+                        wl.error(ltag, "Failed to open browser: " + ie.getMessage());
+                    }
+                }
+            });
+            File f = new File(dirs[i]);
+            JLabel name = new JLabel(f.getName());
+            AppUI.getGBRow(jp, name, link, y, gridbag);
+            AppUI.setColor(link, brand.getHyperlinkColor());
+            AppUI.underLine(link);
+            y++;
+        }
+        
+        
+        JScrollBar scrollBar = new JScrollBar(JScrollBar.VERTICAL) {
             @Override
             public boolean isVisible() {
                 return true;
@@ -6784,7 +6831,10 @@ public class AdvancedClient  {
                 this.thumbColor = brand.getScrollbarThumbColor();
             }
         });
-        AppUI.setSize(scrollPane, 800, 460);
+        AppUI.setSize(scrollPane, 800, 410);
+        
+               // gridbag.setConstraints(jp, c);
+        gridbagjp.setConstraints(scrollPane, c);
       
         AppUI.getGBRow(subInnerCore, null, scrollPane, y, gridbagjp);
         y++; 
@@ -7109,24 +7159,26 @@ public class AdvancedClient  {
     public void showListSerialsScreen() {
         int y = 0;
         JLabel fname;
-        MyTextField walletName = null;
 
-        JPanel subInnerCore = getPanel("List Serials");                
+        JPanel subInnerCore = getPanel("List Serials " + ps.currentWallet.getName());                
         GridBagLayout gridbag = new GridBagLayout();
         subInnerCore.setLayout(gridbag);
 
-        final optRv rv = setOptionsForWallets(false, false);
+        //final optRv rv = setOptionsForWallets(false, false);
         fname = new JLabel("List Serials will show you Serial Numbers of your CloudCoins");     
         AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
         y++;     
         
+        /*
         fname = new JLabel("From Wallet*");
         final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "Make Selection", rv.options);
         cboxfrom.setDefault(null);
         AppUI.getGBRow(subInnerCore, fname, cboxfrom.getComboBox(), y, gridbag);
         cboxfrom.addOption(AppUI.getLocalFolderOption());
         y++;
+        */
         
+        /*
         final JLabel lfText = new JLabel("Local folder*");
         final JFileChooser chooser = new JFileChooser();
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
@@ -7171,6 +7223,7 @@ public class AdvancedClient  {
             }
         });
 
+        */
         AppUI.GBPad(subInnerCore, y, gridbag);        
         y++;
        
@@ -7181,6 +7234,7 @@ public class AdvancedClient  {
             }
         }, new ActionListener() {
             public void actionPerformed(ActionEvent e) {              
+                /*
                 int srcIdx = cboxfrom.getSelectedIndex() - 1;   
                 if (srcIdx == rv.idxs.length) {
                     ps.currentScreen = ProgramState.SCREEN_LIST_SERIALS_DOING;
@@ -7195,8 +7249,9 @@ public class AdvancedClient  {
                 }
                 
                 srcIdx = rv.idxs[srcIdx];
-
-                Wallet srcWallet = wallets[srcIdx];
+*/
+                //Wallet srcWallet = wallets[srcIdx];
+                Wallet srcWallet = ps.currentWallet;
                 ps.srcWallet = srcWallet;            
                 
                 ps.currentScreen = ProgramState.SCREEN_LIST_SERIALS_DOING;
@@ -7625,10 +7680,10 @@ public class AdvancedClient  {
         int y = 0;
         JLabel fname;
 
-        JPanel subInnerCore = getPanel("Delete Wallet");                
+        JPanel subInnerCore = getPanel("Delete Wallet " + ps.currentWallet.getName());                
         GridBagLayout gridbag = new GridBagLayout();
         subInnerCore.setLayout(gridbag);
-
+/*
         final optRv rv = setOptionsForWalletsCommon(false, true, true, null);
         if (rv.idxs.length == 0) {
             fname = AppUI.wrapDiv("You have no empty wallets to delete");
@@ -7637,18 +7692,24 @@ public class AdvancedClient  {
             AppUI.GBPad(subInnerCore, y, gridbag);   
             return;
         }
-
-        
-        
-        fname = new JLabel("You can only delete wallets that are empty");
-        AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
-        y++;
+*/
+        if (ps.currentWallet.getTotal() != 0) {        
+            fname = new JLabel("You can only delete wallets that are empty");
+            AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
+            y++;
+             
+            AppUI.GBPad(subInnerCore, y, gridbag);        
+            y++;
+            return;
+        }
          
+        /*
         fname = new JLabel("Wallet");
         final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "Make Selection", rv.options);
         cboxfrom.setDefault(null);
         AppUI.getGBRow(subInnerCore, fname, cboxfrom.getComboBox(), y, gridbag);
         y++; 
+        */
         
 
  
@@ -7663,6 +7724,7 @@ public class AdvancedClient  {
             }
         }, new ActionListener() {
             public void actionPerformed(ActionEvent e) {              
+                /*
                 int srcIdx = cboxfrom.getSelectedIndex() - 1;              
                 if (srcIdx < 0 || srcIdx >= rv.idxs.length) {
                     ps.errText = "Please select Wallet";
@@ -7682,7 +7744,8 @@ public class AdvancedClient  {
                     }
                 }
 
-                
+                */
+                Wallet srcWallet = ps.currentWallet;
                 ps.srcWallet = srcWallet;
                 ps.currentScreen = ProgramState.SCREEN_CONFIRM_DELETE_WALLET;
                 showScreen();
@@ -7693,11 +7756,20 @@ public class AdvancedClient  {
     public void showBackupScreen() {
         int y = 0;
         JLabel fname;
-
-        JPanel subInnerCore = getPanel("Backup");                
+        
+        JPanel subInnerCore = getPanel("Backup " + ps.currentWallet.getName());                
         GridBagLayout gridbag = new GridBagLayout();
         subInnerCore.setLayout(gridbag);
 
+        if (ps.currentWallet.getTotal() == 0) {
+            fname = new JLabel("You have no coins to backup");   
+            AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
+            y++;
+            AppUI.GBPad(subInnerCore, y, gridbag); 
+            return;
+        }
+
+/*
         final optRv rv = setOptionsForWallets(false, false);
         if (rv.idxs.length == 0) {
             fname = new JLabel("You have no coins to backup");   
@@ -7706,24 +7778,26 @@ public class AdvancedClient  {
             AppUI.GBPad(subInnerCore, y, gridbag); 
             return;
         }
-        
+*/      
         fname = new JLabel("Backup will allow you to create Backup of your CloudCoins");   
         AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
         y++; 
-        
+        /*
         fname = new JLabel("Wallet*");
         final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "Make Selection", rv.options);
         cboxfrom.addOption(AppUI.getBackupKeysOption());
         AppUI.getGBRow(subInnerCore, fname, cboxfrom.getComboBox(), y, gridbag);
         y++; 
-        
+        */
         final JLabel spText = new JLabel("Password*");
         final MyTextField passwordSrc = new MyTextField("Wallet Password", true);
-        AppUI.getGBRow(subInnerCore, spText, passwordSrc.getTextField(), y, gridbag);
-        y++; 
+        if (ps.currentWallet.isEncrypted()) {
+            AppUI.getGBRow(subInnerCore, spText, passwordSrc.getTextField(), y, gridbag);
+            y++; 
+        }
 
-        passwordSrc.getTextField().setVisible(false);
-        spText.setVisible(false);
+        //passwordSrc.getTextField().setVisible(false);
+        //spText.setVisible(false);
         
         fname = new JLabel("Tag");
         final MyTextField memo = new MyTextField("Optional", false);
@@ -7732,7 +7806,8 @@ public class AdvancedClient  {
         AppUI.getGBRow(subInnerCore, fname, memo.getTextField(), y, gridbag);
         y++;
 
-              
+          
+        /*
         cboxfrom.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 int srcIdx = cboxfrom.getSelectedIndex() - 1;              
@@ -7756,6 +7831,7 @@ public class AdvancedClient  {
                 }
             }
         });
+        */
         
         fname = new JLabel("Backup Folder*");
         final JFileChooser chooser = new JFileChooser();
@@ -7788,6 +7864,7 @@ public class AdvancedClient  {
         }, new ActionListener() {
             public void actionPerformed(ActionEvent e) { 
                 ps.typedMemo = memo.getText();
+                /*
                 int srcIdx = cboxfrom.getSelectedIndex() - 1;
                 if (srcIdx == rv.idxs.length) {           
                     if (ps.chosenFile.isEmpty()) {
@@ -7826,8 +7903,11 @@ public class AdvancedClient  {
                 
 
                 srcIdx = rv.idxs[srcIdx];
+                
    
                 Wallet srcWallet = wallets[srcIdx];
+                */
+                Wallet srcWallet = ps.currentWallet;
                 if (srcWallet.isEncrypted()) {
                     if (passwordSrc.getText().isEmpty()) {
                         ps.errText = "Password is empty";
@@ -8390,8 +8470,9 @@ public class AdvancedClient  {
         AppUI.noOpaque(paddingPanel);
         bpanel.add(paddingPanel);
         
-        final JLabel depositIcon, transferIcon, withdrawIcon, refreshIcon;
-        final ImageIcon depositIi, transferIi, withdrawIi, refreshIi, depositIiLight, transferIiLight, withdrawIiLight, refreshIiLight;
+        final JLabel depositIcon, transferIcon, withdrawIcon, refreshIcon, wsettingsIcon;
+        final ImageIcon depositIi, transferIi, withdrawIi, refreshIi, wsettingsIi, 
+                depositIiLight, transferIiLight, withdrawIiLight, refreshIiLight, wsettingsIiLight;
         ImageIcon ii;
         try {
             Image img;
@@ -8407,6 +8488,10 @@ public class AdvancedClient  {
             img = brand.scaleMainMenuIcon(ImageIO.read(brand.getImgTransferIcon()));
             transferIi = new ImageIcon(img);
             transferIcon = new JLabel(new ImageIcon(img));
+            
+            img = brand.scaleMainMenuIcon(ImageIO.read(brand.getImgWsettingsIcon()));
+            wsettingsIi = new ImageIcon(img);
+            wsettingsIcon = new JLabel(new ImageIcon(img));
             
             if (!isAdvancedMode()) {
                 img = brand.scaleMainMenuIcon(ImageIO.read(brand.getImgRefreshIcon()));
@@ -8430,6 +8515,9 @@ public class AdvancedClient  {
 
             img = brand.scaleMainMenuIcon(ImageIO.read(brand.getImgRefreshIconHover()));
             refreshIiLight = new ImageIcon(img);
+            
+            img = brand.scaleMainMenuIcon(ImageIO.read(brand.getImgWsettingsIconHover()));
+            wsettingsIiLight = new ImageIcon(img);
            
             
         } catch (Exception ex) {
@@ -8732,14 +8820,183 @@ public class AdvancedClient  {
         
         
         
+        if (isAdvancedMode()) {
+            // Gears
+                
+            JPanel wrpGears = new JPanel();
+            AppUI.setBoxLayout(wrpGears, false);
+            AppUI.setSize(wrpGears, 44, 56);
+            AppUI.setBackground(wrpGears, brand.getTopMenuHoverColor());
+            AppUI.noOpaque(wrpGears);
+            
+            wrpGears.add(AppUI.vr(8));            
+            AppUI.setHandCursor(wrpGears);
+            wsettingsIcon.setIcon(wsettingsIi);                    
+            wrpGears.add(wsettingsIcon);
+            wrpGears.add(AppUI.vr(8));   
+                        
+            c.insets = new Insets(0, 2, 0, 0);
+            c.anchor = GridBagConstraints.NORTH;
+            gridbag.setConstraints(wrpGears, c);
+            wrp.add(wrpGears);
         
+            // Do stuff popup menu
+            final int mWidth2 = bwidth + 10;
+            final int mHeight2 = 42;
+            final JPopupMenu popupMenu2 = new JPopupMenu() {
+                @Override
+                public void paintComponent(final Graphics g) {
+                    g.setColor(brand.getSettingsMenuBackgroundColor());
+                    g.fillRect(0, 0, getWidth(), getHeight());
+                } 
+            };
+ 
+            String[] items2 = {"Backup", "List Serials", "Delete Wallet", "Show Folders"};
+            if (ps.currentWallet.isSkyWallet()) {
+                items2[0] = items2[1] = items2[3] = null;
+            }
+            
+            for (int i = 0; i < items.length; i++) {
+                if (items2[i] == null)
+                    continue;
+                
+                JMenuItem menuItem = new JMenuItem(items2[i]);
+                menuItem.setActionCommand("" + i);
+                AppUI.setHandCursor(menuItem);
+    
+                MouseAdapter ma = new MouseAdapter() {
+                    public void mouseEntered(MouseEvent evt) {
+                        ps.popupVisible = true;
+                        JMenuItem jMenuItem = (JMenuItem) evt.getSource();
+                        jMenuItem.setBackground(brand.getSettingsMenuHoverColor());
+                    }
+                
+                    public void mouseExited(MouseEvent evt) {
+                        JMenuItem jMenuItem = (JMenuItem) evt.getSource();
+                        jMenuItem.setBackground(brand.getSettingsMenuBackgroundColor());
+                    
+                        ps.popupVisible = false;             
+                        EventQueue.invokeLater(new Runnable() {
+                            public void run(){
+                                try {
+                                    Thread.sleep(40);
+                                } catch(InterruptedException ex) {           
+                                }
+                        
+                                if (ps.popupVisible)
+                                    return;
+
+                                wrpGears.setOpaque(false);
+                                wrpGears.repaint();              
+                                popupMenu2.setVisible(false);
+                            }
+                        });                   
+                    }
+                
+                    public void mouseReleased(MouseEvent evt) {
+                        JMenuItem jMenuItem = (JMenuItem) evt.getSource();
+                        popupMenu2.setVisible(false);
+
+                        String action = jMenuItem.getActionCommand();
+                        if (action.equals("0")) {
+                            ps.currentScreen = ProgramState.SCREEN_BACKUP;
+                        } else if (action.equals("1")) {
+                            ps.currentScreen = ProgramState.SCREEN_LIST_SERIALS;
+                        } else if (action.equals("2")) {
+                            ps.currentScreen = ProgramState.SCREEN_DELETE_WALLET;
+                        } else if (action.equals("3")) {
+                            ps.currentScreen = ProgramState.SCREEN_SHOW_FOLDERS;
+                        }
+
+                        showScreen();
+                    }
+                };
+            
+                menuItem.addMouseListener(ma);
+            
+                AppUI.setSize(menuItem, mWidth2, mHeight2);
+                AppUI.setFont(menuItem, 20);
+                menuItem.setOpaque(true);
+
+                menuItem.setBackground(brand.getSettingsMenuBackgroundColor());
+                menuItem.setBorder(BorderFactory.createEmptyBorder(0,0,0,0));
+                menuItem.setUI(new MenuItemUI() {
+                    public void paint (final Graphics g, final JComponent c) {
+                        final Graphics2D g2d = (Graphics2D) g;
+                        final JMenuItem menuItem = (JMenuItem) c;
+                        String ftext = menuItem.getText();
+ 
+                        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                        int cHeight = c.getHeight();
+
+                        g.setColor(Color.WHITE);     
+                        g.drawChars(ftext.toCharArray(), 0, ftext.length(), 12, cHeight/2 + 6);
+                    }
+                });
+
+                popupMenu2.add(menuItem);
+            }
         
+            AppUI.setMargin(popupMenu2, 0);
+            AppUI.noOpaque(popupMenu2);
+            AppUI.setHandCursor(popupMenu2);
+
+            popupMenu2.addPopupMenuListener(new PopupMenuListener() {
+                @Override
+                public void popupMenuWillBecomeVisible(final PopupMenuEvent e) {
+                    ps.popupVisible = true;
+                }
+                @Override
+                public void popupMenuWillBecomeInvisible(final PopupMenuEvent e) {
+                    AppUI.setBackground(wrpTransfer, savedColor);
+                    wrpGears.setOpaque(false);
+                    wrpGears.repaint();
+                    wsettingsIcon.setIcon(wsettingsIi);   
+                    ps.popupVisible = false;
+                }
+            
+                @Override
+                public void popupMenuCanceled(final PopupMenuEvent e) {
+                    AppUI.setBackground(wrpTransfer, savedColor);
+                    wrpGears.setOpaque(false);
+                    wrpGears.repaint();
+                    wsettingsIcon.setIcon(wsettingsIi);   
+                    ps.popupVisible = false;
+                }
+            });
+
+            wrpGears.addMouseListener(new MouseAdapter() {
+                public void mouseEntered(MouseEvent e) {
+                    wrpGears.setOpaque(true);
+                    AppUI.setBackground(wrpGears, brand.getSettingsMenuBackgroundColor());
+
+                    wsettingsIcon.setIcon(wsettingsIiLight);    
+                    wrpGears.repaint();              
+                    popupMenu2.show(wrpGears, 0 - mWidth2  + wrpGears.getWidth(), wrpGears.getHeight());
+                }
+            
+                public void mouseExited(MouseEvent e) {
+                    ps.popupVisible = false;             
+                    EventQueue.invokeLater(new Runnable() {
+                        public void run(){
+                            try {
+                                Thread.sleep(40);
+                            } catch(InterruptedException ex) {           
+                            }
+                        
+                            if (ps.popupVisible)
+                                return;
+
+                            wsettingsIcon.setIcon(wsettingsIi);    
+                            wrpGears.setOpaque(false);
+                            wrpGears.repaint();              
+                            popupMenu2.setVisible(false);
+                        }
+                    });
+                }          
+            });
         
-        
-        
-        
-        
-        
+        }
         
         
         
@@ -11270,14 +11527,19 @@ public class AdvancedClient  {
                 return;
             }
 
-            if (er.status == ExporterResult.STATUS_FINISHED) {              
+            if (er.status == ExporterResult.STATUS_FINISHED) {                    
+                String filename = er.exportedFileNames.get(0);
                 if (ps.srcWallet.isEncrypted()) {
+                    if (!AppCore.zipFile(filename)) {
+                        wl.error(ltag, "Failed to zip");
+                        ps.errText = "Backup Exported, but zipping failed";
+                    }
+                    
                     wl.debug(ltag, "Ecrypting back");
                     sm.startVaulterService(new VaulterCb());
                     return;
                 }
                 
-                String filename = er.exportedFileNames.get(0);
                 if (!AppCore.zipFile(filename)) {
                     wl.error(ltag, "Failed to zip");
                     ps.errText = "Backup Exported, but zipping failed";

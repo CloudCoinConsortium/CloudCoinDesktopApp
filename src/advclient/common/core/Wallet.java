@@ -188,22 +188,19 @@ public class Wallet implements Comparable<Wallet> {
         
         String[] parts = data.split("\\r?\\n");
         String[][] rv = new String[parts.length][];
-        
+
         for (int i = 0; i < parts.length; i++) {
-            rv[i] = parts[i].split(",");
-            if (rv[i].length != 6) {
+            int idx = parts.length - i - 1;
+            rv[idx] = parts[i].split(",");
+            if (rv[idx].length != 6) {
                 logger.error(ltag, "Transaction parse error: " + parts[i]);
                 return null;
             }
             
-            rv[i][3] = rv[i][3].replace("-", "");
+            rv[idx][3] = rv[idx][3].replace("-", "");
         }
 
-        List list = Arrays.asList(rv);
-        Collections.reverse(list);
-        String[][] rv2 = (String[][]) list.toArray();
-       
-        return rv2;            
+        return rv;            
     }
     
     public void appendTransaction(String memo, int amount, String receiptId) {
@@ -225,9 +222,10 @@ public class Wallet implements Comparable<Wallet> {
         String rMemo = memo.replaceAll("\r\n", " ").replaceAll("\n", " ").replaceAll(",", " ");
         //String sAmount = Integer.toString(amount);
         
+        logger.debug(ltag, "Getting transactions");
         int rest = 0;
         String[][] tr = getTransactions();
-        if (tr != null) {        
+        if (tr != null) {   
             //String[] last = tr[tr.length - 1];
             String[] first = tr[0];
             String rRest = first[4];
@@ -240,6 +238,7 @@ public class Wallet implements Comparable<Wallet> {
         }
 
         String result = "";
+        
         if (rest != getTotal() && !correctionAdded) {
             int adjusted = getTotal() - rest;
             
