@@ -89,6 +89,9 @@ public class ProgramState {
     final public static int SCREEN_FREE_COIN = 70;
     final public static int SCREEN_GET_PASSWORD = 71;
     final public static int SCREEN_TRANSFER_ANOTHER = 72;
+    final public static int SCREEN_HEALTH_CHECK = 73;
+    final public static int SCREEN_HEALTH_CHECKING = 74;
+    final public static int SCREEN_HEALTH_CHECK_DONE = 75;
     
     
     final static int CB_STATE_INIT = 1;
@@ -223,6 +226,8 @@ public class ProgramState {
     CloudCoin chosenCoinCC;
     
     int typedReturnIdx;
+    
+    int hcValid, hcFracked, hcCounterfeit;
     
     public ProgramState() {
         currentScreen = SCREEN_AGREEMENT;

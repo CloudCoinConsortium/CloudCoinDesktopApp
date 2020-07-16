@@ -74,7 +74,7 @@ import org.json.JSONObject;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "3.0.34";
+    public static String version = "3.0.35";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -1369,6 +1369,15 @@ public class AdvancedClient  {
             case ProgramState.SCREEN_TRANSFER_ANOTHER:
                 showTransferAnotherScreen();
                 break;
+            case ProgramState.SCREEN_HEALTH_CHECK:
+                showHealthCheckScreen();
+                break;
+            case ProgramState.SCREEN_HEALTH_CHECKING:
+                showHealthCheckingScreen();
+                break;
+            case ProgramState.SCREEN_HEALTH_CHECK_DONE:
+                showHealthCheckDoneScreen();
+                break;
         }
         
         if (lwrapperPanel != null) {
@@ -1433,6 +1442,21 @@ public class AdvancedClient  {
         String tc = AppCore.formatNumber(totalCoins);
         
         pbarText.setText("Deposited " + stc + " / " + tc + " CloudCoins");
+        pbarText.repaint();
+        
+    }
+    
+    private void setRAIDAHCProgressCoins(int raidaProcessed, int totalCoinsProcessed, int totalCoins) {
+        pbar.setVisible(true);
+        pbar.setValue(raidaProcessed);
+        
+        if (totalCoins == 0)
+            return;
+
+        String stc = AppCore.formatNumber(totalCoinsProcessed);
+        String tc = AppCore.formatNumber(totalCoins);
+        
+        pbarText.setText("Checked " + stc + " / " + tc + " CloudCoins");
         pbarText.repaint();
         
     }
@@ -2802,6 +2826,132 @@ public class AdvancedClient  {
         t.start();
     }
     
+    public void showHealthCheckingScreen() {
+        JPanel subInnerCore = getPanel("Checking in Progress");
+
+        JPanel ct = new JPanel();
+        AppUI.noOpaque(ct);
+        subInnerCore.add(ct);
+        
+        GridBagLayout gridbag = new GridBagLayout();
+        GridBagConstraints c = new GridBagConstraints();      
+        ct.setLayout(gridbag);
+        
+        pbarText = new JLabel("");
+        AppUI.setCommonFont(pbarText);
+        c.insets = new Insets(40, 20, 4, 0);
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = 1;
+        gridbag.setConstraints(pbarText, c);
+        ct.add(pbarText);
+        
+        // ProgressBar
+        pbar = new JProgressBar();
+        pbar.setStringPainted(true);
+        AppUI.setMargin(pbar, 0);
+        AppUI.setSize(pbar, (int) (tw / 2.6f) , 50);
+        pbar.setMinimum(0);
+        pbar.setMaximum(24);
+        pbar.setValue(0);
+        pbar.setUI(new FancyProgressBar());
+        AppUI.noOpaque(pbar);
+        
+        c.insets = new Insets(20, 20, 4, 0);
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = 2;
+        gridbag.setConstraints(pbar, c);
+        ct.add(pbar);
+        
+        subInnerCore.add(AppUI.hr(120));
+        
+        Thread t = new Thread(new Runnable() {
+            public void run(){
+                pbar.setVisible(false);
+                ps.isEchoFinished = false;
+                setRAIDAEchoProgressCoins(0);                
+                sm.startEchoService(new EchoCb());
+                while (!ps.isEchoFinished) {
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException e) {}
+
+                }
+                
+                if (!sm.isRAIDAOK()) {
+                    ps.errText = "RAIDA cannot be contacted. "
+                            + "This is usually caused by company routers blocking outgoing traffic. "
+                            + "Please Echo RAIDA and try again.";
+                    ps.isEchoFinished = false;
+                    ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
+                    showScreen();
+                    return;
+                }
+
+                pbarText.setText("Querying coins...");
+                pbarText.repaint();
+
+                ps.currentWallet.setPassword(ps.typedPassword);
+                sm.setActiveWalletObj(ps.currentWallet);                
+                sm.startHealthAuthenticatorService(ps.currentWallet, new CallbackInterface() {
+                    public void callback(Object result) {
+                        wl.debug(ltag, "Authenticator finished");
+                       
+                
+            
+                        final Object fresult = result;
+	
+                        final AuthenticatorResult ar = (AuthenticatorResult) fresult;
+                        if (ar.status == AuthenticatorResult.STATUS_ERROR) {
+                            EventQueue.invokeLater(new Runnable() {         
+                                public void run() {
+                                    if (!ar.errText.isEmpty())
+                                        ps.errText = "<html><div style='text-align:center; width: 520px'>" + ar.errText + "</div></html>";
+                                    else
+                                        ps.errText = "Failed to Check Coins";
+                                
+                                    ps.currentScreen = ProgramState.SCREEN_HEALTH_CHECK_DONE;
+                                    showScreen();
+                                }
+                            });
+                            
+                            if (ps.currentWallet.isEncrypted()) {
+                                wl.debug(ltag, "Ecrypting back");
+                                sm.startVaulterService(new VaulterCb());
+                            }
+                            
+                            
+                            return;
+                        } else if (ar.status == AuthenticatorResult.STATUS_FINISHED) {
+                            //sm.startGraderService(new GraderCb(), ps.duplicates, null, null);
+                            ps.hcFracked = ar.hcFracked;
+                            ps.hcCounterfeit = ar.hcCounterfeit;
+                            ps.hcValid = ar.hcValid;
+                            EventQueue.invokeLater(new Runnable() {         
+                                public void run() {
+                                    ps.currentScreen = ProgramState.SCREEN_HEALTH_CHECK_DONE;
+                                    showScreen();
+                                }
+                            });
+                            
+                            if (ps.currentWallet.isEncrypted()) {
+                                wl.debug(ltag, "Ecrypting back");
+                                sm.startVaulterService(new VaulterCb());
+                            }
+                            
+                            ps.currentWallet.setNotUpdated();
+                            return;
+                        } 
+                        
+                        setRAIDAHCProgressCoins(ar.totalRAIDAProcessed, ar.totalCoinsProcessed, ar.totalCoins);
+                    }
+                });
+            }
+        });
+        
+        t.start();
+        
+    }
+    
     public void showImportingScreen() {
         JPanel subInnerCore = getPanel("Deposit in Progress");
 
@@ -3272,6 +3422,70 @@ public class AdvancedClient  {
         }, y, gridbag);      
     }
     
+    public void showHealthCheckDoneScreen() {   
+        boolean isError = !ps.errText.equals("");
+        JPanel subInnerCore;
+        
+        if (isError) {
+            subInnerCore = getPanel("Error");
+            resetState();
+            return;
+        }
+             
+        int y = 0;
+        JLabel fname, value;
+
+        subInnerCore = getPanel("Health Check Complete");                
+        GridBagLayout gridbag = new GridBagLayout();
+        subInnerCore.setLayout(gridbag);
+      
+        String totalBankValue = AppCore.formatNumber(ps.hcValid);
+        String totalFailedValue = AppCore.formatNumber(ps.hcCounterfeit);
+        String totalFrackedValue = AppCore.formatNumber(ps.hcFracked);
+
+        
+        /*
+        fname = AppUI.wrapDiv("Deposited <b>" +  total +  " CloudCoins</b> to <b>" + ps.dstWallet.getName() + " </b>");  
+        AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
+        y++;     
+        */
+        
+        fname = new JLabel("Total Authentic Coins:");
+        value = new JLabel(totalBankValue);
+        AppUI.getGBRow(subInnerCore, fname, value, y, gridbag);
+        y++; 
+        
+        fname = new JLabel("Total Fracked Coins (moved to the Fracked folder):");
+        value = new JLabel(totalFrackedValue);
+        AppUI.getGBRow(subInnerCore, fname, value, y, gridbag);
+        y++; 
+        
+        fname = new JLabel("Total Counterfeit Coins (deleted from the Wallet):");
+        value = new JLabel(totalFailedValue);
+        AppUI.getGBRow(subInnerCore, fname, value, y, gridbag);
+        y++; 
+
+        AppUI.GBPad(subInnerCore, y, gridbag);        
+        y++;
+        
+
+        AppUI.getTwoButtonPanel(subInnerCore, "", "Continue", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                resetState(true);
+                ps.currentScreen = ProgramState.SCREEN_DEPOSIT;
+                showScreen();
+            }
+        },  new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                setActiveWallet(ps.currentWallet);
+                ps.sendType = 0;
+                ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
+                //ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                showScreen();
+            }
+        }, y, gridbag);
+
+    }
     
     public void showImportDoneScreen() {   
         boolean isError = !ps.errText.equals("");
@@ -4161,8 +4375,7 @@ public class AdvancedClient  {
         GridBagLayout gridbag = new GridBagLayout();
         subInnerCore.setLayout(gridbag);
         
-        String txt = "Your Wallet <b>" + ps.srcWallet.getName() + "</b> has been deleted.";
-        
+        String txt = "Your Wallet <b>" + ps.srcWallet.getName() + "</b> has been deleted.";       
         fname = AppUI.wrapDiv(txt);
         AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
         y++;
@@ -6420,6 +6633,88 @@ public class AdvancedClient  {
         }
     }
     
+    public void showHealthCheckScreen() {
+        int y = 0;
+        JLabel fname;
+        
+        JPanel subInnerCore = getPanel("Health Check " + ps.currentWallet.getName());                
+        GridBagLayout gridbag = new GridBagLayout();
+        subInnerCore.setLayout(gridbag);
+        
+        if (ps.currentWallet.isSkyWallet()) {
+            fname = AppUI.wrapDiv("Health Check for SkyWallets is not supported");
+            AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
+            y++;
+            AppUI.GBPad(subInnerCore, y, gridbag);  
+            return;
+        }
+        
+        String txt = "Health Check will ensure that all your coins are 100% authentic. "
+                + "It will move coins to the Fracked or Counterfeit folder if they are not 100% authentic";       
+        fname = AppUI.wrapDiv(txt);
+        AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
+        y++;
+
+        fname = new JLabel("Password*");
+        final MyTextField password = new MyTextField("Wallet Password", true);
+
+        if (ps.currentWallet.isEncrypted()) {
+            AppUI.getGBRow(subInnerCore, fname, password.getTextField(), y, gridbag);
+            y++;
+       
+            password.requestFocus(); 
+            if (!ps.currentWallet.getPassword().isEmpty()) {
+                password.setData(ps.currentWallet.getPassword());
+            }
+        }
+   
+        AppUI.GBPad(subInnerCore, y, gridbag);        
+        y++;
+                
+        AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Continue", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                Wallet cw = ps.currentWallet;
+                resetState(true);
+                sm.setActiveWalletObj(cw);
+                ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
+                showScreen();
+            }
+        }, new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                //String walletName = cbox.getSelectedValue();
+                Wallet w = ps.currentWallet;
+                ps.typedDstPassword = password.getText();
+                ps.typedPassword = password.getText();
+//                ps.dstWallet.setPassword(ps.typedDstPassword);
+               
+                if (w.isEncrypted()) {
+                    if (password.getText().isEmpty()) {
+                        ps.errText = "Password is empty";
+                        showScreen();
+                        return;
+                    }
+                    
+                    String wHash = w.getPasswordHash();
+                    String providedHash = AppCore.getMD5(password.getText());
+                    
+                    if (wHash == null) {
+                        ps.errText = "Wallet is corrupted";
+                        showScreen();
+                        return;
+                    }
+                    
+                    if (!wHash.equals(providedHash)) {
+                        ps.errText = "Password is incorrect";
+                        showScreen();
+                        return;
+                    } 
+                }
+                           
+                ps.currentScreen = ProgramState.SCREEN_HEALTH_CHECKING;              
+                showScreen();
+            }
+        }, y, gridbag);      
+    }
     
     public void showGetPasswordScreen() {
         int y = 0;
@@ -8880,12 +9175,12 @@ public class AdvancedClient  {
                 } 
             };
  
-            String[] items2 = {"Backup", "List Serials", "Delete Wallet", "Show Folders"};
+            String[] items2 = {"Backup", "List Serials", "Delete Wallet", "Show Folders", "Health Check"};
             if (ps.currentWallet.isSkyWallet()) {
                 items2[0] = items2[1] = items2[3] = null;
             }
             
-            for (int i = 0; i < items.length; i++) {
+            for (int i = 0; i < items2.length; i++) {
                 if (items2[i] == null)
                     continue;
                 
@@ -8935,6 +9230,8 @@ public class AdvancedClient  {
                             ps.currentScreen = ProgramState.SCREEN_DELETE_WALLET;
                         } else if (action.equals("3")) {
                             ps.currentScreen = ProgramState.SCREEN_SHOW_FOLDERS;
+                        } else if (action.equals("4")) {
+                            ps.currentScreen = ProgramState.SCREEN_HEALTH_CHECK;
                         }
 
                         showScreen();

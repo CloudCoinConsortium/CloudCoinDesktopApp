@@ -29,15 +29,17 @@ public class Authenticator extends Servant {
         super("Authenticator", rootDir, logger);    
     }
 
-    public void launch(CallbackInterface icb) {
+    public void launch(CallbackInterface icb, String dir) {
         this.cb = icb;
     
+        final String fdir = dir;
+        
         globalResult = new AuthenticatorResult();
         launchThread(new Runnable() {
             @Override
             public void run() {
                 logger.info(ltag, "RUN Authenticator");
-                doAuthencticate();
+                doAuthenticate(fdir);
                 
                 raida.setReadTimeout(Config.READ_TIMEOUT);
             }
@@ -113,6 +115,9 @@ public class Authenticator extends Servant {
         aResult.totalCoinsProcessed = globalResult.totalCoinsProcessed;
         aResult.status = globalResult.status;
         aResult.errText = globalResult.errText;
+        aResult.hcValid = globalResult.hcValid;
+        aResult.hcCounterfeit = globalResult.hcCounterfeit;
+        aResult.hcFracked = globalResult.hcFracked;
     }
 
     private void setCoinStatus(ArrayList<CloudCoin> ccs, int idx, int status) {
@@ -128,8 +133,6 @@ public class Authenticator extends Servant {
         String[] posts;
 
         int i;
-        boolean first = true;
-
         posts = new String[RAIDA.TOTAL_RAIDA_COUNT];
         requests = new String[RAIDA.TOTAL_RAIDA_COUNT];
         sbs = new StringBuilder[RAIDA.TOTAL_RAIDA_COUNT];
@@ -164,8 +167,6 @@ public class Authenticator extends Servant {
                 sbs[i].append("&pans[]=");
                 sbs[i].append(cc.pans[i]);
             }
-
-            first = false;
         }
 
         for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
@@ -272,30 +273,6 @@ public class Authenticator extends Servant {
                 setCoinStatus(ccs, i, CloudCoin.STATUS_ERROR);
                 continue;
             }
-
-            /*
-            for (int j = 0; j < o.length; j++) {
-                String strStatus;
-                int status;
-
-                ar[i] = new AuthenticatorResponse[o.length];
-                ar[i][j] = (AuthenticatorResponse) o[j];
-
-                strStatus = ar[i][j].status;
-
-                if (strStatus.equals(Config.REQUEST_STATUS_PASS)) {
-                    status = CloudCoin.STATUS_PASS;
-                } else if (strStatus.equals(Config.REQUEST_STATUS_FAIL)) {
-                    status = CloudCoin.STATUS_FAIL;
-                } else {
-                    status = CloudCoin.STATUS_ERROR;
-                    logger.error(ltag, "Unknown coin status from RAIDA" + i + ": " + strStatus);
-                }
-
-                ccs.get(j).setDetectStatus(i, status);
-                //logger.info(ltag, "raida" + i + " v=" + ar[i][j].status + " m="+ar[i][j].message + " j= " + j + " st=" + status);
-            }
-            */
         }
 
         return true;
@@ -320,6 +297,52 @@ public class Authenticator extends Servant {
             }
         }
     }
+    
+    private void markCoins (ArrayList<CloudCoin> ccs) {
+        for (CloudCoin cc : ccs) {
+            cc.setPownStringFromDetectStatus();
+            logger.debug(ltag, "cc " + cc.sn + " pown " + cc.getPownString());
+         
+            if (!cc.canbeRecoveredFromLost()) {
+                logger.debug(ltag, "Moving cc as counterfeit " + cc.sn);
+                globalResult.hcCounterfeit += cc.getDenomination();
+                String ccFile = AppCore.getUserDir(Config.DIR_COUNTERFEIT, user) + File.separator + cc.getFileName();
+                if (!AppCore.saveFile(ccFile, cc.getJson(false))) {
+                    logger.error(ltag, "Failed to save file: " + ccFile);
+                    return;
+                }
+
+                AppCore.deleteFile(cc.originalFile);  
+                continue;
+            }
+            
+            boolean foundCounterfeit = false;
+            for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+                if (cc.getDetectStatus(i) == CloudCoin.STATUS_FAIL) {
+                    foundCounterfeit = true;
+                    break;
+                }
+            }
+            
+            if (foundCounterfeit) {
+                logger.debug(ltag, "Moving cc to fracked " + cc.sn);
+                globalResult.hcFracked += cc.getDenomination();
+                
+                String ccFile = AppCore.getUserDir(Config.DIR_FRACKED, user) + File.separator + cc.getFileName();
+                if (!AppCore.saveFile(ccFile, cc.getJson(false))) {
+                    logger.error(ltag, "Failed to save file: " + ccFile);
+                    return;
+                }
+
+                AppCore.deleteFile(cc.originalFile);               
+                continue;
+            }
+            
+            logger.debug(ltag, "Coin is ok. " + cc.sn);
+            globalResult.hcValid += cc.getDenomination();
+        }
+
+    }
 
     private void moveCoins(ArrayList<CloudCoin> ccs) {
         for (CloudCoin cc : ccs) {
@@ -340,7 +363,7 @@ public class Authenticator extends Servant {
         }
     }
 
-    public void doAuthencticate() {
+    public void doAuthenticate(String sdir) {
         if (!updateRAIDAStatus()) {
             globalResult.status = AuthenticatorResult.STATUS_ERROR;
             globalResult.errText = AppCore.raidaErrText;
@@ -350,8 +373,21 @@ public class Authenticator extends Servant {
             logger.error(ltag, "Can't proceed. RAIDA is unavailable");
             return;
         }
+        
+        
+        boolean needGeneratePans = true;
+        boolean keepCoins = false;
+        
+        if (sdir == null)
+            sdir = Config.DIR_SUSPECT;
+        else {
+            needGeneratePans = false;
+            keepCoins = true;
+        }
+        
+        logger.debug(ltag, "Do authenticate, need pans " + needGeneratePans + " dir=" + sdir);
 
-        String fullPath = AppCore.getUserDir(Config.DIR_SUSPECT, user);
+        String fullPath = AppCore.getUserDir(sdir, user);
 
         CloudCoin cc;
         ArrayList<CloudCoin> ccs;
@@ -368,7 +404,7 @@ public class Authenticator extends Servant {
         else
             this.email = "";
 
-        globalResult.totalFiles = AppCore.getFilesCount(Config.DIR_SUSPECT, user);
+        globalResult.totalFiles = AppCore.getFilesCount(sdir, user);
         if (globalResult.totalFiles == 0) {
             logger.info(ltag, "The Suspect folder is empty");
             globalResult.status = AuthenticatorResult.STATUS_FINISHED;
@@ -438,8 +474,9 @@ public class Authenticator extends Servant {
                 logger.info(ltag, "Processing");
 
                 AuthenticatorResult ar = new AuthenticatorResult();
-                if (!processDetect(ccs, true)) {
-                    moveCoinsToLost(ccs);
+                if (!processDetect(ccs, needGeneratePans)) {
+                    if (!keepCoins)
+                        moveCoinsToLost(ccs);
                     globalResult.status = AuthenticatorResult.STATUS_ERROR;
                     copyFromGlobalResult(ar);
                     if (cb != null)
@@ -448,7 +485,10 @@ public class Authenticator extends Servant {
                     return;
                 }
 
-                moveCoins(ccs);
+                if (!keepCoins)
+                    moveCoins(ccs);
+                else 
+                    markCoins(ccs);
                 ccs.clear();
 
                 globalResult.totalRAIDAProcessed = 0;
@@ -464,11 +504,15 @@ public class Authenticator extends Servant {
         AuthenticatorResult ar = new AuthenticatorResult();
         if (ccs.size() > 0) {
             logger.info(ltag, "adding + " + ccs.size());
-            if (!processDetect(ccs, true)) {
-                moveCoinsToLost(ccs);
+            if (!processDetect(ccs, needGeneratePans)) {
+                if (!keepCoins)
+                    moveCoinsToLost(ccs);
                 globalResult.status = AuthenticatorResult.STATUS_ERROR;
             } else {
-                moveCoins(ccs);
+                if (!keepCoins)
+                    moveCoins(ccs);
+                else
+                    markCoins(ccs);
                 globalResult.status = AuthenticatorResult.STATUS_FINISHED;
                 globalResult.totalFilesProcessed += ccs.size();
                 globalResult.totalCoinsProcessed = curValProcessed;

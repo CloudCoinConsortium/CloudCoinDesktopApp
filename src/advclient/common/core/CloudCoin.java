@@ -474,7 +474,7 @@ public class CloudCoin {
         goodRows = 0;
         for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
             if (statuses[i] == CloudCoin.STATUS_PASS || 
-                    (includeNs && (statuses[i] == CloudCoin.STATUS_NORESPONSE || statuses[i] == CloudCoin.STATUS_ERROR))) {
+                    (includeNs && (statuses[i] == CloudCoin.STATUS_NORESPONSE || statuses[i] == CloudCoin.STATUS_ERROR || statuses[i] == CloudCoin.STATUS_UNTRIED))) {
                 goodRows++;
                 badRows = 0;
                 if (goodRows == sideSize + 1)

@@ -17,6 +17,11 @@ public class AuthenticatorResult {
 
     public String errText;
     
+    
+    public int hcValid = 0;
+    public int hcCounterfeit = 0;
+    public int hcFracked = 0;
+    
     public AuthenticatorResult() {
         totalFilesProcessed = totalRAIDAProcessed = 0;
         totalFiles = 0;

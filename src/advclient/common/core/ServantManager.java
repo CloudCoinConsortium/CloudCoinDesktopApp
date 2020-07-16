@@ -323,8 +323,49 @@ public class ServantManager {
             return;
 
 	Authenticator at = (Authenticator) sr.getServant("Authenticator");
-	at.launch(cb);
+	at.launch(cb, null);
     }
+    
+    public void startHealthAuthenticatorService(Wallet w, CallbackInterface cb) {
+        if (sr.isRunning("Authenticator"))
+            return;
+
+        System.out.println("xxxxxxxxxx");
+        if (w.isEncrypted()) {
+            logger.debug(ltag, "Wallet is encrypted");
+            Vaulter v = (Vaulter) sr.getServant("Vaulter");
+            v.unvault(w.getPassword(), 0, null, new CallbackInterface() {
+                public void callback(final Object result) {
+                    final Object fresult = result;
+                    VaulterResult vresult = (VaulterResult) fresult;
+                    logger.debug(ltag, "Vaulter CB finished");
+            
+                    if (vresult.status == VaulterResult.STATUS_ERROR) {
+                        logger.error(ltag, "Error on Vaulter");
+                        if (cb != null)  {
+                            AuthenticatorResult ar = new AuthenticatorResult();
+                            ar.status = AuthenticatorResult.STATUS_ERROR;
+                            ar.errText = vresult.errText;                   
+                            cb.callback(sr);
+                        }
+                
+                        return;
+                    }
+                    
+                    Authenticator at = (Authenticator) sr.getServant("Authenticator");
+                    at.launch(cb, Config.DIR_BANK);
+                }
+                
+            });
+             
+            return;
+        }
+         System.out.println("fgox");
+	Authenticator at = (Authenticator) sr.getServant("Authenticator");
+	at.launch(cb, Config.DIR_BANK);
+    }
+    
+    
     
     public void startRecovererService(String email, CloudCoin cc, CallbackInterface cb) {
         if (sr.isRunning("Recoverer"))
