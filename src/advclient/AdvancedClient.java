@@ -74,7 +74,7 @@ import org.json.JSONObject;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "3.0.35";
+    public static String version = "3.0.36";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -1995,6 +1995,7 @@ public class AdvancedClient  {
         Thread t = new Thread(new Runnable() {
             public void run(){
                 pbar.setVisible(false);
+                /*
                 ps.isEchoFinished = false;
                 setRAIDAEchoProgressCoins(0);                
                 sm.startEchoService(new EchoCb());
@@ -2014,6 +2015,7 @@ public class AdvancedClient  {
                     showScreen();
                     return;
                 }
+                */
                 
                 CloudCoin skyCC = null;
                 ps.coinIDinFix = null;
@@ -2048,8 +2050,58 @@ public class AdvancedClient  {
                             return;
                         }
                     }
+                    
+                    ps.isCheckingSkyID = true;
+                    setRAIDAProgressCoins(0, 0, 0);
+                    pbarText.setText("Checking Envelopes");
+                    pbarText.repaint();
+                    
+                    String rpath = AppCore.getRootPath() + File.separator + ps.srcWallet.getName();
+                    wl.debug(ltag, "ShowEnvelopeCoins Counting for " + ps.srcWallet.getName());
+                    ShowEnvelopeCoins sc = new ShowEnvelopeCoins(rpath, wl);
+                    int snID = skyCC.sn;
+                    sc.launch(snID, "", new CallbackInterface() {
+                        public void callback(Object o) {
+                            ShowEnvelopeCoinsResult scresult = (ShowEnvelopeCoinsResult) o;
+ 
+                            wl.debug(ltag, "sec finished: " + scresult.status);
+                            if (scresult.status == ShowEnvelopeCoinsResult.STATUS_PROCESSING) {
+                                setRAIDAProgressCoins(scresult.totalRAIDAProcessed, 0, 0);
+                                return;
+                            }
+
+                            ps.srcWallet.setSNs(scresult.coins);
+                            ps.srcWallet.setEnvelopes(scresult.envelopes);
+                                
+                            int[][] counters = scresult.counters;                        
+                            int totalCnt = AppCore.getTotal(counters[Config.IDX_FOLDER_BANK]) +
+                            AppCore.getTotal(counters[Config.IDX_FOLDER_FRACKED]) +
+                            AppCore.getTotal(counters[Config.IDX_FOLDER_VAULT]);
+
+                            ps.srcWallet.setCounters(counters);
+                                                        
+                            ps.isCheckingSkyID = false;
+                            ps.srcWallet.setTotal(totalCnt);
+                            
+                            ps.cenvelopes = scresult.envelopes;
+
+                        }
+                    });
+                    
+                    
+                    while (ps.isCheckingSkyID) {
+                        try {
+                            Thread.sleep(300);
+                        } catch (InterruptedException e) {}
+                    }
+                    
+
+                    
+                    
+                    
+                    
                 }
-                
+
                 if (ps.dstWallet != null && ps.dstWallet.isSkyWallet()) {
                     ps.isCheckingSkyID = true;
                     skyCC = ps.dstWallet.getIDCoin();
@@ -2118,7 +2170,17 @@ public class AdvancedClient  {
                     pbarText.setText("Querying coins ...");
                     pbarText.repaint();
                     
-                    sm.startShowSkyCoinsService(new ShowEnvelopeCoinsForReceiverCb(), sn);
+                    memo = ps.typedMemo;
+                    if (!ps.typedReturnAddress.isEmpty() && !ps.typedReturnAddress.equals("None"))
+                        memo += " from " + ps.typedReturnAddress;
+                    
+                    sm.transferCoins(ps.srcWallet.getName(), ps.dstWallet.getName(), 
+                        ps.typedAmount, memo, ps.typedRemoteWallet, new SenderCb(), new ReceiverCb());
+                
+                                
+                    
+                    //sm.startShowSkyCoinsService(new ShowEnvelopeCoinsForReceiverCb(), sn);
+       
                     return;
                 }
 
@@ -2499,6 +2561,7 @@ public class AdvancedClient  {
         Thread t = new Thread(new Runnable() {
             public void run(){
                 pbar.setVisible(false);
+                /*
                 ps.isEchoFinished = false;
                 setRAIDAEchoProgressCoins(0);                
                 sm.startEchoService(new EchoCb());
@@ -2517,7 +2580,7 @@ public class AdvancedClient  {
                     ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
                     showScreen();
                     return;
-                }
+                }*/
                 
                 CloudCoin skyCC = null;
                 ps.coinIDinFix = null;
@@ -2550,6 +2613,64 @@ public class AdvancedClient  {
                             return;
                         }
                     }
+                    
+                    
+                    
+                    
+                    
+                    ps.isCheckingSkyID = true;
+                    setRAIDAProgressCoins(0, 0, 0);
+                    pbarText.setText("Checking Envelopes");
+                    pbarText.repaint();
+                    
+                    String rpath = AppCore.getRootPath() + File.separator + ps.srcWallet.getName();
+                    wl.debug(ltag, "ShowEnvelopeCoins Counting for " + ps.srcWallet.getName());
+                    ShowEnvelopeCoins sc = new ShowEnvelopeCoins(rpath, wl);
+                    int snID = skyCC.sn;
+                    sc.launch(snID, "", new CallbackInterface() {
+                        public void callback(Object o) {
+                            ShowEnvelopeCoinsResult scresult = (ShowEnvelopeCoinsResult) o;
+ 
+                            wl.debug(ltag, "sec finished: " + scresult.status);
+                            if (scresult.status == ShowEnvelopeCoinsResult.STATUS_PROCESSING) {
+                                setRAIDAProgressCoins(scresult.totalRAIDAProcessed, 0, 0);
+                                return;
+                            }
+
+                            ps.srcWallet.setSNs(scresult.coins);
+                            ps.srcWallet.setEnvelopes(scresult.envelopes);
+                                
+                            int[][] counters = scresult.counters;                        
+                            int totalCnt = AppCore.getTotal(counters[Config.IDX_FOLDER_BANK]) +
+                            AppCore.getTotal(counters[Config.IDX_FOLDER_FRACKED]) +
+                            AppCore.getTotal(counters[Config.IDX_FOLDER_VAULT]);
+
+                            ps.srcWallet.setCounters(counters);
+                                                        
+                            ps.isCheckingSkyID = false;
+                            ps.srcWallet.setTotal(totalCnt);
+                            
+                            ps.cenvelopes = scresult.envelopes;
+
+                        }
+                    });
+                    
+                    
+                    while (ps.isCheckingSkyID) {
+                        try {
+                            Thread.sleep(300);
+                        } catch (InterruptedException e) {}
+                    }
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
                 }
                 
                 wl.debug(ltag, "Start receiver from " + ps.srcWallet.getIDCoin().sn);
@@ -3360,7 +3481,7 @@ public class AdvancedClient  {
                     return;
                 }
                 
-                if (ps.srcWallet != null && !ps.srcWallet.isSkyWallet()) {
+                if (ps.srcWallet != null) {
                     setActiveWallet(ps.srcWallet);
                     ps.sendType = 0;
                     ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
@@ -5410,8 +5531,8 @@ public class AdvancedClient  {
                         if (scresult.status != ShowEnvelopeCoinsResult.STATUS_FINISHED)
                             return;
                         
-                        w.setSNs(scresult.coins);
-                        w.setEnvelopes(scresult.envelopes);
+                        //w.setSNs(scresult.coins);
+                        //w.setEnvelopes(scresult.envelopes);
                                 
                         int[][] counters = scresult.counters;                        
                         int totalCnt = AppCore.getTotal(counters[Config.IDX_FOLDER_BANK]) +
@@ -9510,63 +9631,8 @@ public class AdvancedClient  {
             }
         }
         
-        final String[][] trs;
-        String[] headers;
-        
-        if (isSky) {
-            Hashtable<String, String[]> envelopes = sm.getActiveWallet().getEnvelopes();
-            thlabel.setText("Skywallet Contents ");
-            if (envelopes == null || envelopes.size() == 0) {
-                if (w.isUpdated()) {
-                    thlabel.setText("No Coins");
-                } else {
-                    thlabel.setText("");
-                }
-                
-                return;
-            }
- 
-            Enumeration<String> enumeration = envelopes.keys();
-            ArrayList<String> hlist = Collections.list(enumeration);
-            Collections.sort(hlist, Collections.reverseOrder());
 
-
-            trs = new String[envelopes.size()][];
-            int i = 0;
-            for (String key : hlist) {
-                String[] data = envelopes.get(key);
-
-                trs[i] = new String[4];
-                trs[i][0] = data[0];
-                trs[i][1] = data[2];
-                trs[i][2] = data[1];
-                trs[i][3] = "";
-       
-                i++;
-            }
-                
-            headers = new String[] {
-                "Memo (note)",
-                "Date",
-                "Amount"
-            };        
-             
-        } else {          
-            trs = sm.getActiveWallet().getTransactions();
-        
-            if (trs == null || trs.length == 0) {
-                thlabel.setText("No transactions");
-                return;
-            }
-            headers = new String[] {
-                "Memo (note)",
-                "Date",
-                "Deposit",
-                "Withdraw",
-                "Total"
-            };
-        }
-      
+        String[] headers; 
         final JLabel iconLeft, iconRight;
         try {     
                 Image img = ImageIO.read(brand.getImgArrowLeftIcon());
@@ -9578,6 +9644,7 @@ public class AdvancedClient  {
             return;
         }
         
+
         DefaultTableCellRenderer r = new DefaultTableCellRenderer() {
             JLabel lbl;
             @Override
@@ -9599,7 +9666,7 @@ public class AdvancedClient  {
   
                 lbl = (JLabel) this;
                 if (column == 0) {                          
-                    String hash = trs[row][trs[0].length - 1];  
+                    String hash = ps.trs[row][ps.trs[0].length - 1];  
 
                     String html = AppCore.getReceiptHtml(hash, sm.getActiveWallet().getName());
                     if (html != null) {
@@ -9645,7 +9712,7 @@ public class AdvancedClient  {
                 AppUI.setMargin(lbl, 8);
                 
                 if (column == 0) {                    
-                    String income = trs[row][2];
+                    String income = ps.trs[row][2];
                     if (income.isEmpty())                   
                         cell.add(iconLeft);
                     else
@@ -9658,16 +9725,8 @@ public class AdvancedClient  {
                 return lbl;
             }
         };
-
         
         final JTable table = new JTable();
-        final JScrollPane scrollPane = AppUI.setupTable(table, headers, trs, r, null);
-        
-        AppUI.alignLeft(scrollPane);
-        
-        table.getColumnModel().getColumn(0).setPreferredWidth(230);
-        table.getColumnModel().getColumn(1).setPreferredWidth(140);
-        
         MouseAdapter ma = new MouseAdapter() {
             private int prevcolumn = -1;
 
@@ -9679,7 +9738,7 @@ public class AdvancedClient  {
                 if (column != 0)
                     return;
                 
-                String hash = trs[row][trs[0].length - 1];                
+                String hash = ps.trs[row][ps.trs[0].length - 1];                
                 String html = AppCore.getReceiptHtml(hash, ps.currentWallet.getName());
                 if (html == null)
                     return;
@@ -9731,9 +9790,112 @@ public class AdvancedClient  {
 
         table.addMouseListener(ma);
         table.addMouseMotionListener(ma);
+        
+     
+        if (isSky) {
+            headers = new String[] {
+                "Memo (note)",
+                "Date",
+                "Amount"
+            }; 
+            
+            String rpath = AppCore.getRootPath() + File.separator + ps.currentWallet.getName();
+            ShowEnvelopeCoins sc = new ShowEnvelopeCoins(rpath, wl);
+            int snID = ps.currentWallet.getIDCoin().sn;
+            JPanel jp = new JPanel();
+            sc.launch(snID, "", new CallbackInterface() {
+                public void callback(Object o) {
+                    ShowEnvelopeCoinsResult scresult = (ShowEnvelopeCoinsResult) o;
+                    if (scresult.status == ShowEnvelopeCoinsResult.STATUS_PROCESSING) 
+                        return;
+                              
+                    ps.currentWallet.setSNs(scresult.coins);
+                    ps.currentWallet.setEnvelopes(scresult.envelopes);                        
+
+                    Hashtable<String, String[]> envelopes = sm.getActiveWallet().getEnvelopes();
+                    thlabel.setText("Skywallet Contents ");
+                    if (envelopes == null || envelopes.size() == 0) {
+                        if (w.isUpdated()) {
+                            thlabel.setText("No Coins");
+                        } else {
+                            thlabel.setText("");
+                        }
+                
+                        return;
+                    }
+ 
+                    Enumeration<String> enumeration = envelopes.keys();
+                    ArrayList<String> hlist = Collections.list(enumeration);
+                    Collections.sort(hlist, Collections.reverseOrder());
+
+                    ps.trs = new String[envelopes.size()][];
+                    int i = 0;
+                    for (String key : hlist) {
+                        String[] data = envelopes.get(key);
+
+                        ps.trs[i] = new String[4];
+                        ps.trs[i][0] = data[0];
+                        ps.trs[i][1] = data[2];
+                        ps.trs[i][2] = data[1];
+                        ps.trs[i][3] = "";
+       
+                        i++;
+                    }
+                    
+                    JScrollPane scrollPane = AppUI.setupTable(table, headers, ps.trs, r, null);   
+                    AppUI.alignLeft(scrollPane);
+                    table.getColumnModel().getColumn(0).setPreferredWidth(230);
+                    table.getColumnModel().getColumn(1).setPreferredWidth(140);
+                    
+                    /*
+                    for (Component c : rightPanel.getComponents()) {
+                        if (c instanceof JScrollPane) {
+                            System.out.println("xxx");
+                            rightPanel.remove(c);
+                        }
+                    }
+                    */
+                    
+                    jp.add(scrollPane);
+                    jp.revalidate();
+                    jp.repaint();
+                }
+            });
+            
+            //JScrollPane scrollPane = new JScrollPane();
+            AppUI.alignLeft(jp);
+            AppUI.noOpaque(jp);
+            AppUI.setBoxLayout(jp, false);
+            rightPanel.add(jp);
+        } else {          
+            ps.trs = sm.getActiveWallet().getTransactions();
+        
+            if (ps.trs == null || ps.trs.length == 0) {
+                thlabel.setText("No transactions");
+                return;
+            }
+            headers = new String[] {
+                "Memo (note)",
+                "Date",
+                "Deposit",
+                "Withdraw",
+                "Total"
+            };
+            
+            JScrollPane scrollPane = AppUI.setupTable(table, headers, ps.trs, r, null);   
+            AppUI.alignLeft(scrollPane);
+            table.getColumnModel().getColumn(0).setPreferredWidth(230);
+            table.getColumnModel().getColumn(1).setPreferredWidth(140);
+            rightPanel.add(scrollPane);
+        }
+      
  
         
-        rightPanel.add(scrollPane);
+        
+
+        //final JScrollPane scrollPane = tscrollPane;     
+        
+        
         
         JPanel subInnerCore = new JPanel();
         AppUI.alignLeft(subInnerCore);

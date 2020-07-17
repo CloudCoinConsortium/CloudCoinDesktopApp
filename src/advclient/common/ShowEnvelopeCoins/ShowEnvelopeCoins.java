@@ -32,13 +32,13 @@ public class ShowEnvelopeCoins extends Servant {
         this.cb = icb;
 
         final int fsn = sn;
-        final String fenvelope = envelope;
 
         result = new ShowEnvelopeCoinsResult();
         result.coins = new int[0];
         result.tags = new String[0];
         result.envelopes = new Hashtable<String, String[]>();
         result.counters = new int[Config.IDX_FOLDER_LAST][5];
+        result.totalRAIDAProcessed = 0;
         
         launchThread(new Runnable() {
             @Override
@@ -86,7 +86,23 @@ public class ShowEnvelopeCoins extends Servant {
             requests[i] = sbs[i].toString();
         }
 
-        results = raida.query(requests, null, null);
+        results = raida.query(requests, null, new CallbackInterface() {
+            final GLogger gl = logger;
+            final CallbackInterface myCb = cb;
+
+            @Override
+            public void callback(Object oresult) {
+                result.totalRAIDAProcessed++;
+                //result.status = ShowEnvelopeCoinsResult.STATUS_PROCESSING;
+                if (myCb != null) {
+                    ShowEnvelopeCoinsResult ser = new ShowEnvelopeCoinsResult();
+                    ser.status = ShowEnvelopeCoinsResult.STATUS_PROCESSING;
+                    ser.totalRAIDAProcessed = result.totalRAIDAProcessed;
+                    
+                    myCb.callback(ser);
+                }
+            }
+        });
         if (results == null) {
             logger.error(ltag, "Failed to query showcoinsinenvelope");
             result.status = ShowEnvelopeCoinsResult.STATUS_ERROR;

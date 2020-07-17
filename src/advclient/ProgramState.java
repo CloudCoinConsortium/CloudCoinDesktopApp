@@ -134,6 +134,8 @@ public class ProgramState {
     String[] args;
 
     
+    String[][] trs;
+    
     int statToBankValue, statToBank, statFailed, statLost;
     int statFailedValue, statLostValue;
     
