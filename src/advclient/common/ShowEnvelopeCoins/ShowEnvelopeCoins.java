@@ -18,6 +18,7 @@ import global.cloudcoin.ccbank.core.RAIDA;
 import global.cloudcoin.ccbank.core.Servant;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.Map;
 
 public class ShowEnvelopeCoins extends Servant {
@@ -53,6 +54,178 @@ public class ShowEnvelopeCoins extends Servant {
         });
     }
     
+    public void launch(int sn, CallbackInterface icb) {
+        this.cb = icb;
+
+        final int fsn = sn;
+
+        result = new ShowEnvelopeCoinsResult();
+        result.coins = new int[0];
+        result.tags = new String[0];
+        result.envelopes = new Hashtable<String, String[]>();
+        result.counters = new int[Config.IDX_FOLDER_LAST][5];
+        result.totalRAIDAProcessed = 0;
+        
+        launchThread(new Runnable() {
+            @Override
+            public void run() {
+                logger.info(ltag, "RUN ShowEnvelopeCoins (Balance)");
+
+                doShowBalance(fsn);
+
+                if (cb != null)
+                    cb.callback(result);
+            }
+        });
+    }
+    
+    public void doShowBalance(int sn) {
+        CloudCoin cc;
+        String[] results;
+        Object[] o;
+        StringBuilder[] sbs;
+        String[] requests;
+
+        cc = getIDcc(sn);
+        if (cc == null) {
+            logger.error(ltag, "NO ID Coin found for SN: " + sn);
+            result.status = ShowEnvelopeCoinsResult.STATUS_ERROR;
+            return;
+        }
+
+        sbs = new StringBuilder[RAIDA.TOTAL_RAIDA_COUNT];
+        requests = new String[RAIDA.TOTAL_RAIDA_COUNT];
+        for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+            sbs[i] = new StringBuilder();
+            sbs[i].append("show_transfer_balance?nn=");
+            sbs[i].append(cc.nn);
+            sbs[i].append("&sn=");
+            sbs[i].append(cc.sn);
+            sbs[i].append("&an=");
+            sbs[i].append(cc.ans[i]);
+            sbs[i].append("&pan=");
+            sbs[i].append(cc.ans[i]);
+            sbs[i].append("&denomination=");
+            sbs[i].append(cc.getDenomination());
+            
+            requests[i] = sbs[i].toString();
+        }
+
+        results = raida.query(requests, null, null);
+        if (results == null) {
+            logger.error(ltag, "Failed to query showcoinsinenvelope balance");
+            result.status = ShowEnvelopeCoinsResult.STATUS_ERROR;
+            return;
+        }
+
+        if (isCancelled()) {
+            result.status = ShowEnvelopeCoinsResult.STATUS_CANCELLED;
+            logger.error(ltag, "ShowCoins cancelled");
+            return;
+        }
+        
+        /*
+        HashMap[] hashmaps = new HashMap[RAIDA.TOTAL_RAIDA_COUNT];
+        //int[][] sns = new int[RAIDA.TOTAL_RAIDA_COUNT][];
+        for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+            hashmaps[i] = new HashMap<String, ShowTransferBalanceResponse>();
+        }*/
+              
+        HashMap hm = new HashMap<String, ShowTransferBalanceResponse>();
+        HashMap hm2 = new HashMap<String, Integer>();
+        CloudCoin fakeCC = new CloudCoin(Config.DEFAULT_NN, 1);
+        for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {        
+            if (results[i] != null) {
+                if (results[i].equals("")) {
+                    logger.error(ltag, "Skipped raida" + i);
+                    fakeCC.setDetectStatus(i, CloudCoin.STATUS_UNTRIED);
+                    continue;
+                } else if (results[i].equals("E")) {
+                    logger.error(ltag, "Error raida" + i);
+                    fakeCC.setDetectStatus(i, CloudCoin.STATUS_ERROR);
+                    continue;
+                }
+            }
+            
+            if (results[i] == null) {
+                logger.error(ltag, "Skipped raida due to zero response: " + i);
+                fakeCC.setDetectStatus(i, CloudCoin.STATUS_NORESPONSE);
+                continue;
+            }
+            
+            ShowTransferBalanceResponse cr = (ShowTransferBalanceResponse) parseResponse(results[i], ShowTransferBalanceResponse.class);
+            if (cr == null) {
+                logger.error(ltag, "Failed to get response coin. RAIDA: " + i);
+                fakeCC.setDetectStatus(i, CloudCoin.STATUS_ERROR);
+                continue;
+            }
+
+            if (!cr.status.equals(Config.REQUEST_STATUS_PASS)) {
+                logger.error(ltag, "Failed to show env coins. RAIDA: " + i + " Result: " + cr.message);  
+                fakeCC.setDetectStatus(i, CloudCoin.STATUS_FAIL);
+                continue;
+            }
+            
+            fakeCC.setDetectStatus(i, CloudCoin.STATUS_PASS);
+                        
+            logger.debug(ltag, "raida " + i + ". Returned total " + cr.total);
+            String idx = "" + cr.total;
+            
+            hm.put(idx, cr);
+            if (!hm2.containsKey(idx)) {
+                hm2.put(idx, 0);
+            }
+            
+            int val = (int) hm2.get(idx);
+            hm2.put(idx, val + 1);
+
+            
+        }
+        fakeCC.setPownStringFromDetectStatus();
+        logger.debug(ltag, "ShowBalance pownstring " + fakeCC.getPownString());
+        //System.out.println("ps="+ fakeCC.getPownString());
+      
+        Iterator it = hm2.entrySet().iterator();
+        int max = 0;
+        String keyTotal = "0";
+        while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry)it.next();
+            //System.out.println(pair.getKey() + " = " + pair.getValue());
+            
+            if ((int) pair.getValue() >= max) {
+                keyTotal = (String) pair.getKey();
+                max = (int) pair.getValue();
+            }
+            
+            it.remove(); // avoids a ConcurrentModificationException
+        }
+        
+        logger.debug(ltag, "Maximum Total: " + keyTotal + " Number of Raida servers reported this total: " + max);
+        
+        ShowTransferBalanceResponse cr2 = (ShowTransferBalanceResponse) hm.get(keyTotal);
+        if (cr2 == null) {
+            logger.debug(ltag, "Failed to find key " + keyTotal);
+            result.status = ShowEnvelopeCoinsResult.STATUS_ERROR;
+            return;
+        }
+        
+        logger.debug(ltag, "Picked: 250s:" + cr2.d250 + ", 100s:" + cr2.d100 + ", 25s:" + cr2.d25 + ", 5s:" + cr2.d5 + ", 1s:" + cr2.d1 + ", total: " + keyTotal);
+        //System.out.println("Picked: 250s:" + cr2.d250 + ", 100s:" + cr2.d100 + ", 25s:" + cr2.d25 + ", 5s:" + cr2.d5 + ", 1s:" + cr2.d1 + ", total: " + keyTotal);
+        result.status = ShowEnvelopeCoinsResult.STATUS_FINISHED;
+        //System.out.println("Maximum Total: " + keyTotal + " Number of Raida servers reported this total: " + max);
+        /*
+        if (1==1)
+            return;*/
+        
+        int idx = Config.IDX_FOLDER_BANK;
+        result.counters[idx][Config.IDX_1] = cr2.d1;
+        result.counters[idx][Config.IDX_5] = cr2.d5;
+        result.counters[idx][Config.IDX_25] = cr2.d25;
+        result.counters[idx][Config.IDX_100] = cr2.d100;
+        result.counters[idx][Config.IDX_250] = cr2.d250;
+        
+     
+    }
     
     public void doShowSkyCoins(int sn) {
         CloudCoin cc;

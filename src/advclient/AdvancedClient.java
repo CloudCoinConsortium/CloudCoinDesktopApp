@@ -117,6 +117,8 @@ public class AdvancedClient  {
     
     boolean triedFreeCoin = false;
     
+    boolean globalEcho = false;
+    
     JLabel modeText;
     
     Brand brand;
@@ -1161,6 +1163,7 @@ public class AdvancedClient  {
         clear();   
         if (ps.needInitWallets) {
             sm.initWallets();
+            
             ps.needInitWallets = false;
         }
 
@@ -4428,9 +4431,17 @@ public class AdvancedClient  {
         y++;
         
         AppUI.getTwoButtonPanel(subInnerCore, "", "Continue", null,  new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
-                showScreen();
+            public void actionPerformed(ActionEvent e) {           
+                if (sm.getWallets().length != 0) {
+                    if (isAdvancedMode()) {
+                        setActiveWallet(sm.getWallets()[0]);
+                    } else {
+                        setActiveWallet(getPrimaryWallet());
+                    }
+                    //System.out.println("w="+ps.currentWallet.getName());
+                    ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
+                    showScreen();     
+                }
             }
         }, y, gridbag);   
         
@@ -5524,16 +5535,12 @@ public class AdvancedClient  {
                 ShowEnvelopeCoins sc = new ShowEnvelopeCoins(rpath, wl);
                 sm.addSec(sc);
                 int snID = w.getIDCoin().sn;
-                sc.launch(snID, "", new CallbackInterface() {
+                sc.launch(snID, new CallbackInterface() {
                     public void callback(Object o) {
                         ShowEnvelopeCoinsResult scresult = (ShowEnvelopeCoinsResult) o;
-
                         if (scresult.status != ShowEnvelopeCoinsResult.STATUS_FINISHED)
                             return;
-                        
-                        //w.setSNs(scresult.coins);
-                        //w.setEnvelopes(scresult.envelopes);
-                                
+
                         int[][] counters = scresult.counters;                        
                         int totalCnt = AppCore.getTotal(counters[Config.IDX_FOLDER_BANK]) +
 			AppCore.getTotal(counters[Config.IDX_FOLDER_FRACKED]) +
@@ -10941,6 +10948,11 @@ public class AdvancedClient  {
         });
         
         corePanel.add(lwrapperPanel);
+        
+        if (!globalEcho) {
+            sm.startEchoService(null);
+            globalEcho = true;
+        }
     }
 
     public JPanel getWallet(Wallet wallet, int type) {
