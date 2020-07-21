@@ -1,5 +1,7 @@
 package global.cloudcoin.ccbank.Authenticator;
 
+import java.util.HashMap;
+
 public class AuthenticatorResult {
     public int totalFilesProcessed;
     public int totalFiles;
@@ -21,6 +23,8 @@ public class AuthenticatorResult {
     public int hcValid = 0;
     public int hcCounterfeit = 0;
     public int hcFracked = 0;
+    
+    public HashMap<Integer, String[]> tickets;
     
     public AuthenticatorResult() {
         totalFilesProcessed = totalRAIDAProcessed = 0;

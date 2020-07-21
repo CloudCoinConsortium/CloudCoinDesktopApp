@@ -10347,72 +10347,6 @@ public class AdvancedClient  {
                     }
                 });
 
-                /*} else {
-                    if (sn <= 0) {
-                        ps.errText = "Wallet does not exist or network error occured";
-                        showScreen();
-                        return;
-                    }
-                    
-                    if (cc.sn != sn) {
-                        ps.errText = "Sky Coin SN does not match your Coin SN";
-                        showScreen();
-                        return;
-                    }
-                                       
-                    final CloudCoin fcc = cc;
-                    final String wname = domain + "." + ps.trustedServer;
-                    sm.startAuthenticatorService(fcc, new CallbackInterface() {
-                        public void callback(Object result) {
-                            wl.debug(ltag, "AuthenticatorSkyCoin finished");
-
-                            final Object fresult = result;
-                            final AuthenticatorResult ar = (AuthenticatorResult) fresult;
-                            if (ar.status == AuthenticatorResult.STATUS_ERROR || ar.status == AuthenticatorResult.STATUS_CANCELLED) {
-                                ps.errText = "Failed to check your Coin";
-                                showScreen();
-                                return;
-                            } else if (ar.status == AuthenticatorResult.STATUS_FINISHED) {
-                                ps.isCheckingSkyID = false;
-                            } else {
-                                setRAIDAProgressCoins(ar.totalRAIDAProcessed, 0, 0);
-                                return;
-                            }
-                            
-                             if (AppCore.getErrorCount(fcc) > Config.MAX_FAILED_RAIDAS_TO_SEND) {
-                                ps.currentScreen = ProgramState.SCREEN_SKY_WALLET_CREATED;
-                                ps.errText = getSkyIDErrorIfRAIDAFailed();
-                                showScreen();
-                                return;
-                            } else if (AppCore.getPassedCount(fcc) < Config.PASS_THRESHOLD) {         
-                                ps.currentScreen = ProgramState.SCREEN_SKY_WALLET_CREATED;
-                                ps.errText = getSkyIDError(wname, fcc.getPownString());
-                                showScreen();
-                                return;
-                            }
-
-                            if (!AppCore.moveToFolderNewName(ps.chosenFile, AppCore.getIDDir(), null, newFileName)) {
-                                ps.errText = "Failed to move coin";
-                                showScreen();
-                                return;
-                            }
-
-                            SwingUtilities.invokeLater(new Runnable() {
-                                public void run() {
-                                    sm.initWallets();
-                                    ps.currentScreen = ProgramState.SCREEN_SKY_WALLET_CREATED;
-                                    showScreen();
-                                }
-                            });
-
-                        }
-                    });
-                    
-                    ps.currentScreen = ProgramState.SCREEN_CHECKING_SKYID;
-                    showScreen();
-
-                }
-                    */
             }
         }, y, gridbag);
        
@@ -11742,6 +11676,7 @@ public class AdvancedClient  {
                 });
                 return;
             } else if (ar.status == AuthenticatorResult.STATUS_FINISHED) {
+                ps.detectTickets = ar.tickets;
                 sm.startGraderService(new GraderCb(), ps.duplicates, null, null);
                 return;
             } else if (ar.status == AuthenticatorResult.STATUS_CANCELLED) {
@@ -11832,7 +11767,7 @@ public class AdvancedClient  {
                 }
             });
 
-            sm.startFrackFixerService(new FrackFixerCb(), false, w.getEmail());           
+            sm.startFrackFixerServiceWithTickets(new FrackFixerCb(), false, w.getEmail(), ps.detectTickets);           
 	}
     }
 

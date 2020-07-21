@@ -15,6 +15,7 @@ import global.cloudcoin.ccbank.core.Config;
 import global.cloudcoin.ccbank.core.GLogger;
 import global.cloudcoin.ccbank.core.RAIDA;
 import global.cloudcoin.ccbank.core.Servant;
+import java.util.HashMap;
 //import global.cloudcoin.ccbank.Authenticator.AuthenticatorResult;
 
 //import global.cloudcoin.ccbank.common.core.Authenticator.AuthenticatorResult;
@@ -34,7 +35,9 @@ public class Authenticator extends Servant {
     
         final String fdir = dir;
         
+        
         globalResult = new AuthenticatorResult();
+        globalResult.tickets = new HashMap<Integer, String[]>();
         launchThread(new Runnable() {
             @Override
             public void run() {
@@ -52,6 +55,7 @@ public class Authenticator extends Servant {
         final CloudCoin fcc = cc;
 
         globalResult = new AuthenticatorResult();
+        globalResult.tickets = new HashMap<Integer, String[]>();
         launchThread(new Runnable() {
             @Override
             public void run() {
@@ -80,6 +84,7 @@ public class Authenticator extends Servant {
         final ArrayList<CloudCoin> fccs = ccs;
 
         globalResult = new AuthenticatorResult();
+        globalResult.tickets = new HashMap<Integer, String[]>();
         launchThread(new Runnable() {
             @Override
             public void run() {
@@ -118,11 +123,35 @@ public class Authenticator extends Servant {
         aResult.hcValid = globalResult.hcValid;
         aResult.hcCounterfeit = globalResult.hcCounterfeit;
         aResult.hcFracked = globalResult.hcFracked;
+        aResult.tickets = globalResult.tickets;
     }
 
     private void setCoinStatus(ArrayList<CloudCoin> ccs, int idx, int status) {
         for (CloudCoin cc : ccs) {
             cc.setDetectStatus(idx, status);
+        }
+    }
+    
+    private void setTicket(CloudCoin cc, int idx, String ticket) {
+        String[] data;
+        System.out.println("cc="+cc.sn);
+        if (globalResult.tickets.containsKey(cc.sn)) {
+            System.out.println("putting exi " + cc.sn + " raida " + idx + " ticket " + ticket);
+            logger.debug(ltag, "putting existing " + cc.sn + " raida " + idx +" ticket " + ticket);
+            data = globalResult.tickets.get(cc.sn);
+        } else {
+            logger.debug(ltag, "putting new " + cc.sn + " raida " + idx +" ticket " + ticket);
+            System.out.println("putting new " + cc.sn + " raida " + idx + " ticket " + ticket);
+            data = new String[RAIDA.TOTAL_RAIDA_COUNT]; 
+        }
+            
+        data[idx] = ticket;
+        globalResult.tickets.put(cc.sn, data);
+    }
+    
+    private void setTickets(ArrayList<CloudCoin> ccs, int idx, String ticket) {
+        for (CloudCoin cc : ccs) {
+            setTicket(cc, idx, ticket);
         }
     }
 
@@ -240,6 +269,7 @@ public class Authenticator extends Servant {
             if (ars.status.equals("allpass")) {
                 logger.debug(ltag, "allpass");
                 setCoinStatus(ccs, i, CloudCoin.STATUS_PASS);
+                setTickets(ccs, i, ars.ticket);
                 continue;
             } else if (ars.status.equals("allfail")) {
                 logger.debug(ltag, "allfail");
@@ -259,6 +289,7 @@ public class Authenticator extends Servant {
                     int status;
                     if (strStatus.equals(Config.REQUEST_STATUS_PASS)) {
                         status = CloudCoin.STATUS_PASS;
+                        setTicket(ccs.get(j), i, ars.ticket);
                     } else if (strStatus.equals(Config.REQUEST_STATUS_FAIL)) {
                         status = CloudCoin.STATUS_FAIL;
                     } else {

@@ -307,8 +307,17 @@ public class ServantManager {
             return;
         
         FrackFixer ff = (FrackFixer) sr.getServant("FrackFixer");
-	ff.launch(cb, needExtensive, email);
+	ff.launch(cb, needExtensive, email, null);
     }
+    
+    public void startFrackFixerServiceWithTickets(CallbackInterface cb, boolean needExtensive, String email, HashMap<Integer, String[]> tickets) {
+        if (sr.isRunning("FrackFixer"))
+            return;
+        
+        FrackFixer ff = (FrackFixer) sr.getServant("FrackFixer");
+	ff.launch(cb, needExtensive, email, tickets);
+    }
+    
     
     public void startUnpackerService(CallbackInterface cb) {
         if (sr.isRunning("Unpacker"))
@@ -899,41 +908,6 @@ public class ServantManager {
                         cb.callback(mcr);
                     
                     startGraderService(new eGraderCb(cb, w), null, w.getName(), null);
-            
-                    /*
-                    startAuthenticatorService(new CallbackInterface() {
-                        public void callback(Object result) {
-                            logger.debug(ltag, "Authenticator for Change finished");
-                        
-                            final Object fresult = result;
-                            final AuthenticatorResult ar = (AuthenticatorResult) fresult;
-                            if (ar.status == AuthenticatorResult.STATUS_ERROR) {
-                                logger.debug(ltag, "Error in making Change");
-                                mcr.errText = "Failed to authenticate coins from Public Change";
-                                mcr.status = 0;
-                                if (cb != null) {
-                                    cb.callback(mcr);
-                                }
-                            
-                                return;
-                            } else if (ar.status == AuthenticatorResult.STATUS_FINISHED) {
-                                mcr.text = "Grading Coins from Public Change";
-                                if (cb != null)
-                                    cb.callback(mcr);
-                            
-                                startGraderService(new eGraderCb(cb, w), null, w.getName());
-                                return;
-                            }
-                        
-                            mcr.text = "Authenticating Coins from Public Change";
-                            mcr.progress = ar.totalRAIDAProcessed;
-                            mcr.status = 1;
-                            if (cb != null) {
-                                cb.callback(mcr);
-                            }
-                        }
-                    });
-                    */
                 }
                 
             }

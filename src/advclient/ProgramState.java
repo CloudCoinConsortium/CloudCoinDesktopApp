@@ -10,6 +10,7 @@ import global.cloudcoin.ccbank.core.Wallet;
 import global.cloudcoin.ccbank.core.BillPayItem;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Hashtable;
 
 /**
@@ -142,6 +143,7 @@ public class ProgramState {
     int statTotalFracked, statTotalFixed, statFailedToFix;
     int statTotalFrackedValue, statTotalFixedValue, statFailedToFixValue;
     
+    HashMap<Integer, String[]> detectTickets;
     String receiptId;
     
     boolean isSrcBoxFull, isDstBoxFull;
