@@ -184,7 +184,7 @@ public class Config {
     final public static int LOG_BUFFER_SIZE = 1024000;
     
     
-    final public static int MIN_MULTI_NOTES = 10;
+    final public static int MIN_MULTI_NOTES = 2;
     final public static int MAX_MULTI_NOTES = 4000;
     
     final public static int MIN_ECHO_TIMEOUT = 2000;

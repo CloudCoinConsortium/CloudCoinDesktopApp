@@ -833,12 +833,13 @@ public class FrackFixer extends Servant {
             mh.put(thash, cca);
         }
             
-        int total = mh.keySet().size();
+        int total = mh.size();
         int progressWeight = RAIDA.TOTAL_RAIDA_COUNT / total;
         if (progressWeight < 1)
             progressWeight = 1;
         
-        logger.debug(ltag, "keyset size " + total);
+        logger.debug(ltag, "keyset size " + total + ", weight = " + progressWeight);
+        boolean result = true;
         for (String key : mh.keySet()) {
             ArrayList<CloudCoin> cca = (ArrayList<CloudCoin>) mh.get(key);
             CloudCoin fcc = cca.get(0);
@@ -852,8 +853,15 @@ public class FrackFixer extends Servant {
                 logger.debug(ltag, "cc.sn " + cc.sn + " thash " + key);
             }
 
+            if (tickets4[0] == null || tickets4[1] == null || tickets4[2] == null || tickets4[3] == null) {
+                logger.debug(ltag, "One of the tickets is zero. Continue");
+                result = false;
+                continue;
+            }
+            
                 
-            fixCoinsInCornerWithTicketsReal(raidaIdx, corner + 1, cca, email, tickets4, progressWeight);
+            if (!fixCoinsInCornerWithTicketsReal(raidaIdx, corner + 1, cca, email, tickets4, progressWeight))
+                result = false;
                 //cc.setDetectStatus(5, CloudCoin.STATUS_NORESPONSE);
 
             //System.out.println("k="+key+ " ks="+data[0]);
@@ -865,7 +873,7 @@ public class FrackFixer extends Servant {
             System.out.println("cc="+cc.getDetectStatus(5));
         }
         */
-        return true;
+        return result;
         //return fixCoinsInCornerWithTicketsReal(raidaIdx, corner, nccs, email, tickets4, 4);
     }
     

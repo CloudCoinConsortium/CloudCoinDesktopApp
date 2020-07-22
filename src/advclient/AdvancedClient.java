@@ -4288,10 +4288,10 @@ public class AdvancedClient  {
                     showScreen();
                     return;
                 }
-                
-                int notes = Validator.getIntFromString(maxNotes.getText(), Config.MIN_MULTI_NOTES, Config.MAX_MULTI_NOTES);
+
+                int notes = Validator.getIntFromString(maxNotes.getText(), Config.MIN_MULTI_NOTES, Config.MAX_MULTI_NOTES);              
                 if (notes < 0) {
-                    ps.errText = "Send/Receive timeout must be in the range (" + Config.MIN_MULTI_NOTES + ", " + Config.MAX_MULTI_NOTES + ")";
+                    ps.errText = "Max Notes must be in the range (" + Config.MIN_MULTI_NOTES + ", " + Config.MAX_MULTI_NOTES + ")";
                     showScreen();
                     return;
                 }
