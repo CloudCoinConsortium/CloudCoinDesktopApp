@@ -134,14 +134,14 @@ public class Authenticator extends Servant {
     
     private void setTicket(CloudCoin cc, int idx, String ticket) {
         String[] data;
-        System.out.println("cc="+cc.sn);
+        //System.out.println("cc="+cc.sn);
         if (globalResult.tickets.containsKey(cc.sn)) {
-            System.out.println("putting exi " + cc.sn + " raida " + idx + " ticket " + ticket);
+            //System.out.println("putting exi " + cc.sn + " raida " + idx + " ticket " + ticket);
             logger.debug(ltag, "putting existing " + cc.sn + " raida " + idx +" ticket " + ticket);
             data = globalResult.tickets.get(cc.sn);
         } else {
             logger.debug(ltag, "putting new " + cc.sn + " raida " + idx +" ticket " + ticket);
-            System.out.println("putting new " + cc.sn + " raida " + idx + " ticket " + ticket);
+            //System.out.println("putting new " + cc.sn + " raida " + idx + " ticket " + ticket);
             data = new String[RAIDA.TOTAL_RAIDA_COUNT]; 
         }
             

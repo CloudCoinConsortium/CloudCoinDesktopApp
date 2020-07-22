@@ -74,7 +74,7 @@ import org.json.JSONObject;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "3.0.36";
+    public static String version = "3.0.37";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -1748,6 +1748,7 @@ public class AdvancedClient  {
             y++;
         }
 
+        isfailed=true;
         if (isfailed) {
             y++;
             String txt = "TIMED OUT means the response exceeded the " + Config.ECHO_TIMEOUT / 1000 + " seconds allowed. "
@@ -1756,7 +1757,8 @@ public class AdvancedClient  {
                 + "Try changing your settings to increase the Timeout. Or try using a more powerful computer.";
 
             x = AppUI.wrapDiv(txt);
-            AppUI.setCommonFont(x);
+            AppUI.setFont(x, 14);
+            AppUI.setColor(x, brand.getMainTextColor());
             c.anchor = GridBagConstraints.WEST;
             c.insets = new Insets(8, 0, 2, 0);
             c.gridx = GridBagConstraints.RELATIVE;
@@ -1764,6 +1766,52 @@ public class AdvancedClient  {
             c.gridwidth = 4;
             gridbag.setConstraints(x, c);
             ct.add(x);
+            y++;
+        }
+        
+        
+        x = AppUI.wrapDiv("yy");
+        c.anchor = GridBagConstraints.EAST;
+        c.insets = new Insets(8, 0, 2, 0);
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = y;
+        c.gridwidth = 4;
+        /*
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+        y++;
+                       
+        AppUI.GBPad(subInnerCore, y, gridbag);        
+        y++;
+        
+        AppUI.getTwoButtonPanel(subInnerCore, "", "Continue", null,  new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                ps.sendType = 0;
+                ps.currentScreen = ProgramState.SCREEN_FIX_FRACKED;
+                showScreen();
+            }
+        }, y, gridbag);*/
+        
+        MyButton cb1 = new MyButton("Continue");
+        cb1.addListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                setDefaultScreen();
+                showScreen();
+            }
+        });
+        c.weightx = 0;
+        gridbag.setConstraints(cb1.getButton(), c);
+        ct.add(cb1.getButton());       
+        
+    }
+    
+    public void setDefaultScreen() {
+        Wallet w = getPrimaryWallet();
+        if (w != null) {
+            ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
+            setActiveWallet(w);
+        } else {
+            ps.currentScreen = ProgramState.SCREEN_DEFAULT;
         }
     }
     

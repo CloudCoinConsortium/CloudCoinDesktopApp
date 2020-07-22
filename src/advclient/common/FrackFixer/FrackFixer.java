@@ -31,13 +31,13 @@ public class FrackFixer extends Servant {
     public void launch(CallbackInterface icb, boolean needExtensive, String email, HashMap<Integer, String[]> tickets) {
         this.cb = icb;
 
-
+/*
         for (int key : tickets.keySet()) {
             String[] data = tickets.get(key);
             System.out.println("k="+key+ " ks="+data[0]);
     // ...
         }
-        
+        */
         fr = new FrackFixerResult();
         if (isCancelled()) {
             logger.info(ltag, "Start Cancelled");
@@ -107,10 +107,10 @@ public class FrackFixer extends Servant {
                 trustedTriads[i][2] = new int[] { trustedServers[i][2], trustedServers[i][3], trustedServers[i][5], trustedServers[i][6] };
                 trustedTriads[i][3] = new int[] { trustedServers[i][0], trustedServers[i][4], trustedServers[i][6], trustedServers[i][7]  };
                 
-                System.out.println("raida " + i + " c1="+ trustedServers[i][0] + " "+ trustedServers[i][1] + " "+ trustedServers[i][3] + " "+trustedServers[i][7]);
-                System.out.println("raida " + i + " c1="+ trustedServers[i][1] + " "+ trustedServers[i][2] + " "+ trustedServers[i][4] + " "+trustedServers[i][5]);
-                System.out.println("raida " + i + " c1="+ trustedServers[i][3] + " "+ trustedServers[i][5] + " "+ trustedServers[i][6] + " "+trustedServers[i][2]);
-                System.out.println("raida " + i + " c1="+ trustedServers[i][4] + " "+ trustedServers[i][6] + " "+ trustedServers[i][7] + " "+trustedServers[i][0]);
+                //System.out.println("raida " + i + " c1="+ trustedServers[i][0] + " "+ trustedServers[i][1] + " "+ trustedServers[i][3] + " "+trustedServers[i][7]);
+                //System.out.println("raida " + i + " c1="+ trustedServers[i][1] + " "+ trustedServers[i][2] + " "+ trustedServers[i][4] + " "+trustedServers[i][5]);
+                //System.out.println("raida " + i + " c1="+ trustedServers[i][3] + " "+ trustedServers[i][5] + " "+ trustedServers[i][6] + " "+trustedServers[i][2]);
+                //System.out.println("raida " + i + " c1="+ trustedServers[i][4] + " "+ trustedServers[i][6] + " "+ trustedServers[i][7] + " "+trustedServers[i][0]);
             } else {   
                 trustedTriads[i][0] = new int[] { trustedServers[i][0], trustedServers[i][1], trustedServers[i][3] };
                 trustedTriads[i][1] = new int[] { trustedServers[i][1], trustedServers[i][2], trustedServers[i][4] };
@@ -881,7 +881,7 @@ public class FrackFixer extends Servant {
         int[] raidaFix;
 
 
-        System.out.println("corner="+corner);
+        //System.out.println("corner="+corner);
         
         String[] results;
         String[] requests;
