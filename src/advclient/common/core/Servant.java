@@ -53,6 +53,8 @@ public class Servant {
     protected StringBuilder csb;
     
     protected String receiptId;
+    
+    protected ArrayList<Integer>[] rarr;
 
     public Servant(String name, String rootDir, GLogger logger) {
         this.name = name;
@@ -1757,5 +1759,86 @@ public class Servant {
         return null;
         //return null;
     }
+    
+    public void fixTransfer(ArrayList<Integer>[] rarr) {
+        logger.debug(ltag, "Fixing Transfer");
+        
+
+        int i;
+
+
+        int cnt = 0;
+        for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+            ArrayList<Integer> r = rarr[i];
+            if (r.size() == 0) 
+                continue;
+            
+            cnt++;
+        }
+        
+        if (cnt == 0) {
+            logger.debug(ltag, "Nothing to fix");
+            return;
+        }
+        int[] rlist = new int[cnt];
+        String[] requests = new String[cnt];
+        String[] results;
+        StringBuilder sb;
+        int j = 0;
+        for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+            ArrayList<Integer> r = rarr[i];
+            if (r.size() == 0) 
+                continue;
+            
+            rlist[j] = i;
+            sb = new StringBuilder();
+            sb.append("sync/fix_transfer?corner=1");
+            for (int sn : r) {
+                sb.append("&sn[]=");
+                sb.append(sn);
+            }
+            requests[j] = sb.toString();
+                    
+           
+            System.out.println("adding raida " + i);
+            System.out.println("r="+requests[j]);
+             j++;
+        }
+        
+        results = raida.query(requests, null, cb, rlist);      
+        if (results == null) {
+            logger.error(ltag, "Failed to query Break in Bank");
+            return;
+        }
+        
+        logger.debug(ltag, "Fix transfer done");
+        for (i = 0; i < rlist.length; i++) {
+            int raidaIdx = rlist[i];
+            logger.info(ltag, "i=" + raidaIdx + " r="+results[i]);
+        }
+
+    }
+    
+    protected void initRarr() {
+        rarr = new ArrayList[RAIDA.TOTAL_RAIDA_COUNT];
+        for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+            rarr[i] = new ArrayList<Integer>();
+        }
+    }
+    
+    protected void addCoinsToRarr(int idx, ArrayList<CloudCoin> ccs) {
+        logger.debug(ltag, "Adding coins: " + ccs.size());
+        System.out.println("adding " + ccs.size());
+        for (CloudCoin cc : ccs) {
+            addCoinToRarr(idx, cc);
+        }
+    }
+    
+    protected void addCoinToRarr(int idx, CloudCoin cc) {
+        System.out.println("adding " + idx + " sn="+cc.sn);
+        logger.debug(ltag, " adding to rarr " + cc.sn);
+        rarr[idx].add(cc.sn);
+    }
+    
     
 }

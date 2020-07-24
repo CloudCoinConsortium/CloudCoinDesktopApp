@@ -606,6 +606,47 @@ public class AppUI {
         return cb1;
     }
     
+    public static MyButton getThreeButtonPanel(JComponent parent, String name0, String name1, String name2,
+            ActionListener al0, ActionListener al1, ActionListener al2, int y, GridBagLayout gridbag) {
+        GridBagConstraints c = new GridBagConstraints();
+        
+        c.anchor = GridBagConstraints.NORTHEAST;
+        c.insets = new Insets(40, 0, 0, 10);    
+        c.gridy = y;
+        c.weightx = 1;
+        c.weighty = 0;
+        c.gridwidth = 2;
+        
+        JPanel jwr = new JPanel();
+        AppUI.setBoxLayout(jwr, false);
+        AppUI.noOpaque(jwr);
+        
+        MyButton cb0 = new MyButton(name0, brand.getSecondaryButtonColor());
+        cb0.addListener(al0);  
+        //gridbag.setConstraints(cb0.getButton(), c);
+        jwr.add(cb0.getButton());
+        jwr.add(AppUI.vr(8));
+        
+        //c.gridwidth = 1;
+        MyButton cb1 = new MyButton(name1, brand.getSecondaryButtonColor());
+        cb1.addListener(al1);  
+        //gridbag.setConstraints(cb1.getButton(), c);
+        jwr.add(cb1.getButton());
+        jwr.add(AppUI.vr(8));
+        
+        MyButton cb2 = new MyButton(name2);
+        cb2.addListener(al2);
+        c.weightx = 0;
+        //gridbag.setConstraints(cb2.getButton(), c);
+        jwr.add(cb2.getButton());       
+        gridbag.setConstraints(jwr, c);
+        
+        parent.add(jwr);
+        
+        return cb2;
+    }
+    
+    
     public static JLabel wrapDiv(String text) {
         return new JLabel("<html><div style='width:500px; text-align:left'>" + text + "</div></html>");
     }

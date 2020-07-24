@@ -2153,6 +2153,7 @@ public class AdvancedClient  {
                     
                 }
 
+                /*
                 if (ps.dstWallet != null && ps.dstWallet.isSkyWallet()) {
                     ps.isCheckingSkyID = true;
                     skyCC = ps.dstWallet.getIDCoin();
@@ -2182,7 +2183,7 @@ public class AdvancedClient  {
                             return;
                         }
                     }
-                }
+                }*/
 
 
                 String dstName =  (ps.foundSN == 0) ? ps.dstWallet.getName() : "" + ps.foundSN;
@@ -2228,9 +2229,7 @@ public class AdvancedClient  {
                     sm.transferCoins(ps.srcWallet.getName(), ps.dstWallet.getName(), 
                         ps.typedAmount, memo, ps.typedRemoteWallet, new SenderCb(), new ReceiverCb());
                 
-                                
-                    
-                    //sm.startShowSkyCoinsService(new ShowEnvelopeCoinsForReceiverCb(), sn);
+
        
                     return;
                 }
@@ -3890,7 +3889,12 @@ public class AdvancedClient  {
         AppUI.GBPad(subInnerCore, y, gridbag);        
         y++;
             
-        AppUI.getTwoButtonPanel(subInnerCore, "Test Connection", "Save", new ActionListener() {
+        AppUI.getThreeButtonPanel(subInnerCore, "Cancel", "Test Connection", "Save", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                setDefaultScreen();
+                showScreen();
+            }
+        }, new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 boolean cbEnabled = cb1.isChecked();
                 
@@ -4714,6 +4718,10 @@ public class AdvancedClient  {
                 String newFileName = AppCore.getUserDir(Config.DIR_FRACKED, ps.srcWallet.getName()) + File.separator + ps.coinIDinFix.getName() + ".stack";
                 wl.debug(ltag, "New name: " + newFileName);
 
+                
+                System.out.println("x="+ps.coinIDinFix);
+                System.out.println("x="+ps.coinIDinFix.getName());
+                System.out.println("x="+ps.coinIDinFix.getIDCoin());
                 if (!AppCore.saveFile(newFileName, ps.coinIDinFix.getIDCoin().getJson(false))) {
                     ps.errText = "Failed to move ID Coin. Please, check main.log file";
                     showScreen();
@@ -9302,22 +9310,7 @@ public class AdvancedClient  {
                 });
             }          
         });
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+
         
         
         if (isAdvancedMode()) {
@@ -9501,20 +9494,7 @@ public class AdvancedClient  {
         }
         
         
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+
         JPanel wrpRefresh = new JPanel();
         // Refresh
         if (!isAdvancedMode()) {        
@@ -9858,7 +9838,7 @@ public class AdvancedClient  {
             ShowEnvelopeCoins sc = new ShowEnvelopeCoins(rpath, wl);
             int snID = ps.currentWallet.getIDCoin().sn;
             JPanel jp = new JPanel();
-            sc.launch(snID, "", new CallbackInterface() {
+            sc.launch(snID, "", true, new CallbackInterface() {
                 public void callback(Object o) {
                     ShowEnvelopeCoinsResult scresult = (ShowEnvelopeCoinsResult) o;
                     if (scresult.status == ShowEnvelopeCoinsResult.STATUS_PROCESSING) 
@@ -10704,7 +10684,16 @@ public class AdvancedClient  {
         y++;
 
         final MyTextField femail = email;
-        AppUI.getTwoButtonPanel(subInnerCore, "Refresh", "Continue", new ActionListener() {
+        
+
+        
+        
+        AppUI.getThreeButtonPanel(subInnerCore, "Cancel", "Refresh", "Continue", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                setDefaultScreen();
+                showScreen();
+            }
+        }, new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 ps.currentScreen = ProgramState.SCREEN_RECOVERY;
                 showScreen();
@@ -10750,6 +10739,7 @@ public class AdvancedClient  {
                 showScreen();
             }
         }, y, gridbag);
+        
 
     }
     
@@ -12383,29 +12373,7 @@ public class AdvancedClient  {
 	}
     }
 
-    class ShowEnvelopeCoinsForReceiverCb implements CallbackInterface {
-	public void callback(Object result) {
-            ShowEnvelopeCoinsResult er = (ShowEnvelopeCoinsResult) result;
- 
-            ps.cenvelopes = er.envelopes;
-            
-            wl.debug(ltag, "Sending from sc to " + ps.dstWallet.getName());
-            
-            Thread t = new Thread(new Runnable() {
-                public void run(){
-                    String memo = ps.typedMemo;
-                    if (!ps.typedReturnAddress.isEmpty() && !ps.typedReturnAddress.equals("None"))
-                        memo += " from " + ps.typedReturnAddress;
-                    
-                    sm.transferCoins(ps.srcWallet.getName(), ps.dstWallet.getName(), 
-                        ps.typedAmount, memo, ps.typedRemoteWallet, new SenderCb(), new ReceiverCb());
-                }
-            });
-        
-            t.start();
-        }
-    }
-    
+
     
     class ReceiverCb implements CallbackInterface {
 	public void callback(Object result) {

@@ -49,6 +49,8 @@ public class Receiver extends Servant {
         
         csb = new StringBuilder();
         
+        initRarr();
+        
         receiptId = AppCore.generateHex();
         if (rn != null)
             receiptId = rn;
@@ -303,6 +305,7 @@ public class Receiver extends Servant {
         if (cb != null)
             cb.callback(rr);
         
+        fixTransfer(rarr);
     } 
         
         
@@ -417,6 +420,7 @@ public class Receiver extends Servant {
             } else if (ars.status.equals("fail")) {
                 logger.debug(ltag, "fail");
                 setCoinStatus(ccs, i, CloudCoin.STATUS_FAIL);
+                addCoinsToRarr(i, ccs);
                 continue;
             } else {
                 logger.error(ltag, "Invalid status: " + ars.status);

@@ -46,13 +46,39 @@ public class ShowEnvelopeCoins extends Servant {
             public void run() {
                 logger.info(ltag, "RUN ShowEnvelopeCoins");
 
-                doShowSkyCoins(fsn);
+                doShowSkyCoins(fsn, false);
 
                 if (cb != null)
                     cb.callback(result);
             }
         });
     }
+    
+    public void launch(int sn, String envelope, boolean needFix, CallbackInterface icb) {
+        this.cb = icb;
+
+        final int fsn = sn;
+
+        result = new ShowEnvelopeCoinsResult();
+        result.coins = new int[0];
+        result.tags = new String[0];
+        result.envelopes = new Hashtable<String, String[]>();
+        result.counters = new int[Config.IDX_FOLDER_LAST][5];
+        result.totalRAIDAProcessed = 0;
+        
+        launchThread(new Runnable() {
+            @Override
+            public void run() {
+                logger.info(ltag, "RUN ShowEnvelopeCoins. NeedFix");
+
+                doShowSkyCoins(fsn, needFix);
+
+                if (cb != null)
+                    cb.callback(result);
+            }
+        });
+    }
+    
     
     public void launch(int sn, CallbackInterface icb) {
         this.cb = icb;
@@ -227,13 +253,15 @@ public class ShowEnvelopeCoins extends Servant {
      
     }
     
-    public void doShowSkyCoins(int sn) {
+    public void doShowSkyCoins(int sn, boolean needFix) {
         CloudCoin cc;
         String[] results;
         Object[] o;
         StringBuilder[] sbs;
         String[] requests;
 
+        System.out.println("nf="+needFix);
+        
         cc = getIDcc(sn);
         if (cc == null) {
             logger.error(ltag, "NO ID Coin found for SN: " + sn);
@@ -354,7 +382,37 @@ public class ShowEnvelopeCoins extends Servant {
             logger.error(ltag, "Failed to get coins");
             return;
         }
-                  
+         
+        
+        if (needFix) {
+            logger.info(ltag, "Calculating fix_transfer set of coins");
+            ArrayList<Integer>[] rarr = new ArrayList[RAIDA.TOTAL_RAIDA_COUNT];
+            for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+                rarr[i] = new ArrayList<Integer>();
+                int[] snst = sns[i];
+                for (int j = 0; j < vsns.length; j++) {
+                    boolean found = false;
+                    for (int k = 0; k < snst.length; k++) {
+                        if (snst[k] == vsns[j]) {
+                            found = true;
+                            break;
+                        }                  
+                    }
+                
+                    if (!found) {
+                        logger.debug(ltag, user + ": SN " + vsns[j] + " wasn't in the common set for raida " + i + ". Adding it to fix_transfer");
+                        //System.out.println(user + ": SN " + vsns[j] + " wasn't in the common set for raida " + i + ". Adding it to fix_transfer");
+                        rarr[i].add(vsns[j]);
+                    }
+                }
+            
+            }
+            
+            fixTransfer(rarr);
+        }
+        
+        
+        
         result.coins = new int[vsns.length];
         result.tags = new String[vsns.length];
         

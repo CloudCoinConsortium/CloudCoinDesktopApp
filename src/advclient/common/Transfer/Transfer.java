@@ -43,6 +43,8 @@ public class Transfer extends Servant {
         valuesPicked = new int[AppCore.getDenominations().length];
         globalResult = new TransferResult();
         
+        initRarr();
+        
         csb = new StringBuilder();
         launchThread(new Runnable() {
             @Override
@@ -257,6 +259,8 @@ public class Transfer extends Servant {
         if (cb != null)
             cb.callback(tr);
         
+        fixTransfer(rarr);
+        
     }
     
     private void setCoinStatus(ArrayList<CloudCoin> ccs, int idx, int status) {
@@ -372,6 +376,7 @@ public class Transfer extends Servant {
             } else if (ars.status.equals("allfail")) {
                 logger.debug(ltag, "allfail");
                 setCoinStatus(ccs, i, CloudCoin.STATUS_FAIL);
+                addCoinsToRarr(i, ccs);
                 continue;
             } else if (ars.status.equals("mixed")) {
                 logger.debug(ltag, "mixed " + ars.message);
@@ -389,6 +394,7 @@ public class Transfer extends Servant {
                         status = CloudCoin.STATUS_PASS;
                     } else if (strStatus.equals(Config.REQUEST_STATUS_FAIL)) {
                         status = CloudCoin.STATUS_FAIL;
+                        addCoinToRarr(i, ccs.get(j));
                     } else {
                         status = CloudCoin.STATUS_ERROR;
                         logger.error(ltag, "Unknown coin status from RAIDA" + i + ": " + strStatus);
