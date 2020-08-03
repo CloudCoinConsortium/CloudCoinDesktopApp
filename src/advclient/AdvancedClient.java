@@ -74,7 +74,7 @@ import org.json.JSONObject;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "3.0.37";
+    public static String version = "3.0.38";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -1933,7 +1933,7 @@ public class AdvancedClient  {
                                         String dstName =  (ps.foundSN == 0) ? ps.dstWallet.getName() : "" + ps.foundSN;
                                         
                                         sm.transferCoins(ps.srcWallet.getName(), dstName, 
-                                            ps.typedAmount, ps.typedMemo, ps.typedRemoteWallet, new SenderCb(), new ReceiverCb());
+                                            ps.typedAmount, ps.typedMemo, ps.typedRemoteWallet, ps.needPownAfterLocalTransfer, new SenderCb(), new ReceiverCb());
                                     }
                                 });
                             }
@@ -2188,8 +2188,10 @@ public class AdvancedClient  {
 
                 String dstName =  (ps.foundSN == 0) ? ps.dstWallet.getName() : "" + ps.foundSN;
                 String memo = ps.typedMemo;
-                if (!ps.typedReturnAddress.isEmpty() && !ps.typedReturnAddress.equals("None"))
-                    memo += " from " + ps.typedReturnAddress;
+                if (!ps.typedReturnAddress.isEmpty() && !ps.typedReturnAddress.equals("None")) {
+                    //memo += " from " + ps.typedReturnAddress;
+                    memo = AppCore.formatMemo(ps.typedMemo, ps.typedReturnAddress);
+                }
                 
                 // Remote wallet
                 if (ps.srcWallet.isSkyWallet()) {
@@ -2227,16 +2229,26 @@ public class AdvancedClient  {
                         memo += " from " + ps.typedReturnAddress;
                     
                     sm.transferCoins(ps.srcWallet.getName(), ps.dstWallet.getName(), 
-                        ps.typedAmount, memo, ps.typedRemoteWallet, new SenderCb(), new ReceiverCb());
+                        ps.typedAmount, memo, ps.typedRemoteWallet, false, new SenderCb(), new ReceiverCb());
                 
 
        
                     return;
                 }
 
+                
+                // Check if sending from localwallet to localwallet email protected
+                if (ps.dstWallet != null && !ps.dstWallet.isSkyWallet() && !ps.dstWallet.getEmail().isEmpty()) {
+                    ps.needPownAfterLocalTransfer = true;
+                    if (ps.dstWallet.isEncrypted())
+                        ps.typedPassword = ps.typedDstPassword;
+                } else {
+                    ps.needPownAfterLocalTransfer = false;
+                }
+
                 wl.debug(ltag, "Sending to dst " + dstName);
                 sm.transferCoins(ps.srcWallet.getName(), dstName, 
-                        ps.typedAmount, memo, ps.typedRemoteWallet, new SenderCb(), new ReceiverCb());
+                        ps.typedAmount, memo, ps.typedRemoteWallet, ps.needPownAfterLocalTransfer, new SenderCb(), new ReceiverCb());
             }
         });
         
@@ -4967,9 +4979,6 @@ public class AdvancedClient  {
     
     public void showConfirmBillPayScreen() {
         int y = 0;
-        JLabel fname, value;
-        MyTextField walletName = null;
-
         int total = 0;
         for (int i = 0; i < ps.billpays.length; i++) {
             if (ps.billpays[i].status != BillPayItem.SEND_STATUS_READY && ps.billpays[i].status != BillPayItem.SEND_STATUS_STUCK)
@@ -8943,6 +8952,8 @@ public class AdvancedClient  {
     
         int layerHeight = 48;
         JLabel thlabel = new JLabel("Transaction History");
+        if (isSky)
+            thlabel.setText("Loading...");
         AppUI.alignLeft(thlabel);
         AppUI.setFont(thlabel, 22);
         AppUI.setColor(thlabel, brand.getMainTextColor());
@@ -9831,6 +9842,7 @@ public class AdvancedClient  {
             headers = new String[] {
                 "Memo (note)",
                 "Date",
+                "From",
                 "Amount"
             }; 
             
@@ -9868,11 +9880,13 @@ public class AdvancedClient  {
                     for (String key : hlist) {
                         String[] data = envelopes.get(key);
 
-                        ps.trs[i] = new String[4];
-                        ps.trs[i][0] = data[0];
+                        ps.trs[i] = new String[5];
+                        ps.trs[i][0] = AppCore.extractTag(data[0]);
                         ps.trs[i][1] = data[2];
-                        ps.trs[i][2] = data[1];
-                        ps.trs[i][3] = "";
+                        ps.trs[i][2] = AppCore.extractFromTag(data[0]);
+                        ps.trs[i][3] = data[1];
+                        ps.trs[i][4] = "";
+                        //ps.trs[i][4] = "";
        
                         i++;
                     }
@@ -9881,6 +9895,7 @@ public class AdvancedClient  {
                     AppUI.alignLeft(scrollPane);
                     table.getColumnModel().getColumn(0).setPreferredWidth(230);
                     table.getColumnModel().getColumn(1).setPreferredWidth(140);
+                    table.getColumnModel().getColumn(2).setPreferredWidth(90);
                     
                     /*
                     for (Component c : rightPanel.getComponents()) {
@@ -11606,7 +11621,7 @@ public class AdvancedClient  {
 
             //setRAIDAProgress(0, 0, AppCore.getFilesCount(Config.DIR_SUSPECT, sm.getActiveWallet().getName()));
             setRAIDAProgressCoins(0, 0, 0);
-            sm.startSenderService(sn, null, 0, ps.typedMemo, sm.getActiveWallet().getName(), null, new SenderDepositCb());
+            sm.startSenderService(sn, null, 0, ps.typedMemo, sm.getActiveWallet().getName(), null, false, new SenderDepositCb());
 
         }
     }
@@ -12285,6 +12300,21 @@ public class AdvancedClient  {
                 Wallet dstWallet = ps.dstWallet;
                 
                 srcWallet.appendTransaction(ps.typedMemo, sr.amount * -1, sr.receiptId);
+                if (ps.needPownAfterLocalTransfer && dstWallet != null) {
+                    wl.debug(ltag, "Need pown after local transfer");                    
+                    EventQueue.invokeLater(new Runnable() {
+                        public void run() {
+                            ps.currentScreen = ProgramState.SCREEN_IMPORTING;
+                            ps.files = new ArrayList<String>();   
+                            showScreen();
+                            return;
+                        }
+                    });
+                    
+                    return;
+                }
+                
+                
                 if (dstWallet != null) {
                     dstWallet.appendTransaction(ps.typedMemo, sr.amount, sr.receiptId);
                     if (dstWallet.isEncrypted()) {

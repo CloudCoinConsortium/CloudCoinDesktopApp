@@ -303,7 +303,7 @@ public class ChangeMaker extends Servant {
         
 
         addCoinToReceipt(cc, "authentic", "Sent to Public Change");
-        saveReceipt(user, 1, 0, 0, 0, 0, 0);
+        saveReceipt(user, 1, 0, 0, 0, 0, 0, cc.getDenomination());
 
         cr.status = ChangeMakerResult.STATUS_FINISHED;
     }

@@ -109,7 +109,7 @@ public class Grader extends Servant {
 
         if (graded) {
             saveReceipt(user, gr.totalAuthentic, gr.totalCounterfeit, gr.totalFracked,
-                gr.totalLost, gr.totalUnchecked, dups);
+                gr.totalLost, gr.totalUnchecked, dups, gr.totalAuthenticValue + gr.totalFrackedValue);
         }
     }
 

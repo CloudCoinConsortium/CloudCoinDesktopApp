@@ -259,4 +259,6 @@ public class Config {
     public static boolean REQUESTED_ADVANCED_VIEW = false;
     
     public static String FREECOIN_URL = "https://cloudcoin.global/freecoin.php";
+    
+    public static String MEMO_METADATA_SEPARATOR = "METADATASEPARATOR";
 }

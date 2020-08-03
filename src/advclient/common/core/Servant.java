@@ -1021,9 +1021,7 @@ public class Servant {
         if (!csb.toString().equals(""))
             csb.append(",");
 
-        csb.append("{\"nn.sn\": \"");
-        csb.append(cc.nn);
-        csb.append(".");
+        csb.append("{\"sn\": \"");
         csb.append(cc.sn);
         csb.append("\", \"status\": \"");
         csb.append(status);
@@ -1035,7 +1033,7 @@ public class Servant {
 
     }
     
-    public void saveReceipt(String duser, int a, int c, int f, int l, int u, int dups) {
+    public void saveReceipt(String duser, int a, int c, int f, int l, int u, int dups, int totalValue) {
         logger.debug(ltag, "Saving receipt " + duser + ": " + a + "," + c + "," + f + "," + l + "," + u + "," + dups);
         
         StringBuilder rsb = new StringBuilder();
@@ -1065,6 +1063,8 @@ public class Servant {
         rsb.append(u);
         rsb.append(", \"prev_imported\": ");
         rsb.append(dups);
+        rsb.append(", \"total_value\": ");
+        rsb.append(totalValue);
         rsb.append(", \"receipt_detail\": [");
         rsb.append(csb);
         rsb.append("]}");
@@ -1798,11 +1798,7 @@ public class Servant {
                 sb.append(sn);
             }
             requests[j] = sb.toString();
-                    
-           
-            System.out.println("adding raida " + i);
-            System.out.println("r="+requests[j]);
-             j++;
+            j++;
         }
         
         results = raida.query(requests, null, cb, rlist);      

@@ -386,8 +386,8 @@ public class LossFixer extends Servant {
             } else {
                 if (!cc.canbeRecoveredFromLost()) {
                     logger.debug(ltag, "Coin " + cc.sn + " can't be restored: " + failed);
-                    AppCore.moveToTrash(cc.originalFile, user);
-                    addCoinToReceipt(cc, "counterfeit", Config.DIR_COUNTERFEIT);
+                    //AppCore.moveToTrash(cc.originalFile, user);
+                    //addCoinToReceipt(cc, "counterfeit", Config.DIR_COUNTERFEIT);
                     lr.failed++;                    
                 } else {
                     logger.debug(ltag, "Coin " + cc.sn + " will stay with us for a while");

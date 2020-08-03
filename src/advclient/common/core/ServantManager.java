@@ -445,9 +445,9 @@ public class ServantManager {
 	b.launch(dstDir, cb);
     }
     
-    public void startSenderService(int sn, String dstFolder, int amount, String memo, String remoteWalletName, String rn, CallbackInterface cb) {
+    public void startSenderService(int sn, String dstFolder, int amount, String memo, String remoteWalletName, String rn, boolean needPownAfterLocalTransfer, CallbackInterface cb) {
 	Sender s = (Sender) sr.getServant("Sender");
-	s.launch(sn, dstFolder, null, amount, memo, remoteWalletName, rn, cb);
+	s.launch(sn, dstFolder, null, amount, memo, remoteWalletName, rn, needPownAfterLocalTransfer, cb);
     }
      
     
@@ -460,7 +460,7 @@ public class ServantManager {
 
     public void startSenderServiceForChange(int sn, int[] values, String memo, CallbackInterface cb) {
         Sender s = (Sender) sr.getServant("Sender");
-	s.launch(sn, null, values, 0, memo, Config.CHANGE_SKY_DOMAIN, null, cb);
+	s.launch(sn, null, values, 0, memo, Config.CHANGE_SKY_DOMAIN, null, false, cb);
     }
     
     public void startChangeMakerService(int method, String email, CloudCoin cc, CallbackInterface cb) {
@@ -510,11 +510,11 @@ public class ServantManager {
         }
         
 	Sender s = (Sender) sr.getServant("Sender");
-	s.launch(sn, null, null, amount, memo, remoteWalletName, rn, cb);
+	s.launch(sn, null, null, amount, memo, remoteWalletName, rn, false, cb);
     }
     
     public boolean transferCoins(String srcWallet, String dstWallet, int amount, 
-            String memo, String remoteWalletName, CallbackInterface scb, CallbackInterface rcb) {
+            String memo, String remoteWalletName, boolean needPownAfterLocalTransfer, CallbackInterface scb, CallbackInterface rcb) {
         
         logger.debug(ltag, "Transferring " + amount + " from " + srcWallet + " to " + dstWallet + " rn=" + remoteWalletName);
         int sn = 0;
@@ -571,7 +571,7 @@ public class ServantManager {
         }
 
         logger.debug(ltag, "send to sn " + sn + " dstWallet " + dstWallet);
-        startSenderService(sn, dstWallet, amount, memo, remoteWalletName, null, scb);
+        startSenderService(sn, dstWallet, amount, memo, remoteWalletName, null, needPownAfterLocalTransfer, scb);
         
         return true;
         
@@ -1182,7 +1182,7 @@ public class ServantManager {
             }
             
             logger.debug(ltag, "send sn " + sn + " dstWallet " + dstFolder);
-            startSenderService(sn, dstFolder, amount, memo, remoteWalletName, rn, cb);
+            startSenderService(sn, dstFolder, amount, memo, remoteWalletName, rn, false, cb);
 	}
     }
     

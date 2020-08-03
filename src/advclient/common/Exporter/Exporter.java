@@ -241,7 +241,11 @@ public class Exporter extends Servant {
                     addCoinToReceipt(cc, "authentic", Config.DIR_EXPORT);
             }
         
-            saveReceipt(user, coinsPicked.size(), 0, 0, 0, 0, 0);
+            int totalValue = 0;
+            for (CloudCoin vcc : coinsPicked)
+                totalValue += vcc.getDenomination();
+            
+            saveReceipt(user, coinsPicked.size(), 0, 0, 0, 0, 0, totalValue);
         }
         
         er.status = ExporterResult.STATUS_FINISHED;

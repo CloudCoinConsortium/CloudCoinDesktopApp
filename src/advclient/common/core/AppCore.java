@@ -15,6 +15,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -35,6 +36,7 @@ import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -1013,6 +1015,7 @@ public class AppCore {
             int total_lost = o.optInt("total_lost");
             int total_unchecked = o.optInt("total_unchecked");
             int total_prevs = o.optInt("prev_imported");
+            int total_value = o.optInt("total_value");
             
             
             sb.append("<p>Receipt <b>#");
@@ -1032,6 +1035,8 @@ public class AppCore {
             sb.append(total_unchecked);
             sb.append("</b></p><p>Total Previously Deposited: <b>");
             sb.append(total_prevs);
+            sb.append("</b></p><p>Total Value: <b>");
+            sb.append(total_value);
             sb.append("</b></p><br><br><p>Details:</p><br>");
             
             JSONArray a = o.getJSONArray("receipt_detail");
@@ -1039,13 +1044,17 @@ public class AppCore {
             for (int i = 0; i < a.length(); i++) {
                 JSONObject io = a.getJSONObject(i);
                 
-                String nnsn = io.getString("nn.sn");
+                String sn = io.optString("sn");
+                if (sn == "") {
+                    sn = io.getString("nn.sn");
+                }
+                
                 String status = io.getString("status");
                 String pown = io.getString("pown");
                 String note = io.getString("note");
 
-                sb.append("<p>nn.sn: ");
-                sb.append(nnsn);
+                sb.append("<p>sn: ");
+                sb.append(sn);
                 sb.append("</p><p>status: ");
                 sb.append(status);
                 sb.append("</p><p>pown: ");
@@ -1892,6 +1901,7 @@ public class AppCore {
                 }
             }.load(reader);
         } catch(Exception e) {
+            System.out.println("e="+e.getMessage());
             logger.debug(ltag, "INI File is corrupted");
             return null;
         }
@@ -2198,5 +2208,61 @@ public class AppCore {
         return hwId;
         
         
+    }
+    
+    public static String formatMemo(String memo, String from) {
+        if(1==1)
+            return memo;
+        
+        StringBuilder sb = new StringBuilder();
+        
+        sb.append(memo);
+        sb.append(Config.MEMO_METADATA_SEPARATOR);
+        
+        StringBuilder sbx = new StringBuilder();
+        sbx.append("from=");
+        sbx.append(from);
+        
+        String b64 =  Base64.getEncoder().encodeToString((sbx.toString()).getBytes());
+        
+        sb.append(b64);
+        
+        return sb.toString();
+    }
+    
+    public static String extractTag(String metadata) {
+        String[] parts = metadata.split(Config.MEMO_METADATA_SEPARATOR);
+        
+        return parts[0];
+    }
+    
+    public static String extractFromTag(String metadata) {
+        String[] parts = metadata.split(Config.MEMO_METADATA_SEPARATOR);
+        if (parts.length <= 1) {
+            return "";
+        }
+        
+        String b64 =  new String(Base64.getDecoder().decode(parts[1]));
+
+        b64 = "[main]\n" + b64;
+        StringReader sr = new StringReader(b64);
+        Map<String, Properties> data;
+        try {
+            data = AppCore.parseINI(sr);
+        } catch (IOException e) {
+            logger.error(ltag, "Failed to parse metadata" + parts[1]);
+            return "";
+        }
+        
+        
+        Properties p = data.get("main");
+        if (p == null)
+            return "";
+             
+        String s = p.getProperty("from");
+        if (s == null)
+            return "";
+        
+        return s;
     }
 }

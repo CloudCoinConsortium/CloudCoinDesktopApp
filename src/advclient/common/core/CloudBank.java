@@ -345,6 +345,8 @@ public class CloudBank {
         rsb.append(total);
         rsb.append(", \"prev_imported\": ");
         rsb.append(0);
+        rsb.append(", \"total_value\": ");
+        rsb.append(0);
         rsb.append(", \"receipt\": [");
         //rsb.append(csb);
         rsb.append("]}");

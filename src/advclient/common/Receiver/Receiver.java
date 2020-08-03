@@ -18,7 +18,7 @@ public class Receiver extends Servant {
     ReceiverResult rr;
     ReceiverResult globalResult;
     
-    int a, c, e, f;
+    int a, c, e, f, av;
     boolean isSkyWithdraw;
     ArrayList<String> ff;
 
@@ -59,6 +59,7 @@ public class Receiver extends Servant {
 
         ff = new ArrayList<String>();
         a = c = e = f = 0;
+        av = 0;
         
         launchThread(new Runnable() {
             @Override
@@ -90,8 +91,8 @@ public class Receiver extends Servant {
         
         if (!updateRAIDAStatus()) {
             logger.error(ltag, "Can't proceed. RAIDA is unavailable");
-            rr.status = ReceiverResult.STATUS_ERROR;
-            rr.errText = AppCore.raidaErrText;
+            globalResult.status = ReceiverResult.STATUS_ERROR;
+            globalResult.errText = AppCore.raidaErrText;
             rr = new ReceiverResult();
             copyFromGlobalResult(rr);
             if (cb != null)
@@ -293,7 +294,7 @@ public class Receiver extends Servant {
 
         globalResult.status = ReceiverResult.STATUS_FINISHED;      
         if (!isSkyWithdraw)
-            saveReceipt(user, a, c, 0, 0, e, 0);      
+            saveReceipt(user, a, c, 0, 0, e, 0, av);      
         
         
         rr.files = new String[ff.size()];
@@ -469,6 +470,7 @@ public class Receiver extends Servant {
             logger.info(ltag, "cc=" + tcc.sn + " v=" + tcc.getJson(false));
             globalResult.amount += tcc.getDenomination();
             a++;
+            av += tcc.getDenomination();
             if (needReceipt)
                 addCoinToReceipt(tcc, "authentic", Config.DIR_BANK + " from " + fdstFolder);
         }

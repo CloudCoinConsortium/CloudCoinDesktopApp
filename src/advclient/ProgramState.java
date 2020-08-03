@@ -229,6 +229,8 @@ public class ProgramState {
     String chosenCoin;
     CloudCoin chosenCoinCC;
     
+    boolean needPownAfterLocalTransfer;
+    
     int typedReturnIdx;
     
     int hcValid, hcFracked, hcCounterfeit;
@@ -334,6 +336,8 @@ public class ProgramState {
 
         typedReturnAddress = "";
         typedReturnIdx = -1;
+        
+        needPownAfterLocalTransfer = true;
     }
  
     public String toString() {

@@ -230,8 +230,8 @@ public class FrackFixer extends Servant {
         fr.totalFiles = AppCore.getFilesCount(Config.DIR_FRACKED, user);
         FrackFixerResult nfr = new FrackFixerResult();
         copyFromMainFr(nfr);
-        if (cb != null)
-            cb.callback(nfr);
+        //if (cb != null)
+        //    cb.callback(nfr);
         
         int maxCoins = getIntConfigValue("max-coins-to-multi-detect");
         if (maxCoins == -1)

@@ -31,7 +31,7 @@ public class Sender extends Servant {
     }
 
     public void launch(int tosn, String dstFolder, int[] values, int amount, 
-            String envelope, String remoteWalletName, String rn, CallbackInterface icb) {
+            String envelope, String remoteWalletName, String rn, boolean needPownAfterLocalTransfer, CallbackInterface icb) {
         this.cb = icb;
 
         final int ftosn = tosn;
@@ -39,6 +39,7 @@ public class Sender extends Servant {
         final String fenvelope = envelope;
         final int famount = amount;
         final String fdstFolder = dstFolder;
+        final boolean fneedPownAfterLocalTransfer = needPownAfterLocalTransfer;
 
         this.remoteWalletName = remoteWalletName;
 
@@ -66,7 +67,7 @@ public class Sender extends Servant {
                 logger.info(ltag, "RUN Sender");
                 
                 if (fdstFolder != null) {
-                    doSendLocal(famount, fdstFolder);
+                    doSendLocal(famount, fdstFolder, fneedPownAfterLocalTransfer);
                 } else {
                     doSend(ftosn, fvalues, famount, fenvelope);
                 }
@@ -97,8 +98,8 @@ public class Sender extends Servant {
     }
     
     
-    public void doSendLocal(int amount, String dstUser) {
-        logger.debug(ltag, "Sending locally " + amount + " to " + dstUser);
+    public void doSendLocal(int amount, String dstUser, boolean needPownAfterLocalTransfer) {
+        logger.debug(ltag, "Sending locally " + amount + " to " + dstUser + " needpown="+needPownAfterLocalTransfer);
         
         String fullBankPath = AppCore.getUserDir(Config.DIR_BANK, user);
         String fullFrackedPath = AppCore.getUserDir(Config.DIR_FRACKED, user);
@@ -128,27 +129,36 @@ public class Sender extends Servant {
                 continue;
             }
             
-            String coinFolder = cf.getParentFile().getName();
+            if (needPownAfterLocalTransfer) {
+                logger.debug(ltag, "Need pown. Moving to Import");
+                if (!AppCore.moveToFolderNoTs(cc.originalFile, Config.DIR_IMPORT, dstUser)) {
+                    logger.error(ltag, "Failed to move coin " + cc.originalFile);
+                    addCoinToReceipt(cc, "error", "None");
+                    globalResult.status = SenderResult.STATUS_ERROR;
+                    e++;
+                    continue;
+                }
+            } else {
+                String coinFolder = cf.getParentFile().getName();            
+                if (!coinFolder.equals(Config.DIR_BANK) && !coinFolder.equals(Config.DIR_FRACKED)) {
+                    logger.error(ltag, "Coin was in the invalid folder: " + coinFolder);
+                    addCoinToReceipt(cc, "error", "None");
+                    globalResult.status = SenderResult.STATUS_ERROR;
+                    e++;
+                    continue;
+                }
             
-            if (!coinFolder.equals(Config.DIR_BANK) && !coinFolder.equals(Config.DIR_FRACKED)) {
-                logger.error(ltag, "Coin was in the invalid folder: " + coinFolder);
-                addCoinToReceipt(cc, "error", "None");
-                globalResult.status = SenderResult.STATUS_ERROR;
-                e++;
-                continue;
-            }
-            
-            if (!AppCore.moveToFolderNoTs(cc.originalFile, coinFolder, dstUser)) {
-                logger.error(ltag, "Failed to move coin " + cc.originalFile);
-                addCoinToReceipt(cc, "error", "None");
-                globalResult.status = SenderResult.STATUS_ERROR;
-                e++;
-                continue;
+                if (!AppCore.moveToFolderNoTs(cc.originalFile, coinFolder, dstUser)) {
+                    logger.error(ltag, "Failed to move coin " + cc.originalFile);
+                    addCoinToReceipt(cc, "error", "None");
+                    globalResult.status = SenderResult.STATUS_ERROR;
+                    e++;
+                    continue;
+                }
             }
             
             a++;
-            addCoinToReceipt(cc, "authentic", Config.DIR_BANK);
-            
+            addCoinToReceipt(cc, "authentic", Config.DIR_BANK);           
             globalResult.totalAuthentic = a;
             globalResult.totalCounterfeit = 0;
             globalResult.totalUnchecked = e;
@@ -156,8 +166,8 @@ public class Sender extends Servant {
         }
         
 
-        saveReceipt(user, a, 0, 0, 0, e, 0);
-        saveReceipt(dstUser, a, 0, 0, 0, e, 0);
+        saveReceipt(user, a, 0, 0, 0, e, 0, av);
+        saveReceipt(dstUser, a, 0, 0, 0, e, 0, av);
         
         SenderResult sr = new SenderResult();
         if (globalResult.status != SenderResult.STATUS_ERROR)
@@ -370,7 +380,7 @@ public class Sender extends Servant {
         globalResult.totalAuthenticValue = av;
         globalResult.totalFrackedValue = fv;
         
-        saveReceipt(user, a, c, f, 0, e, 0);
+        saveReceipt(user, a, c, f, 0, e, 0, av + fv);
         
         copyFromGlobalResult(sr);
         if (cb != null)
@@ -721,8 +731,7 @@ public class Sender extends Servant {
                 av += cc.getDenomination();
                 AppCore.moveToFolderNoTs(cc.originalFile, Config.DIR_SENT, user, true);
             } else {
-                if (cc.canbeRecoveredFromLost()) {
-                    
+                if (cc.canbeRecoveredFromLost()) {                    
                     logger.debug(ltag, "Need to launch sendAgain for " + cc.sn);
                     againCCs.add(cc);
                     continue;
@@ -752,9 +761,14 @@ public class Sender extends Servant {
                     av += cc.getDenomination();
                     AppCore.moveToFolderNoTs(cc.originalFile, Config.DIR_SENT, user, true);
                 } else {
-                    logger.debug(ltag, "Send again failed for cc " + cc.sn + " Giving up");
-                    c++;
-                    AppCore.moveToFolderNoTs(cc.originalFile, Config.DIR_COUNTERFEIT, user, true);
+                    if (!cc.canbeRecoveredFromLost()) {
+                        logger.debug(ltag, "Send again failed for cc " + cc.sn + " Giving up");
+                        c++;
+                        AppCore.moveToFolderNoTs(cc.originalFile, Config.DIR_COUNTERFEIT, user, true);
+                    } else {
+                        logger.debug(ltag, "Coins were not sent, but they have a chance. Leaving them in the Bank");
+                        e++;
+                    }
                 }
             }
         }

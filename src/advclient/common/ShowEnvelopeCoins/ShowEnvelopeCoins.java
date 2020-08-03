@@ -259,8 +259,6 @@ public class ShowEnvelopeCoins extends Servant {
         Object[] o;
         StringBuilder[] sbs;
         String[] requests;
-
-        System.out.println("nf="+needFix);
         
         cc = getIDcc(sn);
         if (cc == null) {
