@@ -214,6 +214,7 @@ public class Config {
     final public static String SENT_SKYWALLETS_FILENAME = "sentwallets.txt";
     
     final public static String PNG_TEMPLATE_NAME = "template.png";
+    final public static String CARD_TEMPLATE_NAME = "card.png";
 
     final public static String TAG_RANDOM = "random";
     

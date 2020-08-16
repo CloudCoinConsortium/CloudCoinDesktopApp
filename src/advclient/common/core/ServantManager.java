@@ -339,7 +339,6 @@ public class ServantManager {
         if (sr.isRunning("Authenticator"))
             return;
 
-        System.out.println("xxxxxxxxxx");
         if (w.isEncrypted()) {
             logger.debug(ltag, "Wallet is encrypted");
             Vaulter v = (Vaulter) sr.getServant("Vaulter");
@@ -391,6 +390,15 @@ public class ServantManager {
 	Authenticator at = (Authenticator) sr.getServant("Authenticator");
 	at.launch(cc, cb);
     }
+    
+    public void startAuthenticatorService(CloudCoin cc, String[] pans, CallbackInterface cb) {
+        if (sr.isRunning("Authenticator"))
+            return;
+
+	Authenticator at = (Authenticator) sr.getServant("Authenticator");
+	at.launch(cc, pans, cb);
+    }
+    
     
     public void startAuthenticatorService(ArrayList<CloudCoin> ccs, CallbackInterface cb) {
         if (sr.isRunning("Authenticator"))

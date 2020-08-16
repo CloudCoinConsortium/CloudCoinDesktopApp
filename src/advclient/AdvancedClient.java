@@ -74,7 +74,7 @@ import org.json.JSONObject;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "3.0.38";
+    public static String version = "3.0.39";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -1380,6 +1380,9 @@ public class AdvancedClient  {
                 break;
             case ProgramState.SCREEN_HEALTH_CHECK_DONE:
                 showHealthCheckDoneScreen();
+                break;
+            case ProgramState.SCREEN_CREATE_SKY_WALLET_FAILED: 
+                showCreateSkyWalletErrorScreen();
                 break;
         }
         
@@ -4730,10 +4733,6 @@ public class AdvancedClient  {
                 String newFileName = AppCore.getUserDir(Config.DIR_FRACKED, ps.srcWallet.getName()) + File.separator + ps.coinIDinFix.getName() + ".stack";
                 wl.debug(ltag, "New name: " + newFileName);
 
-                
-                System.out.println("x="+ps.coinIDinFix);
-                System.out.println("x="+ps.coinIDinFix.getName());
-                System.out.println("x="+ps.coinIDinFix.getIDCoin());
                 if (!AppCore.saveFile(newFileName, ps.coinIDinFix.getIDCoin().getJson(false))) {
                     ps.errText = "Failed to move ID Coin. Please, check main.log file";
                     showScreen();
@@ -5403,7 +5402,7 @@ public class AdvancedClient  {
             return;
         }
 
-        subInnerCore = getPanel("Sky Wallet created");                
+        subInnerCore = getPanel("Sky Wallet & Debit Card created");                
         GridBagLayout gridbag = new GridBagLayout();
         subInnerCore.setLayout(gridbag);
   
@@ -5416,7 +5415,7 @@ public class AdvancedClient  {
                 + "that the name is pointing to. The trusted transfer server that "
                 + "SkyWallet.cc points to is called \"TeleportNow.\" TeleportNow has data supremacy "
                 + "just like the RAIDA. Teleport now cannot be brought down or hacked "
-                + "and there is no information about transactions that are stored.");
+                + "and there is no information about transactions that are stored.<br>You can find your Debit Card in the ID folder");
         
         AppUI.getGBRow(subInnerCore, null, fname, 0, gridbag);
         y++;     
@@ -9113,18 +9112,7 @@ public class AdvancedClient  {
         c.anchor = GridBagConstraints.NORTH;
         gridbag.setConstraints(wrpWithdraw, c);
         wrp.add(wrpWithdraw);
-            
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+
         
         // Transfer
         JPanel wrpTransfer = new JPanel();
@@ -10055,7 +10043,209 @@ public class AdvancedClient  {
     }
     
     public void showSetDNSRecordScreen() {
-        JPanel subInnerCore = getPanel("Setting DNS Record. Please wait...");
+        JPanel subInnerCore = getPanel("Registering Debit Card. Please wait...");
+        
+        //JPanel subInnerCore = getPanel("Deposit in Progress");
+
+        JPanel ct = new JPanel();
+        AppUI.noOpaque(ct);
+        subInnerCore.add(ct);
+        
+        GridBagLayout gridbag = new GridBagLayout();
+        GridBagConstraints c = new GridBagConstraints();      
+        ct.setLayout(gridbag);
+        
+        JLabel x = new JLabel("Do not close the application");
+        AppUI.setCommonFont(x);
+        AppUI.setColor(x, brand.getErrorColor());
+        c.anchor = GridBagConstraints.CENTER;
+        c.insets = new Insets(10, 0, 4, 0); 
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = 0;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+        
+        pbarText = new JLabel("");
+        AppUI.setCommonFont(pbarText);
+        c.insets = new Insets(40, 20, 4, 0);
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = 1;
+        gridbag.setConstraints(pbarText, c);
+        ct.add(pbarText);
+        
+        // ProgressBar
+        pbar = new JProgressBar();
+        pbar.setStringPainted(true);
+        AppUI.setMargin(pbar, 0);
+        AppUI.setSize(pbar, (int) (tw / 2.6f) , 50);
+        pbar.setMinimum(0);
+        pbar.setMaximum(24);
+        pbar.setValue(0);
+        pbar.setUI(new FancyProgressBar());
+        AppUI.noOpaque(pbar);
+        
+        c.insets = new Insets(20, 20, 4, 0);
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = 2;
+        gridbag.setConstraints(pbar, c);
+        ct.add(pbar);
+        
+        subInnerCore.add(AppUI.hr(120));
+        Thread t = new Thread(new Runnable() {
+            public void run() {
+                String skywalletName = ps.domain + "." + ps.trustedServer;
+                String destFilename = AppCore.getIDDir() + File.separator + skywalletName + ".png";               
+                File f = new File(destFilename);
+                if (f.exists()) {
+                    ps.errText = "SkyWallet file already exists in your ID folder";
+                    ps.currentScreen = ProgramState.SCREEN_CREATE_SKY_WALLET_FAILED;
+                    showScreen();
+                    return;
+                }
+                
+                pbar.setVisible(false);
+                ps.isEchoFinished = false;
+                setRAIDAEchoProgressCoins(0);                
+                sm.startEchoService(new EchoCb());
+                while (!ps.isEchoFinished) {
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException e) {}
+                }
+                
+                if (!sm.isRAIDAOK()) {
+                    ps.errText = "RAIDA cannot be contacted. "
+                    + "This is usually caused by company routers blocking outgoing traffic. "
+                    + "Please Echo RAIDA and try again.";
+                    ps.isEchoFinished = false;
+                    ps.currentScreen = ProgramState.SCREEN_CREATE_SKY_WALLET_FAILED;
+                    showScreen();
+                    return;
+                }
+                
+                String file = isAdvancedMode() ? ps.chosenFile : ps.frecoinFilename;
+                
+                CloudCoin cc;
+                try {
+                    cc = new CloudCoin(file);
+                } catch (Exception e) {
+                    ps.errText = "Failed to parse CloudCoin";
+                    ps.currentScreen = ProgramState.SCREEN_CREATE_SKY_WALLET_FAILED;
+                    showScreen();
+                    return;
+                }
+
+                pbarText.setText("Sending generated ANs to the RAIDA");
+                pbarText.repaint();        
+                                
+                String[] pans = new String[RAIDA.TOTAL_RAIDA_COUNT];                
+                String cardNumber = AppCore.generatePansAndCardNumber(cc.sn, ps.typedPIN, pans);
+
+                
+                ps.isCheckingSkyID = true;
+                sm.startAuthenticatorService(cc, pans, new CallbackInterface() {
+                     public void callback(Object result) {
+                        wl.debug(ltag, "Authenticator SkyWallet finished");
+
+                        final AuthenticatorResult ar = (AuthenticatorResult) result;
+                        if (ar.status == AuthenticatorResult.STATUS_ERROR) {
+                            ps.isCheckingSkyID = false;
+                            EventQueue.invokeLater(new Runnable() {
+                                public void run() {
+                                    ps.errText = "Failed to Authencticate SkyID Coin";
+                                    ps.currentScreen = ProgramState.SCREEN_CREATE_SKY_WALLET_FAILED;
+                                    showScreen();
+                                }
+                            });
+               
+                            return;
+                        } else if (ar.status == AuthenticatorResult.STATUS_FINISHED) {
+                            ps.isCheckingSkyID = false;
+                            return;
+                        }
+                        
+                        setRAIDAProgressCoins(ar.totalRAIDAProcessed, 0, 0);
+                     }
+                });
+                
+                while (ps.isCheckingSkyID) {
+                    try {
+                        Thread.sleep(300);
+                    } catch (InterruptedException e) {}
+                }
+                
+                cc.setPownStringFromDetectStatus();
+                cc.setAnsToPansIfPassed();
+                wl.debug(ltag, "pown result " + cc.getPownString());
+                
+                if (!cc.isSentFixable()) {
+                    ps.errText = "Failed to send ANs to the RAIDA. Make sure your coin is authentic";
+                    ps.currentScreen = ProgramState.SCREEN_CREATE_SKY_WALLET_FAILED;
+                    showScreen();
+                    return;                
+                }
+                
+                String stack = cc.getJson(false);
+                if (!AppCore.saveCard(destFilename, skywalletName, stack, cardNumber, ps.typedPIN)) {
+                    wl.debug(ltag, "Failed to save PNG. Falling back to usual stack");
+                    
+                    destFilename = AppCore.getIDDir() + File.separator + skywalletName;
+                    if (!AppCore.saveFile(destFilename, stack)) {
+                        wl.debug(ltag, "We failed to save");
+                        wl.debug(ltag, "Your coin: " + cc.getJson(false));
+                        ps.errText = "Failed to save local file in your filesystem";
+                        ps.currentScreen = ProgramState.SCREEN_CREATE_SKY_WALLET_FAILED;
+                        showScreen();
+                        return;         
+                    }
+                }
+                
+                
+                pbarText.setText("Setting DNS record");
+                pbarText.repaint(); 
+                
+                DNSSn d = new DNSSn(ps.domain, ps.trustedServer, wl);
+                if (!d.setRecord(destFilename, sm.getSR())) {
+                    ps.errText = "Failed to set record. Check if the coin is valid";
+                    ps.currentScreen = ProgramState.SCREEN_CREATE_SKY_WALLET;
+                    showScreen();
+                    return;
+                } 
+
+                /*
+                String newFileName = ps.domain + "." + ps.trustedServer + ".stack";
+                if (!AppCore.moveToFolderNewName(file,  AppCore.getIDDir(), null, newFileName)) {
+                    ps.errText = "Failed to move ID Coin to the Default Wallet";
+                    ps.currentScreen = ProgramState.SCREEN_CREATE_SKY_WALLET;
+                    showScreen();
+                    return;
+                }*/
+                
+                
+
+
+                Wallet w = sm.getFirstFullNonSkyWallet();
+                if (w != null) {
+                    AppCore.moveToSent(file, w.getName());
+                }
+                    
+                sm.initWallets();                          
+                        
+                if (!isAdvancedMode()) {
+                    ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
+                } else {
+                    ps.currentScreen = ProgramState.SCREEN_SKY_WALLET_CREATED;
+                }
+                
+                showScreen();  
+               
+            }
+        });
+        
+        t.start();
+                        
+                        
+        
       
         AppUI.hr(subInnerCore, 4);
     }
@@ -10151,7 +10341,7 @@ public class AdvancedClient  {
         int y = 0;
         JLabel fname1, fname2, fname3;
 
-        JPanel subInnerCore = getPanel("Create Sky Wallet");                
+        JPanel subInnerCore = getPanel("Create Sky Wallet & Debit Card");                
         GridBagLayout gridbag = new GridBagLayout();
         subInnerCore.setLayout(gridbag);
         
@@ -10274,6 +10464,12 @@ public class AdvancedClient  {
         
         AppUI.getGBRow(subInnerCore, fname3, tf1.getTextField(), y, gridbag);
         y++; 
+        
+        
+        fname3 = new JLabel("PIN*");
+        final MyTextField tfpin = new MyTextField("", true);   
+        AppUI.getGBRow(subInnerCore, fname3, tfpin.getTextField(), y, gridbag);
+        y++; 
            
         AppUI.GBPad(subInnerCore, y, gridbag);        
         y++;
@@ -10284,8 +10480,7 @@ public class AdvancedClient  {
                 showScreen();
             }
         }, new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                
+            public void actionPerformed(ActionEvent e) {          
                 //ps.isCreatingNewSkyWallet = !cb1.isChecked();
                 ps.skyVaultDomain = tf0.getText();
                 
@@ -10319,6 +10514,20 @@ public class AdvancedClient  {
                     return;
                 }
                 
+                String pin = tfpin.getText();
+                if (pin.isEmpty()) {
+                    ps.errText = "PIN can't be empty";
+                    showScreen();
+                    return;
+                }
+                
+                if (!Validator.pin(pin)) {
+                    ps.errText = "PIN must contain from 3 to 6 digits";
+                    showScreen();
+                    return;                        
+                }
+                
+                
                 domain = domain.toLowerCase();
                 if (domain.endsWith(ps.trustedServer)) {
                     domain = domain.substring(0, domain.length() - ps.trustedServer.length() - 1);
@@ -10342,7 +10551,7 @@ public class AdvancedClient  {
                 }
 
                 
-                final String newFileName = domain + "." + ps.trustedServer + ".stack";
+                //final String newFileName = domain + "." + ps.trustedServer + ".stack";
                 final DNSSn d = new DNSSn(domain, ps.trustedServer, wl);
                 int sn = d.getSN();
                 
@@ -10354,41 +10563,16 @@ public class AdvancedClient  {
                     return;
                 }
                     
-                Thread t = new Thread(new Runnable() {
-                    public void run(){
-                        String file = isAdvancedMode() ? ps.chosenFile : ps.frecoinFilename;
-                        if (!d.setRecord(file, sm.getSR())) {
-                            ps.errText = "Failed to set record. Check if the coin is valid";
-                            showScreen();
-                            return;
-                        } 
-
-                        if (!AppCore.moveToFolderNewName(file,  AppCore.getIDDir(), null, newFileName)) {
-                            ps.errText = "Failed to move ID Coin to the Default Wallet";
-                            showScreen();
-                            return;
-                        }
-                    
-                        sm.initWallets();                          
-                        
-                        if (!isAdvancedMode()) {
-                            ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
-                        } else {
-                            ps.currentScreen = ProgramState.SCREEN_SKY_WALLET_CREATED;
-                        }
-                        showScreen();    
-                    }
-                });
-        
-                t.start();
-
                 EventQueue.invokeLater(new Runnable() {
                     public void run() {
                         ps.currentScreen = ProgramState.SCREEN_SETTING_DNS_RECORD;
+                        //ps.currentScreen = ProgramState.SCREEN_IMPORTING;
                         showScreen();
                         return;
                     }
                 });
+                
+                ps.typedPIN = pin;
 
             }
         }, y, gridbag);
@@ -10538,6 +10722,32 @@ public class AdvancedClient  {
         t.start();
         
     }
+    
+    
+    public void showCreateSkyWalletErrorScreen() {
+        JPanel subInnerCore;
+        
+             
+        int y = 0;
+
+        subInnerCore = getPanel("Create SkyWallet Failed");                
+        GridBagLayout gridbag = new GridBagLayout();
+        subInnerCore.setLayout(gridbag);
+        
+        AppUI.GBPad(subInnerCore, y, gridbag);        
+        y++;
+        
+      
+        AppUI.getTwoButtonPanel(subInnerCore, "", "Continue", null,  new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                ps.currentScreen = ProgramState.SCREEN_CREATE_SKY_WALLET;
+                showScreen();
+            }
+        }, y, gridbag);
+        
+    }
+    
+    
     public void showRecoveryDoneScreen() {
         boolean isError = !ps.errText.equals("");
         JPanel subInnerCore;
@@ -11508,11 +11718,7 @@ public class AdvancedClient  {
     public static void main(String[] args) {
         System.setProperty("awt.useSystemAAFontSettings","on");
         System.setProperty("swing.aatext", "true");
-        
-        
-        
-        
-        
+
         /*
         try {
             UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
@@ -11671,7 +11877,7 @@ public class AdvancedClient  {
     }
     
     class AuthenticatorForSkyCoinCb implements CallbackInterface {
-       public void callback(Object result) {
+        public void callback(Object result) {
             wl.debug(ltag, "AuthenticatorSkyCoin finished");
 
             final Object fresult = result;

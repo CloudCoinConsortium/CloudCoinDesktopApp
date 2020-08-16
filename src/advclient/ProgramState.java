@@ -93,6 +93,7 @@ public class ProgramState {
     final public static int SCREEN_HEALTH_CHECK = 73;
     final public static int SCREEN_HEALTH_CHECKING = 74;
     final public static int SCREEN_HEALTH_CHECK_DONE = 75;
+    final public static int SCREEN_CREATE_SKY_WALLET_FAILED = 76;
     
     
     final static int CB_STATE_INIT = 1;
@@ -111,6 +112,8 @@ public class ProgramState {
     String typedPassword;
     String typedEmail;
     String typedWalletName;
+    
+    String typedPIN;
 
     int currentWalletIdx;
     Wallet currentWallet;
@@ -338,6 +341,8 @@ public class ProgramState {
         typedReturnIdx = -1;
         
         needPownAfterLocalTransfer = true;
+        
+        typedPIN = "";
     }
  
     public String toString() {

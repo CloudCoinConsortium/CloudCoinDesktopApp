@@ -66,4 +66,12 @@ public class Validator {
         
         return rv;
     }
+    
+    public static boolean pin(String pin) {
+        Pattern p = Pattern.compile("[0-9]{3,6}", Pattern.UNICODE_CHARACTER_CLASS);
+        Matcher m = p.matcher(pin);
+        
+        return m.matches();
+    }
+    
 }

@@ -11,7 +11,6 @@ import global.cloudcoin.ccbank.core.Config;
 import global.cloudcoin.ccbank.core.DetectionAgent;
 import global.cloudcoin.ccbank.core.GLogger;
 import global.cloudcoin.ccbank.core.RAIDA;
-import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
@@ -87,6 +86,7 @@ public class Brand {
     
     Font _regFont, _semiBoldFont, _boldFont;
     Font _osRegFont, _osSemiBoldFont;
+    Font _cardFont;
     
     Map<String, dlResult> datamap;
     
@@ -108,7 +108,7 @@ public class Brand {
             "templatePng","templateJpeg1","templateJpeg5","templateJpeg25","templateJpeg100",
             "templateJpeg250","mainFont","mainFontSemiBold","mainFontBold","secondFont","secondFontSemiBold",
             "dropdownArrow", "arrowLeft", "arrowRight", "toggleyes", "toggleno", "lookingGlass", "eye",
-            "emailIcon", "emailIconActive"
+            "emailIcon", "emailIconActive", "templateCard", "cardFont"
         };
         
         for (String s : vals) {
@@ -256,6 +256,7 @@ public class Brand {
         copyTemplate("templateJpeg100", templateDir + File.separator + "jpeg100.jpg");
         copyTemplate("templateJpeg250", templateDir + File.separator + "jpeg250.jpg");
         copyTemplate("templatePng", templateDir + File.separator + Config.PNG_TEMPLATE_NAME);
+        copyTemplate("templateCard", templateDir + File.separator + Config.CARD_TEMPLATE_NAME);
    
     }
     
@@ -391,10 +392,8 @@ public class Brand {
                 return false;
         }
 
-        //try {             Thread.sleep(2000);        } catch (InterruptedException e) {}
-        //writeDefaultConfigIfNeeded();
-
         File configFile = new File(getConfigPath());
+        configFile.delete();
         if (!configFile.exists()) {
             logger.debug(ltag, "Downloading config file");
             br.text = "Downloading Config File";
@@ -531,6 +530,7 @@ public class Brand {
         _regFont = getFont("mainFont");
         _osRegFont = getFont("secondFont");
         _osSemiBoldFont = getFont("secondFontSemiBold");
+        _cardFont = getFont("cardFont");
     }
     
 
@@ -729,6 +729,11 @@ public class Brand {
         p = getProperty(ms, "templatepng");
         if (p != null)
             datamap.get("templatePng").name = p;
+        
+        p = getProperty(ms, "cardtemplate");
+        if (p != null)
+            datamap.get("templateCard").name = p;
+        
         
         p = getProperty(ms, "templatejpeg1");
         if (p != null)
@@ -929,6 +934,11 @@ public class Brand {
         if (p != null)
             datamap.get("secondFontSemiBold").name = p;
         
+        p = getProperty(ms, "cardfont");
+        if (p != null)
+            datamap.get("cardFont").name = p;
+        
+        
         // Support
         ms = data.get("support");
         if (ms == null) {
@@ -1088,6 +1098,9 @@ public class Brand {
         return this._osSemiBoldFont;
     }
     
+    public Font getCardFont() {
+        return this._cardFont;
+    }
     
     public Color getBackgroundColor() {
         return colorFromHex(this.backgroundColor);

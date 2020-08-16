@@ -832,8 +832,14 @@ public class FrackFixer extends Servant {
             cca.add(cc);
             mh.put(thash, cca);
         }
-            
+        
         int total = mh.size();
+        if (total == 0) {
+            logger.debug(ltag, "Nothing to fix");
+            return true;
+        }
+            
+        
         int progressWeight = RAIDA.TOTAL_RAIDA_COUNT / total;
         if (progressWeight < 1)
             progressWeight = 1;

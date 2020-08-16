@@ -1628,9 +1628,7 @@ public class Servant {
         CommonResponse errorResponse;
         String[] requests;
         StringBuilder[] sbs;
-        String[] posts;
         int i;
-        CloudCoin[] sccs;
 
         logger.debug(ltag, "Breaking coin " + tcc.sn + ". ID coin " + idcc.sn);
         
@@ -1824,14 +1822,12 @@ public class Servant {
     
     protected void addCoinsToRarr(int idx, ArrayList<CloudCoin> ccs) {
         logger.debug(ltag, "Adding coins: " + ccs.size());
-        System.out.println("adding " + ccs.size());
         for (CloudCoin cc : ccs) {
             addCoinToRarr(idx, cc);
         }
     }
     
     protected void addCoinToRarr(int idx, CloudCoin cc) {
-        System.out.println("adding " + idx + " sn="+cc.sn);
         logger.debug(ltag, " adding to rarr " + cc.sn);
         rarr[idx].add(cc.sn);
     }

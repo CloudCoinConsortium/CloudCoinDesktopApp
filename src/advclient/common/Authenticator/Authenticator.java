@@ -65,7 +65,7 @@ public class Authenticator extends Servant {
                 ccs.add(fcc);
 
                 AuthenticatorResult ar = new AuthenticatorResult();
-                if (!processDetect(ccs, false)) {
+                if (!processDetect(ccs, false, null)) {
                     logger.error(ltag, "Failed to detect");
                     globalResult.status = AuthenticatorResult.STATUS_ERROR;
                 } else {
@@ -79,6 +79,37 @@ public class Authenticator extends Servant {
         });
     }
     
+    public void launch(CloudCoin cc, String[] pans, CallbackInterface icb) {
+        this.cb = icb;
+        final CloudCoin fcc = cc;
+
+        globalResult = new AuthenticatorResult();
+        globalResult.tickets = new HashMap<Integer, String[]>();
+        launchThread(new Runnable() {
+            @Override
+            public void run() {
+                logger.info(ltag, "RUN CloudCoin Authenticator for Sky Wallet " + fcc.sn);
+
+                ArrayList<CloudCoin> ccs = new ArrayList<CloudCoin>();
+                ccs.add(fcc);
+
+                AuthenticatorResult ar = new AuthenticatorResult();
+                if (!processDetect(ccs, false, pans)) {
+                    logger.error(ltag, "Failed to detect");
+                    globalResult.status = AuthenticatorResult.STATUS_ERROR;
+                } else {
+                    globalResult.status = AuthenticatorResult.STATUS_FINISHED;
+                }
+
+                copyFromGlobalResult(ar);
+                if (cb != null)
+                    cb.callback(ar);
+            }
+        });
+    }
+    
+    
+    
     public void launch(ArrayList<CloudCoin> ccs, CallbackInterface icb) {
         this.cb = icb;
         final ArrayList<CloudCoin> fccs = ccs;
@@ -91,7 +122,7 @@ public class Authenticator extends Servant {
                 logger.info(ltag, "RUN CloudCoins Authenticator");
 
                 AuthenticatorResult ar = new AuthenticatorResult();
-                if (!processDetect(fccs, false)) {
+                if (!processDetect(fccs, false, null)) {
                     logger.error(ltag, "Failed to detect");
                     globalResult.status = AuthenticatorResult.STATUS_ERROR;
                 } else {
@@ -155,7 +186,7 @@ public class Authenticator extends Servant {
         }
     }
 
-    public boolean processDetect(ArrayList<CloudCoin> ccs, boolean needGeneratePans) {
+    public boolean processDetect(ArrayList<CloudCoin> ccs, boolean needGeneratePans, String[] pans) {
         String[] results;
         String[] requests;
         StringBuilder[] sbs;
@@ -171,11 +202,17 @@ public class Authenticator extends Servant {
             sbs[i].append("b=t");
         }
 
+        if (pans != null)
+            logger.debug(ltag, "will set pans");
+        
         for (CloudCoin cc : ccs) {
-            if (needGeneratePans)
+            if (needGeneratePans) {
                 cc.generatePans(this.email);
-            else
+            } else if (pans != null) {
+                cc.setPans(pans);
+            } else {
                 cc.setPansToAns();
+            }
 
             for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
                 //if (!first)
@@ -505,7 +542,7 @@ public class Authenticator extends Servant {
                 logger.info(ltag, "Processing");
 
                 AuthenticatorResult ar = new AuthenticatorResult();
-                if (!processDetect(ccs, needGeneratePans)) {
+                if (!processDetect(ccs, needGeneratePans, null)) {
                     if (!keepCoins)
                         moveCoinsToLost(ccs);
                     globalResult.status = AuthenticatorResult.STATUS_ERROR;
@@ -535,7 +572,7 @@ public class Authenticator extends Servant {
         AuthenticatorResult ar = new AuthenticatorResult();
         if (ccs.size() > 0) {
             logger.info(ltag, "adding + " + ccs.size());
-            if (!processDetect(ccs, needGeneratePans)) {
+            if (!processDetect(ccs, needGeneratePans, null)) {
                 if (!keepCoins)
                     moveCoinsToLost(ccs);
                 globalResult.status = AuthenticatorResult.STATUS_ERROR;

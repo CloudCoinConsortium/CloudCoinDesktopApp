@@ -408,6 +408,11 @@ public class CloudCoin {
     public void createAn(int idx, String email) {
         ans[idx] = generatePan(idx, email);
     }
+    
+    public void setPans(String[] ppans) {
+        for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++)
+            pans[i] = ppans[i];
+    }
         
     public int getDenomination() {  
 	if (this.sn < 1 )

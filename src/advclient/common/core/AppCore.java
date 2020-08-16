@@ -1,9 +1,18 @@
 package global.cloudcoin.ccbank.core;
 
+import advclient.AppUI;
 import advclient.common.core.Validator;
 import global.cloudcoin.ccbank.ServantManager.ServantManager;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -34,6 +43,8 @@ import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.Month;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -50,6 +61,7 @@ import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import javax.imageio.ImageIO;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -67,6 +79,7 @@ public class AppCore {
             + "Check that local routers are not blocking your connection.";
     
     public static int currentMode;
+    private static Object graphics2D;
     static public boolean createDirectory(String dirName) {
         String idPath;
 
@@ -1901,7 +1914,6 @@ public class AppCore {
                 }
             }.load(reader);
         } catch(Exception e) {
-            System.out.println("e="+e.getMessage());
             logger.debug(ltag, "INI File is corrupted");
             return null;
         }
@@ -2042,7 +2054,6 @@ public class AppCore {
             logger.error(ltag, "Invalid PNG Crc32 checksum");
             return -1;
         }
-               
         
         return idx;
     }
@@ -2211,8 +2222,8 @@ public class AppCore {
     }
     
     public static String formatMemo(String memo, String from) {
-        if(1==1)
-            return memo;
+        //if(1==1)
+        //    return memo;
         
         StringBuilder sb = new StringBuilder();
         
@@ -2265,4 +2276,165 @@ public class AppCore {
         
         return s;
     }
+    
+    public static String generatePansAndCardNumber(int sn, String pin, String[] pans) {
+        logger.debug(ltag, "Generating pans for " + sn);
+        
+        String AB = "0123456789";
+        SecureRandom rnd = new SecureRandom();
+        StringBuilder sb = new StringBuilder(32);
+        for (int i = 0; i < 12; i++) {
+            sb.append(AB.charAt(rnd.nextInt(AB.length())));
+        }
+        
+        String rand = sb.toString();       
+        logger.debug(ltag, "rand " + rand);
+        
+        String preCardNumber = "401" + rand;
+        String reversed = new StringBuilder(preCardNumber).reverse().toString();
+        int total = 0;
+        for (int i = 0; i < reversed.length(); i++) {
+            int c = reversed.charAt(i) - '0';
+            if (((i + 3) % 2) != 0) {
+                c *= 2;
+                if (c > 9)
+                    c -= 9;
+            }
+            
+            total += c;
+        }
+
+        int remainder = 10 - (total % 10);
+        if (remainder == 10)
+            remainder = 0;
+        
+        String cardNumber = preCardNumber + "" + remainder;
+        
+        logger.debug(ltag, "Generated Card Number " + cardNumber);
+        logger.debug(ltag, "reversed " + reversed + " total " + total + " rem " + remainder);
+        
+        for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+            String seed = "" + i + "" + sn + "" + rand + "" + pin;            
+            pans[i] = AppCore.getMD5(seed);
+        }
+                
+        return cardNumber;
+        
+    }
+    
+    public static boolean saveCard(String filename, String wallet, String data, String cardNumber, String pin) {
+        String templateFileName = AppCore.getTemplateDir() + File.separator + Config.CARD_TEMPLATE_NAME;        
+        byte[] bytes = AppCore.loadFileToBytes(templateFileName);
+        if (bytes == null) {
+            logger.error(ltag, "Failed to load template " + templateFileName);
+            return false;
+        }
+        
+        int idx = AppCore.basicPngChecks(bytes);
+        if (idx == -1) {
+            logger.error(ltag, "PNG checks failed");
+            return false;
+        }
+        
+        logger.info(ltag, "Loaded, bytes: " + bytes.length);
+        
+        
+        
+        ByteArrayInputStream bais = new ByteArrayInputStream(bytes);     
+        BufferedImage bi;
+        try {
+            bi = ImageIO.read(bais);
+        } catch (IOException e) {
+            logger.debug(ltag, "Failed to read image");
+            return false;
+        }
+        
+        LocalDate currentdate = LocalDate.now();
+        int currentMonth = currentdate.getMonthValue();
+        int currentYear = currentdate.getYear() - 2000;
+        
+        currentYear += 5;
+        
+        String date = currentMonth + "/" + currentYear;
+        
+        cardNumber = cardNumber.replaceAll("(\\d{4})","$1 ").trim();
+        
+        System.out.println("c="+cardNumber+", d=" + date);
+    
+        //Font f = AppUI.brand.getCardFont();
+                
+        
+        Graphics g = bi.getGraphics();
+        Graphics2D g2d = (Graphics2D) g;
+        g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        g.setFont(g.getFont().deriveFont(44f));
+        g.drawString(cardNumber, 64, 285);
+        
+        g.setFont(g.getFont().deriveFont(35f));
+        g.drawString(date, 450, 362);
+        g.setFont(g.getFont().deriveFont(44f));
+        g.drawString(wallet, 64, 425);
+        
+        g.setColor(Color.decode("#dddddd"));
+        g.setFont(g.getFont().deriveFont(17f));
+        g.drawString("Keep these numbers secret. Do not give to merchants.", 64, 320);
+        g.setColor(Color.BLACK);
+        g.setFont(g.getFont().deriveFont(35f));
+        g.drawString("CVV (Keep Secret): " + pin, 64, 675);
+
+        g.dispose();
+    
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try {
+            ImageIO.write(bi, "png", baos);
+            baos.flush();
+        } catch (IOException e) {
+            logger.debug(ltag, "Failed to write image");
+            return false;
+        }
+        
+        bytes = baos.toByteArray();
+  
+        logger.info(ltag, "Generated, bytes: " + bytes.length);
+        int dl = data.length();
+        int chunkLength = dl + 12;
+        logger.debug(ltag, "data length " + dl);
+        byte[] nbytes = new byte[bytes.length + chunkLength];
+        for (int i = 0; i < idx + 4; i++) {
+            nbytes[i] = bytes[i];
+        }
+
+        // Setting up the chunk
+        // Set length
+        AppCore.setUint32(nbytes, idx + 4, dl);
+        
+        // Header cLDc
+        nbytes[idx + 4 + 4] = 0x63;
+        nbytes[idx + 4 + 5] = 0x4c;
+        nbytes[idx + 4 + 6] = 0x44;
+        nbytes[idx + 4 + 7] = 0x63;
+                
+        for (int i = 0; i < dl; i++) {
+            nbytes[i + idx + 4 + 8] = (byte) data.charAt(i);
+        }
+
+        // crc
+        long crc32 = AppCore.crc32(nbytes, idx + 8, dl + 4);
+        AppCore.setUint32(nbytes, idx + 8 + dl + 4, crc32);
+        logger.debug(ltag, "crc32 " + crc32);
+        
+        // Rest data
+        for (int i = 0; i < bytes.length - idx - 4; i++) {
+            nbytes[i + idx + 8 + dl + 4 + 4] = bytes[i + idx + 4];
+        }
+
+
+        if (!AppCore.saveFileFromBytes(filename, nbytes)) {
+            logger.error(ltag, "Failed to write file");
+            return false;
+        }
+        
+        return true;
+    }
+    
 }
