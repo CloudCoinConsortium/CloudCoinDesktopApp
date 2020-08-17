@@ -1753,16 +1753,41 @@ public class AppCore {
             if (!AppCore.hasCoinExtension(file))
                 continue;
 
-            String[] parts = file.getName().split("\\.");
-            if (parts.length != 5) {
+            if (file.getName().endsWith(".png")) {
+                CloudCoin cc;
+            
+                try {
+                    cc = new CloudCoin(file.getAbsolutePath());
+                } catch (Exception e) {
+                    logger.debug(ltag, "Unable to open " + file.getName() + ", skipping it");
+                    continue;
+                }
+
+                sns.add(cc.sn);
                 continue;
             }
             
-            int sn;
+            //System.out.println("f="+file);
+            String[] parts = file.getName().split("\\.");
+            if (parts.length != 5) {
+                logger.debug(ltag, "Maybe it is a stack file. Will try to parse it");
+                CloudCoin[] sccs = AppCore.parseStack(file.getAbsolutePath());
+                for (int i = 0; i < sccs.length; i++) {
+                    sns.add(sccs[i].sn);
+                }
+                
+                continue;
+            }
             
+            int sn;            
             try {
                 sn = Integer.parseInt(parts[3]);
             } catch (NumberFormatException e) {
+                logger.debug(ltag, "Maybe it is a stack file. Will try to parse it");
+                CloudCoin[] sccs = AppCore.parseStack(file.getAbsolutePath());
+                for (int i = 0; i < sccs.length; i++) {
+                    sns.add(sccs[i].sn);
+                }
                 continue;
             }
             
@@ -1776,6 +1801,57 @@ public class AppCore {
         return asns;
     }
     
+    public static CloudCoin[] parseStack(String file) {
+        JSONArray incomeJsonArray;
+        int sn, nn;
+        CloudCoin cc;
+        CloudCoin[] ccs = new CloudCoin[0];
+        
+        String data = AppCore.loadFile(file);
+        if (data == null) {
+            logger.debug(ltag, "Failed to load file " + file);
+            return ccs;
+        }
+        
+        try {
+            JSONObject o = new JSONObject(data);
+            incomeJsonArray = o.getJSONArray("cloudcoin");
+
+            ccs = new CloudCoin[incomeJsonArray.length()];
+            for (int i = 0; i < incomeJsonArray.length(); i++) {
+                JSONObject childJSONObject = incomeJsonArray.getJSONObject(i);
+
+                sn = childJSONObject.getInt("sn");
+                nn = childJSONObject.getInt("nn");
+
+                JSONArray ans = childJSONObject.getJSONArray("an");
+                String[] strAns = AppCore.toStringArray(ans);
+                String ed = childJSONObject.optString("ed");
+                JSONArray aoidJson = childJSONObject.optJSONArray("aoid");
+                String[] strAoid = AppCore.toStringArray(aoidJson);
+
+                cc = new CloudCoin(nn, sn, strAns, ed, strAoid, Config.DEFAULT_TAG);
+                ccs[i] = cc;
+            }
+        } catch (JSONException e) {
+            logger.error(ltag, "Failed to parse stack: " + e.getMessage());
+            return null;
+        }
+
+        return ccs;
+    }
+    
+    public static String[] toStringArray(JSONArray jsonArray) {
+        if (jsonArray == null)
+            return null;
+
+        String[] arr = new String[jsonArray.length()];
+        for (int i = 0; i < jsonArray.length(); i++) {
+            arr[i] = jsonArray.optString(i);
+        }
+
+        return arr;
+    }
     
     public static void saveSerialsFromSNs(String fileName, int[] sns) {
         
@@ -1999,6 +2075,12 @@ public class AppCore {
                     return null;
                 }
             }
+            
+            if (idx + 4 + i + 7 > bytes.length) {
+                logger.error(ltag, "CloudCoin was not found");
+                return null;
+            }
+            
                        
             StringBuilder sb = new StringBuilder();
             sb.append(Character.toChars(bytes[idx + 4 + i + 4]));

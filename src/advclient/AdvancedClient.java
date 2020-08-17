@@ -918,14 +918,14 @@ public class AdvancedClient  {
         };
  
         String[] items = {"Backup", "List serials", "Clear History", "Fix Fracked", 
-            "Delete a Wallet", "Show Folders", "Echo RAIDA", "Settings", "Cloud Bank", "Recovery"};
+            "Delete a Wallet", "Show Folders", "Echo RAIDA", "Settings", "Cloud Bank", "Recovery", "List Serials"};
         
         
         items[0] = items[1] = items[4] = items[5] = null;
         
         if (!isAdvancedMode()) {
             items[0] = items[1] = items[2] = items[3] = items[4] = items[5] = items[7] = items[8] 
-                    = items[9] = null;
+                    = items[9] = items[10] = null;
         }
         
         for (int i = 0; i < items.length; i++) {
@@ -992,6 +992,8 @@ public class AdvancedClient  {
                         ps.currentScreen = ProgramState.SCREEN_CLOUDBANK;
                     } else if (action.equals("9")) {
                         ps.currentScreen = ProgramState.SCREEN_RECOVERY;
+                    } else if (action.equals("10")) {
+                        ps.currentScreen = ProgramState.SCREEN_LIST_SERIALS_GLOBAL;
                     } 
 
                     showScreen();
@@ -1384,6 +1386,13 @@ public class AdvancedClient  {
             case ProgramState.SCREEN_CREATE_SKY_WALLET_FAILED: 
                 showCreateSkyWalletErrorScreen();
                 break;
+            case ProgramState.SCREEN_LIST_SERIALS_GLOBAL:
+                showListSerialsGlobalScreen();
+                break;
+            case ProgramState.SCREEN_LIST_SERIALS_GLOBAL_DOING:
+                showListSerialsGlobalDoingScreen();
+                break;
+                
         }
         
         if (lwrapperPanel != null) {
@@ -7672,6 +7681,68 @@ public class AdvancedClient  {
        
     }
     
+    
+    public void showListSerialsGlobalScreen() {
+        int y = 0;
+        JLabel fname;
+
+        JPanel subInnerCore = getPanel("List Serials");                
+        GridBagLayout gridbag = new GridBagLayout();
+        subInnerCore.setLayout(gridbag);
+
+        //final optRv rv = setOptionsForWallets(false, false);
+        fname = new JLabel("List Serials will show you Serial Numbers of your CloudCoins");     
+        AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
+        y++;     
+        
+        final JLabel lfText = new JLabel("Local folder*");
+        final JFileChooser chooser = new JFileChooser();
+        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        chooser.setAcceptAllFileFilterUsed(false);
+     
+        final MyTextField localFolder = new MyTextField("Select Folder", false, true);
+        localFolder.setFilepickerListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (!Config.DEFAULT_EXPORT_DIR.isEmpty())
+                    chooser.setCurrentDirectory(new File(Config.DEFAULT_EXPORT_DIR));
+
+                int returnVal = chooser.showOpenDialog(null);
+                if (returnVal == JFileChooser.APPROVE_OPTION) {       
+                    ps.chosenFile = chooser.getSelectedFile().getAbsolutePath();
+                    localFolder.setData(chooser.getSelectedFile().getName());
+                }
+            }
+        });
+        AppUI.getGBRow(subInnerCore, lfText, localFolder.getTextField(), y, gridbag);
+        y++;
+
+        AppUI.GBPad(subInnerCore, y, gridbag);        
+        y++;
+       
+        AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Continue", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                setDefaultScreen();
+                showScreen();
+            }
+        }, new ActionListener() {
+            public void actionPerformed(ActionEvent e) {    
+                if (ps.chosenFile.isEmpty()) {
+                    ps.errText = "Please, select folder";
+                    showScreen();
+                    return;
+                }
+
+                ps.currentScreen = ProgramState.SCREEN_LIST_SERIALS_GLOBAL_DOING;
+                showScreen();
+            }
+        }, y, gridbag);
+
+        
+
+    }
+    
+    
     public void showListSerialsScreen() {
         int y = 0;
         JLabel fname;
@@ -7684,6 +7755,7 @@ public class AdvancedClient  {
         fname = new JLabel("List Serials will show you Serial Numbers of your CloudCoins");     
         AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
         y++;     
+
         
         /*
         fname = new JLabel("From Wallet*");
@@ -8637,6 +8709,44 @@ public class AdvancedClient  {
         resetState();
     }
     
+    
+    public void showListSerialsGlobalDoingScreen() {
+        JPanel subInnerCore = getPanel("Checking folder...");                
+        GridBagLayout gridbag = new GridBagLayout();
+        subInnerCore.setLayout(gridbag);
+
+        Thread t = new Thread(new Runnable() {
+            public void run() {
+                int[] sns = AppCore.getCoinsSNInDir(ps.chosenFile);
+                if (sns == null) {
+                    EventQueue.invokeLater(new Runnable() {
+                        public void run() {
+                            ps.errText = "Failed to read folder";
+                            ps.currentScreen = ProgramState.SCREEN_LIST_SERIALS_DONE;
+                            showScreen();
+                            return;
+                        }
+                    });
+                        
+                    return;
+                }
+                                    
+                EventQueue.invokeLater(new Runnable() {
+                    public void run() {
+                        ps.lsSNs = sns;
+                        ps.currentScreen = ProgramState.SCREEN_LIST_SERIALS_DONE;
+                        showScreen();
+                        return;
+                    }
+                });
+            }
+        });
+        
+        t.start();
+        
+    }
+    
+    
     public void showListSerialsDoing() {
         JPanel subInnerCore = getPanel("Doing List Serials...");                
         GridBagLayout gridbag = new GridBagLayout();
@@ -8662,14 +8772,10 @@ public class AdvancedClient  {
                         return;
                     }
         
-                    //fname = AppUI.wrapDiv("Wallet <b>" + w.getName() + " - " + w.getTotal() + " CC</b>");   
-                    //AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
-                    //y++; 
-                    //wname = w.getName();
-                } else if (ps.chosenFile == null) {
+                } else {
                     EventQueue.invokeLater(new Runnable() {
                         public void run() {
-                            ps.errText = "No folder or Wallet chosen";
+                            ps.errText = "No Wallet chosen";
                             ps.currentScreen = ProgramState.SCREEN_LIST_SERIALS_DONE;
                             showScreen();
                             return;
@@ -8677,24 +8783,8 @@ public class AdvancedClient  {
                     });
 
                     return;
-                } else {
-                    sns = AppCore.getCoinsSNInDir(ps.chosenFile);
-                    if (sns == null) {
-                        EventQueue.invokeLater(new Runnable() {
-                            public void run() {
-                                ps.errText = "Failed to read folder";
-                                ps.currentScreen = ProgramState.SCREEN_LIST_SERIALS_DONE;
-                                showScreen();
-                                return;
-                            }
-                        });
-                        
-                        return;
-                    }
-
-                }
-                
-                                    
+                } 
+                                  
                 EventQueue.invokeLater(new Runnable() {
                     public void run() {
                         ps.lsSNs = sns;
@@ -8764,6 +8854,8 @@ public class AdvancedClient  {
             if (rVal == JFileChooser.APPROVE_OPTION) {
                 AppCore.saveSerialsFromSNs(c.getSelectedFile().getAbsolutePath(), sns);
         }
+            
+        int y = 0;
        
             /*
         //serial number table
@@ -8774,13 +8866,13 @@ public class AdvancedClient  {
         AppUI.getGBRow(subInnerCore, null, scrollPane, y, gridbag);
         y++; 
         
-
+*/
         
         AppUI.GBPad(subInnerCore, y, gridbag);        
         y++;
         
         
-        AppUI.getTwoButtonPanel(subInnerCore, "Print", "Export List", new ActionListener() {
+        AppUI.getTwoButtonPanel(subInnerCore, "", "Continue", /*new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                     try {
                         table.print();
@@ -8788,19 +8880,22 @@ public class AdvancedClient  {
                         System.out.println("Failed to print");
                     }
                 }
-            }, new ActionListener() {
+            }*/null, new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                JFileChooser c = new JFileChooser();
+                setDefaultScreen();
+                showScreen();
+                /*JFileChooser c = new JFileChooser();
                 c.setSelectedFile(new File(w.getName() + "-serials.csv"));
 
                 int rVal = c.showSaveDialog(null);
                 if (rVal == JFileChooser.APPROVE_OPTION) {
                     w.saveSerials(c.getSelectedFile().getAbsolutePath());
                 }
+                */
             }
         }, y, gridbag);
-        */
-        resetState();
+        //*/
+        //resetState();
     }
     
     public void sleep(int ms) {

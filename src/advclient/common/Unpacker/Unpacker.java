@@ -457,7 +457,7 @@ public class Unpacker extends Servant {
         return cc;
     }
 
-    private CloudCoin[] parseStack(String data) {
+    public CloudCoin[] parseStack(String data) {
         JSONArray incomeJsonArray;
 
         CloudCoin[] ccs;
@@ -494,8 +494,6 @@ public class Unpacker extends Servant {
     }
 
     private CloudCoin[] parseCsv(String data) {
-        JSONArray incomeJsonArray;
-
         CloudCoin[] ccs;
         CloudCoin cc;
 

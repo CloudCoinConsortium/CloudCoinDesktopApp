@@ -94,6 +94,8 @@ public class ProgramState {
     final public static int SCREEN_HEALTH_CHECKING = 74;
     final public static int SCREEN_HEALTH_CHECK_DONE = 75;
     final public static int SCREEN_CREATE_SKY_WALLET_FAILED = 76;
+    final public static int SCREEN_LIST_SERIALS_GLOBAL = 77;
+    final public static int SCREEN_LIST_SERIALS_GLOBAL_DOING = 78;
     
     
     final static int CB_STATE_INIT = 1;
