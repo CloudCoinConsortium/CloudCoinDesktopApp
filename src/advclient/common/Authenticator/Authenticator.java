@@ -36,8 +36,10 @@ public class Authenticator extends Servant {
         final String fdir = dir;
         
         
+        
         globalResult = new AuthenticatorResult();
         globalResult.tickets = new HashMap<Integer, String[]>();
+        globalResult.errText = "";
         launchThread(new Runnable() {
             @Override
             public void run() {
@@ -56,6 +58,7 @@ public class Authenticator extends Servant {
 
         globalResult = new AuthenticatorResult();
         globalResult.tickets = new HashMap<Integer, String[]>();
+        globalResult.errText = "";
         launchThread(new Runnable() {
             @Override
             public void run() {
@@ -85,6 +88,7 @@ public class Authenticator extends Servant {
 
         globalResult = new AuthenticatorResult();
         globalResult.tickets = new HashMap<Integer, String[]>();
+        globalResult.errText = "";
         launchThread(new Runnable() {
             @Override
             public void run() {
@@ -116,6 +120,7 @@ public class Authenticator extends Servant {
 
         globalResult = new AuthenticatorResult();
         globalResult.tickets = new HashMap<Integer, String[]>();
+        globalResult.errText = "";
         launchThread(new Runnable() {
             @Override
             public void run() {

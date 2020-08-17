@@ -368,11 +368,15 @@ public class ServantManager {
              
             return;
         }
-         System.out.println("fgox");
+
 	Authenticator at = (Authenticator) sr.getServant("Authenticator");
 	at.launch(cb, Config.DIR_BANK);
     }
     
+    public void startAuthenticatorInFrackedService(Wallet w, CallbackInterface cb) {
+        Authenticator at = (Authenticator) sr.getServant("Authenticator");
+	at.launch(cb, Config.DIR_FRACKED);
+    }
     
     
     public void startRecovererService(String email, CloudCoin cc, CallbackInterface cb) {

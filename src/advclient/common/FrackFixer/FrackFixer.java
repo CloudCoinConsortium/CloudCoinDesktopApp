@@ -378,11 +378,19 @@ public class FrackFixer extends Servant {
             for (CloudCoin cc : ccs) {
                 fr.totalRAIDAProcessed = 0;
                 for (corner = 0; corner < 4; corner++) {
-                    logger.debug(ltag, "corner=" + corner);
-                    if (fixCoinInCorner(raidaIdx, corner, cc, email)) {
-                        logger.debug(ltag, "Fixed successfully: " + cc.sn);
-                        syncCoin(raidaIdx, cc);
-                        break;
+                    logger.debug(ltag, "corner=" + corner + " haveTickets " + haveTickets);
+                    if (haveTickets) {
+                        if (fixCoinInCornerWithTickets(raidaIdx, corner, cc, email, tickets)) {
+                            logger.debug(ltag, "Fixed successfully");
+                            syncCoin(raidaIdx, cc);
+                            break;
+                        }
+                    } else {
+                        if (fixCoinInCorner(raidaIdx, corner, cc, email)) {
+                            logger.debug(ltag, "Fixed successfully: " + cc.sn);
+                            syncCoin(raidaIdx, cc);
+                            break;
+                        }
                     }
                 }                
                 fr.totalFilesProcessed++;
@@ -419,6 +427,64 @@ public class FrackFixer extends Servant {
                 break;
             }
         }
+    }
+    
+    public boolean fixCoinInCornerWithTicketsReal(int raidaIdx, int corner, CloudCoin cc, String email, String[] tickets) {
+        int[] triad;
+        int[] raidaFix;
+
+        String[] results;
+        String[] requests;
+        
+        raidaFix = new int[1];
+        raidaFix[0] = raidaIdx;
+        
+        logger.debug(ltag, "Fixing one coin real with tickets on raida " + raidaIdx);
+
+        if (raida.isFailed(raidaIdx)) {
+            logger.error(ltag, "RAIDA " + raidaIdx + " is failed. Skipping it");
+            return false;
+        }
+
+        triad = trustedTriads[raidaIdx][corner];
+        requests = new String[1];
+        requests[0] = "fix?";
+
+        for (int i = 0; i < tickets.length; i++) {
+            if (i != 0)
+                requests[0] += "&";
+
+            requests[0] += "fromserver" + (i + 1) + "=" + triad[i] + "&message" + (i + 1) + "=" + tickets[i];
+        }
+
+        cc.createAn(raidaIdx, email);
+        requests[0] += "&pan=" + cc.ans[raidaIdx];
+
+        logger.debug(ltag, "Doing actual fix on RAIDA" + raidaIdx);
+        results = raida.query(requests, null, null, raidaFix);
+        if (results == null) {
+            logger.error(ltag, "Failed to fix on RAIDA" + raidaIdx);
+            raida.setFailed(raidaIdx);
+            return false;
+        }
+
+        FixResponse fresp = (FixResponse) parseResponse(results[0], FixResponse.class);
+        if (fresp == null) {
+            logger.error(ltag, "Failed to parse fix response" + raidaIdx);
+            raida.setFailed(raidaIdx);
+            return false;
+        }
+
+        if (!fresp.status.equals("success")) {
+            logger.error(ltag, "Failed to fix on RAIDA" + raidaIdx + ": " + fresp.message);
+            raida.setFailed(raidaIdx);
+            return false;
+        }
+
+        
+        logger.debug(ltag, "Fixed on RAIDA" + raidaIdx);
+
+        return true;
     }
     
     public boolean fixCoinInCorner(int raidaIdx, int corner, CloudCoin cc, String email) {
@@ -794,12 +860,48 @@ public class FrackFixer extends Servant {
         }
     }
     
-    public boolean fixCoinsInCornerWithTickets(int raidaIdx, int corner, ArrayList<CloudCoin> ccs, String email, HashMap<Integer, String[]> tickets) {
+    public boolean fixCoinInCornerWithTickets(int raidaIdx, int corner, CloudCoin cc, String email, HashMap<Integer, String[]> tickets) {
+        logger.debug(ltag, "Fixing in corner " + corner + " cc " + cc.sn);
+        int[] triad;
+        String[] tickets3 = new String[3];
        
+        
+        triad = trustedTriads[raidaIdx][corner];
+        int aIdx = triad[0];
+        int bIdx = triad[1];
+        int cIdx = triad[2];
+
+        logger.debug(ltag, "Fixing in corner " + corner + "(" + aIdx + ", " + bIdx + ", " + cIdx + ")");
+        String[] thasha = tickets.get(cc.sn);
+        if (thasha == null) {
+            logger.debug(ltag, "No ticket for SN " + cc.sn + ", skipping it");
+            return false;
+        }
+            
+                   
+        tickets3[0] = tickets.get(cc.sn)[aIdx];
+        tickets3[1] = tickets.get(cc.sn)[bIdx];
+        tickets3[2] = tickets.get(cc.sn)[cIdx];
+          
+        logger.debug(ltag, "a=" + tickets3[0] + ", b=" + tickets3[1] + ", c=" + tickets3[2]);
+        if (tickets3[0] == null || tickets3[1] == null || tickets3[2] == null) {
+            logger.debug(ltag, "One of the tickets is zero. Continue");
+            return false;
+        }
+                            
+        if (!fixCoinInCornerWithTicketsReal(raidaIdx, corner, cc, email, tickets3)) {
+            return false;
+        }
+        
+        return true;
+                
+
+    }
+    
+    public boolean fixCoinsInCornerWithTickets(int raidaIdx, int corner, ArrayList<CloudCoin> ccs, String email, HashMap<Integer, String[]> tickets) {
+      
         int[] triad;
         String[] tickets4 = new String[4];
-        ArrayList<CloudCoin> nccs = new ArrayList<CloudCoin>();
-        ArrayList<CloudCoin> restccs = new ArrayList<CloudCoin>();
         HashMap<String, ArrayList<CloudCoin>> mh = new HashMap<String, ArrayList<CloudCoin>>();
         
         triad = trustedTriads[raidaIdx][corner];
@@ -868,19 +970,9 @@ public class FrackFixer extends Servant {
                 
             if (!fixCoinsInCornerWithTicketsReal(raidaIdx, corner + 1, cca, email, tickets4, progressWeight))
                 result = false;
-                //cc.setDetectStatus(5, CloudCoin.STATUS_NORESPONSE);
 
-            //System.out.println("k="+key+ " ks="+data[0]);
-    // ...
         }
-        /*
-        System.out.println("post");
-        for (CloudCoin cc : ccs) {
-            System.out.println("cc="+cc.getDetectStatus(5));
-        }
-        */
         return result;
-        //return fixCoinsInCornerWithTicketsReal(raidaIdx, corner, nccs, email, tickets4, 4);
     }
     
     public boolean fixCoinsInCornerWithTicketsReal(int raidaIdx, int corner, ArrayList<CloudCoin> ccs, String email, String[] tickets, int progressWeight) {

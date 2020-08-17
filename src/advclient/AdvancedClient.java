@@ -74,7 +74,7 @@ import org.json.JSONObject;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "3.0.39";
+    public static String version = "3.0.40";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -1547,8 +1547,10 @@ public class AdvancedClient  {
         String stc = AppCore.formatNumber(totalCoinsProcessed);
         String tc = AppCore.formatNumber(totalCoins);
         
+        String fr = fixingRAIDA == -1 ? "" : "" + fixingRAIDA;
+        
         pbarText.setText("<html><div style='text-align:center'>Round #" + round + " Fixing on RAIDA " + 
-                fixingRAIDA + "<br>" + stc + " / " + tc + " CloudCoins Fixed</div></html>");
+                fr + "<br>" + stc + " / " + tc + " CloudCoins Fixed</div></html>");
         
         pbarText.repaint();
     }
@@ -1619,7 +1621,7 @@ public class AdvancedClient  {
         Thread t = new Thread(new Runnable() {
             public void run(){
                 wl.debug(ltag, "Fixing coins in " + ps.srcWallet.getName());
-                ps.isEchoFinished = false;
+                /*ps.isEchoFinished = false;
                 setRAIDAEchoProgressCoins(0);                
                 sm.startEchoService(new EchoCb());
                 while (!ps.isEchoFinished) {
@@ -1638,9 +1640,64 @@ public class AdvancedClient  {
                     showScreen();
                     return;
                 }
+                */
 
-                sm.setActiveWalletObj(ps.srcWallet);                
-                sm.startFrackFixerService(new FrackFixerOnPurposeCb(), ps.needExtensiveFixing, ps.srcWallet.getEmail());
+                sm.setActiveWalletObj(ps.srcWallet); 
+                
+                
+                
+                sm.startAuthenticatorInFrackedService(ps.srcWallet, new CallbackInterface() {
+                    public void callback(Object result) {
+                        wl.debug(ltag, "Authenticator for fracked finished");
+                        final Object fresult = result;
+                        final AuthenticatorResult ar = (AuthenticatorResult) fresult;
+                        if (ar.status == AuthenticatorResult.STATUS_ERROR) {
+                            EventQueue.invokeLater(new Runnable() {         
+                                public void run() {
+                                    if (!ar.errText.isEmpty())
+                                        ps.errText = "<html><div style='text-align:center; width: 520px'>" + ar.errText + "</div></html>";
+                                    else
+                                        ps.errText = "Failed to Authencticate Coins";
+                                
+
+                                    ps.currentScreen = ProgramState.SCREEN_FIX_DONE;
+                                    showScreen();
+                                }
+                            });
+                            return;
+                        } else if (ar.status == AuthenticatorResult.STATUS_FINISHED) {
+                            ps.detectTickets = ar.tickets;
+                            wl.debug(ltag, "Finished auth");
+                            setRAIDAFixingProgressCoins(0, 0, ar.totalCoins, -1, 0);
+                            sm.startFrackFixerServiceWithTickets(new FrackFixerOnPurposeCb(), ps.needExtensiveFixing, ps.srcWallet.getEmail(), ps.detectTickets); 
+                            return;
+                        } else if (ar.status == AuthenticatorResult.STATUS_CANCELLED) {
+                            sm.resumeAll();
+                            EventQueue.invokeLater(new Runnable() {         
+                                public void run() {
+                                    ps.errText = "Operation Cancelled";
+                                    ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
+                                    showScreen();
+                                }
+                            });
+                            return;
+                        }
+
+                        setRAIDAHCProgressCoins(ar.totalRAIDAProcessed, ar.totalCoinsProcessed, ar.totalCoins);
+                    }
+                });
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                //sm.startFrackFixerService(new FrackFixerOnPurposeCb(), ps.needExtensiveFixing, ps.srcWallet.getEmail());
+                //sm.startFrackFixerServiceWithTickets(new FrackFixerCb(), false, w.getEmail(), ps.detectTickets); 
             }
         });
         

@@ -77,6 +77,8 @@ public class DetectionAgent {
     
     
     public void setExactFullUrl(String url) {
+        if (url == null)
+            logger.debug(ltag, "Marking " + this.RAIDANumber + " as null");
         this.fullURL = url;
     }
 
@@ -100,9 +102,11 @@ public class DetectionAgent {
 
     public int getStatus() {
         if (fullURL == null)
-            lastStatus = RAIDA.STATUS_FAILED;
+            return RAIDA.STATUS_FAILED;
+            //lastStatus = RAIDA.STATUS_FAILED;
 
-        return lastStatus;
+        return RAIDA.STATUS_OK;
+        //return lastStatus;
     }
 
     public void setStatus(int status) {
