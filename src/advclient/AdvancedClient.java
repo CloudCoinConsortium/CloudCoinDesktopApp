@@ -1654,8 +1654,10 @@ public class AdvancedClient  {
 
                 sm.setActiveWalletObj(ps.srcWallet); 
                 
+                setRAIDAFixingProgressCoins(0, 0, 0, -1, 0);
+                sm.startFrackFixerServiceWithTickets(new FrackFixerOnPurposeCb(), ps.needExtensiveFixing, ps.srcWallet.getEmail(), ps.detectTickets);
                 
-                
+                /*
                 sm.startAuthenticatorInFrackedService(ps.srcWallet, new CallbackInterface() {
                     public void callback(Object result) {
                         wl.debug(ltag, "Authenticator for fracked finished");
@@ -1709,6 +1711,7 @@ public class AdvancedClient  {
                         setRAIDAHCProgressCoins(ar.totalRAIDAProcessed, ar.totalCoinsProcessed, ar.totalCoins);
                     }
                 });
+                */
             }
         });
         
