@@ -96,6 +96,7 @@ public class ProgramState {
     final public static int SCREEN_CREATE_SKY_WALLET_FAILED = 76;
     final public static int SCREEN_LIST_SERIALS_GLOBAL = 77;
     final public static int SCREEN_LIST_SERIALS_GLOBAL_DOING = 78;
+    final public static int SCREEN_PRE_FIX_FRACKED = 79;
     
     
     final static int CB_STATE_INIT = 1;
@@ -144,6 +145,8 @@ public class ProgramState {
     
     int statToBankValue, statToBank, statFailed, statLost;
     int statFailedValue, statLostValue;
+    
+    int screenToGoAfterCoinFixed;
     
     int statTotalFracked, statTotalFixed, statFailedToFix;
     int statTotalFrackedValue, statTotalFixedValue, statFailedToFixValue;
@@ -239,6 +242,12 @@ public class ProgramState {
     int typedReturnIdx;
     
     int hcValid, hcFracked, hcCounterfeit;
+    
+
+
+    int screenToGetBack;
+    
+    Wallet savedSrcWallet;
     
     public ProgramState() {
         currentScreen = SCREEN_AGREEMENT;
@@ -345,6 +354,12 @@ public class ProgramState {
         needPownAfterLocalTransfer = true;
         
         typedPIN = "";
+        
+        screenToGoAfterCoinFixed = 0;
+        
+        savedSrcWallet = null;
+        
+        screenToGetBack = 0;
     }
  
     public String toString() {

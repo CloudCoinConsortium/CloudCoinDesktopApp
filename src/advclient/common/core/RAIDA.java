@@ -213,7 +213,8 @@ public class RAIDA {
 		try {
                     f.get(agents[0].getReadTimeout() * 2, TimeUnit.MILLISECONDS);
 		} catch (ExecutionException e) {
-                    logger.error(ltag, "Error executing the task");
+                    logger.error(ltag, "Error executing the task: " + e.getMessage());
+                    e.printStackTrace();
 		} catch (TimeoutException e) {
                     logger.error(ltag, "Timeout during connection to the server");
 		} catch (InterruptedException e) {

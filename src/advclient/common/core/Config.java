@@ -11,6 +11,7 @@ public class Config {
     public static String DIR_EMAIL_OUT = "EmailOut";
     public static String DIR_EMAIL_SENT = "EmailSent";
     public static String DIR_FRACKED = "Fracked";
+    public static String DIR_OTHER = "OtherCoins";
     public static String DIR_GALLERY = "Gallery";
     public static String DIR_ID = "ID";
     public static String DIR_IMPORT = "Import";
@@ -262,4 +263,8 @@ public class Config {
     public static String FREECOIN_URL = "https://cloudcoin.global/freecoin.php";
     
     public static String MEMO_METADATA_SEPARATOR = "METADATASEPARATOR";
+    
+    public static String COIN_FILTER = "coinslist.txt";
+    
+    
 }

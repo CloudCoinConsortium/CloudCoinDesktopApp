@@ -148,24 +148,28 @@ public class FrackFixer extends Servant {
         logger.info(ltag, "Maybe moving " + ccs.size() + " coins");
         fr.pownStrings = new String[ccs.size()];
         int j = 0;
+        int failed;
         for (CloudCoin cc : ccs) {
             logger.debug(ltag, "Moving coin " + cc.sn);
             cnt = 0;
+            failed = 0;
             for (int i = RAIDA.TOTAL_RAIDA_COUNT - 1; i >= 0; i--) {
-                //if (cc.getDetectStatus(i) != CloudCoin.STATUS_FAIL)
-                //    cnt++;
+                if (cc.getDetectStatus(i) == CloudCoin.STATUS_FAIL)
+                    failed++;
                 if (cc.getDetectStatus(i) == CloudCoin.STATUS_PASS)
                     cnt++;
             }
 
+            cc.setPownStringFromDetectStatus();
             fr.pownStrings[j] = cc.getPownString();
-            if (cnt == RAIDA.TOTAL_RAIDA_COUNT) {
+            logger.debug(ltag, "cc " + cc.sn + " pownstring " + cc.getPownString());
+            if (cnt > RAIDA.TOTAL_RAIDA_COUNT - 2 && failed == 0) {
                 logger.info(ltag, "Coin " + cc.sn + " is fixed. Moving to bank");
                 AppCore.moveToBank(cc.originalFile, user);
                 fr.fixed++;
                 fr.fixedValue += cc.getDenomination();
             } else {
-                logger.debug(ltag, "Not ready to move. Failed to fix. Only passed:" + cnt);
+                logger.debug(ltag, "Not ready to move. Failed to fix. Only passed:" + cnt + " failed="+failed);
             }
             
             j++;
@@ -379,9 +383,16 @@ public class FrackFixer extends Servant {
                 fr.totalRAIDAProcessed = 0;
                 for (corner = 0; corner < 4; corner++) {
                     logger.debug(ltag, "corner=" + corner + " haveTickets " + haveTickets);
+                    // Temporary solution. The code is the same for now
                     if (haveTickets) {
+                        /*
                         if (fixCoinInCornerWithTickets(raidaIdx, corner, cc, email, tickets)) {
                             logger.debug(ltag, "Fixed successfully");
+                            syncCoin(raidaIdx, cc);
+                            break;
+                        }*/
+                        if (fixCoinInCorner(raidaIdx, corner, cc, email)) {
+                            logger.debug(ltag, "Fixed successfully: " + cc.sn);
                             syncCoin(raidaIdx, cc);
                             break;
                         }

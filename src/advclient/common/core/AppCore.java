@@ -79,7 +79,45 @@ public class AppCore {
             + "Check that local routers are not blocking your connection.";
     
     public static int currentMode;
-    private static Object graphics2D;
+    
+    public static HashMap<String, String> coinsList;
+    
+    
+    static public void initFilter(String file)  {
+        logger.debug(ltag, "Reading filter");
+        
+        AppCore.coinsList = new HashMap<String, String>();
+        int c = 0;
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+            
+            while ((line = br.readLine()) != null) {
+                int snc = Integer.parseInt(line);
+                CloudCoin cc = new CloudCoin(Config.DEFAULT_NN, snc);
+                if (cc.getDenomination() == 0) {
+                    logger.debug(ltag, "Warning: invalid SN in the filter file: " + line);
+                    continue;
+                }
+                
+                AppCore.coinsList.put(line, line);
+                c++;
+                
+                // process the line.
+            }
+        } catch (Exception e) {
+            AppCore.coinsList = null;
+        }
+        
+        if (c == 0) {
+            logger.debug(ltag, "No coins collected in filter");
+            AppCore.coinsList = null;
+            return;
+        }
+        
+        
+        logger.debug(ltag, c + " coins collected in filter");
+    }
+
     static public boolean createDirectory(String dirName) {
         String idPath;
 
@@ -187,6 +225,7 @@ public class AppCore {
             Config.DIR_EMAIL_OUT,
             Config.DIR_EMAIL_SENT,
             Config.DIR_FRACKED,
+            Config.DIR_OTHER,
             Config.DIR_GALLERY,
             Config.DIR_IMPORT,
             Config.DIR_IMPORTED,
@@ -1495,8 +1534,6 @@ public class AppCore {
     }
     
     public static int[] getSNSOverlap(int[][] sns) {
-        int[] vsns;
-        
         logger.debug(ltag, "Getting overlapped sns");
         HashMap<Integer, CloudCoin> hm = new HashMap<Integer, CloudCoin>();
         for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
@@ -1515,20 +1552,25 @@ public class AppCore {
                 cc.setDetectStatus(i, CloudCoin.STATUS_PASS);
             }
         }
-        
-        int valid = 0;
+
         ArrayList<CloudCoin> coins = new ArrayList<CloudCoin>();
         Iterator it = hm.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry pair = (Map.Entry) it.next();
             CloudCoin cc = (CloudCoin) pair.getValue();            
             cc.setPownStringFromDetectStatus();
+            /*
+            if (!cc.getPownString().endsWith("ppppppppppppppp")) {
+                continue;
+            }
+            */
             
             if (!cc.isSentFixable()) {
                 logger.debug(ltag, "Skipping coin: " + cc.sn + " p=" + cc.getPownString());
                 continue;
             }
             
+            //System.out.println("add="+cc.sn);
             coins.add(cc);           
         }
         
@@ -2404,7 +2446,7 @@ public class AppCore {
         
     }
     
-    public static boolean saveCard(String filename, String wallet, String data, String cardNumber, String pin) {
+    public static boolean saveCard(String filename, String wallet, String data, String cardNumber, String pin, String ip) {
         String templateFileName = AppCore.getTemplateDir() + File.separator + Config.CARD_TEMPLATE_NAME;        
         byte[] bytes = AppCore.loadFileToBytes(templateFileName);
         if (bytes == null) {
@@ -2419,9 +2461,7 @@ public class AppCore {
         }
         
         logger.info(ltag, "Loaded, bytes: " + bytes.length);
-        
-        
-        
+
         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);     
         BufferedImage bi;
         try {
@@ -2441,10 +2481,11 @@ public class AppCore {
         
         cardNumber = cardNumber.replaceAll("(\\d{4})","$1 ").trim();
         
-        System.out.println("c="+cardNumber+", d=" + date);
+
     
         //Font f = AppUI.brand.getCardFont();
-                
+        
+        
         
         Graphics g = bi.getGraphics();
         Graphics2D g2d = (Graphics2D) g;
@@ -2463,6 +2504,10 @@ public class AppCore {
         g.setColor(Color.BLACK);
         g.setFont(g.getFont().deriveFont(35f));
         g.drawString("CVV (Keep Secret): " + pin, 64, 675);
+        g.setColor(Color.decode("#ffffff"));
+        g.setFont(g.getFont().deriveFont(18f));
+        g.drawString( "IP " + ip, 174, 736);
+        
 
         g.dispose();
     

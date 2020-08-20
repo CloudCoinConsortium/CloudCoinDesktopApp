@@ -245,6 +245,15 @@ public class Unpacker extends Servant {
         String path;
 
         path = AppCore.getUserDir(Config.DIR_SUSPECT, user) + File.separator + fileName;
+        if (AppCore.coinsList != null) {
+            if (AppCore.coinsList.get(cc.sn + "") == null) {
+                logger.debug(ltag, "Coin " + cc.sn + " isn't in the filter list");
+                path = AppCore.getUserDir(Config.DIR_OTHER, user) + File.separator + fileName;
+                System.out.println("no " + cc.sn);
+            }
+            
+        }
+        
         
 
         logger.info(ltag, "Saving " + path + ": " + json);

@@ -165,6 +165,10 @@ public class Brand {
         return this.brandDir + File.separator + Config.BRAND_CONFIG_NAME;
     }
     
+    public String getCoinFilterPath() {
+        return this.brandDir + File.separator + Config.COIN_FILTER;
+    }
+    
     public String getAssetPath(String file) {
         return this.brandDir + File.separator + file;
     }
@@ -333,6 +337,26 @@ public class Brand {
         return true;
     }
     
+    public boolean downloadFilter() {
+        String url = Config.BRAND_URL + "/" + name + "/" + Config.COIN_FILTER;
+        DetectionAgent daFake = new DetectionAgent(RAIDA.TOTAL_RAIDA_COUNT * 10000, logger);
+        daFake.setExactFullUrl(url);
+
+        String result = daFake.doRequest("", null);
+        if (result == null || result.equals("E")) {
+            logger.error(ltag, "Failed to receive response from Brand Server");
+            return false;
+        }
+
+        if (!AppCore.saveFile(getCoinFilterPath(), result)) {
+            logger.error(ltag, "Failed to save config file");
+            return false;
+        }
+        
+        return true;
+    }
+    
+    
     public boolean checkFile(String file) {
         String filename = this.brandDir + File.separator + file;
         File f = new File(filename);
@@ -433,6 +457,8 @@ public class Brand {
             }
         }
 
+        downloadFilter();
+        
         br.text = "Parsing config file";
         cb.callback(br);
 
