@@ -189,12 +189,13 @@ public class AdvancedClient  {
         CloudCoin cc = new CloudCoin(1, 10);
         cc.setPownString("ppfppfpppppfppppfpfpppppp");
         //cc.setPownString("pppppppppppfppppfefpnpppp");
-
+        cc.setPownString("pfppppppfpppppppppppppppp");
         
         System.out.println("cc="+cc.getPownString() + " cc=" +cc.isSentFixable() + " x="+cc.isSentFixableColumns(false) + " y=" + cc.isSentFixableRows(false));
         System.out.println("canberecovered=" + cc.canbeRecoveredFromLost());
         System.exit(1);
         */
+        
         
         hwId = AppCore.getHwID();
         

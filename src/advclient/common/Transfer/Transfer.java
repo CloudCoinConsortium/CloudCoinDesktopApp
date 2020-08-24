@@ -421,7 +421,7 @@ public class Transfer extends Servant {
             logger.info(ltag, "cc " + tcc.sn + " " + tcc.getPownString());
             
             //if (cnt < Config.PASS_THRESHOLD) {
-            if (!cc.isSentFixable()) {
+            if (!tcc.isSentFixable()) {
                 logger.error(ltag, "Coin " + tcc.sn + " was not transferred. PassCount: " + tcc.sn);
                 failed = true;
             }
