@@ -204,7 +204,7 @@ public class Config {
     public static int PUBLIC_CHANGE_MAKER_ID = 2;
     
     
-    public static int SECONDS_TO_AGGREGATE_ENVELOPES = 30;
+    public static int SECONDS_TO_AGGREGATE_ENVELOPES = 120;
     
     public static int MAX_COUNTERFEIT_RAIDAS_TO_SEND = 2;
     public static int MAX_FAILED_RAIDAS_TO_SEND = 2;

@@ -1759,6 +1759,16 @@ public class Servant {
     }
     
     public void fixTransfer(ArrayList<Integer>[] rarr) {
+        Thread t = new Thread(new Runnable() {
+           public void run() {
+               fixTransferReal(rarr);
+           }
+        });
+        
+        t.start();
+    }
+    
+    public void fixTransferReal(ArrayList<Integer>[] rarr) {
         logger.debug(ltag, "Fixing Transfer");
         
 
@@ -1799,9 +1809,10 @@ public class Servant {
             j++;
         }
         
-        results = raida.query(requests, null, cb, rlist);      
+        raida.queryNoWait(requests, rlist);      
+        /*
         if (results == null) {
-            logger.error(ltag, "Failed to query Break in Bank");
+            logger.error(ltag, "Failed to query Fix tranfer");
             return;
         }
         
@@ -1810,7 +1821,7 @@ public class Servant {
             int raidaIdx = rlist[i];
             logger.info(ltag, "i=" + raidaIdx + " r="+results[i]);
         }
-
+*/
     }
     
     protected void initRarr() {

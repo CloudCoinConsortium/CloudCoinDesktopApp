@@ -448,7 +448,7 @@ public class AppUI {
         if (Config.REQUESTED_ADVANCED_VIEW == true)
             AppUI.setSize(scrollPane, 880, 294);
         else
-            AppUI.setSize(scrollPane, 1080, 294);
+            AppUI.setSize(scrollPane, 1080, 264);
         scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(10, 0));
         scrollPane.getVerticalScrollBar().setUI(new BasicScrollBarUI() {       
             @Override

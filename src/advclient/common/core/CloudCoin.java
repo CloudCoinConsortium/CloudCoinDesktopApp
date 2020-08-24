@@ -23,7 +23,7 @@ public class CloudCoin {
     private String pownString;
     private String[] aoid;
 
-    public static final int YEARSTILEXPIRE = 2;
+    public static final int YEARSTILEXPIRE = 5;
     public String tag;
 
     public String originalFile = "";

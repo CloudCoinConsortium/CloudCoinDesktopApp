@@ -281,4 +281,52 @@ public class RAIDA {
 
             return results;
 	}
+        
+    
+	public String[] queryNoWait(String[] requests, int[] rlist) {
+            int raidalistSize;
+            service = AppCore.getServiceExecutor();
+            List<Future<Runnable>> futures = new ArrayList<Future<Runnable>>();
+
+            if (rlist == null)
+		rlist = getAllRAIDAs();
+
+            raidalistSize = rlist.length;
+
+            final String[] results = new String[raidalistSize];
+            if (requests.length != raidalistSize) {
+		logger.error(ltag, "Internal error. Wrong parameters");
+		return null;
+            }
+    
+            for (int i = 0; i < raidalistSize; i++) {
+		final int rIdxFinal = rlist[i];
+		final int iFinal = i;
+		final String request = requests[i];
+
+		Future f = service.submit(new Runnable() {
+                    public void run() {
+                        String url = "/service/" + request;
+                        results[iFinal] = agents[rIdxFinal].doRequest(url, null, "Main");
+                    }
+                });
+                
+                futures.add(f);
+            }
+/*
+            for (Future<Runnable> f : futures) {
+		try {
+                    f.get(agents[0].getReadTimeout() * 2, TimeUnit.MILLISECONDS);
+		} catch (ExecutionException e) {
+                    logger.error(ltag, "Error executing the task: " + e.getMessage());
+                    e.printStackTrace();
+		} catch (TimeoutException e) {
+                    logger.error(ltag, "Timeout during connection to the server");
+		} catch (InterruptedException e) {
+                    logger.error(ltag, "Task interrupted");
+		}
+            }*/
+
+            return results;
+	}
 }

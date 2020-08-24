@@ -74,7 +74,7 @@ import org.json.JSONObject;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "3.0.40";
+    public static String version = "3.0.41";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -4706,6 +4706,7 @@ public class AdvancedClient  {
 
         wl.debug(ltag, "Chosen wallet for fixing: " + w.getName());
 
+        ps.needExtensiveFixing = false;
         ps.savedSrcWallet = ps.srcWallet;
         ps.coinIDinFix = ps.srcWallet;
         ps.srcWallet = w;
@@ -5963,6 +5964,7 @@ public class AdvancedClient  {
         int y = 0;
         JLabel fname;
 
+        ps.triedToChange = false;
         JPanel subInnerCore = getPanel("Withdraw from " + ps.currentWallet.getName());                
         GridBagLayout gridbag = new GridBagLayout();
         subInnerCore.setLayout(gridbag);
@@ -6170,11 +6172,13 @@ public class AdvancedClient  {
         int y = 0;
         JLabel fname;
 
+        ps.triedToChange = false;
         JPanel subInnerCore = getPanel("Send from " + ps.currentWallet.getName());                
         GridBagLayout gridbag = new GridBagLayout();
         subInnerCore.setLayout(gridbag);
 
         final optRv rvTo = setOptionsForWalletsAll(ps.currentWallet.getName());
+        
         
         final JLabel spText = new JLabel("Password*");;
         final MyTextField passwordSrc = new MyTextField("Wallet Password", true);
@@ -6204,20 +6208,8 @@ public class AdvancedClient  {
      
         passwordDst.getTextField().setVisible(false);
         dpText.setVisible(false);
-
+        
         /*
-        final JLabel rwText = new JLabel("To SkyWallet");;
-        final MyTextField remoteWalledId = new MyTextField("JohnDoe.SkyWallet.cc", false);
-        if (!ps.typedRemoteWallet.isEmpty())
-            remoteWalledId.setData("" + ps.typedRemoteWallet);
-        AppUI.getGBRow(subInnerCore, rwText, remoteWalledId.getTextField(), y, gridbag);
-        y++;
-        
-        
-        remoteWalledId.getTextField().setVisible(false);
-        rwText.setVisible(false);
-        */
-        
         optRv rv = new optRv();
         rv.options = new String[0];
         rv.idxs = new int[0];
@@ -6277,6 +6269,7 @@ public class AdvancedClient  {
         
         localFolder.getTextField().setVisible(false);
         lfText.setVisible(false);
+        */
         
         fname = new JLabel("Amount*");
         final MyTextField amount = new MyTextField("0 CC", false);
@@ -6305,12 +6298,13 @@ public class AdvancedClient  {
         AppUI.GBPad(subInnerCore, y, gridbag);        
         y++;
 
+        /*
         cboxto.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 int dstIdx = cboxto.getSelectedIndex() - 1;
                 
-                localFolder.getTextField().setVisible(false);
-                lfText.setVisible(false);
+                //localFolder.getTextField().setVisible(false);
+                //lfText.setVisible(false);
                 
                 
                 // Remote Wallet
@@ -6378,7 +6372,7 @@ public class AdvancedClient  {
                 }
             }
         });
-
+*/
         /*
         if (ps.srcWallet != null && ps.selectedFromIdx > 0) {
             cboxfrom.setDefaultIdx(ps.selectedFromIdx);
@@ -6407,13 +6401,13 @@ public class AdvancedClient  {
                 
                 //ps.selectedFromIdx = cboxfrom.getSelectedIndex();
                 ps.selectedToIdx =  cboxto.getSelectedIndex();
-                ps.typedRemoteWallet = remoteWalledId.getCustomValue();
+                ps.typedRemoteWallet = cboxto.getSelectedValue();
 
 
                 Wallet w = ps.currentWallet;
                 ps.srcWallet = w;
             
-                if (dstIdx < 0 || dstIdx >= rvTo.idxs.length + 2) {             
+                if (dstIdx < 0 || dstIdx >= rvTo.idxs.length) {             
                     ps.errText = "Please choose Wallet";
                     showScreen();
                     return;
@@ -6484,7 +6478,7 @@ public class AdvancedClient  {
                     return;
                 }
                       
-                              
+                /*
                 if (dstIdx == rvTo.idxs.length) {
                     // Remote User
                     if (remoteWalledId.getCustomValue().isEmpty()) {
@@ -6576,6 +6570,7 @@ public class AdvancedClient  {
                     
                     return;                    
                 } else {
+                */
                     dstIdx = rvTo.idxs[dstIdx];
           
                     // Wallet
@@ -6615,7 +6610,7 @@ public class AdvancedClient  {
                     
                     ps.dstWallet = dstWallet;
                     ps.sendType = ProgramState.SEND_TYPE_WALLET;
-                }
+                //}
                 
                 if (ps.typedMemo.isEmpty())
                     ps.typedMemo = "Transfer";
@@ -6631,6 +6626,7 @@ public class AdvancedClient  {
         int y = 0;
         JLabel fname;
 
+        ps.triedToChange = false;
         JPanel subInnerCore = getPanel("Send from " + ps.currentWallet.getName() + " to Another User");                
         GridBagLayout gridbag = new GridBagLayout();
         subInnerCore.setLayout(gridbag);
@@ -8734,6 +8730,7 @@ public class AdvancedClient  {
         
         table.getColumnModel().getColumn(0).setPreferredWidth(120);
         table.getColumnModel().getColumn(5).setPreferredWidth(120);
+        table.getColumnModel().getColumn(4).setPreferredWidth(60);
       //  table.getColumnModel().getColumn(4).setPreferredWidth(10);
 
  
@@ -8968,7 +8965,17 @@ public class AdvancedClient  {
             String rec = "";
             if (!w.getEmail().isEmpty()) {
                 String colstr = "#" + Integer.toHexString(brand.getMainTextColor().getRGB()).substring(2);
-                rec = "<br><span style='font-size:0.4em; color: " + colstr + "'>Recovery Email: " + w.getEmail() + "</span>";
+                rec = "<br><span style='font-size:0.5em; color: " + colstr + "'>Recovery Email: " + w.getEmail() + "";
+            }
+            
+            if (!isAdvancedMode()) {
+                Wallet wx = getPrimarySkyWallet();
+                if (wx != null) {
+                    String colstr = "#" + Integer.toHexString(brand.getMainTextColor().getRGB()).substring(2);
+                    rec += "<br>SkyWallet Address: " + wx.getName() + "</span>";
+                }
+            } else {
+                rec += "</span>";
             }
             
             String totalString = "Counting";
@@ -12489,8 +12496,11 @@ public class AdvancedClient  {
                             return;
                         }
 
+                        cc.originalFile = AppCore.getIDDir() + File.separator + ps.coinIDinFix.getName() + ".stack";
                         ps.coinIDinFix.setIDCoin(cc);
+                        //ps.coinIDinFix = null;
                         if (!fixed) {
+                            ps.coinIDinFix.setIDCoin(cc);
                             ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
                             ps.errText = "Failed to fix ID Coin. Please try again later";
                             showScreen();
@@ -12582,7 +12592,13 @@ public class AdvancedClient  {
     
     class SenderCb implements CallbackInterface {
 	public void callback(Object result) {
+            if (result == null) {
+                wl.debug(ltag, "Null result in Sender");
+                return;
+            }
+            
             final SenderResult sr = (SenderResult) result;
+            
             
             wl.debug(ltag, "Sender finished: " + sr.status);
             if (sr.status == SenderResult.STATUS_PROCESSING) {
@@ -12883,6 +12899,10 @@ public class AdvancedClient  {
        public void callback(Object result) {
             final TransferResult tr = (TransferResult) result;
 
+            if (result == null) {
+                wl.debug(ltag, "Zero result. Transfer finished");
+                return;
+            }
             wl.debug(ltag, "Transfer finished: " + tr.status);
             if (tr.status == TransferResult.STATUS_PROCESSING) {
                 setRAIDATransferProgressCoins(tr.totalRAIDAProcessed, tr.totalCoinsProcessed, tr.totalCoins, tr.step);
