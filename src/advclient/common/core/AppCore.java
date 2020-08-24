@@ -1686,7 +1686,7 @@ public class AppCore {
         }
     }
     
-    public static String[][] getSentCoins() {
+    public static String[][] getSentCoins(String destwallet) {
         String fileName = AppCore.getLogDir() + File.separator + Config.SENT_SKYCOINS_FILENAME;
         
         String data = AppCore.loadFile(fileName);
@@ -1699,22 +1699,40 @@ public class AppCore {
         
         int j = 0;
         for (int i = 0; i < parts.length; i++) {
+            
             tmp = parts[i].split(",");
             if (tmp.length != 7) {
                 continue;
             }
+            
+            String name = tmp[1];
+            if (!name.equals(destwallet))
+                continue;
+            
             j++;
         }
 
         int r = 0;
         String[][] rv = new String[j][];
-        for (int i = 0; i < parts.length; i++) {
+        //for (int i = 0; i < parts.length; i++) {
+        for (int i = parts.length - 1; i >= 0; i--) {
             tmp = parts[i].split(",");
             if (tmp.length != 7) {
                 continue;
             }
+            
+            String name = tmp[1];
+            if (!name.equals(destwallet))
+                continue;
 
-            rv[r++] = tmp;
+            rv[r] = new String[6];
+            rv[r][0] = tmp[0];
+            rv[r][1] = tmp[2];
+            rv[r][2] = tmp[3];
+            rv[r][3] = tmp[4];
+            rv[r][4] = tmp[5];
+            rv[r][5] = tmp[6];
+            r++;
         }
         
         return rv;         

@@ -8692,8 +8692,8 @@ public class AdvancedClient  {
         };
               
 
-        String[][] serials = AppCore.getSentCoins();
-        if (serials == null) {
+        String[][] serials = AppCore.getSentCoins(ps.currentWallet.getName());
+        if (serials == null || serials.length == 0) {
             return;
         }
         
@@ -8722,7 +8722,7 @@ public class AdvancedClient  {
         
         //serial number table
         
-        final JScrollPane scrollPane = AppUI.setupTable(table, new String[] {"Date", "From", "To", "SN", "Amount", "Memo"}, serials, r, hrx);
+        final JScrollPane scrollPane = AppUI.setupTable(table, new String[] {"Date", "To", "SN", "Amount", "Memo"}, serials, r, hrx);
         AppUI.setSize(scrollPane, 920, 325);
  
       
@@ -8730,8 +8730,9 @@ public class AdvancedClient  {
         //y++; 
         
         table.getColumnModel().getColumn(0).setPreferredWidth(120);
-        table.getColumnModel().getColumn(5).setPreferredWidth(120);
-        table.getColumnModel().getColumn(4).setPreferredWidth(60);
+        table.getColumnModel().getColumn(1).setPreferredWidth(160);
+        //table.getColumnModel().getColumn(5).setPreferredWidth(120);
+        table.getColumnModel().getColumn(4).setPreferredWidth(140);
       //  table.getColumnModel().getColumn(4).setPreferredWidth(10);
 
  
