@@ -176,8 +176,7 @@ public class Exporter extends Servant {
             }
         }
 
-        logger.debug(ltag, "Export isbackup " + keepSrc + " type " + type + " amount " + amount);
-        
+        logger.debug(ltag, "Export isbackup " + keepSrc + " type " + type + " amount " + amount);        
         if (!keepSrc) {
             int totalNotes = coinsPicked.size();
             if (totalNotes > Config.MAX_EXPORTED_NOTES) {

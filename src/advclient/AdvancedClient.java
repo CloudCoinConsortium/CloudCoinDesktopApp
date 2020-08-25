@@ -5190,7 +5190,9 @@ public class AdvancedClient  {
                         ps.isSkyDeposit = true;
                     } else {
                         ps.isSkyDeposit = false;
+
                     }
+                    ps.foundSN = 0;
                     showScreen();
                 } else if (ps.sendType == ProgramState.SEND_TYPE_REMOTE) {    
 

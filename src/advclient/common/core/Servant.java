@@ -774,6 +774,22 @@ public class Servant {
             if (file.isDirectory())
                 continue;
 
+            String[] parts = file.getName().split("\\.");
+            if (parts.length < 4) {
+                continue;
+            }
+            
+            int sn;
+            try {
+                sn = Integer.parseInt(parts[3]);
+            } catch (NumberFormatException e) {
+                continue;
+            }
+            
+            cc = new CloudCoin(Config.DEFAULT_NN, sn);
+            System.out.println("cc0="+cc.sn+" p="+cc.getPownString());
+            
+            /*
             try {
                 cc = new CloudCoin(file.toString());
             } catch (JSONException e) {
@@ -781,32 +797,47 @@ public class Servant {
                         " error: " + e.getMessage());
 
                 continue;
-            }
+            }*/
 
             denomination = cc.getDenomination();
             if (denomination == 1) {
                 if (exps[Config.IDX_1]-- > 0) {
                     logger.info(ltag, "Adding 1: " + cc.sn);
+                    cc = AppCore.getCoin(file.getAbsolutePath());
+                    if (cc == null)
+                        continue;
                     coinsPicked.add(cc);
                 } 
             } else if (denomination == 5) {
                 if (exps[Config.IDX_5]-- > 0) {
                     logger.info(ltag, "Adding 5: " + cc.sn);
+                    cc = AppCore.getCoin(file.getAbsolutePath());
+                    if (cc == null)
+                        continue;
                     coinsPicked.add(cc);
                 }
             } else if (denomination == 25) {
                 if (exps[Config.IDX_25]-- > 0) {
                     logger.info(ltag, "Adding 25: " + cc.sn);
+                    cc = AppCore.getCoin(file.getAbsolutePath());
+                    if (cc == null)
+                        continue;
                     coinsPicked.add(cc);
                 } 
             } else if (denomination == 100) {
                 if (exps[Config.IDX_100]-- > 0) {
                     logger.info(ltag, "Adding 100: " + cc.sn);
+                    cc = AppCore.getCoin(file.getAbsolutePath());
+                    if (cc == null)
+                        continue;
                     coinsPicked.add(cc);
                 } 
             } else if (denomination == 250) {
                 if (exps[Config.IDX_250]-- > 0) {
                     logger.info(ltag, "Adding 250: " + cc.sn);
+                    cc = AppCore.getCoin(file.getAbsolutePath());
+                    if (cc == null)
+                        continue;
                     coinsPicked.add(cc);
                 } 
             }
