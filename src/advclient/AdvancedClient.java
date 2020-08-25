@@ -74,7 +74,7 @@ import org.json.JSONObject;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "3.0.41";
+    public static String version = "3.0.42";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -2005,9 +2005,9 @@ public class AdvancedClient  {
                                 EventQueue.invokeLater(new Runnable() {         
                                     public void run() {                                    
                                         if (ps.srcWallet.isEncrypted()) {
-                                            sm.startSecureExporterService(Config.TYPE_STACK, ps.typedAmount, ps.typedMemo, ps.chosenFile, false, new ExporterCb());
+                                            sm.startSecureExporterService(ps.exportType, ps.typedAmount, ps.typedMemo, ps.chosenFile, false, new ExporterCb());
                                         } else {
-                                            sm.startExporterService(Config.TYPE_STACK, ps.typedAmount, ps.typedMemo, ps.chosenFile, false, new ExporterCb());
+                                            sm.startExporterService(ps.exportType, ps.typedAmount, ps.typedMemo, ps.chosenFile, false, new ExporterCb());
                                         }                                    
                                     }
                                 });
@@ -6301,14 +6301,21 @@ public class AdvancedClient  {
         AppUI.GBPad(subInnerCore, y, gridbag);        
         y++;
 
-        /*
+        
         cboxto.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 int dstIdx = cboxto.getSelectedIndex() - 1;
+                if (dstIdx < 0 || dstIdx >= rvTo.idxs.length) 
+                    return;
+                                          
+                dstIdx = rvTo.idxs[dstIdx];             
+                Wallet dstWallet = wallets[dstIdx];             
+                if (dstWallet == null)
+                    return;
                 
                 //localFolder.getTextField().setVisible(false);
                 //lfText.setVisible(false);
-                
+                /*
                 
                 // Remote Wallet
                 if (dstIdx == rvTo.idxs.length) {
@@ -6363,7 +6370,7 @@ public class AdvancedClient  {
                     memoLabel.revalidate();
                     memo.setPlaceholder("Optional");
                 }
-
+                  */
                 
                 
                 if (dstWallet.isEncrypted()) {  
@@ -6375,7 +6382,7 @@ public class AdvancedClient  {
                 }
             }
         });
-*/
+
         /*
         if (ps.srcWallet != null && ps.selectedFromIdx > 0) {
             cboxfrom.setDefaultIdx(ps.selectedFromIdx);
@@ -7101,7 +7108,7 @@ public class AdvancedClient  {
             public void filesDropped( java.io.File[] files ) {   
                 for( int i = 0; i < files.length; i++ ) {
                     if (!AppCore.hasCoinExtension(files[i])) {
-                        ps.errText = "File must have .png .jpeg or .stack extension";
+                        ps.errText = "File must have .png .jpeg .zip or .stack extension";
                         showScreen();
                         return;
                     }
@@ -9396,7 +9403,6 @@ public class AdvancedClient  {
  
                     g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-                    int width = g.getFontMetrics().stringWidth(ftext);
                     int cHeight = c.getHeight();
 
                     g.setColor(Color.WHITE);     
@@ -9897,10 +9903,15 @@ public class AdvancedClient  {
                     String d = (String) value;
                     try {
                         String total = AppCore.formatNumber(Integer.parseInt(d));
-                        if (column == 2)
-                            total = "+ " + total;
-                        else if (column == 3)
-                            total = "- " + total;
+                        
+                        if (!isSky) {
+                            if (column == 2)
+                                total = "+ " + total;
+                            else if (column == 3)
+                                total = "- " + total;
+                        } else {
+                            AppUI.setColor(lbl, brand.getThirdTextColor());
+                        }
 
                         lbl.setText(total);
                     } catch (NumberFormatException e) {
@@ -9914,11 +9925,16 @@ public class AdvancedClient  {
                 AppUI.setMargin(lbl, 8);
                 
                 if (column == 0) {                    
-                    String income = ps.trs[row][2];
-                    if (income.isEmpty())                   
-                        cell.add(iconLeft);
-                    else
+                    String income = ps.trs[row][2];                    
+                    if (isSky) {
                         cell.add(iconRight);
+                    } else {
+                    
+                        if (income.isEmpty())                   
+                            cell.add(iconLeft);
+                        else
+                            cell.add(iconRight);
+                    }
                     AppUI.setMargin(lbl, 8, 20, 8, 8);
                     cell.add(lbl);
                     return cell;           

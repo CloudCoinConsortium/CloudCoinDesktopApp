@@ -1741,7 +1741,7 @@ public class AppCore {
     
     public static boolean hasCoinExtension(File file) {
         String f = file.toString().toLowerCase();
-        if (f.endsWith(".stack") || f.endsWith(".jpg") || f.endsWith(".jpeg") || f.endsWith(".png"))
+        if (f.endsWith(".stack") || f.endsWith(".jpg") || f.endsWith(".jpeg") || f.endsWith(".png") || f.endsWith(".zip"))
             return true;
         
         logger.debug(ltag, "Ignoring invalid extension " + file.toString());
@@ -2116,6 +2116,11 @@ public class AppCore {
             logger.error(ltag, "Failed to load file " + fileName);
             return null;
         }
+        
+        return AppCore.extractStackFromPNGBytes(bytes);
+    }
+        
+    public static String extractStackFromPNGBytes(byte[] bytes) {
 
         int idx = AppCore.basicPngChecks(bytes);
         if (idx == -1) {

@@ -58,7 +58,32 @@ public class CloudCoin {
         }
         if (data == null)
             throw(new JSONException("Failed to open file"));
+        
+        this.fileName = fileName;
+        CloudCoinFromString(data);
+    }
+    
+    public CloudCoin(byte[] data) {
+        char s0, s1, s2;
+        
+        s0 = (char) data[1];
+        s1 = (char) data[2];
+        s2 = (char) data[3];
 
+        
+        String sdata;
+        if (s0 == 'P' && s1 == 'N' && s2 == 'G') {
+            type = Config.TYPE_PNG;
+            sdata = AppCore.extractStackFromPNGBytes(data);
+        } else {
+            type = Config.TYPE_STACK;
+            sdata = new String(data);
+        }
+        
+        CloudCoinFromString(sdata);
+    }
+
+    public void CloudCoinFromString(String data) {
         JSONObject o = new JSONObject(data);
         JSONArray incomeJsonArray = o.getJSONArray("cloudcoin");
 

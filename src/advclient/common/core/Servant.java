@@ -787,18 +787,6 @@ public class Servant {
             }
             
             cc = new CloudCoin(Config.DEFAULT_NN, sn);
-            System.out.println("cc0="+cc.sn+" p="+cc.getPownString());
-            
-            /*
-            try {
-                cc = new CloudCoin(file.toString());
-            } catch (JSONException e) {
-                logger.error(ltag, "Failed to parse coin: " + file.toString() +
-                        " error: " + e.getMessage());
-
-                continue;
-            }*/
-
             denomination = cc.getDenomination();
             if (denomination == 1) {
                 if (exps[Config.IDX_1]-- > 0) {

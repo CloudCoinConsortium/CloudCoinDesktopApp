@@ -21,8 +21,11 @@ import global.cloudcoin.ccbank.core.Config;
 import global.cloudcoin.ccbank.core.GLogger;
 import global.cloudcoin.ccbank.core.RAIDA;
 import global.cloudcoin.ccbank.core.Servant;
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 public class Unpacker extends Servant {
     String ltag = "Unpacker";
@@ -155,6 +158,8 @@ public class Unpacker extends Servant {
                 rv = doUnpackBinary(file.toString()); 
             } else if (extension.equals("png")) {
                 rv = doUnpackPng(file.toString());
+            } else if (extension.equals("zip")) {
+                rv = doUnpackZip(file.toString());
             } else {
                 rv = doUnpackStack(file.toString());
             }
@@ -371,6 +376,45 @@ public class Unpacker extends Servant {
             addCoinToRccs(ccs[i], fileName);
         }
 
+        return true;
+    }
+
+    
+    public boolean doUnpackZip(String fileName) {
+        logger.info(ltag, "Unpacking zip");
+
+        ArrayList<CloudCoin> accs = new ArrayList<CloudCoin>();
+        
+        byte[] buffer = new byte[64 * 1024 * 1024];
+        try {
+            ZipInputStream zis = new ZipInputStream(new FileInputStream(fileName));
+            ZipEntry zipEntry = zis.getNextEntry();
+            while (zipEntry != null) {
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                int len;
+                while ((len = zis.read(buffer)) > 0) {
+                    bos.write(buffer, 0, len);
+                }
+                bos.close();
+            
+                CloudCoin cc = new CloudCoin(bos.toByteArray());
+                logger.debug(ltag, "Unpacked from zip cc " + cc.sn);
+
+                accs.add(cc);
+            
+                zipEntry = zis.getNextEntry();
+            }
+            zis.closeEntry();
+            zis.close();
+        } catch (Exception e) {
+            logger.debug(ltag, "Failed to unzip file " + e.getMessage());
+            return false;
+        }
+
+        for (CloudCoin acc : accs) {
+            addCoinToRccs(acc, fileName);
+        }
+        
         return true;
     }
     
