@@ -487,8 +487,8 @@ public class AppCore {
         moveToFolderNoTs(fileName, Config.DIR_TRASH, user, true);
     }
 
-    static public void moveToBank(String fileName, String user) { 
-        moveToFolderNoTs(fileName, Config.DIR_BANK, user); 
+    static public boolean moveToBank(String fileName, String user) { 
+        return moveToFolderNoTs(fileName, Config.DIR_BANK, user); 
     }
 
     static public void moveToImported(String fileName, String user) {

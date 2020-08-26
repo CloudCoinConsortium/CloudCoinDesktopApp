@@ -35,6 +35,8 @@ public class DetectionAgent {
 
     private int lastStatus;
     
+    private int artStatus;
+    
     HttpURLConnection urlConnection;
     
     boolean binary;
@@ -53,6 +55,7 @@ public class DetectionAgent {
 
         lastStatus = RAIDA.STATUS_OK;
 
+        artStatus = RAIDA.STATUS_OK;
         setDefaultFullUrl();
     }
 
@@ -101,16 +104,17 @@ public class DetectionAgent {
     }
 
     public int getStatus() {
-        if (fullURL == null)
-            return RAIDA.STATUS_FAILED;
+        //if (fullURL == null)
+        //    return RAIDA.STATUS_FAILED;
             //lastStatus = RAIDA.STATUS_FAILED;
 
-        return RAIDA.STATUS_OK;
+        //return RAIDA.STATUS_OK;
         //return lastStatus;
+        return artStatus;
     }
 
     public void setStatus(int status) {
-        lastStatus = status;
+        artStatus = status;
     }
 
 

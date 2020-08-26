@@ -109,6 +109,11 @@ public class RAIDA {
             logger.debug(ltag, "RAIDA " + idx + " is set failed");
             agents[idx].setStatus(RAIDA.STATUS_FAILED);
 	}
+        
+        public void flushStatuses() {
+             for (int i = 0; i < TOTAL_RAIDA_COUNT; i++)
+                 agents[i].setStatus(RAIDA.STATUS_OK);
+        }
 
 	public long[] getLastLatencies() {
 		long[] responses;

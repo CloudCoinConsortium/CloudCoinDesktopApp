@@ -39,6 +39,8 @@ public class FrackFixer extends Servant {
     // ...
         }
         */
+        
+        
         fr = new FrackFixerResult();
         if (isCancelled()) {
             logger.info(ltag, "Start Cancelled");
@@ -51,7 +53,8 @@ public class FrackFixer extends Servant {
             return;
         }
 
-             
+        raida.flushStatuses();
+        
         launchDetachedThread(new Runnable() {
             @Override
             public void run() {
@@ -166,9 +169,13 @@ public class FrackFixer extends Servant {
             logger.debug(ltag, "cc " + cc.sn + " pownstring " + cc.getPownString());
             if (cnt > RAIDA.TOTAL_RAIDA_COUNT - 2 && failed == 0) {
                 logger.info(ltag, "Coin " + cc.sn + " is fixed. Moving to bank");
-                AppCore.moveToBank(cc.originalFile, user);
-                fr.fixed++;
-                fr.fixedValue += cc.getDenomination();
+                if (!AppCore.moveToBank(cc.originalFile, user)) {
+                    logger.error(ltag, "Failed to move coin in the Bank. Moving to Trash");
+                    AppCore.moveToTrash(cc.originalFile, user);
+                } else {
+                    fr.fixed++;
+                    fr.fixedValue += cc.getDenomination();
+                }
             } else {
                 logger.debug(ltag, "Not ready to move. Failed to fix. Only passed:" + cnt + " failed="+failed);
             }
@@ -186,7 +193,7 @@ public class FrackFixer extends Servant {
 
             return;
         }
-
+/*
         if (!updateRAIDAStatus()) {
             logger.error(ltag, "Can't proceed. RAIDA is unavailable");
             fr.status = FrackFixerResult.STATUS_ERROR;
@@ -194,8 +201,8 @@ public class FrackFixer extends Servant {
                 cb.callback(fr);
 
             return;
-        }
-        
+        }*/
+        raida.setDefaultUrls();
         raida.setReadTimeout(Config.FIX_FRACKED_TIMEOUT);
         
         String fullPath = AppCore.getUserDir(Config.DIR_FRACKED, user);
