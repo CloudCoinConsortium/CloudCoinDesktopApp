@@ -17,6 +17,7 @@ import global.cloudcoin.ccbank.core.Config;
 import global.cloudcoin.ccbank.core.GLogger;
 import global.cloudcoin.ccbank.core.RAIDA;
 import global.cloudcoin.ccbank.core.Servant;
+import java.util.Collections;
 
 public class ChangeMaker extends Servant {
     String ltag = "ChangeMaker";
@@ -39,6 +40,8 @@ public class ChangeMaker extends Servant {
         receiptId = AppCore.generateHex();
         cr.receiptId = receiptId;
         cr.errText = "";
+        
+        initRarr();
         
         launchThread(new Runnable() {
             @Override
@@ -77,8 +80,10 @@ public class ChangeMaker extends Servant {
             cr.status = ChangeMakerResult.STATUS_ERROR;
             return;
         }
+        
+        initRarr();
 
-        int sns[] = showChange(method, cc);
+        int sns[] = showChange(method, cc, rarr);
         if (sns == null) {
             cr.errText = "Not enough coins at the Public Change Maker";
             cr.status = ChangeMakerResult.STATUS_ERROR;
@@ -90,6 +95,7 @@ public class ChangeMaker extends Servant {
        // }
         
         
+        
         //System.exit(1);
         CloudCoin[] chccs = new CloudCoin[sns.length];
         for (int i = 0; i < sns.length; i++) {
@@ -97,11 +103,33 @@ public class ChangeMaker extends Servant {
             ccx.createAns(email);
             chccs[i] = ccx;
             logger.info(ltag, "sn "+ sns[i] + " d="+ccx.getDenomination());
-            
-            //System.out.println("coin=" + sns[i] + " pans:");
-            //for (int x=0;x<25;x++)
-            //    System.out.println("->" + chccs[i].ans[x]);
         }
+        
+        boolean needToCallFixTransfer = false;
+        for (int j = 0; j < rarr.length; j++) {
+            logger.debug(ltag, "r " + rarr[j].size());
+            if (rarr[j].size() > 0) {
+                logger.debug(ltag, "Need to call fix transfer. At least raida " + j + " has something to fix");
+                needToCallFixTransfer = true;
+                break;
+            }
+        }
+        
+        logger.debug(ltag, "Change evaluated");
+        if (needToCallFixTransfer) {
+            logger.debug(ltag, "Calling fix_transfer");
+            fixTransfer(rarr);
+            logger.debug(ltag, "Sleeping for " + Config.MS_TO_SLEEP_AFTER_FIXTRANSFER + " ms");
+            try {
+                Thread.sleep(Config.MS_TO_SLEEP_AFTER_FIXTRANSFER);
+            } catch (InterruptedException e) {
+                
+            }
+            
+            logger.debug(ltag, "Finished waiting");
+        }
+
+        logger.debug(ltag, "Continuing");
 
         requests = new String[RAIDA.TOTAL_RAIDA_COUNT];
         for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
@@ -139,8 +167,6 @@ public class ChangeMaker extends Servant {
         
         int cntErr = 0;
         ChangeResponse[] crs = new ChangeResponse[RAIDA.TOTAL_RAIDA_COUNT];
-        CloudCoin[] ccs = new CloudCoin[sns.length];
-
         for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
             logger.info(ltag, "parsing " + i);
             //System.out.println("r=" + i + " res=" + results[i].trim());
@@ -184,6 +210,9 @@ public class ChangeMaker extends Servant {
             
             if (crs[i].status.equals("fail")) {
                 logger.error(ltag, "RAIDA " + i + ": counterfeit response: " + crs[i].status);
+                //ArrayList<CloudCoin> accs = new ArrayList<CloudCoin>();
+                //Collections.addAll(accs, chccs);
+                //addCoinsToRarr(i, accs);
                 setCoinsStatus(chccs, i, CloudCoin.STATUS_FAIL);
                 cntErr++;
                 continue;
@@ -199,71 +228,10 @@ public class ChangeMaker extends Servant {
 
             //System.out.println("PASS " + i);
             setCoinsStatus(chccs, i, CloudCoin.STATUS_PASS);
-
-            /*
-            if (ccs.length != crs[i].sns.length || ccs.length != crs[i].ans.length) {
-                logger.error(ltag, "RAIDA " + i + ": wrong response cnt: " + crs[i].sns.length + "/" + crs[i].ans.length + " need " + ccs.length);
-                cntErr++;
-                continue;
-            }
-            */
-
-            /*
-            for (int j = 0; j < crs[i].sns.length; j++) {
-                int rnn, rsn;
-                String ran;
-                boolean found;
-
-                rsn = crs[i].sns[j];
-                ran = crs[i].ans[j];
-                rnn = crs[i].nn;
-
-                logger.info(ltag, " sn="+ rsn + " nn="+rnn+ " an="+ran);
-                found = false;
-
-                for (int k = 0; k < ccs.length; k++) {
-                    if (ccs[k] == null)
-                        continue;
-
-                    if (ccs[k].sn == rsn) {
-                        ccs[k].ans[i] = ran;
-                        ccs[k].setDetectStatus(i, CloudCoin.STATUS_PASS);
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found) {
-                    for (int k = 0; k < ccs.length; k++) {
-                        if (ccs[k] == null) {
-                            found = true;
-                            ccs[k] = new CloudCoin(rnn, rsn);
-                            ccs[k].ans[i] = ran;
-                            ccs[k].setDetectStatus(i, CloudCoin.STATUS_PASS);
-                            
-                            break;
-                        }
-                    }
-
-                    if (!found) {
-                        logger.error(ltag, "Can't find a coin for rsn=" + rsn);
-                        continue;
-                    }
-                }
-            }
-            */
         }
 
         logger.debug(ltag, "Error count: " + cntErr);
-        /*
-        if (cntErr >= RAIDA.TOTAL_RAIDA_COUNT - Config.PASS_THRESHOLD) {
-            logger.error(ltag, "Too many errors: " + cntErr);
-            cr.errText = "Failed to get change. Too many errors from RAIDA: " + cntErr;
-            cr.status = ChangeMakerResult.STATUS_ERROR;
-            return;    
-        }
-        */
-        //String dir = AppCore.getUserDir(Config.DIR_SUSPECT, user);
+
         String dir = AppCore.getUserDir(Config.DIR_DETECTED, user);
         String file;
         boolean isError = false;
@@ -306,6 +274,8 @@ public class ChangeMaker extends Servant {
         saveReceipt(user, 1, 0, 0, 0, 0, 0, cc.getDenomination());
 
         cr.status = ChangeMakerResult.STATUS_FINISHED;
+        
+        //fixTransfer(rarr);
     }
 
 }

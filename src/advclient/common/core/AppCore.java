@@ -26,6 +26,7 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
+import static java.lang.Integer.max;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.URL;
@@ -55,6 +56,8 @@ import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.zip.CRC32;
@@ -2586,5 +2589,10 @@ public class AppCore {
         
         return true;
     }
-    
+ 
+    public static int getRandomCorner() {
+        Random rand = new Random();
+        
+        return rand.nextInt(4) + 1;
+    }
 }

@@ -74,7 +74,7 @@ import org.json.JSONObject;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "3.0.42";
+    public static String version = "3.0.43";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -137,8 +137,6 @@ public class AdvancedClient  {
     
     public AdvancedClient(String[] args) {
         wl = new WLogger();
-        
-
         
         String home = System.getProperty("user.home");
         resetState();
@@ -3064,9 +3062,11 @@ public class AdvancedClient  {
         Thread t = new Thread(new Runnable() {
             public void run(){
                 pbar.setVisible(false);
+                /*
                 ps.isEchoFinished = false;
                 setRAIDAEchoProgressCoins(0);                
                 sm.startEchoService(new EchoCb());
+                
                 while (!ps.isEchoFinished) {
                     try {
                         Thread.sleep(500);
@@ -3083,6 +3083,7 @@ public class AdvancedClient  {
                     showScreen();
                     return;
                 }
+                */
 
                 pbarText.setText("Querying coins...");
                 pbarText.repaint();
@@ -9324,7 +9325,7 @@ public class AdvancedClient  {
             } 
         };
  
-        String[] items = {"Send to Another User", "Transfer Within Wallet", "Bill Pay", "Sent Coins"};
+        String[] items = {"Send to Another User", "Transfer Within Wallets", "Bill Pay", "Sent Coins"};
         if (!isAdvancedMode()) {
             items[2] = items[3] = null;
         }
@@ -11248,6 +11249,8 @@ public class AdvancedClient  {
         corePanel.add(mwrapperPanel);
         updateWalletAmount();
 
+        wl.debug(ltag, "Right panel updated");
+        
         return mwrapperPanel;
     }
     

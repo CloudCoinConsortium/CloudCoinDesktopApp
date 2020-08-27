@@ -1490,9 +1490,32 @@ public class Servant {
         return rsns;
     }
     
+    private void addToRccIfNotExists(int[] quorum, int[][] target, int d) {
+        logger.debug(ltag, "Comparing arrays denomination " + d);
+        boolean found;
+        for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+            logger.debug(ltag, "Calculating quorum for raida " + i);
+            
+            found = false;
+            for (int j = 0; j < quorum.length; j++) {
+                int qsc = quorum[j];
+                for (int k = 0; k < target[i].length; k++) {
+                    if (target[i][k] == qsc) {
+                        found = true;
+                        break;
+                    }
+                }
+                
+                if (!found) {
+                    logger.debug(ltag, "SN " + qsc + " is not present on RAIDA " + i);
+                    addSnToRarr(i, qsc);
+                }              
+            }
+        }
+        
+    }
     
-    protected int[] showChange(int method, CloudCoin cc) {
-        String resultMain;
+    protected int[] showChange(int method, CloudCoin cc, ArrayList<Integer>[] rarr) {
         String[] results;
         String[] requests;
         StringBuilder[] sbs;
@@ -1579,6 +1602,14 @@ public class Servant {
             return null;
         }
         
+        if (rarr != null) {
+            logger.debug(ltag, "Need to collect array for fix_transfer");
+            addToRccIfNotExists(vsns1, rsns1, 1);
+            addToRccIfNotExists(vsns5, rsns5, 5);
+            addToRccIfNotExists(vsns25, rsns25, 25);
+            addToRccIfNotExists(vsns100, rsns100, 100);
+        }
+        
         int[] sns;
         switch (method) {
             case Config.CHANGE_METHOD_5A:
@@ -1659,7 +1690,7 @@ public class Servant {
    
         logger.debug(ltag, "Method chosen: " + method);
         
-        int sns[] = showChange(method, tcc);
+        int sns[] = showChange(method, tcc, null);
         if (sns == null) {
             logger.error(ltag, "Not enough coins to make change");
             return null;
@@ -1809,8 +1840,10 @@ public class Servant {
         }
         int[] rlist = new int[cnt];
         String[] requests = new String[cnt];
-        String[] results;
         StringBuilder sb;
+        
+        int corner = AppCore.getRandomCorner();
+        logger.debug(ltag, "Picked random corner " + corner);
         int j = 0;
         for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
             ArrayList<Integer> r = rarr[i];
@@ -1819,7 +1852,7 @@ public class Servant {
             
             rlist[j] = i;
             sb = new StringBuilder();
-            sb.append("sync/fix_transfer?corner=1");
+            sb.append("sync/fix_transfer?corner=" + corner);
             for (int sn : r) {
                 sb.append("&sn[]=");
                 sb.append(sn);
@@ -1859,8 +1892,21 @@ public class Servant {
     
     protected void addCoinToRarr(int idx, CloudCoin cc) {
         logger.debug(ltag, " adding to rarr " + cc.sn);
+        
+        if (rarr[idx].size() >= Config.MAX_NOTES_TO_FIXTRANSFER) {
+            logger.debug(ltag, "Will not add coins to fix_transfer rarr. It is already " + Config.MAX_NOTES_TO_FIXTRANSFER + " notes in it");
+            return;
+        }
+        
         rarr[idx].add(cc.sn);
     }
     
-    
+    protected void addSnToRarr(int idx, int sn) {
+        logger.debug(ltag, " adding sn to rarr " + sn);
+        if (rarr[idx].size() >= Config.MAX_NOTES_TO_FIXTRANSFER) {
+            logger.debug(ltag, "Will not add coins to fix_transfer rarr. It is already " + Config.MAX_NOTES_TO_FIXTRANSFER + " notes in it");
+            return;
+        }
+        rarr[idx].add(sn);
+    }
 }

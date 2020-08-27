@@ -266,5 +266,8 @@ public class Config {
     
     public static String COIN_FILTER = "coinslist.txt";
     
+    public static int MS_TO_SLEEP_AFTER_FIXTRANSFER = 4000;
+    
+    public static int MAX_NOTES_TO_FIXTRANSFER = 400;
     
 }
