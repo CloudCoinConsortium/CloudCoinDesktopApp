@@ -504,10 +504,12 @@ public class ServantManager {
     }
     
     public void cancel(String servantName) {
+        logger.debug(ltag, "Trying to cancel " + servantName);
         Servant s = sr.getServant(servantName);
         if (s == null)
             return;
         
+        logger.debug(ltag, "Actually Cancelling " + servantName);
         s.cancel();
     }
     
@@ -1353,9 +1355,10 @@ public class ServantManager {
     }
     
     public void cancelSecs() {
-        for (ShowEnvelopeCoins sec : secs)
+        logger.debug(ltag, "Forcing to cancel");
+        for (ShowEnvelopeCoins sec : secs) 
             sec.cancelForce();
-        
+                    
         for (ShowCoins sc : scs) {
             sc.cancelForce();
         }

@@ -1175,7 +1175,6 @@ public class AdvancedClient  {
             ps.needInitWallets = false;
         }
 
-
         switch (ps.currentScreen) {
             case ProgramState.SCREEN_NEW_VERSION:
                 resetState();
@@ -2289,8 +2288,7 @@ public class AdvancedClient  {
         JPanel subInnerCore;
         
         if (isError) {
-            subInnerCore = getPanel("Error");
-            resetState();
+            showError();
             return;
         }
              
@@ -3252,8 +3250,7 @@ public class AdvancedClient  {
         JPanel subInnerCore;
         
         if (isError) {
-            subInnerCore = getPanel("Error");
-            resetState();
+            showError();
             return;
         }
              
@@ -3334,8 +3331,7 @@ public class AdvancedClient  {
         JPanel subInnerCore;
         
         if (isError) {
-            subInnerCore = getPanel("Error");
-            resetState();
+            showError();
             return;
         }
              
@@ -3388,8 +3384,7 @@ public class AdvancedClient  {
         JPanel subInnerCore;
         
         if (isError) {
-            subInnerCore = getPanel("Error");
-            resetState();
+            showError();
             return;
         }
              
@@ -3462,8 +3457,7 @@ public class AdvancedClient  {
         JPanel subInnerCore;
         
         if (isError) {
-            subInnerCore = getPanel("Error");
-            resetState();
+            showError();
             return;
         }
         
@@ -3505,8 +3499,7 @@ public class AdvancedClient  {
         JPanel subInnerCore;
         
         if (isError) {
-            subInnerCore = getPanel("Error");
-            resetState();
+            showError();
             return;
         }
         
@@ -3575,8 +3568,7 @@ public class AdvancedClient  {
         JPanel subInnerCore;
         
         if (isError) {
-            subInnerCore = getPanel("Error");
-            resetState();
+            showError();
             return;
         }
         
@@ -3625,8 +3617,7 @@ public class AdvancedClient  {
         JPanel subInnerCore;
         
         if (isError) {
-            subInnerCore = getPanel("Error");
-            resetState();
+            showError();
             return;
         }
              
@@ -3685,13 +3676,30 @@ public class AdvancedClient  {
 
     }
     
+    public void showError() {
+        JPanel subInnerCore = getPanel("Error");
+        resetState();
+            
+        int y = 0;
+        GridBagLayout gridbag = new GridBagLayout();
+        subInnerCore.setLayout(gridbag);
+            
+        AppUI.GBPad(subInnerCore, y, gridbag);        
+        y++;
+        AppUI.getTwoButtonPanel(subInnerCore, "", "Continue", null, new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                setDefaultScreen();
+                showScreen();
+            }
+        }, y, gridbag); 
+    }
+    
     public void showImportDoneScreen() {   
         boolean isError = !ps.errText.equals("");
         JPanel subInnerCore;
         
         if (isError) {
-            subInnerCore = getPanel("Error");
-            resetState();
+            showError();
             return;
         }
              
@@ -4332,7 +4340,7 @@ public class AdvancedClient  {
             
         AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Save", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                setDefaultScreen();
                 showScreen();
             }
         }, new ActionListener() {
@@ -4451,8 +4459,7 @@ public class AdvancedClient  {
         JPanel subInnerCore;
         
         if (isError) {
-            subInnerCore = getPanel("Error");
-            resetState();
+            showError();
             return;
         }
              
@@ -4534,8 +4541,7 @@ public class AdvancedClient  {
         JPanel subInnerCore;
         
         if (isError) {
-            subInnerCore = getPanel("Error");
-            resetState();
+            showError();
             return;
         }
              
@@ -4573,8 +4579,7 @@ public class AdvancedClient  {
         JPanel subInnerCore;
         
         if (isError) {
-            subInnerCore = getPanel("Error");
-            resetState();
+            showError();
             return;
         }
              
@@ -4610,8 +4615,7 @@ public class AdvancedClient  {
         JPanel subInnerCore;
         
         if (isError) {
-            subInnerCore = getPanel("Error");
-            resetState();
+            showError();
             return;
         }
              
@@ -5387,8 +5391,7 @@ public class AdvancedClient  {
         boolean isError = !ps.errText.equals("");
 
         if (isError) {
-            subInnerCore = getPanel("Error");
-            resetState();
+            showError();
             return;
         }
 
@@ -5437,8 +5440,7 @@ public class AdvancedClient  {
         boolean isError = !ps.errText.equals("");
 
         if (isError) {
-            subInnerCore = getPanel("Error");
-            resetState();
+            showError();
             return;
         }
 
@@ -7285,38 +7287,7 @@ public class AdvancedClient  {
         jp.setLayout(gridbag);
         gridbagjp.setConstraints(jp, c);
         AppUI.noOpaque(jp);
-        
-      
-        /*
-        for (int i = 0; i < wallets.length; i++) {
-            if (wallets[i].isSkyWallet()) 
-                continue;
 
-            JLabel sl = new JLabel(wallets[i].getName());
-            final String fdir = AppCore.getRootUserDir(wallets[i].getName());
-            JLabel link = AppUI.getHyperLink(fdir, "javascript:void(0); return false", 20);
-            link.addMouseListener(new MouseAdapter() {
-                public void mouseReleased(MouseEvent e) {
-                    if (!Desktop.isDesktopSupported())
-                        return;
-                    try {
-                        Desktop.getDesktop().open(new File(fdir));
-                    } catch (IOException ie) {
-                        wl.error(ltag, "Failed to open browser: " + ie.getMessage());
-                    }
-                }
-            });
-            
-            AppUI.getGBRow(jp, sl, link, y, gridbag);
-            AppUI.setColor(link, brand.getHyperlinkColor());
-            AppUI.underLine(link);
-            y++;
- 
-        }
-        */
-        
-        
-        //JLabel sl = new JLabel(ps.currentWallet.getName());
         final String fdir = AppCore.getRootUserDir(ps.currentWallet.getName());
         String[] dirs = AppCore.getDirsInDir(fdir);
         for (int i = 0; i < dirs.length; i++) {
@@ -7389,7 +7360,7 @@ public class AdvancedClient  {
                 this.thumbColor = brand.getScrollbarThumbColor();
             }
         });
-        AppUI.setSize(scrollPane, 800, 410);
+        AppUI.setSize(scrollPane, 800, 360);
         
                // gridbag.setConstraints(jp, c);
         gridbagjp.setConstraints(scrollPane, c);
@@ -7411,15 +7382,14 @@ public class AdvancedClient  {
         
         
 
-        AppUI.GBPad(jp, y, gridbag);        
+        AppUI.GBPad(subInnerCore, y, gridbagjp);        
         y++;
-        /*
-        AppUI.getTwoButtonPanel(subInnerCore, "", "Continue", null,  new ActionListener() {
+        AppUI.getTwoButtonPanel(subInnerCore, "", "Continue", null, new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                setDefaultScreen();
                 showScreen();
             }
-        }, y, gridbag);*/
+        }, y, gridbagjp);  
        
     }
     
@@ -7635,6 +7605,7 @@ public class AdvancedClient  {
         
         //gridbag.setConstraints(l, c);
         //subInnerCore.add(l);
+     
     }
     
     public void showClearScreen() {
@@ -7680,8 +7651,9 @@ public class AdvancedClient  {
         // Buttons
         continueButton = AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Continue", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                setDefaultScreen();
                 showScreen();
+
             }
         }, new ActionListener() {
             public void actionPerformed(ActionEvent e) {    
@@ -7850,7 +7822,7 @@ public class AdvancedClient  {
        
         AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Continue", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                setDefaultScreen();
                 showScreen();
             }
         }, new ActionListener() {
@@ -7947,7 +7919,7 @@ public class AdvancedClient  {
         // Buttons
         AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Continue", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                setDefaultScreen();
                 showScreen();
             }
         }, new ActionListener() {
@@ -8356,6 +8328,15 @@ public class AdvancedClient  {
              
             AppUI.GBPad(subInnerCore, y, gridbag);        
             y++;
+
+                   
+            AppUI.getTwoButtonPanel(subInnerCore, "", "Continue", null, new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    setDefaultScreen();
+                    showScreen();
+                }
+            }, y, gridbag);  
+            
             return;
         }
          
@@ -8375,32 +8356,11 @@ public class AdvancedClient  {
         // Buttons
         AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Continue", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                setDefaultScreen();
                 showScreen();
             }
         }, new ActionListener() {
             public void actionPerformed(ActionEvent e) {              
-                /*
-                int srcIdx = cboxfrom.getSelectedIndex() - 1;              
-                if (srcIdx < 0 || srcIdx >= rv.idxs.length) {
-                    ps.errText = "Please select Wallet";
-                    showScreen();
-                    return;
-                }
-
-                srcIdx = rv.idxs[srcIdx];
-   
-                Wallet srcWallet = wallets[srcIdx];
-                if (srcWallet.isSkyWallet()) {
-                    Wallet dstWallet = sm.getFirstNonSkyWallet();
-                    if (dstWallet == null) {
-                        ps.errText = "You cannot delete a Sky Wallet because you do not have a Local Wallet";
-                        showScreen();
-                        return;
-                    }
-                }
-
-                */
                 Wallet srcWallet = ps.currentWallet;
                 ps.srcWallet = srcWallet;
                 ps.currentScreen = ProgramState.SCREEN_CONFIRM_DELETE_WALLET;
@@ -8514,7 +8474,7 @@ public class AdvancedClient  {
 
         AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Continue", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                setDefaultScreen();
                 showScreen();
             }
         }, new ActionListener() {
@@ -10943,8 +10903,7 @@ public class AdvancedClient  {
         JPanel subInnerCore;
         
         if (isError) {
-            subInnerCore = getPanel("Error");
-            resetState();
+            showError();
             return;
         }
              

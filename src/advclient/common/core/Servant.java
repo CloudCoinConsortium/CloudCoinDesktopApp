@@ -98,14 +98,17 @@ public class Servant {
     }
     
     public void cancelForce() {
+        logger.debug(ltag, "Trying to cancel force servant " + user);
         if (raida == null)
             return;
 
+        logger.debug(ltag, "Cancelling force servant " + user);
         cancel();
         raida.cancel();
     }
     
     public void cancel() {
+        logger.debug(ltag, "Set cancel for " + user);
         this.cancelRequest = true;
     }
 
