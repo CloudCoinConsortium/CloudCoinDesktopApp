@@ -185,15 +185,17 @@ public class AdvancedClient  {
         
         /*
         CloudCoin cc = new CloudCoin(1, 10);
-        cc.setPownString("ppfppfpppppfppppfpfpppppp");
+        cc.setPownString("ppnpppppffppfpppnppnppppp");
+        cc.setPownString("pfnppppfffppfppppppnppppp");
+        cc.setPownString("pfpppppfffppfpppppppppppp");
         //cc.setPownString("pppppppppppfppppfefpnpppp");
-        cc.setPownString("pfppppppfpppppppppppppppp");
+        //cc.setPownString("pfppppppfpppppppppppppppp");
         
         System.out.println("cc="+cc.getPownString() + " cc=" +cc.isSentFixable() + " x="+cc.isSentFixableColumns(false) + " y=" + cc.isSentFixableRows(false));
         System.out.println("canberecovered=" + cc.canbeRecoveredFromLost());
         System.exit(1);
-        */
         
+        */
         
         hwId = AppCore.getHwID();
         
@@ -2247,7 +2249,6 @@ public class AdvancedClient  {
                         pbarText.repaint();
                         return;
                     }
-                    int sn = ps.srcWallet.getIDCoin().sn;
                     
                     pbarText.setText("Querying coins ...");
                     pbarText.repaint();
@@ -5457,7 +5458,7 @@ public class AdvancedClient  {
                 + "that the name is pointing to. The trusted transfer server that "
                 + "SkyWallet.cc points to is called \"TeleportNow.\" TeleportNow has data supremacy "
                 + "just like the RAIDA. Teleport now cannot be brought down or hacked "
-                + "and there is no information about transactions that are stored.<br>You can find your Debit Card in the ID folder");
+                + "and there is no information about transactions that are stored.<br><br>You can find your Debit Card in the ID folder");
         
         AppUI.getGBRow(subInnerCore, null, fname, 0, gridbag);
         y++;     
@@ -12166,6 +12167,7 @@ public class AdvancedClient  {
                     } else {
                         memo = "Failed to Import";
                     }
+
                     w.appendTransaction(memo, 0, "COUNTERFEIT");
                 }
             }
@@ -12414,8 +12416,9 @@ public class AdvancedClient  {
                 public void run() {
                     if (isDepositing()) {
                         ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
-                    } else if (isTransferring() || isMakingChange()) {
+                    } else if (isTransferring() || isMakingChange() || ps.needPownAfterLocalTransfer) {
                         ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                        ps.needPownAfterLocalTransfer = false;
                     } else if (isFixing()) {
                         ps.currentScreen = ProgramState.SCREEN_FIX_DONE;
                     } else if (isBackupping()) {
@@ -12525,12 +12528,13 @@ public class AdvancedClient  {
                         if (isFixing()) {
                             ps.currentScreen = ProgramState.SCREEN_FIX_DONE;
                         } else {
-                        if (isTransferring())
-                            ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
-                        else if (isWithdrawing()) {
-                            ps.currentScreen = ProgramState.SCREEN_WITHDRAW_DONE;
-                        } else 
-                            ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
+                            if (isTransferring() || ps.needPownAfterLocalTransfer) {
+                                ps.currentScreen = ProgramState.SCREEN_TRANSFER_DONE;
+                                ps.needPownAfterLocalTransfer = false;
+                            } else if (isWithdrawing()) {
+                                ps.currentScreen = ProgramState.SCREEN_WITHDRAW_DONE;
+                            } else 
+                                ps.currentScreen = ProgramState.SCREEN_IMPORT_DONE;
                         }
                         showScreen();
                     }

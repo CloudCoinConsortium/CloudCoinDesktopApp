@@ -518,7 +518,7 @@ public class ServantManager {
             logger.debug(ltag, "Src wallet is encrypted");
             Vaulter v = (Vaulter) sr.getServant("Vaulter");
             v.unvault(w.getPassword(), amount, null, 
-               new rVaulterCb(sn, null, amount, memo, remoteWalletName, rn, cb));
+               new rVaulterCb(sn, null, amount, memo, remoteWalletName, rn, false, cb));
              
             return;
         }
@@ -579,7 +579,7 @@ public class ServantManager {
             logger.debug(ltag, "Src wallet is encrypted");
             Vaulter v = (Vaulter) sr.getServant("Vaulter");
             v.unvault(srcWalletObj.getPassword(), amount, null, 
-               new rVaulterCb(sn, dstWallet, amount, memo, remoteWalletName, null, scb));
+               new rVaulterCb(sn, dstWallet, amount, memo, remoteWalletName, null, needPownAfterLocalTransfer, scb));
              
             return true;
         }
@@ -1163,9 +1163,10 @@ public class ServantManager {
         int sn;
         String remoteWalletName;
         String rn;
+        boolean needPownAfterLocalTransfer;
     
         public rVaulterCb(int sn, String dstFolder, int amount, 
-                String memo, String remoteWalletName, String rn, CallbackInterface cb) {
+                String memo, String remoteWalletName, String rn, boolean needPownAfterLocalTransfer, CallbackInterface cb) {
             this.cb = cb;
             this.amount = amount;
             this.memo = memo;
@@ -1173,6 +1174,7 @@ public class ServantManager {
             this.dstFolder = dstFolder;
             this.remoteWalletName = remoteWalletName;
             this.rn = rn;
+            this.needPownAfterLocalTransfer = needPownAfterLocalTransfer;
 
         }
         
@@ -1196,7 +1198,7 @@ public class ServantManager {
             }
             
             logger.debug(ltag, "send sn " + sn + " dstWallet " + dstFolder);
-            startSenderService(sn, dstFolder, amount, memo, remoteWalletName, rn, false, cb);
+            startSenderService(sn, dstFolder, amount, memo, remoteWalletName, rn, needPownAfterLocalTransfer, cb);
 	}
     }
     
