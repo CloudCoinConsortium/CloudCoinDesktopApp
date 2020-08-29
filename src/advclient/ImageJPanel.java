@@ -30,6 +30,8 @@ public class ImageJPanel extends JPanel {
   private Object point;
   int width, height;
   double ratio;
+  
+  int offsetx, offsety;
 
   // Some code to initialize the background image.
   // Here, we use the constructor to load the image. This
@@ -75,6 +77,11 @@ public class ImageJPanel extends JPanel {
           System.out.println("error");
       }
   }
+  
+  public void setOffsets(int x, int y) {
+      offsetx = x;
+      offsety = y;
+  }
 
   public int getImageWidth() {
       return width;
@@ -109,6 +116,7 @@ public class ImageJPanel extends JPanel {
     //g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.1f));
     //g2d.setColor(Color.yellow);
         //g2d.fillOval(point.x, point.y, 120, 60);
-    g.drawImage(backgroundImage, 32, 306, this); 
+    //g.drawImage(backgroundImage, 32, 306, this); 
+    g.drawImage(backgroundImage, offsetx, offsety, this); 
   }
 }

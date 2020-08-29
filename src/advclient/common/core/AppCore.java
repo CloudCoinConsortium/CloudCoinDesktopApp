@@ -1830,11 +1830,14 @@ public class AppCore {
                 continue;
             }
             
-            //System.out.println("f="+file);
             String[] parts = file.getName().split("\\.");
             if (parts.length != 5) {
                 logger.debug(ltag, "Maybe it is a stack file. Will try to parse it");
                 CloudCoin[] sccs = AppCore.parseStack(file.getAbsolutePath());
+                if (sccs == null) {
+                    logger.debug(ltag, "It is not, continue");
+                    continue;
+                }
                 for (int i = 0; i < sccs.length; i++) {
                     sns.add(sccs[i].sn);
                 }

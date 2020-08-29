@@ -384,9 +384,8 @@ public class ShowEnvelopeCoins extends Servant {
         
         if (needFix) {
             logger.info(ltag, "Calculating fix_transfer set of coins");
-            ArrayList<Integer>[] rarr = new ArrayList[RAIDA.TOTAL_RAIDA_COUNT];
+            initRarr();
             for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
-                rarr[i] = new ArrayList<Integer>();
                 int[] snst = sns[i];
                 for (int j = 0; j < vsns.length; j++) {
                     boolean found = false;
@@ -400,7 +399,8 @@ public class ShowEnvelopeCoins extends Servant {
                     if (!found) {
                         logger.debug(ltag, user + ": SN " + vsns[j] + " wasn't in the common set for raida " + i + ". Adding it to fix_transfer");
                         //System.out.println(user + ": SN " + vsns[j] + " wasn't in the common set for raida " + i + ". Adding it to fix_transfer");
-                        rarr[i].add(vsns[j]);
+                        addSnToRarr(i, vsns[j]);
+                        //rarr[i].add(vsns[j]);
                     }
                 }
             

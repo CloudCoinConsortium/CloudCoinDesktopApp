@@ -74,7 +74,7 @@ import org.json.JSONObject;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "3.0.43";
+    public static String version = "3.0.44";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -82,6 +82,8 @@ public class AdvancedClient  {
     JPanel wpanel;
     
     JPanel lwrapperPanel;
+    
+    JScrollPane leftScrollPane;
     
     String ltag = "Advanced Client";
     JLabel totalText;
@@ -1131,6 +1133,7 @@ public class AdvancedClient  {
     
     public void initCorePanel() {
         corePanel = new ImageJPanel(brand.getImgBackgroundImage());
+        corePanel.setOffsets(32, 306);
         AppUI.setBoxLayout(corePanel, false);
         AppUI.setSize(corePanel, tw, th - headerHeight);
         AppUI.setBackground(corePanel, brand.getBackgroundColor());
@@ -1420,6 +1423,10 @@ public class AdvancedClient  {
         corePanel.repaint();
         corePanel.revalidate();
 
+        Rectangle viewBounds = leftScrollPane.getViewportBorderBounds();
+        
+        
+        
     }
   
     public void maybeShowError(JPanel p) {
@@ -5972,7 +5979,8 @@ public class AdvancedClient  {
         JLabel fname;
 
         ps.triedToChange = false;
-        JPanel subInnerCore = getPanel("Withdraw from " + ps.currentWallet.getName());                
+        //JPanel subInnerCore = getPanel("Withdraw from " + ps.currentWallet.getName());      
+        JPanel subInnerCore = getPanel("Withdraw to a local folder");   
         GridBagLayout gridbag = new GridBagLayout();
         subInnerCore.setLayout(gridbag);
 
@@ -7278,8 +7286,13 @@ public class AdvancedClient  {
         c.gridy = 0;
         c.gridx = 0;
         
+        JLabel x = new JLabel("Caution: Moving or removing folders or their contents will cause lost information and errors");
+        AppUI.setCommonFont(x);
+        AppUI.setColor(x, brand.getErrorColor());
         
-        
+
+        AppUI.getGBRow(subInnerCore, null, x, y, gridbagjp);
+        y++; 
         
         
         JPanel jp = new JPanel();
@@ -7361,7 +7374,7 @@ public class AdvancedClient  {
                 this.thumbColor = brand.getScrollbarThumbColor();
             }
         });
-        AppUI.setSize(scrollPane, 800, 360);
+        AppUI.setSize(scrollPane, 800, 320);
         
                // gridbag.setConstraints(jp, c);
         gridbagjp.setConstraints(scrollPane, c);
@@ -11231,6 +11244,7 @@ public class AdvancedClient  {
 
         // List wallets
         //wallets = sm.getWallets();
+        /*
         int activeWalletIdx = -1;
         for (int i = 0; i < wallets.length; i++) {
             if (this.isActiveWallet(wallets[i])) {
@@ -11240,17 +11254,30 @@ public class AdvancedClient  {
                 break;
             }                
         }
+        */
 
                 
         if (!isAdvancedMode()) 
             return;
         
+        JPanel activeWalletJPanel = null;
+        int pos = 0;
+        int savedPos = 0;
         for (int i = 0; i < wallets.length; i++) {
-            if (i == activeWalletIdx)
-                continue;
+         //   if (i == activeWalletIdx)
+           //     continue;
 
-            wpanel.add(getWallet(wallets[i], 0));
+            JPanel wp = getWallet(wallets[i], 0);
+            if (this.isActiveWallet(wallets[i])) {
+                activeWalletJPanel = wp;
+                savedPos = pos;
+            } 
+
+            
+            wpanel.add(wp);
             wpanel.add(AppUI.hr(10));
+            
+            pos += wp.getPreferredSize().height + 10;
         }
 
  
@@ -11267,7 +11294,21 @@ public class AdvancedClient  {
 
         
         
+        
+        
+        
+
+        
+        
+        
+        
+        
+        
+        
         JScrollPane scrollPane = new JScrollPane(wpanel);
+        
+        
+        
         JScrollBar scrollBar = new JScrollBar(JScrollBar.VERTICAL) {
             @Override
             public boolean isVisible() {
@@ -11281,8 +11322,54 @@ public class AdvancedClient  {
         scrollPane.setOpaque(false);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
+        //scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
+        scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(10, 0));
+        scrollPane.getVerticalScrollBar().setUI(new BasicScrollBarUI() {
+            @Override
+            protected JButton createDecreaseButton(int orientation) {
+                TriangleButton jbutton = new TriangleButton(false);
+                AppUI.setHandCursor(jbutton);
+                jbutton.setContentAreaFilled(false);
+                jbutton.setFocusPainted(false);
+            
+                JButton b = new JButton();
+                AppUI.setSize(b, 0, 0);
+                
+                return b;
+            }
+
+            @Override    
+            protected JButton createIncreaseButton(int orientation) {
+                TriangleButton jbutton = new TriangleButton(true);
+                AppUI.setHandCursor(jbutton);
+                jbutton.setContentAreaFilled(false);
+                jbutton.setFocusPainted(false);
+            
+                JButton b = new JButton();
+                AppUI.setSize(b, 0, 0);
+                
+                return b;
+            }
+            @Override 
+            protected void configureScrollBarColors(){
+                this.trackColor = brand.getScrollbarTrackColor();
+                this.thumbColor = brand.getScrollbarThumbColor();
+            }
+        });
+        
+        leftScrollPane = scrollPane;
+        
+        
+        Rectangle visible = scrollPane.getVisibleRect();
+        //visible.y = 800;
+        //scrollPane.scrollRectToVisible(visible);
+
+        
+        
+
+        
         lwrapperPanel.add(scrollPane);  
+
         
         wpanel.addMouseListener(new MouseAdapter() {
             public void mouseReleased(MouseEvent e) {
@@ -11302,6 +11389,17 @@ public class AdvancedClient  {
             sm.startEchoService(null);
             globalEcho = true;
         }
+
+        
+        lwrapperPanel.validate();
+
+        JScrollBar vertical = leftScrollPane.getVerticalScrollBar();
+        
+        savedPos -= 200;
+        if (savedPos > 0) {
+            vertical.setValue(savedPos);
+        }
+
     }
 
     public JPanel getWallet(Wallet wallet, int type) {
@@ -11318,17 +11416,30 @@ public class AdvancedClient  {
         if (isCreatingSkyWallet() && type == TYPE_ADD_SKY) {
             isDisabled = false;
         }
-        
-        
+
+                
         final Color color = isDisabled ? brand.getInactiveWalletBackgroundColor() : brand.getActiveWalletBackgroundColor();
         
-        final JPanel wpanel = new JPanel();
-        AppUI.setSize(wpanel, 200, 110);
-        //AppUI.setMargin(wpanel, 10);
-        AppUI.setBackground(wpanel, color);
+        JPanel wpanel = new JPanel();
+        
+        if (wallet != null && wallet.isSkyWallet()) {
+            //try {
+                //Image imgx = ImageIO.read(brand.getImgSkyWalletBackgroundIcon());
+                ImageJPanel iwp = new ImageJPanel(brand.getImgSkyWalletBackgroundIcon());
+                iwp.setOffsets(5, 0);
+                wpanel = iwp;
+                AppUI.noOpaque(wpanel);
+           // } catch (IOException e) {}
+        } else {
+            AppUI.setBackground(wpanel, color);
+        }
+        
+        
+        AppUI.setSize(wpanel, 180, 110);
         GridBagLayout gridbag = new GridBagLayout();   
         wpanel.setLayout(gridbag);
- 
+
+        
         String name;
         if (wallet == null) {
             if (type == TYPE_ADD_BUTTON)
@@ -11348,7 +11459,8 @@ public class AdvancedClient  {
         } else {
             AppUI.setBoldFont(labelName, 14);
             AppUI.setColor(labelName, brand.getMainTextColor());
-            wpanel.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, brand.getSelectedWalletBorderColor()));
+            if (!wallet.isSkyWallet())
+                wpanel.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, brand.getSelectedWalletBorderColor()));
         }
 
         if (isCreatingWallet() && type == TYPE_ADD_BUTTON) {
@@ -11358,130 +11470,182 @@ public class AdvancedClient  {
         
         final boolean fisDisabled = isDisabled;      
         if (wallet != null) {
-            URL u = wallet.isSkyWallet() ? brand.getImgWalletSkyIcon() : brand.getImgWalletLocalIcon();
-            BufferedImage bufimage = new BufferedImage(29, 29, BufferedImage.TYPE_INT_ARGB);
-            JLabel icon;
-            JLabel iconMail, iconLock, iconCloud;
-            JLabel dummyIcon;
-            try {
-                Image img;
+            JLabel jxl = new JLabel("");
+            if (!wallet.isSkyWallet()) {
+                URL u = wallet.isSkyWallet() ? brand.getImgWalletSkyIcon() : brand.getImgWalletLocalIcon();
+                BufferedImage bufimage = new BufferedImage(29, 29, BufferedImage.TYPE_INT_ARGB);
+                JLabel icon;
+                JLabel iconMail, iconLock, iconCloud;
+                JLabel dummyIcon;
+                try {
+                    Image img;
             
-                img = ImageIO.read(u);
-                icon = new JLabel(new ImageIcon(img));
-                dummyIcon = new JLabel(new ImageIcon(bufimage));
-                if (isDisabled) {
-                    img = ImageIO.read(brand.getImgEmailIcon());
-                    iconMail = new JLabel(new ImageIcon(img));
-                    img = ImageIO.read(brand.getImgCloudIcon());
-                    iconCloud = new JLabel(new ImageIcon(img));
-                    img = ImageIO.read(brand.getImgLockIcon());
-                    iconLock = new JLabel(new ImageIcon(img));
-                } else {
-                    img = ImageIO.read(brand.getImgEmailIconActive());
-                    iconMail = new JLabel(new ImageIcon(img));
-                    img = ImageIO.read(brand.getImgCloudIconActive());
-                    iconCloud = new JLabel(new ImageIcon(img));
-                    img = ImageIO.read(brand.getImgLockIconActive());
-                    iconLock = new JLabel(new ImageIcon(img));
+                    img = ImageIO.read(u);
+                    icon = new JLabel(new ImageIcon(img));
+                    dummyIcon = new JLabel(new ImageIcon(bufimage));
+                    if (isDisabled) {
+                        img = ImageIO.read(brand.getImgEmailIcon());
+                        iconMail = new JLabel(new ImageIcon(img));
+                        img = ImageIO.read(brand.getImgCloudIcon());
+                        iconCloud = new JLabel(new ImageIcon(img));
+                        img = ImageIO.read(brand.getImgLockIcon());
+                        iconLock = new JLabel(new ImageIcon(img));
+                    } else {
+                        img = ImageIO.read(brand.getImgEmailIconActive());
+                        iconMail = new JLabel(new ImageIcon(img));
+                        img = ImageIO.read(brand.getImgCloudIconActive());
+                        iconCloud = new JLabel(new ImageIcon(img));
+                        img = ImageIO.read(brand.getImgLockIconActive());
+                        iconLock = new JLabel(new ImageIcon(img));
                     
+                    }
+                
+                
+                } catch (Exception ex) {
+                    return null;
                 }
-                
-                
-            } catch (Exception ex) {
-                return null;
-            }
             
                    
-            GridBagConstraints c = new GridBagConstraints();          
-            c.anchor = GridBagConstraints.WEST;
-            c.insets = new Insets(4, 18, 0, 0); 
-            c.gridx = 0;
-            c.gridy = y;   
-            c.weightx = 0;
-            c.gridheight = 2;
-            gridbag.setConstraints(icon, c);
-
-            wpanel.add(icon);
+                GridBagConstraints c = new GridBagConstraints();          
+                c.anchor = GridBagConstraints.WEST;
+                c.insets = new Insets(4, 18, 0, 0); 
+                c.gridx = 0;
+                c.gridy = y;   
+                c.weightx = 0;
+                c.gridheight = 2;
+                gridbag.setConstraints(icon, c);
+                wpanel.add(icon);
             
             
-            AppUI.setSize(labelName, 120, 20);
-            c.insets = new Insets(10, 16, 0, 0);
-            c.gridx = GridBagConstraints.RELATIVE;
-            c.weightx = 1;
-            c.gridwidth = 2;
-            c.anchor = GridBagConstraints.WEST;
-            c.gridheight = 1;
-            gridbag.setConstraints(labelName, c);
-            wpanel.add(labelName);
+                AppUI.setSize(labelName, 120, 20);
+                c.insets = new Insets(10, 16, 0, 0);
+                c.gridx = GridBagConstraints.RELATIVE;
+                c.weightx = 1;
+                c.gridwidth = 2;
+                c.anchor = GridBagConstraints.WEST;
+                c.gridheight = 1;
+                gridbag.setConstraints(labelName, c);
+                wpanel.add(labelName);
             
-            y++;
+                y++;
          
-            // Amount (empty)
-            JLabel jxl = new JLabel("");
-            AppUI.setSemiBoldFont(jxl, 16);
-            AppUI.setColor(jxl, brand.getTitleTextColor());
-            AppUI.alignLeft(jxl);
-            AppUI.noOpaque(jxl);
+                // Amount (empty)
+                
+                AppUI.setSemiBoldFont(jxl, 16);
+                AppUI.setColor(jxl, brand.getTitleTextColor());
+                AppUI.alignLeft(jxl);
+                AppUI.noOpaque(jxl);
 
-            c.insets = new Insets(12, 16, 0, 0); 
-            c.gridx = GridBagConstraints.RELATIVE;
-            c.gridy = y; 
-            c.weightx = 1;
-            c.gridwidth = 2;
-            c.anchor = GridBagConstraints.NORTHWEST;
-            gridbag.setConstraints(jxl, c);
-            wpanel.add(jxl);
+                c.insets = new Insets(12, 16, 0, 0); 
+                c.gridx = GridBagConstraints.RELATIVE;
+                c.gridy = y; 
+                c.weightx = 1;
+                c.gridwidth = 2;
+                c.anchor = GridBagConstraints.NORTHWEST;
+                gridbag.setConstraints(jxl, c);
+                wpanel.add(jxl);
             
-            y++;
+                y++;
             
-            // Icons
-            JPanel jpwr = new JPanel();
-            AppUI.setBoxLayout(jpwr, false);
+                // Icons
+                JPanel jpwr = new JPanel();
+                AppUI.setBoxLayout(jpwr, false);
             
-            JPanel jp = new JPanel();
+                JPanel jp = new JPanel();
             
             
-            //AppUI.setBoxLayout(jp, false);
-            AppUI.setMargin(jp, 0);
-            AppUI.noOpaque(jp);
-            //AppUI.alignLeft(jp);
-            //AppUI.setSize(jp, 60, 29);
-            c.anchor = GridBagConstraints.WEST;
-            c.insets = new Insets(4, 18, 0, 0); 
-            c.gridx = 0;
-            c.gridy = y;   
-            c.gridwidth = 2;
-            c.gridheight = 1;
-            gridbag.setConstraints(jp, c);
-            if (wallet.isSkyWallet()) { 
-                jp.add(iconCloud);
-                //jp.add(dummyIcon);
-            } else if (!wallet.getEmail().isEmpty()) {
-                jp.add(iconMail);
-                //jp.add(dummyIcon);
+                //AppUI.setBoxLayout(jp, false);
+                AppUI.setMargin(jp, 0);
+                AppUI.noOpaque(jp);
+                //AppUI.alignLeft(jp);
+                //AppUI.setSize(jp, 60, 29);
+                c.anchor = GridBagConstraints.WEST;
+                c.insets = new Insets(4, 18, 0, 0); 
+                c.gridx = 0;
+                c.gridy = y;   
+                c.gridwidth = 2;
+                c.gridheight = 1;
+                gridbag.setConstraints(jp, c);
+                if (wallet.isSkyWallet()) { 
+                    jp.add(iconCloud);
+                    //jp.add(dummyIcon);
+                } else if (!wallet.getEmail().isEmpty()) {
+                    jp.add(iconMail);
+                    //jp.add(dummyIcon);
+                } else {
+                    jp.add(dummyIcon);
+                }
+                wpanel.add(jp);
+
+                jp = new JPanel();
+                //AppUI.setBoxLayout(jp, false);
+                AppUI.setMargin(jp, 0);
+                AppUI.noOpaque(jp);
+                AppUI.alignLeft(jp);
+                c.anchor = GridBagConstraints.EAST;
+                c.insets = new Insets(0, 0, 0, 18); 
+                c.gridx = GridBagConstraints.RELATIVE;
+                c.gridy = y;   
+                c.gridwidth = 1;
+                gridbag.setConstraints(jp, c);
+                if (wallet.isEncrypted()){
+                    jp.add(iconLock);
+                    //jp.add(dummyIcon);
+                } else  {
+                    jp.add(dummyIcon);
+                }
+                wpanel.add(jp);
             } else {
-                jp.add(dummyIcon);
-            }
-            wpanel.add(jp);
+                AppUI.setSemiBoldFont(jxl, 16);
+                AppUI.setColor(jxl, brand.getMainTextColor());
+                AppUI.alignLeft(jxl);
+                AppUI.noOpaque(jxl);
 
-            jp = new JPanel();
-            //AppUI.setBoxLayout(jp, false);
-            AppUI.setMargin(jp, 0);
-            AppUI.noOpaque(jp);
-            AppUI.alignLeft(jp);
-            c.anchor = GridBagConstraints.EAST;
-            c.insets = new Insets(0, 0, 0, 18); 
-            c.gridx = GridBagConstraints.RELATIVE;
-            c.gridy = y;   
-            c.gridwidth = 1;
-            gridbag.setConstraints(jp, c);
-            if (wallet.isEncrypted()){
-                jp.add(iconLock);
-                //jp.add(dummyIcon);
-            } else  {
-                jp.add(dummyIcon);
+                GridBagConstraints c = new GridBagConstraints();    
+                c.insets = new Insets(42, 68, 0, 0); 
+                c.gridx = GridBagConstraints.RELATIVE;
+                c.gridy = y; 
+                c.weighty = 1;
+                c.gridwidth = 2;
+                c.anchor = GridBagConstraints.NORTHWEST;
+                gridbag.setConstraints(jxl, c);
+                wpanel.add(jxl);
+                y++;
+                
+                
+                
+                
+                String fontfamily = labelName.getFont().getFamily();
+
+
+                //String aText = brand.getTerms();
+                //aText = aText.replaceAll("<span class=\"instructions\">.+</span>", "");
+                //tp.setContentType("text/html"); 
+                //tp.setText("<html><div style=' font-family:"+fontfamily+"; font-size: 12px'>" + aText + "</div></html>"); 
+                
+                c.insets = new Insets(0, 0, 0, 0);
+                c.gridx = GridBagConstraints.RELATIVE;
+                c.gridy = y; 
+                c.weightx = 1;
+                c.gridwidth = 2;
+                c.anchor = GridBagConstraints.CENTER;
+                c.gridheight = 1;
+                
+                //labelName.setText("<html><div style='text-align:center; width: 180px; font-size: 14px; font-family:' " + fontfamily+ "'>" + labelName.getText() + "</div></html>");
+                //labelName.setText("sfdsdsds.sfafafafafsas.xxx.sdsa");
+                JLabel l = new JLabel(labelName.getText(), JLabel.CENTER);
+                gridbag.setConstraints(l, c);
+                AppUI.setColor(l, brand.getMainTextColor());
+                if (!isDisabled)
+                    AppUI.setBoldFont(l, 14);
+                else
+                    AppUI.setFont(l, 14);
+                AppUI.alignCenter(l);
+                AppUI.setSize(l, 160, 20);
+                wpanel.add(l);
+                //AppUI.opaque(labelName);
+                
             }
-            wpanel.add(jp);
             
             
             
