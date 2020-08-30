@@ -74,7 +74,7 @@ import org.json.JSONObject;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "3.0.44";
+    public static String version = "3.0.45";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -1422,10 +1422,7 @@ public class AdvancedClient  {
         
         corePanel.repaint();
         corePanel.revalidate();
-
-        Rectangle viewBounds = leftScrollPane.getViewportBorderBounds();
-        
-        
+                
         
     }
   
@@ -5980,7 +5977,7 @@ public class AdvancedClient  {
 
         ps.triedToChange = false;
         //JPanel subInnerCore = getPanel("Withdraw from " + ps.currentWallet.getName());      
-        JPanel subInnerCore = getPanel("Withdraw to a local folder");   
+        JPanel subInnerCore = getPanel("Withdraw to Local Folder");   
         GridBagLayout gridbag = new GridBagLayout();
         subInnerCore.setLayout(gridbag);
 
@@ -8951,18 +8948,16 @@ public class AdvancedClient  {
             String rec = "";
             if (!w.getEmail().isEmpty()) {
                 String colstr = "#" + Integer.toHexString(brand.getMainTextColor().getRGB()).substring(2);
-                rec = "<br><span style='font-size:0.5em; color: " + colstr + "'>Recovery Email: " + w.getEmail() + "";
+                rec = "<br><span style='font-size:0.5em; color: " + colstr + "'>Recovery Email: " + w.getEmail() + "</span>";
             }
             
             if (!isAdvancedMode()) {
                 Wallet wx = getPrimarySkyWallet();
                 if (wx != null) {
                     String colstr = "#" + Integer.toHexString(brand.getMainTextColor().getRGB()).substring(2);
-                    rec += "<br>SkyWallet Address: " + wx.getName() + "</span>";
+                    rec += "<br><span style='font-size:0.5em; color: " + colstr + "'>SkyWallet Address: " + wx.getName() + "</span>";
                 }
-            } else {
-                rec += "</span>";
-            }
+            } 
             
             String totalString = "Counting";
             if (w.isUpdated())
@@ -11260,7 +11255,6 @@ public class AdvancedClient  {
         if (!isAdvancedMode()) 
             return;
         
-        JPanel activeWalletJPanel = null;
         int pos = 0;
         int savedPos = 0;
         for (int i = 0; i < wallets.length; i++) {
@@ -11269,7 +11263,6 @@ public class AdvancedClient  {
 
             JPanel wp = getWallet(wallets[i], 0);
             if (this.isActiveWallet(wallets[i])) {
-                activeWalletJPanel = wp;
                 savedPos = pos;
             } 
 
@@ -11425,7 +11418,14 @@ public class AdvancedClient  {
         if (wallet != null && wallet.isSkyWallet()) {
             //try {
                 //Image imgx = ImageIO.read(brand.getImgSkyWalletBackgroundIcon());
-                ImageJPanel iwp = new ImageJPanel(brand.getImgSkyWalletBackgroundIcon());
+            
+                ImageJPanel iwp;
+                
+                if (isDisabled) {
+                    iwp = new ImageJPanel(brand.getImgSkyWalletBackgroundGsIcon());
+                } else {
+                    iwp = new ImageJPanel(brand.getImgSkyWalletBackgroundIcon());
+                }
                 iwp.setOffsets(5, 0);
                 wpanel = iwp;
                 AppUI.noOpaque(wpanel);
@@ -11459,7 +11459,7 @@ public class AdvancedClient  {
         } else {
             AppUI.setBoldFont(labelName, 14);
             AppUI.setColor(labelName, brand.getMainTextColor());
-            if (!wallet.isSkyWallet())
+            if (wallet != null && !wallet.isSkyWallet())
                 wpanel.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, brand.getSelectedWalletBorderColor()));
         }
 

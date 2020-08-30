@@ -351,7 +351,7 @@ public class ProgramState {
         typedReturnAddress = "";
         typedReturnIdx = -1;
         
-        needPownAfterLocalTransfer = true;
+        needPownAfterLocalTransfer = false;
         
         typedPIN = "";
         

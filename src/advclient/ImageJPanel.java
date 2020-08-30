@@ -27,7 +27,6 @@ public class ImageJPanel extends JPanel {
     
     
   private Image backgroundImage;
-  private Object point;
   int width, height;
   double ratio;
   
@@ -62,7 +61,7 @@ public class ImageJPanel extends JPanel {
       
       initFromURL(u);
   }
-  
+
   public void initFromURL(URL u) {
 
       try {

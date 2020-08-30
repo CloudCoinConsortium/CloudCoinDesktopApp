@@ -1514,6 +1514,23 @@ public class Servant {
                     addSnToRarr(i, qsc);
                 }              
             }
+            
+            logger.debug(ltag, "Checking coins to delete");
+            for (int j = 0; j < target[i].length; j++) {
+                int c = target[i][j];
+                for (int k = 0; k < quorum.length; k++) {
+                    if (quorum[k] == c) {
+                        found = true;
+                        break;
+                    }
+                }
+                
+                if (!found) {
+                    logger.debug(ltag, "SN " + c + " is present on RAIDA " + i + " but not present in quorum. Will try to delete it via fix_transfer");
+                    addSnToRarr(i, c);
+                }  
+            }
+            
         }
         
     }

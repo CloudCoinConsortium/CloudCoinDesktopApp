@@ -105,7 +105,7 @@ public class Brand {
             "supportIcon","settingsIcon","coinsIcon","supportHtmlIcon","supportTimeIcon","supportPhoneIcon",
             "supportEmailIcon","supportPortalIcon","supportTermsIcon", "supportVideoIcon", "walletLocalIcon","walletSkyIcon","vaultIcon",
             "vaultIconActive","lockIcon","lockIconActive","cloudIcon","cloudIconActive","coinsInventoryIcon",
-            "templatePng","templateJpeg1","templateJpeg5","templateJpeg25","templateJpeg100", "skywalletBackgroundIcon",
+            "templatePng","templateJpeg1","templateJpeg5","templateJpeg25","templateJpeg100", "skywalletBackgroundIcon", "skywalletBackgroundGsIcon",
             "templateJpeg250","mainFont","mainFontSemiBold","mainFontBold","secondFont","secondFontSemiBold",
             "dropdownArrow", "arrowLeft", "arrowRight", "toggleyes", "toggleno", "lookingGlass", "eye",
             "emailIcon", "emailIconActive", "templateCard", "cardFont"
@@ -716,6 +716,10 @@ public class Brand {
         p = getProperty(ms, "skywalletbackgroundicon");
         if (p != null)
             datamap.get("skywalletBackgroundIcon").name = p;
+        
+        p = getProperty(ms, "skywalletbackgroundgsicon");
+        if (p != null)
+            datamap.get("skywalletBackgroundGsIcon").name = p;
         
         p = getProperty(ms, "vaulticon");
         if (p != null)
@@ -1388,6 +1392,10 @@ public class Brand {
     
     public URL getImgSkyWalletBackgroundIcon() {
         return getAssetPathByName("skywalletBackgroundIcon");
+    }
+    
+    public URL getImgSkyWalletBackgroundGsIcon() {
+        return getAssetPathByName("skywalletBackgroundGsIcon");
     }
     
     public URL getImgWalletSkyIcon() {

@@ -387,6 +387,7 @@ public class ShowEnvelopeCoins extends Servant {
             initRarr();
             for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
                 int[] snst = sns[i];
+                logger.debug(ltag, "Looking for coins to add");
                 for (int j = 0; j < vsns.length; j++) {
                     boolean found = false;
                     for (int k = 0; k < snst.length; k++) {
@@ -398,9 +399,26 @@ public class ShowEnvelopeCoins extends Servant {
                 
                     if (!found) {
                         logger.debug(ltag, user + ": SN " + vsns[j] + " wasn't in the common set for raida " + i + ". Adding it to fix_transfer");
-                        //System.out.println(user + ": SN " + vsns[j] + " wasn't in the common set for raida " + i + ". Adding it to fix_transfer");
+                        //System.out.println(user + ": SN1 " + vsns[j] + " wasn't in the common set for raida " + i + ". Adding it to fix_transfer");
                         addSnToRarr(i, vsns[j]);
                         //rarr[i].add(vsns[j]);
+                    }
+                }
+                
+                logger.debug(ltag, "Looking for coins to delete");
+                for (int j = 0; j < snst.length; j++) {
+                    boolean found = false;
+                    for (int k = 0; k < vsns.length; k++) {
+                        if (snst[j] == vsns[k]) {
+                            found = true;
+                            break;
+                        }                  
+                    }
+                
+                    if (!found) {
+                        logger.debug(ltag, user + ": SN2 " + snst[j] + " is a coin on rada " + i + ". Other raida servers don't have a quorum on it. Adding it to fix_transfer");
+                        //System.out.println(user + ": SN2 " + snst[j] + " wasn't in the common set for raida " + i + ". Adding it to fix_transfer");
+                        addSnToRarr(i, snst[j]);
                     }
                 }
             
