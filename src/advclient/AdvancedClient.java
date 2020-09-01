@@ -74,7 +74,7 @@ import org.json.JSONObject;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "3.0.45";
+    public static String version = "3.0.46";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -1506,6 +1506,9 @@ public class AdvancedClient  {
     }
     
     private void setRAIDAEchoProgressCoins(int raidaProcessed) {
+        if (pbar == null)
+            return;
+        
         pbar.setVisible(true);
         pbar.setValue(raidaProcessed);
 

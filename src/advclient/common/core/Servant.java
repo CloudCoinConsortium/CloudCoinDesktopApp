@@ -1716,10 +1716,6 @@ public class Servant {
             return null;
         }
 
-        for (i = 0; i < sns.length; i++) {
-            CloudCoin ccx = new CloudCoin(1, sns[i]);
-            logger.info(ltag, "sn "+ sns[i] + " d="+ccx.getDenomination());
-        }
 
         for (i = 0; i < sns.length; i++) {
             CloudCoin xcc = new CloudCoin(Config.DEFAULT_NN, sns[i]);

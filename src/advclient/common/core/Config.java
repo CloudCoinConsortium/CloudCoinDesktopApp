@@ -270,4 +270,6 @@ public class Config {
     
     public static int MAX_NOTES_TO_FIXTRANSFER = 400;
     
+    public static int FIX_MAX_REGEXPS = 24;
+    
 }
