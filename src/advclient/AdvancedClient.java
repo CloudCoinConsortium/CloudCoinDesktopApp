@@ -74,7 +74,7 @@ import org.json.JSONObject;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "3.0.46";
+    public static String version = "3.0.47";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -4571,7 +4571,7 @@ public class AdvancedClient  {
         
         AppUI.getTwoButtonPanel(subInnerCore, "", "Continue", null,  new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                setDefaultScreen();
                 showScreen();
             }
         }, y, gridbag);   
@@ -4609,7 +4609,7 @@ public class AdvancedClient  {
         
         AppUI.getTwoButtonPanel(subInnerCore, "", "Continue", null,  new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                setDefaultScreen();
                 showScreen();
             }
         }, y, gridbag);   
@@ -4839,7 +4839,7 @@ public class AdvancedClient  {
         
         AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Confirm", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                setDefaultScreen();
                 showScreen();
             }
         }, new ActionListener() {
@@ -4889,7 +4889,7 @@ public class AdvancedClient  {
         final MyTextField mtf0 = tf0;
         AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Confirm", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                setDefaultScreen();
                 showScreen();
             }
         }, new ActionListener() {
@@ -5101,7 +5101,7 @@ public class AdvancedClient  {
         
         AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Confirm", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                setDefaultScreen();
                 showScreen();
             }
         }, new ActionListener() {
@@ -5353,7 +5353,7 @@ public class AdvancedClient  {
         final MyTextField ftf1 = tf1;
         AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Continue", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                setDefaultScreen();
                 showScreen();
             }
         }, new ActionListener() {
@@ -5517,7 +5517,7 @@ public class AdvancedClient  {
         // Buttons
         continueButton = AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Continue", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                setDefaultScreen();
                 showScreen();
             }
         }, new ActionListener() {
@@ -5584,7 +5584,7 @@ public class AdvancedClient  {
         final MyTextField ftf1 = tf1;
         AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Continue", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                setDefaultScreen();
                 showScreen();
             }
         }, new ActionListener() {
@@ -5868,7 +5868,7 @@ public class AdvancedClient  {
 
         AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Continue", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                setDefaultScreen();
                 showScreen();
             }
         }, new ActionListener() {
@@ -10638,7 +10638,7 @@ public class AdvancedClient  {
    
         MyButton cb = AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Continue", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                setDefaultScreen();
                 showScreen();
             }
         }, new ActionListener() {
@@ -11162,7 +11162,7 @@ public class AdvancedClient  {
         final MyTextField fwalletName = walletName;
         AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Continue", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                ps.currentScreen = ProgramState.SCREEN_DEFAULT;
+                setDefaultScreen();
                 showScreen();
             }
         }, new ActionListener() {
