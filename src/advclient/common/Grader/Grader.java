@@ -143,7 +143,9 @@ public class Grader extends Servant {
         String ccFile;
 
         String dst = "";
-        if (cc.isSentFixable()) {
+        
+        
+        if (passed >= Config.MIN_PASSED_NUM_TO_BE_AUTHENTIC) {
             if (counterfeit != 0) {
                 logger.debug(ltag, "Coin " + cc.sn + " is fracked");
 
@@ -152,7 +154,12 @@ public class Grader extends Servant {
                 dst = dstFolder = Config.DIR_FRACKED;
                 if (fsource != null) 
                     dst += " from " + fsource;
-        
+                    
+                if (noresponse > 0) {
+                    logger.debug(ltag, "Has lost. Include pans");
+                    includePans = true;
+                }
+                
                 addCoinToReceipt(cc, "fracked", dst);
             } else {
                 logger.debug(ltag, "Coin " + cc.sn + " is authentic");
@@ -167,21 +174,35 @@ public class Grader extends Servant {
             }
 
             cc.calcExpirationDate();
-
             ccFile = AppCore.getUserDir(dstFolder, user) + File.separator + cc.getFileName();
-        } else {
-            if (!cc.canbeRecoveredFromLost()) {
-                logger.debug(ltag, "Coin " + cc.sn + " is counterfeit");
+        } else if (counterfeit >= Config.MAX_FAILED_NUM_TO_BE_COUNTERFEIT) {
+            logger.debug(ltag, "Coin " + cc.sn + " is counterfeit");
 
-                gr.totalCounterfeit++;
-                gr.totalCounterfeitValue += cc.getDenomination();
-                dst = dstFolder = Config.DIR_COUNTERFEIT;
+            gr.totalCounterfeit++;
+            gr.totalCounterfeitValue += cc.getDenomination();
+            dst = dstFolder = Config.DIR_COUNTERFEIT;
+            if (fsource != null) 
+                dst += " from " + fsource;
+
+            addCoinToReceipt(cc, "counterfeit", dst);
+        } else {
+            logger.debug(ltag, "Coin " + cc.sn + " is suspect");
+            if (counterfeit > 0) {
+                logger.debug(ltag, "Coin has failed responses. Will try to fix it in Fracked");
+                gr.totalFracked++;
+                gr.totalFrackedValue += cc.getDenomination();
+                dst = dstFolder = Config.DIR_FRACKED;
                 if (fsource != null) 
                     dst += " from " + fsource;
-
-                addCoinToReceipt(cc, "counterfeit", dst);
+                    
+                if (noresponse > 0) {
+                    logger.debug(ltag, "Has lost. Include pans");
+                    includePans = true;
+                }
+                
+                addCoinToReceipt(cc, "fracked", dst);
             } else {
-                logger.debug(ltag, "Coin " + cc.sn + " is lost");
+                logger.debug(ltag, "Coin is lost");
 
                 gr.totalLost++;
                 dst = dstFolder = Config.DIR_LOST;
@@ -193,14 +214,16 @@ public class Grader extends Servant {
                 includePans = true;
             }
 
-            ccFile = AppCore.getUserDir(dstFolder, user) + File.separator + cc.getFileName();
-            File f = new File(ccFile);
-            if (f.exists()) {
-                logger.debug(ltag, "This coin already exists. Overwriting it");
-                AppCore.deleteFile(ccFile);
-            }
+
         }
 
+        ccFile = AppCore.getUserDir(dstFolder, user) + File.separator + cc.getFileName();
+        File f = new File(ccFile);
+        if (f.exists()) {
+            logger.debug(ltag, "This coin already exists. Overwriting it");
+            AppCore.deleteFile(ccFile);
+        }
+        
         cc.setAnsToPansIfPassed();
 
         logger.info(ltag, "Saving grader coin: " + ccFile + " include=" + includePans);

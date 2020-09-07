@@ -5761,21 +5761,6 @@ public class AdvancedClient  {
             AppUI.GBPad(subInnerCore, y, gridbag);  
             return;
         }
-
-
-        /*
-        final optRv rvFrom = setOptionsForWalletsCommon(false, false, true, null);
-        if (rvFrom.idxs.length == 0) {
-            fname = AppUI.wrapDiv("No Wallets");
-            AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
-            y++;
-            AppUI.GBPad(subInnerCore, y, gridbag);  
-            return;
-        }
-        
-        */
-        
-        //JLabel infox = AppUI.wrapDiv("uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu");
         
 
         JLabel infox = AppUI.wrapDiv("");
@@ -5792,14 +5777,6 @@ public class AdvancedClient  {
         AppUI.underLine(link);
         y++;
         
-
-        //System.out.println("cw="+ps.currentWallet.getName());
-        /*
-        fname = new JLabel("From");
-        final RoundedCornerComboBox cboxfrom = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "Make Selection", rvFrom.options);
-        AppUI.getGBRow(subInnerCore, fname, cboxfrom.getComboBox(), y, gridbag);
-        y++;     
-        */
         
         final JLabel spText = new JLabel("Password");
         final MyTextField passwordSrc = new MyTextField("Wallet Password", true);
@@ -5807,9 +5784,6 @@ public class AdvancedClient  {
             AppUI.getGBRow(subInnerCore, spText, passwordSrc.getTextField(), y, gridbag);
             y++; 
         }
-        
-        //passwordSrc.getTextField().setVisible(false);
-        //spText.setVisible(false);
         
         final JLabel lfText = new JLabel("CSV File");
         final JFileChooser chooser = new JFileChooser();
@@ -10045,15 +10019,6 @@ public class AdvancedClient  {
                     table.getColumnModel().getColumn(1).setPreferredWidth(140);
                     table.getColumnModel().getColumn(2).setPreferredWidth(90);
                     
-                    /*
-                    for (Component c : rightPanel.getComponents()) {
-                        if (c instanceof JScrollPane) {
-                            System.out.println("xxx");
-                            rightPanel.remove(c);
-                        }
-                    }
-                    */
-                    
                     jp.add(scrollPane);
                     jp.revalidate();
                     jp.repaint();
@@ -11433,7 +11398,21 @@ public class AdvancedClient  {
                 wpanel = iwp;
                 AppUI.noOpaque(wpanel);
            // } catch (IOException e) {}
+        } else if (wallet != null) {
+            ImageJPanel iwp;
+            
+            if (isDisabled) {
+                iwp = new ImageJPanel(brand.getImgWalletIconBg());
+            } else {
+                iwp = new ImageJPanel(brand.getImgWalletIconActiveBg());
+            }
+            iwp.setImageSize(180, 110);
+            //iwp.setOffsets(115, 100);
+            //if (isDisabled)
+            //    iwp.setGreyScale();
+            wpanel = iwp;
         } else {
+            //ImageJPanel = 
             AppUI.setBackground(wpanel, color);
         }
         
@@ -11457,7 +11436,8 @@ public class AdvancedClient  {
     
         JLabel labelName = new JLabel(name);        
         if (isDisabled) {
-            AppUI.setColor(labelName, brand.getSecondTextColor());
+            //AppUI.setColor(labelName, brand.getSecondTextColor());
+            AppUI.setColor(labelName, brand.getMainTextColor());
             AppUI.setFont(labelName, 14);
         } else {
             AppUI.setBoldFont(labelName, 14);
@@ -11511,7 +11491,7 @@ public class AdvancedClient  {
                    
                 GridBagConstraints c = new GridBagConstraints();          
                 c.anchor = GridBagConstraints.WEST;
-                c.insets = new Insets(4, 18, 0, 0); 
+                c.insets = new Insets(2, 12, 0, 0); 
                 c.gridx = 0;
                 c.gridy = y;   
                 c.weightx = 0;
@@ -11520,12 +11500,12 @@ public class AdvancedClient  {
                 wpanel.add(icon);
             
             
-                AppUI.setSize(labelName, 120, 20);
-                c.insets = new Insets(10, 16, 0, 0);
+                AppUI.setSize(labelName, 110, 16);
+                c.insets = new Insets(12, 10, 0, 0);
                 c.gridx = GridBagConstraints.RELATIVE;
                 c.weightx = 1;
                 c.gridwidth = 2;
-                c.anchor = GridBagConstraints.WEST;
+                c.anchor = GridBagConstraints.CENTER;
                 c.gridheight = 1;
                 gridbag.setConstraints(labelName, c);
                 wpanel.add(labelName);
@@ -11535,11 +11515,12 @@ public class AdvancedClient  {
                 // Amount (empty)
                 
                 AppUI.setSemiBoldFont(jxl, 16);
-                AppUI.setColor(jxl, brand.getTitleTextColor());
+                //AppUI.setColor(jxl, brand.getTitleTextColor());
+                AppUI.setColor(jxl, brand.getMainTextColor());
                 AppUI.alignLeft(jxl);
                 AppUI.noOpaque(jxl);
 
-                c.insets = new Insets(12, 16, 0, 0); 
+                c.insets = new Insets(12, 18, 0, 0); 
                 c.gridx = GridBagConstraints.RELATIVE;
                 c.gridy = y; 
                 c.weightx = 1;
@@ -11563,7 +11544,7 @@ public class AdvancedClient  {
                 //AppUI.alignLeft(jp);
                 //AppUI.setSize(jp, 60, 29);
                 c.anchor = GridBagConstraints.WEST;
-                c.insets = new Insets(4, 18, 0, 0); 
+                c.insets = new Insets(8, 18, 0, 0); 
                 c.gridx = 0;
                 c.gridy = y;   
                 c.gridwidth = 2;
@@ -11586,7 +11567,7 @@ public class AdvancedClient  {
                 AppUI.noOpaque(jp);
                 AppUI.alignLeft(jp);
                 c.anchor = GridBagConstraints.EAST;
-                c.insets = new Insets(0, 0, 0, 18); 
+                c.insets = new Insets(8, 0, 0, 18); 
                 c.gridx = GridBagConstraints.RELATIVE;
                 c.gridy = y;   
                 c.gridwidth = 1;

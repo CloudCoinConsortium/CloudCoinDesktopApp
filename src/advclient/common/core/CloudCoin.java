@@ -491,9 +491,27 @@ public class CloudCoin {
         return isSentFixableRows(false) && isSentFixableColumns(false);
     }
     
+    
+    public boolean canbeRecoveredFromLost() {
+        int c = 0;
+        for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+            if (this.getDetectStatus(i) == CloudCoin.STATUS_FAIL)
+                c++;
+        }
+        
+        if (c >= Config.MAX_FAILED_NUM_TO_BE_COUNTERFEIT)
+            return false;
+        
+        return true;
+        
+    }
+    
+    
+    /*
     public boolean canbeRecoveredFromLost() {
         return isSentFixableRows(true) && isSentFixableColumns(true);
     }
+    */
     
     
     private boolean _isSentFixable(int[] statuses, boolean includeNs) {

@@ -287,9 +287,9 @@ public class Unpacker extends Servant {
         try {
             fis = new FileInputStream(fileName);
             fis.read(jpegHeader);
-            data = toHexadecimal(jpegHeader);
+            data = AppCore.toHexadecimal(jpegHeader);
             fis.close();
-            cc = parseJpeg(data);
+            cc = AppCore.parseJpeg(data);
             if (cc == null)
                 return false;
 
@@ -471,44 +471,9 @@ public class Unpacker extends Servant {
     }
 
 
-    private String toHexadecimal(byte[] digest) {
-        String hash = "";
+    
 
-        for (byte aux : digest) {
-            int b = aux & 0xff;
-            if (Integer.toHexString(b).length() == 1) hash += "0";
-            hash += Integer.toHexString(b);
-        }
-
-        return hash;
-    }
-
-    private CloudCoin parseJpeg(String data) {
-
-        int startAn = 40;
-        int endAn = 72;
-        String[] ans = new String[RAIDA.TOTAL_RAIDA_COUNT];
-        String aoid, ed;
-        int nn, sn;
-
-        for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
-            ans[i] = data.substring(startAn + (i * 32), endAn + (i * 32));
-        }
-
-        aoid = pownHexToString(data.substring(840, 895));
-        ed = expirationDateHexToString(data.substring(900, 902));
-        try {
-            nn = Integer.parseInt(data.substring(902, 904), 16);
-            sn = Integer.parseInt(data.substring(904, 910), 16);
-        } catch (NumberFormatException e) {
-            logger.error(ltag, "Failed to parse numbers: " + e.getMessage());
-            return null;
-        }
-
-        CloudCoin cc = new CloudCoin(nn, sn, ans, ed, new String[] { aoid }, Config.DEFAULT_TAG);
-
-        return cc;
-    }
+    
 
     public CloudCoin[] parseStack(String data) {
         JSONArray incomeJsonArray;
@@ -587,49 +552,7 @@ public class Unpacker extends Servant {
     }
 
 
-    private String pownHexToString(String hexString) {
-        StringBuilder stringBuilder = new StringBuilder();
-
-        for (int i = 0, j = hexString.length(); i < j; i++) {
-            if ('0' == hexString.charAt(i))
-                stringBuilder.append('p');
-            else if ('1' == hexString.charAt(i))
-                stringBuilder.append('9');
-            else if ('2' == hexString.charAt(i))
-                stringBuilder.append('n');
-            else if ('E' == hexString.charAt(i))
-                stringBuilder.append('e');
-            else if ('F' == hexString.charAt(i))
-                stringBuilder.append('f');
-        }
-
-        return stringBuilder.toString();
-    }
-
-    private String expirationDateHexToString(String edHex) {
-        int monthsAfterZero = Integer.valueOf(edHex, 16);
-
-        Date date;
-        try {
-            SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
-            date = sdf.parse("13-08-2016");
-        } catch (ParseException e) {
-            return "08-2016";
-        }
-
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(date);
-
-        cal.add(Calendar.MONTH, monthsAfterZero);
-        //LocalDate zeroDate = LocalDate.of(2016, 8, 13);
-        //LocalDate ed = zeroDate.plusMonths(monthsAfterZero);
-
-        //return ed.getMonthValue() + "-" + ed.getYear();
-
-        int m = cal.get(Calendar.MONTH) + 1;
-
-        return m + "-" + cal.get(Calendar.YEAR);
-    }
+    
 
     private String[] toStringArray(JSONArray jsonArray) {
         if (jsonArray == null)

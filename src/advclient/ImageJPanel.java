@@ -103,6 +103,29 @@ public class ImageJPanel extends JPanel {
       backgroundImage = backgroundImage.getScaledInstance(x, y, Image.SCALE_SMOOTH);
   }
   
+  public void setGreyScale() {
+    BufferedImage bimage = new BufferedImage(backgroundImage.getWidth(null), backgroundImage.getHeight(null), BufferedImage.TYPE_INT_ARGB);
+    Graphics2D bGr = bimage.createGraphics();
+    bGr.drawImage(backgroundImage, 0, 0, null);
+    bGr.dispose();
+       
+    width = bimage.getWidth();
+    height = bimage.getHeight();
+         
+    for (int i = 0; i < height; i++) {
+        for(int j = 0; j < width; j++) {
+            Color c = new Color(bimage.getRGB(j, i));
+            int red = (int)(c.getRed() * 0.299);
+            int green = (int)(c.getGreen() * 0.587);
+            int blue = (int)(c.getBlue() *0.114);
+            Color newColor = new Color(red + green + blue, red + green + blue, red + green + blue);
+            bimage.setRGB(j,i,newColor.getRGB());
+        }
+    }
+    
+    backgroundImage = (Image) bimage;
+  }
+  
   public void paintComponent(Graphics g) {
     super.paintComponent(g);
 

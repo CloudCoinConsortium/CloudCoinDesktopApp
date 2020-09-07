@@ -106,6 +106,7 @@ public class Brand {
             "supportEmailIcon","supportPortalIcon","supportTermsIcon", "supportVideoIcon", "walletLocalIcon","walletSkyIcon","vaultIcon",
             "vaultIconActive","lockIcon","lockIconActive","cloudIcon","cloudIconActive","coinsInventoryIcon",
             "templatePng","templateJpeg1","templateJpeg5","templateJpeg25","templateJpeg100", "skywalletBackgroundIcon", "skywalletBackgroundGsIcon",
+            "bgWalletIconActive", "bgWalletIcon",
             "templateJpeg250","mainFont","mainFontSemiBold","mainFontBold","secondFont","secondFontSemiBold",
             "dropdownArrow", "arrowLeft", "arrowRight", "toggleyes", "toggleno", "lookingGlass", "eye",
             "emailIcon", "emailIconActive", "templateCard", "cardFont"
@@ -745,6 +746,15 @@ public class Brand {
         if (p != null)
             datamap.get("cloudIconActive").name = p;
         
+        p = getProperty(ms, "bgwalleticon");
+        if (p != null)
+            datamap.get("bgWalletIconActive").name = p;
+        
+        p = getProperty(ms, "bgwalleticongs");
+        if (p != null)
+            datamap.get("bgWalletIcon").name = p;
+               
+        
         p = getProperty(ms, "emailicon");
         if (p != null)
             datamap.get("emailIcon").name = p;
@@ -1366,6 +1376,10 @@ public class Brand {
         return getAssetPathByName("supportPortalIcon");
     }
     
+    public URL getTemplateJpeg100Icon() {
+        return getAssetPathByName("templateJpeg100");
+    }
+    
     public URL getImgSupportTermsIcon() {
         return getAssetPathByName("supportTermsIcon");
     }
@@ -1430,6 +1444,13 @@ public class Brand {
         return getAssetPathByName("cloudIconActive");
     }
     
+    public URL getImgWalletIconBg() {
+        return getAssetPathByName("bgWalletIcon");
+    }
+    
+    public URL getImgWalletIconActiveBg() {
+        return getAssetPathByName("bgWalletIconActive");
+    }
     
     public String getTerms() {
         return getAssetPathByNameText("terms");

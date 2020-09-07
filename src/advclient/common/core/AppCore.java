@@ -43,12 +43,14 @@ import java.security.MessageDigest;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -63,6 +65,7 @@ import java.util.jar.JarFile;
 import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 import javax.imageio.ImageIO;
 import org.json.JSONArray;
@@ -1799,6 +1802,83 @@ public class AppCore {
         return ccs;
     }
     
+    public static String toHexadecimal(byte[] digest) {
+        String hash = "";
+
+        for (byte aux : digest) {
+            int b = aux & 0xff;
+            if (Integer.toHexString(b).length() == 1) hash += "0";
+            hash += Integer.toHexString(b);
+        }
+
+        return hash;
+    }
+    
+    public static CloudCoin parseJpeg(String data) {
+
+        int startAn = 40;
+        int endAn = 72;
+        String[] ans = new String[RAIDA.TOTAL_RAIDA_COUNT];
+        String aoid, ed;
+        int nn, sn;
+
+        for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+            ans[i] = data.substring(startAn + (i * 32), endAn + (i * 32));
+        }
+
+        aoid = AppCore.pownHexToString(data.substring(840, 895));
+        ed = AppCore.expirationDateHexToString(data.substring(900, 902));
+        try {
+            nn = Integer.parseInt(data.substring(902, 904), 16);
+            sn = Integer.parseInt(data.substring(904, 910), 16);
+        } catch (NumberFormatException e) {
+            logger.error(ltag, "Failed to parse numbers: " + e.getMessage());
+            return null;
+        }
+
+        CloudCoin cc = new CloudCoin(nn, sn, ans, ed, new String[] { aoid }, Config.DEFAULT_TAG);
+
+        return cc;
+    }
+    
+    public static String pownHexToString(String hexString) {
+        StringBuilder stringBuilder = new StringBuilder();
+
+        for (int i = 0, j = hexString.length(); i < j; i++) {
+            if ('0' == hexString.charAt(i))
+                stringBuilder.append('p');
+            else if ('1' == hexString.charAt(i))
+                stringBuilder.append('9');
+            else if ('2' == hexString.charAt(i))
+                stringBuilder.append('n');
+            else if ('E' == hexString.charAt(i))
+                stringBuilder.append('e');
+            else if ('F' == hexString.charAt(i))
+                stringBuilder.append('f');
+        }
+
+        return stringBuilder.toString();
+    }
+
+    public static String expirationDateHexToString(String edHex) {
+        int monthsAfterZero = Integer.valueOf(edHex, 16);
+
+        Date date;
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
+            date = sdf.parse("13-08-2016");
+        } catch (ParseException e) {
+            return "08-2016";
+        }
+
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+
+        cal.add(Calendar.MONTH, monthsAfterZero);
+        int m = cal.get(Calendar.MONTH) + 1;
+
+        return m + "-" + cal.get(Calendar.YEAR);
+    }
     
     public static int[] getCoinsSNInDir(String dir) {
         File dirObj = new File(dir);
@@ -1816,7 +1896,8 @@ public class AppCore {
             if (!AppCore.hasCoinExtension(file))
                 continue;
 
-            if (file.getName().endsWith(".png")) {
+            String fname = file.getName().toLowerCase();
+            if (fname.endsWith(".png")) {
                 CloudCoin cc;
             
                 try {
@@ -1827,6 +1908,58 @@ public class AppCore {
                 }
 
                 sns.add(cc.sn);
+                continue;
+            }
+            
+            if (fname.endsWith(".jpg") || fname.endsWith(".jpeg")) {
+                FileInputStream fis;
+                byte[] jpegHeader = new byte[455];
+                String data;
+                CloudCoin cc;
+                
+
+                try {
+                    fis = new FileInputStream(file.getAbsolutePath());
+                    fis.read(jpegHeader);
+                    data = toHexadecimal(jpegHeader);
+                    fis.close();
+                    cc = AppCore.parseJpeg(data);
+                    if (cc == null) {
+                        logger.debug(ltag, "Failed to parse jpeg");
+                        continue;
+                    }
+                } catch (IOException e) {
+                    logger.error(ltag, "Failed to read file: " + e.getMessage());
+                    continue;
+                }
+                
+                sns.add(cc.sn);
+                continue;
+            }
+            
+            if (fname.endsWith(".zip")) {
+                byte[] buffer = new byte[64 * 1024 * 1024];
+                try {
+                    ZipInputStream zis = new ZipInputStream(new FileInputStream(file.getAbsolutePath()));
+                    ZipEntry zipEntry = zis.getNextEntry();
+                    while (zipEntry != null) {
+                        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                        int len;
+                        while ((len = zis.read(buffer)) > 0) {
+                            bos.write(buffer, 0, len);
+                        }
+                        bos.close();
+            
+                        CloudCoin cc = new CloudCoin(bos.toByteArray());
+                        sns.add(cc.sn);
+                        zipEntry = zis.getNextEntry();
+                    }
+                    zis.closeEntry();
+                    zis.close();
+                } catch (Exception e) {
+                    logger.debug(ltag, "Failed to unzip file " + e.getMessage());
+                    continue;
+                }
                 continue;
             }
             

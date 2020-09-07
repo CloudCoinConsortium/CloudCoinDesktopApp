@@ -272,4 +272,7 @@ public class Config {
     
     public static int FIX_MAX_REGEXPS = 24;
     
+    
+    public static int MAX_FAILED_NUM_TO_BE_COUNTERFEIT = 17;
+    public static int MIN_PASSED_NUM_TO_BE_AUTHENTIC = 17;
 }

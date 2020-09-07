@@ -327,7 +327,7 @@ public class LossFixer extends Servant {
                     status = CloudCoin.STATUS_PASS;
                 } else if (strStatus.equals("pan")) {
                     status = CloudCoin.STATUS_PASS;
-                    ccs.get(j).ans[raidaIdx] =  ccs.get(j).pans[i];
+                    ccs.get(j).ans[raidaIdx] =  ccs.get(j).pans[raidaIdx];
                 } else if (strStatus.equals("neither")) {
                     status = CloudCoin.STATUS_FAIL;
                 } else {
