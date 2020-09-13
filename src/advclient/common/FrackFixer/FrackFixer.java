@@ -293,7 +293,45 @@ public class FrackFixer extends Servant {
         ArrayList<CloudCoin> ccactive = new ArrayList<CloudCoin>();
         int i;
 
-        logger.debug(ltag, "Round1");
+        
+        
+        
+        
+        // Fixing lost
+        ArrayList<CloudCoin> ccactiveLost = new ArrayList<CloudCoin>();
+        logger.debug(ltag, "Will try to fix lost first");
+        fr.round = 0;
+        fr.totalCoinsProcessed = 0;
+        int curValProcessedL = 0;
+        for (CloudCoin tcc : ccall) {
+            ccactiveLost.add(tcc);
+            curValProcessedL += tcc.getDenomination();
+                
+            if (ccactiveLost.size() == maxCoins) {
+                logger.info(ltag, "Doing preloss. maxCoins " + maxCoins);
+                processLossfix(ccactiveLost);
+                ccactiveLost.clear();
+                                
+                nfr = new FrackFixerResult();
+                fr.totalRAIDAProcessed = 0;
+                fr.totalFilesProcessed += maxCoins;
+                fr.totalCoinsProcessed = curValProcessedL;
+
+                copyFromMainFr(nfr);
+                if (cb != null)
+                    cb.callback(nfr);   
+            }
+        }
+        
+        if (ccactiveLost.size() > 0) {
+            logger.info(ltag, "Doing rest prelostfix.  " + ccactiveLost.size());
+            processLossfix(ccactiveLost);         
+            ccactiveLost.clear();  
+        }         
+        
+        
+        
+        logger.debug(ltag, "Fixing Round1");
         
         // Round 1
         for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
@@ -604,7 +642,7 @@ public class FrackFixer extends Servant {
         int corner;
         
         boolean haveTickets = tickets == null ? false : true;
-        processLossfix(ccs);   
+        //processLossfix(ccs);   
         
         logger.debug(ltag, "Fixing " + ccs.size() + " coins on the RAIDA" + raidaIdx + " needExtensive " + needExtensive + " have tickets " + haveTickets);
         if (needExtensive) {
@@ -1370,7 +1408,12 @@ public class FrackFixer extends Servant {
         //requests[0] = "fix";
         
         CloudCoin cc = ccs.get(0);
-        cc.createAn(raidaIdx, email);
+        if (email.equals(Config.SKY_EMAIL_PLACEHOLDER)) {
+            logger.debug(ltag, "Generating pan");
+            cc.createAn(raidaIdx, email);
+        } else {
+            logger.debug(ltag, "Choosing pan");
+        }
         
         String pan = cc.ans[raidaIdx];
         logger.debug(ltag, "Generated pan " + pan);

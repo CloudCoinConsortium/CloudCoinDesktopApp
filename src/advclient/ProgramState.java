@@ -97,7 +97,7 @@ public class ProgramState {
     final public static int SCREEN_LIST_SERIALS_GLOBAL = 77;
     final public static int SCREEN_LIST_SERIALS_GLOBAL_DOING = 78;
     final public static int SCREEN_PRE_FIX_FRACKED = 79;
-    
+    final public static int SCREEN_BACKUP_SKYWALLET = 80;
     
     final static int CB_STATE_INIT = 1;
     final static int CB_STATE_RUNNING = 2;

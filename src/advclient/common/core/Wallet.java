@@ -252,7 +252,7 @@ public class Wallet implements Comparable<Wallet> {
                 result += "," + adjusted + ",";
             }
             
-            result += getTotal() + ",dummy" + lsep;
+            result += getTotal() + ",AutoAdjusted" + lsep;
             rest = getTotal();    
         }
                

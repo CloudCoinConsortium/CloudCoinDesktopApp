@@ -74,7 +74,7 @@ import org.json.JSONObject;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "3.0.47";
+    public static String version = "4.0.0";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -143,6 +143,9 @@ public class AdvancedClient  {
         String home = System.getProperty("user.home");
         resetState();
         
+        
+
+        
         brand = new Brand(Config.DEFAULT_BRAND_NAME, wl);
         
         initMainScreen();   
@@ -161,6 +164,8 @@ public class AdvancedClient  {
         AppCore.logger = wl;
         boolean rv = AppCore.initFolders(new File(home));
         AppCore.logSystemInfo(version);
+        
+
         
         wl.debug(ltag, "Num arguments: " + args.length);
         for (int i = 0; i < args.length; i++) {
@@ -1405,6 +1410,9 @@ public class AdvancedClient  {
             case ProgramState.SCREEN_PRE_FIX_FRACKED:
                 showPreFixFrackedScreen();
                 break;
+            case ProgramState.SCREEN_BACKUP_SKYWALLET:
+                showBackupSkyWalletScreen();
+                break;
                 
         }
         
@@ -1566,8 +1574,12 @@ public class AdvancedClient  {
         
         String fr = fixingRAIDA == -1 ? "" : "" + fixingRAIDA;
         
-        pbarText.setText("<html><div style='text-align:center'>Round #" + round + " Fixing on RAIDA " + 
-                fr + "<br>" + stc + " / " + tc + " CloudCoins Fixed</div></html>");
+        if (round == 0) {
+            pbarText.setText("<html><div style='text-align:center'>Checking Limbo Coins<br>" + stc + " / " + tc + " CloudCoins Checked</div></html>");
+        } else {
+            pbarText.setText("<html><div style='text-align:center'>Round #" + round + " Fixing on RAIDA " + 
+                    fr + "<br>" + stc + " / " + tc + " CloudCoins Fixed</div></html>");
+        }
         
         pbarText.repaint();
     }
@@ -2418,6 +2430,7 @@ public class AdvancedClient  {
                 if (sccs == null || sccs.length == 0) {
                     ps.currentScreen = ProgramState.SCREEN_CHECKING_SKYWALLETS_DONE;
                     ps.errText = "Failed to get Coins from ID folder";
+                    showScreen();
                     return;
                 }
                 
@@ -2444,8 +2457,8 @@ public class AdvancedClient  {
                         continue;
                     }
                     
-                    if (cc.getType() != Config.TYPE_STACK) {
-                        wl.debug(ltag, "Can't fix non-stack files " + cc.originalFile);
+                    if (cc.getType() != Config.TYPE_STACK && cc.getType() != Config.TYPE_PNG) {
+                        wl.debug(ltag, "Can't fix non-png and non-stack files " + cc.originalFile);
                         ps.fxFailedToFix.add(cc);
                         continue;
                     }
@@ -2456,8 +2469,7 @@ public class AdvancedClient  {
                     
                     ps.fxToFix.add(cc);
                 }
-                
-                
+
                 if (ps.fxToFix.size() == 0) {
                     ps.currentScreen = ProgramState.SCREEN_CHECKING_SKYWALLETS_DONE;
                     showScreen();
@@ -2498,6 +2510,9 @@ public class AdvancedClient  {
                     }
                 }
                 
+                String email = ps.srcWallet.getEmail();
+                if (ps.srcWallet.isSkyWallet())
+                    email = Config.SKY_EMAIL_PLACEHOLDER;
                 
                 sm.setActiveWalletObj(ps.srcWallet);                
                 sm.startFrackFixerService(new CallbackInterface() {
@@ -2541,16 +2556,32 @@ public class AdvancedClient  {
                                     String fixedFile = foundCC.originalFile;
                                     wl.debug(ltag, "fixed " + fixedFile + " o=" + origFile);
                                     
-                                    AppCore.deleteFile(origFile);
-                                    AppCore.renameFile(fixedFile, origFile);
+                                    
+                                    if (cc.getType() == Config.TYPE_PNG) {
+                                        AppCore.updatePNG(fixedFile, origFile);
+                                        // We delete fixed file because the original one has all ANs already (for skycoins)
+                                        AppCore.deleteFile(fixedFile);
+                                    } else {
+                                        // We delete the orig file because it will be replaced by the fixed one
+                                        AppCore.deleteFile(origFile);
+                                        
+                                        AppCore.renameFile(fixedFile, origFile);
+                                    }
                                     
                                     continue;
                                 }
                                 
+                                
                                 String fixedFile = foundCC.originalFile;
                                 wl.debug(ltag, "Fixed SN " + cc.sn);
-                                AppCore.deleteFile(origFile);
-                                AppCore.renameFile(fixedFile, origFile);
+                                if (cc.getType() == Config.TYPE_PNG) {
+                                    AppCore.updatePNG(fixedFile, origFile);
+                                    // We delete fixed file because the original one has all ANs already (for skycoins)
+                                    AppCore.deleteFile(fixedFile);
+                                } else {
+                                    AppCore.deleteFile(origFile);
+                                    AppCore.renameFile(fixedFile, origFile);
+                                }
                                 ps.fxFixed++;
                             }
 
@@ -2572,7 +2603,7 @@ public class AdvancedClient  {
                         setRAIDAFixingProgressCoins(fr.totalRAIDAProcessed, fr.totalCoinsProcessed, fr.totalCoins, fr.fixingRAIDA, fr.round);
                         return;
                     }
-                }, ps.needExtensiveFixing, ps.srcWallet.getEmail());
+                }, ps.needExtensiveFixing, email);
      
 
                 //ps.currentScreen = ProgramState.SCREEN_CHECKING_SKYWALLETS_DONE;
@@ -3398,13 +3429,15 @@ public class AdvancedClient  {
              
         int y = 0;
         JLabel fname, value;
-        MyTextField walletName = null;
 
         subInnerCore = getPanel("Backup Complete");                
         GridBagLayout gridbag = new GridBagLayout();
         subInnerCore.setLayout(gridbag);
     
-        fname = AppUI.wrapDiv("Your CloudCoins from <b>" + ps.srcWallet.getName() + "</b> have been backed up into:");  
+        if (ps.srcWallet.isSkyWallet())
+            fname = AppUI.wrapDiv("Your ID Coin <b>" + ps.srcWallet.getName() + "</b> has been backed up into:");
+        else
+            fname = AppUI.wrapDiv("Your CloudCoins from <b>" + ps.srcWallet.getName() + "</b> have been backed up into:");  
         AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
         y++;     
            
@@ -8356,6 +8389,82 @@ public class AdvancedClient  {
             }
         }, y, gridbag);       
     }
+    
+    public void showBackupSkyWalletScreen() {
+        int y = 0;
+        JLabel fname;
+        
+        JPanel subInnerCore = getPanel("Backup " + ps.currentWallet.getName());                
+        GridBagLayout gridbag = new GridBagLayout();
+        subInnerCore.setLayout(gridbag);
+
+ 
+        fname = new JLabel("Backup will allow you to create Backup of your Sky Wallet");   
+        AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
+        y++; 
+
+        fname = new JLabel("Backup Folder*");
+        final JFileChooser chooser = new JFileChooser();
+        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        chooser.setAcceptAllFileFilterUsed(false);
+        final MyTextField tf1 = new MyTextField("Click here to select folder", false, true);
+        //tf1.disable();
+        tf1.setFilepickerListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                int returnVal = chooser.showOpenDialog(null);
+                if (returnVal == JFileChooser.APPROVE_OPTION) {       
+                    ps.chosenFile = chooser.getSelectedFile().getAbsolutePath();
+                    tf1.setData(chooser.getSelectedFile().getName());
+                }
+            }
+        });
+
+        AppUI.getGBRow(subInnerCore, fname, tf1.getTextField(), y, gridbag);
+        y++; 
+
+        AppUI.GBPad(subInnerCore, y, gridbag);        
+        y++;
+
+        AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Continue", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                setDefaultScreen();
+                showScreen();
+            }
+        }, new ActionListener() {
+            public void actionPerformed(ActionEvent e) {                     
+                if (ps.chosenFile.isEmpty()) {
+                    ps.errText = "Folder is not chosen";
+                    showScreen();
+                    return;
+                }
+
+                ps.srcWallet = ps.currentWallet;
+                String filename = ps.currentWallet.getIDCoin().originalFile;
+                File f = new File(filename);
+                String newFilename = ps.chosenFile + File.separator + f.getName();
+                
+                wl.debug(ltag, "Copying " + filename + " to " + newFilename);
+                f = new File(newFilename);
+                if (f.exists()) {
+                    ps.errText = "ID coin with the same name already exists in the folder";
+                    showScreen();
+                    return;
+                }
+                
+                if (!AppCore.copyFile(filename, newFilename)) {
+                    ps.errText = "Failed to backup ID coin";
+                    showScreen();
+                    return;
+                }
+                
+
+                
+                ps.currentScreen = ProgramState.SCREEN_BACKUP_DONE;
+                showScreen();
+            }
+        }, y, gridbag);
+    }
 
     public void showBackupScreen() {
         int y = 0;
@@ -9094,12 +9203,7 @@ public class AdvancedClient  {
             simpleViewoffset += 214;
             
         
-        //if (!isSky) {
-            AppUI.setSize(bpanel, 620 + simpleViewoffset, layerHeight);  
-        //} else {
-        //    AppUI.setSize(bpanel, 520, layerHeight); 
-        //    bpanel.setAlignmentY(Component.TOP_ALIGNMENT);
-        //}
+        AppUI.setSize(bpanel, 620 + simpleViewoffset, layerHeight);  
         AppUI.setMargin(bpanel, 0, 0, 0, 0);
 
         
@@ -9166,9 +9270,6 @@ public class AdvancedClient  {
         
         GridBagLayout gridbag = new GridBagLayout();
         
-        
-        //AppUI.alignBottom(wrp);
-        //AppUI.setBackground(wrp, Color.RED);
         AppUI.noOpaque(wrp);
         wrp.setLayout(gridbag);
         AppUI.setMargin(wrp, 0);
@@ -9176,9 +9277,7 @@ public class AdvancedClient  {
 
         
         int fsize = 20;
-        //bpanel.add(wrp);
-        //if (counters != null && counters.length != 0) 
-            bpanel.add(invPanel);
+        bpanel.add(invPanel);
  
         int bwidth = 148;
         GridBagConstraints c = new GridBagConstraints();
@@ -9465,7 +9564,8 @@ public class AdvancedClient  {
  
             String[] items2 = {"Backup", "List Serials", "Delete Wallet", "Show Folders", "Health Check"};
             if (ps.currentWallet.isSkyWallet()) {
-                items2[0] = items2[1] = items2[3] = null;
+                items2[1] = items2[3] = null;
+                //items2[0] = items2[1] = items2[3] = null;
             }
             
             for (int i = 0; i < items2.length; i++) {
@@ -9511,7 +9611,10 @@ public class AdvancedClient  {
 
                         String action = jMenuItem.getActionCommand();
                         if (action.equals("0")) {
-                            ps.currentScreen = ProgramState.SCREEN_BACKUP;
+                            if (ps.currentWallet.isSkyWallet())
+                                ps.currentScreen = ProgramState.SCREEN_BACKUP_SKYWALLET;
+                            else
+                                ps.currentScreen = ProgramState.SCREEN_BACKUP;
                         } else if (action.equals("1")) {
                             ps.currentScreen = ProgramState.SCREEN_LIST_SERIALS;
                         } else if (action.equals("2")) {
@@ -10335,6 +10438,8 @@ public class AdvancedClient  {
                 if (!d.setRecord(destFilename, sm.getSR())) {
                     ps.errText = "Failed to set record. Check if the coin is valid";
                     ps.currentScreen = ProgramState.SCREEN_CREATE_SKY_WALLET;
+                    File fn = new File(destFilename);
+                    fn.delete();
                     showScreen();
                     return;
                 } 
@@ -11457,15 +11562,17 @@ public class AdvancedClient  {
             if (!wallet.isSkyWallet()) {
                 URL u = wallet.isSkyWallet() ? brand.getImgWalletSkyIcon() : brand.getImgWalletLocalIcon();
                 BufferedImage bufimage = new BufferedImage(29, 29, BufferedImage.TYPE_INT_ARGB);
+                BufferedImage bufimage2 = new BufferedImage(29, 29, BufferedImage.TYPE_INT_ARGB);
                 JLabel icon;
                 JLabel iconMail, iconLock, iconCloud;
-                JLabel dummyIcon;
+                JLabel dummyIcon, dummyIcon2;
                 try {
                     Image img;
             
                     img = ImageIO.read(u);
                     icon = new JLabel(new ImageIcon(img));
                     dummyIcon = new JLabel(new ImageIcon(bufimage));
+                    dummyIcon2 = new JLabel(new ImageIcon(bufimage2));
                     if (isDisabled) {
                         img = ImageIO.read(brand.getImgEmailIcon());
                         iconMail = new JLabel(new ImageIcon(img));
@@ -11488,8 +11595,9 @@ public class AdvancedClient  {
                     return null;
                 }
             
-                   
+                
                 GridBagConstraints c = new GridBagConstraints();          
+                /*
                 c.anchor = GridBagConstraints.WEST;
                 c.insets = new Insets(2, 12, 0, 0); 
                 c.gridx = 0;
@@ -11498,20 +11606,46 @@ public class AdvancedClient  {
                 c.gridheight = 2;
                 gridbag.setConstraints(icon, c);
                 wpanel.add(icon);
+                */
             
             
-                AppUI.setSize(labelName, 110, 16);
-                c.insets = new Insets(12, 10, 0, 0);
+                //AppUI.setSize(labelName, 120, 16);
+                c.insets = new Insets(10, 0, 0, 0);
                 c.gridx = GridBagConstraints.RELATIVE;
                 c.weightx = 1;
-                c.gridwidth = 2;
-                c.anchor = GridBagConstraints.CENTER;
+                c.gridwidth = 3;
+                c.anchor = GridBagConstraints.NORTH;
+                        
                 c.gridheight = 1;
                 gridbag.setConstraints(labelName, c);
                 wpanel.add(labelName);
             
                 y++;
          
+                
+                
+                //icon
+                JPanel jp = new JPanel();
+                AppUI.setMargin(jp, 0);
+                AppUI.noOpaque(jp);
+                c.anchor = GridBagConstraints.NORTHWEST;
+                c.insets = new Insets(4, 4, 0, 0); 
+                c.gridx = 0;
+                c.gridy = y;   
+                c.weightx = 1;
+                c.gridwidth = 1;
+                c.gridheight = 1;
+                gridbag.setConstraints(jp, c);
+                if (!wallet.getEmail().isEmpty()) {
+                    jp.add(iconMail);
+                } else {
+                    //jp.add(iconMail);
+                    jp.add(dummyIcon);
+                }
+                wpanel.add(jp);
+                
+                
+                
                 // Amount (empty)
                 
                 AppUI.setSemiBoldFont(jxl, 16);
@@ -11520,17 +11654,66 @@ public class AdvancedClient  {
                 AppUI.alignLeft(jxl);
                 AppUI.noOpaque(jxl);
 
-                c.insets = new Insets(12, 18, 0, 0); 
+                c.insets = new Insets(10, 0, 0, 0); 
                 c.gridx = GridBagConstraints.RELATIVE;
                 c.gridy = y; 
                 c.weightx = 1;
-                c.gridwidth = 2;
-                c.anchor = GridBagConstraints.NORTHWEST;
+                c.gridwidth = 1;
+                c.anchor = GridBagConstraints.NORTH;
                 gridbag.setConstraints(jxl, c);
-                wpanel.add(jxl);
-            
+                wpanel.add(jxl);  
+                
+                
+                
+                jp = new JPanel();
+                //AppUI.setBoxLayout(jp, false);
+                AppUI.setMargin(jp, 0);
+                AppUI.noOpaque(jp);
+                AppUI.alignLeft(jp);
+                c.anchor = GridBagConstraints.NORTHEAST;
+                c.insets = new Insets(0, 0, 0, 8); 
+                c.gridx = GridBagConstraints.RELATIVE;
+                c.gridy = y;   
+                c.weightx = 1;
+                c.gridwidth = 1;
+                gridbag.setConstraints(jp, c);
+                if (wallet.isEncrypted()){
+                    jp.add(iconLock);
+                    //jp.add(dummyIcon);
+                } else  {
+                    // jp.add(iconLock);
+                    jp.add(dummyIcon2);
+                }
+                wpanel.add(jp);
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
                 y++;
             
+                
+                
+
+                JPanel padder = new JPanel();
+                AppUI.noOpaque(padder);
+                c.anchor = GridBagConstraints.NORTHWEST;
+                c.insets = new Insets(0, 0, 0, 0);    
+                c.gridx = GridBagConstraints.RELATIVE;
+                c.gridy = y;
+                c.weightx = 1;
+                c.weighty = 1;
+                gridbag.setConstraints(padder, c);
+                wpanel.add(padder);
+                
+                
+                /*
                 // Icons
                 JPanel jpwr = new JPanel();
                 AppUI.setBoxLayout(jpwr, false);
@@ -11579,6 +11762,9 @@ public class AdvancedClient  {
                     jp.add(dummyIcon);
                 }
                 wpanel.add(jp);
+                
+                
+                */
             } else {
                 AppUI.setSemiBoldFont(jxl, 16);
                 AppUI.setColor(jxl, brand.getMainTextColor());

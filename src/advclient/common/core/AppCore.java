@@ -466,6 +466,20 @@ public class AppCore {
         
         return true;
     }
+    
+    static public boolean updatePNG(String oldFile, String newFile) {
+        logger.info(ltag, "Update PNG now (dummy: ans already set in FrackFixer): " + oldFile + " -> " + newFile);
+        /*
+        String context = AppCore.loadFile(oldFile);
+        if (context == null) {
+            return false;
+        }
+        */
+        
+        //AppCore.deleteFile(newFile);
+        
+        return true;
+    }
 
     static public boolean renameFile(String oldFile, String newFile) {
         logger.info(ltag, "Renaming " + oldFile + " -> " + newFile);
