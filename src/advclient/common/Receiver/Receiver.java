@@ -70,6 +70,36 @@ public class Receiver extends Servant {
         });
     }
     
+    public void launch(int fromsn, ArrayList<String> files, String dir, CallbackInterface icb) {
+        this.cb = icb;
+
+        final int ffromsn = fromsn;
+        final ArrayList<String> ffiles = files;
+        final String fdir = dir;
+
+        rr = new ReceiverResult();
+        coinsPicked = new ArrayList<CloudCoin>();
+        valuesPicked = new int[AppCore.getDenominations().length];
+        globalResult = new ReceiverResult();
+        
+        csb = new StringBuilder();
+        receiptId = AppCore.generateHex();
+        globalResult.receiptId = receiptId;
+
+        ff = new ArrayList<String>();
+        a = c = e = f = 0;
+        av = 0;
+        
+        launchThread(new Runnable() {
+            @Override
+            public void run() {
+                logger.info(ltag, "RUN Receiver for Partial");
+                doReceivePartial(ffromsn, fdir, ffiles);
+            }
+        });
+    }
+    
+    
     private void copyFromGlobalResult(ReceiverResult rResult) {
         rResult.totalFilesProcessed = globalResult.totalFilesProcessed;
         rResult.totalRAIDAProcessed = globalResult.totalRAIDAProcessed;
@@ -83,7 +113,268 @@ public class Receiver extends Servant {
         rResult.needExtra = globalResult.needExtra;
         rResult.step = globalResult.step;
     }
+    
+    public void doReceivePartial(int sn, String dir, ArrayList<String> files) {
+        int total = 0;
+        ArrayList<CloudCoin> allccs = new ArrayList<CloudCoin>();
+        for (String f : files) {
+            logger.debug(ltag, "Will try to fix " + f);
+            CloudCoin cc = new CloudCoin(f);
+            
+            //System.out.println("receiving " + f + " cc="+cc.sn + " p="+cc.getPownString() + " st="+cc.getDetectStatus(0)+  " st="+cc.getDetectStatus(14) + " d="+dir);
+            total += cc.getDenomination();
+            allccs.add(cc);
+        }
+        CloudCoin idcc = getIDcc(sn);
+        if (idcc == null) {
+            logger.error(ltag, "NO ID Coin found for SN: " + sn);
+            rr.status = ReceiverResult.STATUS_ERROR;
+            rr.errText = "Failed to find coin ID";
+            rr = new ReceiverResult();
+            copyFromGlobalResult(rr);
+            if (cb != null)
+                cb.callback(rr);
+            return;
+        }
+        
+        globalResult.step = 1;        
+        globalResult.totalFiles = files.size();
+        globalResult.totalCoins = total;
+        globalResult.totalRAIDAProcessed = 0;
+        globalResult.totalFilesProcessed = 0;
+        globalResult.totalCoinsProcessed = 0;
+        
+        
+        rr = new ReceiverResult();
+        copyFromGlobalResult(rr);
+        if (cb != null)
+            cb.callback(rr);
+        
+        
+        ArrayList<CloudCoin> ccs = new ArrayList<CloudCoin>();
+        int curValProcessed = 0;
+        int maxCoins = getIntConfigValue("max-coins-to-multi-detect");
+        if (maxCoins == -1)
+            maxCoins = Config.DEFAULT_MAX_COINS_MULTIDETECT;
+        
+        logger.debug(ltag, "Maxcoins: " + maxCoins);
+        for (CloudCoin cc : allccs) {
+            logger.debug(ltag, "Receiving from SN " + sn);         
+            
+            ccs.add(cc);
+            curValProcessed += cc.getDenomination();
+            if (ccs.size() == maxCoins) {
+                logger.info(ltag, "Processing");
+                rr = new ReceiverResult();
+                
+                if (!processReceivePartial(ccs, dir, idcc)) {
+                    rr = new ReceiverResult();
+                    globalResult.status = ReceiverResult.STATUS_ERROR;
+                    copyFromGlobalResult(rr);
+                    if (cb != null)
+                        cb.callback(rr);
+                
+                    return;
+                }
+          
+                ccs.clear();
 
+                globalResult.totalRAIDAProcessed = 0;
+                globalResult.totalFilesProcessed += maxCoins;
+                globalResult.totalCoinsProcessed = curValProcessed;
+
+                copyFromGlobalResult(rr);
+                if (cb != null)
+                    cb.callback(rr);         
+            }  
+        }
+        
+        rr = new ReceiverResult();
+        if (ccs.size() > 0) {
+            logger.info(ltag, "adding + " + ccs.size());
+            if (!processReceivePartial(ccs, dir, idcc)) {
+                rr = new ReceiverResult();
+                globalResult.status = ReceiverResult.STATUS_ERROR;
+                copyFromGlobalResult(rr);
+                if (cb != null)
+                    cb.callback(rr);
+                
+               return;
+            } else {
+                globalResult.totalFilesProcessed += ccs.size();
+            }
+        }
+        
+        
+        
+        
+        globalResult.status = ReceiverResult.STATUS_FINISHED;      
+        copyFromGlobalResult(rr);
+        if (cb != null)
+            cb.callback(rr);
+        
+    }
+
+    
+     public boolean processReceivePartial(ArrayList<CloudCoin> ccs, String dir, CloudCoin cc)  {
+        String[] results;
+        Object o;
+        CommonResponse errorResponse;
+        ReceiverResponse[][] rrs;
+        String[] requests;
+        StringBuilder[] sbs;
+        String[] posts;
+        int i;
+
+        
+        String pang = AppCore.generateHex().toLowerCase();
+        logger.debug(ltag, "Generated pang " + pang);
+
+        sbs = new StringBuilder[RAIDA.TOTAL_RAIDA_COUNT];
+        posts = new String[RAIDA.TOTAL_RAIDA_COUNT];
+        requests = new String[RAIDA.TOTAL_RAIDA_COUNT];
+
+        for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+            requests[i] = "receive";
+
+            sbs[i] = new StringBuilder();
+            sbs[i].append("b=t");
+            sbs[i].append("&nn=");
+            sbs[i].append(cc.nn);
+            sbs[i].append("&sn=");
+            sbs[i].append(cc.sn);
+            sbs[i].append("&an=");
+            sbs[i].append(cc.ans[i]);
+            sbs[i].append("&pan=");
+            sbs[i].append(cc.ans[i]);
+            sbs[i].append("&dn=");
+            sbs[i].append(cc.getDenomination());
+
+            for (CloudCoin tcc : ccs) {
+                sbs[i].append("&sns[]=");
+                sbs[i].append(tcc.sn);
+            }
+
+            sbs[i].append("&pang=");
+            sbs[i].append(pang);
+            
+            posts[i] = sbs[i].toString();
+        }
+
+        results = raida.query(requests, posts, new CallbackInterface() {
+            final GLogger gl = logger;
+            final CallbackInterface myCb = cb;
+
+            @Override
+            public void callback(Object result) {
+                globalResult.totalRAIDAProcessed++;
+                if (myCb != null) {
+                    ReceiverResult rrlocal = new ReceiverResult();
+                    copyFromGlobalResult(rrlocal);
+                    myCb.callback(rrlocal);
+                }
+            }
+        });
+        
+        if (results == null) {
+            logger.error(ltag, "Failed to query receive");
+            return false;
+        }
+
+        rrs = new ReceiverResponse[RAIDA.TOTAL_RAIDA_COUNT][];
+        for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+            logger.info(ltag, "i="+i+ " r="+results[i]);
+            if (results[i] != null) {
+                if (results[i].equals("") || results[i].equals("E")) {
+                    logger.error(ltag, "Skipped raida or error raida" + i);
+                    continue;
+                } 
+            }
+            
+            if (results[i] == null) {
+                logger.error(ltag, "Skipped raida due to zero response: " + i);
+                continue;
+            }
+
+            o = parseResponse(results[i], ReceiverResponse.class);
+            if (o == null) {
+                errorResponse = (CommonResponse) parseResponse(results[i], CommonResponse.class);
+                if (errorResponse == null) {
+                    logger.error(ltag, "Failed to get error");
+                    continue;
+                }
+
+                logger.error(ltag, "Failed to auth coin. Status: " + errorResponse.status);
+                continue;
+            }
+            
+            ReceiverResponse ars = (ReceiverResponse) o;           
+            logger.debug(ltag, "raida" + i + " status: " + ars.status);
+            if (ars.status.equals("received")) {
+                logger.debug(ltag, "received");
+                setCoinStatus(ccs, i, CloudCoin.STATUS_PASS);
+                for (CloudCoin tcc : ccs) {
+                    String seed = "" + i + "" + tcc.sn + "" + pang;
+                    String pan = AppCore.getMD5(seed);
+                    logger.debug(ltag, "sn " + tcc.sn + " seed " + seed + " pan " + pan);
+                    tcc.ans[i] = pan;
+                }
+                continue;
+            } else if (ars.status.equals("fail")) {
+                logger.debug(ltag, "fail");
+                continue;
+            } else {
+                logger.error(ltag, "Invalid status: " + ars.status);
+                continue;
+            }
+
+        }
+        
+        String file;        
+        for (CloudCoin tcc : ccs) {
+            tcc.setPownStringFromDetectStatus();
+            logger.debug(ltag, "cc " + cc.sn + " pown " + tcc.getPownString());
+                                    
+            if (!tcc.isSentFixable()) {
+                logger.debug(ltag, "Coin SN " + cc.sn + " isn't sent fixable. Keep it in the Partial folder");               
+                c++;
+                continue;
+            }
+            
+            file = dir + File.separator + tcc.getFileName();
+            logger.info(ltag, "Saving coin " + file);
+            File f = new File(file);
+            if (f.exists())
+                f.delete();
+            
+            if (!AppCore.saveFile(file, tcc.getJson(false))) {
+                logger.error(ltag, "Failed to move coin to Detected: " + tcc.getFileName());
+                e++;
+                continue;
+            }
+            
+            globalResult.coinsFixed += tcc.getDenomination();
+            AppCore.deleteFile(tcc.originalFile);
+
+            
+            logger.info(ltag, "cc=" + tcc.sn + " v=" + tcc.getJson(false));
+            globalResult.amount += tcc.getDenomination();
+            a++;
+            av += tcc.getDenomination();
+        }
+
+        
+
+        logger.info(ltag, "Received " + cc.sn);
+
+        return true;
+    }
+    
+    
+    
+    
+    
+    
     public void doReceive(int sn, int[] sns, String fdstFolder, int amount, boolean needReceipt) {
         int i;
 
@@ -416,7 +707,11 @@ public class Receiver extends Servant {
             if (ars.status.equals("received")) {
                 logger.debug(ltag, "received");
                 setCoinStatus(ccs, i, CloudCoin.STATUS_PASS);
-  
+
+                /*
+                if (i==14 || i==15 || i==16||i==17||i==18||i==19)
+                    setCoinStatus(ccs, i, CloudCoin.STATUS_NORESPONSE);
+                */
                 continue;
             } else if (ars.status.equals("fail")) {
                 logger.debug(ltag, "fail");
@@ -441,7 +736,25 @@ public class Receiver extends Servant {
             logger.debug(ltag, "cc " + cc.sn + " pown " + tcc.getPownString());
                                     
             if (!tcc.isSentFixable()) {
-                logger.debug(ltag, "Coin SN " + cc.sn + " can't be fixed or recovered");
+                logger.debug(ltag, "Coin SN " + cc.sn + " isn't sent fixable. Checking if we can put it in the Partial folder");
+                if (tcc.canbeRecoveredFromLost()) {
+                    String f = AppCore.getPartialDir() + File.separator + cc.sn + "-" + tcc.getFileName();
+                    logger.debug(ltag, "Saving coin as partial: " + f);
+                    String seed, pan;
+                    for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+                        seed = "" + i + "" + tcc.sn + "" + pang;
+                        pan = AppCore.getMD5(seed);
+                        logger.debug(ltag, "sn " + tcc.sn + " seed " + seed + " pan " + pan);
+                        tcc.ans[i] = pan;
+                    }
+                    if (!AppCore.saveFile(f, tcc.getJson(false))) {
+                        logger.error(ltag, "Failed to move coin to Partial: " + tcc.getFileName());
+                        if (needReceipt)
+                            addCoinToReceipt(tcc, "error", "None");
+                        e++;
+                        continue;
+                    }
+                }
                 if (needReceipt)
                     addCoinToReceipt(ccs.get(i), "counterfeit", "None");
                 c++;

@@ -469,6 +469,14 @@ public class ServantManager {
 	//r.launch(, new int[]{1,1}, new int[] {7050330, 7050331}, memo, cb);
         r.launch(sn, sns, dstFolder, amount, false, rn, cb);
     }
+    
+    
+    public void startReceiverForPartialsService(int sn, ArrayList<String> files, String dir, CallbackInterface cb) {
+	Receiver r = (Receiver) sr.getServant("Receiver");
+	//r.launch(, new int[]{1,1}, new int[] {7050330, 7050331}, memo, cb);
+        r.launch(sn, files, dir, cb);
+    }
+    
 
     public void startSenderServiceForChange(int sn, int[] values, String memo, CallbackInterface cb) {
         Sender s = (Sender) sr.getServant("Sender");

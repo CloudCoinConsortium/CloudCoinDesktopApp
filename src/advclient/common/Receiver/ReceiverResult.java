@@ -29,6 +29,8 @@ public class ReceiverResult {
 
     public String[] files;
     
+    public int coinsFixed;
+    
     public ReceiverResult() {
         amount = 0;
         memo = "Receive";

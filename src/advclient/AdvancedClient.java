@@ -74,7 +74,7 @@ import org.json.JSONObject;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "4.0.0";
+    public static String version = "4.0.2";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -454,7 +454,7 @@ public class AdvancedClient  {
     }
 
     public String getSkyIDErrorIfRAIDAFailed() {
-        return "Creating a Skywallet requires that all RAIDA are available.<br>"
+        return "Operation requires that all RAIDA are available.<br>"
                 + "However, One or more could not be contaced.  Please try again later.";
     }
 
@@ -1413,6 +1413,15 @@ public class AdvancedClient  {
             case ProgramState.SCREEN_BACKUP_SKYWALLET:
                 showBackupSkyWalletScreen();
                 break;
+            case ProgramState.SCREEN_FIX_PARTIAL:
+                showFixPartialScreen();
+                break;
+            case ProgramState.SCREEN_FIXING_PARTIAL:
+                showFixingPartialScreen();
+                break;
+            case ProgramState.SCREEN_FIX_PARTIAL_DONE:
+                showFixPartialDoneScreen();
+                break;
                 
         }
         
@@ -1543,6 +1552,20 @@ public class AdvancedClient  {
         pbarText.repaint();
     }
     */
+    
+    public void setRAIDAFixPartialProgressCoins(int raidaProcessed, int totalCoinsProcessed, int totalCoins) {
+        pbar.setVisible(true);
+        pbar.setValue(raidaProcessed);
+        
+        String stc = AppCore.formatNumber(totalCoinsProcessed);
+        String tc = AppCore.formatNumber(totalCoins);
+        
+        String s = "Fixed";
+        pbarText.setText(s + " " + stc + " / " + tc + " CloudCoins");
+        
+        pbarText.repaint();
+    }
+    
     private void setRAIDATransferProgressCoins(int raidaProcessed, int totalCoinsProcessed, int totalCoins, int step) {
         pbar.setVisible(true);
         pbar.setValue(raidaProcessed);
@@ -1595,17 +1618,6 @@ public class AdvancedClient  {
         
         pbarText.repaint();
     }
-    
-    /*
-    private void setRAIDAFixingProgress(int raidaProcessed, int totalFilesProcessed, int totalFiles, int fixingRAIDA, int round) {
-        pbar.setVisible(true);
-        pbar.setValue(raidaProcessed);
-        
-        pbarText.setText("<html><div style='text-align:center'>Round #" + round + " Fixing on RAIDA " + 
-                fixingRAIDA + "<br>" + totalFilesProcessed + " / " + totalFiles + " Notes Fixed</div></html>");
-        pbarText.repaint();
-    }
-    */
     
     public void showFixingfrackedScreen() {
         JPanel subInnerCore = getPanel("Fixing in Progress");
@@ -2703,6 +2715,7 @@ public class AdvancedClient  {
                         } catch (InterruptedException e) {}
                     }
                    
+                    
                     if (AppCore.getErrorCount(skyCC) > Config.MAX_FAILED_RAIDAS_TO_SEND) {
                         ps.errText = getSkyIDErrorIfRAIDAFailed();
                         showScreen();
@@ -8299,6 +8312,9 @@ public class AdvancedClient  {
                 boolean finished = false;
                 while (true) {
                     for (int i = 0; i < wallets.length; i++) {
+                       if (wallets[i].isSkyWallet())
+                           continue;
+                       
                        if (!wallets[i].isUpdated()) {
                            finished = false;
                            break;
@@ -8461,6 +8477,230 @@ public class AdvancedClient  {
 
                 
                 ps.currentScreen = ProgramState.SCREEN_BACKUP_DONE;
+                showScreen();
+            }
+        }, y, gridbag);
+    }
+    
+    public void showFixingPartialScreen() {
+        JPanel subInnerCore = getPanel("Fixing in Progress");
+
+        JPanel ct = new JPanel();
+        AppUI.noOpaque(ct);
+        subInnerCore.add(ct);
+        
+        GridBagLayout gridbag = new GridBagLayout();
+        GridBagConstraints c = new GridBagConstraints();      
+        ct.setLayout(gridbag);
+        
+        JLabel x = new JLabel("Do not close the application until all CloudCoins are fixed!");
+        AppUI.setCommonFont(x);
+        AppUI.setColor(x, brand.getErrorColor());
+        c.anchor = GridBagConstraints.CENTER;
+        c.insets = new Insets(10, 0, 4, 0); 
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = 0;
+        gridbag.setConstraints(x, c);
+        ct.add(x);
+        
+        pbarText = new JLabel("");
+        AppUI.setCommonFont(pbarText);
+        c.insets = new Insets(40, 20, 4, 0);
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = 1;
+        gridbag.setConstraints(pbarText, c);
+        ct.add(pbarText);
+        
+        // ProgressBar
+        pbar = new JProgressBar();
+        pbar.setStringPainted(true);
+        AppUI.setMargin(pbar, 0);
+        AppUI.setSize(pbar, (int) (tw / 2.6f) , 50);
+        pbar.setMinimum(0);
+        pbar.setMaximum(24);
+        pbar.setValue(0);
+        pbar.setUI(new FancyProgressBar());
+        AppUI.noOpaque(pbar);
+        
+        c.insets = new Insets(20, 20, 4, 0);
+        c.gridx = GridBagConstraints.RELATIVE;
+        c.gridy = 2;
+        gridbag.setConstraints(pbar, c);
+        ct.add(pbar);
+        
+        subInnerCore.add(AppUI.hr(120));
+        
+        Thread t = new Thread(new Runnable() {
+            public void run(){
+                pbar.setVisible(false);
+                ps.isEchoFinished = false;
+                setRAIDAEchoProgressCoins(0);                
+                sm.startEchoService(new EchoCb());
+                while (!ps.isEchoFinished) {
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException e) {}
+
+                }
+                
+                if (!sm.isRAIDAOK()) {
+                    ps.errText = "RAIDA cannot be contacted. "
+                            + "This is usually caused by company routers blocking outgoing traffic. "
+                            + "Please Echo RAIDA and try again.";
+                    ps.isEchoFinished = false;
+                    ps.currentScreen = ProgramState.SCREEN_FIX_PARTIAL_DONE;
+                    showScreen();
+                    return;
+                }
+                
+                pbarText.setText("Checking coins ...");
+                ArrayList<String> files = AppCore.getPartialCoins(ps.srcWallet.getIDCoin().sn);
+                if (files.size() == 0) {
+                    ps.errText = "No coins to fix";
+                    ps.currentScreen = ProgramState.SCREEN_FIX_PARTIAL_DONE;
+                    showScreen();
+                    return;
+                }
+                
+                sm.startReceiverForPartialsService(ps.srcWallet.getIDCoin().sn, files, ps.chosenFile, new CallbackInterface() {
+                    public void callback(Object result) {
+                        final ReceiverResult rr = (ReceiverResult) result;
+
+                        wl.debug(ltag, "Receiver finished: " + rr.status);
+                        if (rr.status == ReceiverResult.STATUS_PROCESSING) {
+                            setRAIDAFixPartialProgressCoins(rr.totalRAIDAProcessed, rr.totalCoinsProcessed, rr.totalCoins);
+                            return;
+                        }
+      
+                        if (rr.status == ReceiverResult.STATUS_ERROR) {
+                            EventQueue.invokeLater(new Runnable() {         
+                                public void run() {
+                                    ps.errText = "Failed to fix partials";
+                                    ps.currentScreen = ProgramState.SCREEN_FIX_PARTIAL_DONE;
+                                    showScreen();
+                                }
+                            });
+                            return;
+                        } 
+
+                        ps.statTotalFixed = rr.coinsFixed;
+                        ps.statTotalFrackedValue = rr.totalCoins;
+                        wl.debug(ltag, "Fixed " + rr.coinsFixed);
+                        EventQueue.invokeLater(new Runnable() {         
+                            public void run() {
+                                ps.currentScreen = ProgramState.SCREEN_FIX_PARTIAL_DONE;
+                                showScreen();
+                            }
+                        });
+                    }
+                });
+            }
+        });
+        t.start();
+        
+    }
+    
+    public void showFixPartialDoneScreen() {
+        boolean isError = !ps.errText.equals("");
+        JPanel subInnerCore;
+        
+        if (isError) {
+            showError();
+            return;
+        }
+             
+        int y = 0;
+        JLabel fname, value;
+
+        subInnerCore = getPanel("Fix Complete");                
+        GridBagLayout gridbag = new GridBagLayout();
+        subInnerCore.setLayout(gridbag);
+      
+        String total = AppCore.formatNumber(ps.statTotalFrackedValue); 
+        String totalFixed = AppCore.formatNumber(ps.statTotalFixed);     
+        
+        fname = new JLabel("Total Partial Coins:");
+        value = new JLabel(total);
+        AppUI.getGBRow(subInnerCore, fname, value, y, gridbag);
+        y++; 
+
+        fname = new JLabel("Total Fixed Coins:");
+        value = new JLabel(totalFixed);
+        AppUI.getGBRow(subInnerCore, fname, value, y, gridbag);
+        y++; 
+
+                  
+        AppUI.GBPad(subInnerCore, y, gridbag);        
+        y++;
+        
+
+        AppUI.getTwoButtonPanel(subInnerCore, "", "Continue", null,  new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                if (ps.dstWallet != null)
+                    setActiveWallet(ps.dstWallet);
+                else 
+                    setActiveWallet(ps.srcWallet);
+                ps.sendType = 0;
+                ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
+                showScreen();
+            }
+        }, y, gridbag);
+    }
+    
+    public void showFixPartialScreen() {
+        int y = 0;
+        JLabel fname;
+        
+        JPanel subInnerCore = getPanel("Fix Partials in " + ps.currentWallet.getName());                
+        GridBagLayout gridbag = new GridBagLayout();
+        subInnerCore.setLayout(gridbag);
+
+ 
+        fname = new JLabel("Select folder where to put your fixed coins");   
+        AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
+        y++; 
+
+        
+        fname = new JLabel("Folder*");
+        final JFileChooser chooser = new JFileChooser();
+        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        chooser.setAcceptAllFileFilterUsed(false);
+        final MyTextField tf1 = new MyTextField("Click here to select folder", false, true);
+        //tf1.disable();
+        tf1.setFilepickerListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                int returnVal = chooser.showOpenDialog(null);
+                if (returnVal == JFileChooser.APPROVE_OPTION) {       
+                    ps.chosenFile = chooser.getSelectedFile().getAbsolutePath();
+                    tf1.setData(chooser.getSelectedFile().getName());
+                }
+            }
+        });
+
+        AppUI.getGBRow(subInnerCore, fname, tf1.getTextField(), y, gridbag);
+        y++; 
+
+        AppUI.GBPad(subInnerCore, y, gridbag);        
+        y++;
+
+        AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Continue", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                setDefaultScreen();
+                showScreen();
+            }
+        }, new ActionListener() {
+            public void actionPerformed(ActionEvent e) { 
+
+                Wallet srcWallet = ps.currentWallet;                  
+                ps.srcWallet = srcWallet;              
+                if (ps.chosenFile.isEmpty()) {
+                    ps.errText = "Folder is not chosen";
+                    showScreen();
+                    return;
+                }
+                
+                ps.currentScreen = ProgramState.SCREEN_FIXING_PARTIAL;
                 showScreen();
             }
         }, y, gridbag);
@@ -9562,10 +9802,12 @@ public class AdvancedClient  {
                 } 
             };
  
-            String[] items2 = {"Backup", "List Serials", "Delete Wallet", "Show Folders", "Health Check"};
+            String[] items2 = {"Backup", "List Serials", "Delete Wallet", "Show Folders", "Health Check", "Fix Partials"};
             if (ps.currentWallet.isSkyWallet()) {
                 items2[1] = items2[3] = null;
                 //items2[0] = items2[1] = items2[3] = null;
+            } else {
+                items2[5] = null;
             }
             
             for (int i = 0; i < items2.length; i++) {
@@ -9623,6 +9865,8 @@ public class AdvancedClient  {
                             ps.currentScreen = ProgramState.SCREEN_SHOW_FOLDERS;
                         } else if (action.equals("4")) {
                             ps.currentScreen = ProgramState.SCREEN_HEALTH_CHECK;
+                        } else if (action.equals("5")) {
+                            ps.currentScreen = ProgramState.SCREEN_FIX_PARTIAL;
                         }
 
                         showScreen();

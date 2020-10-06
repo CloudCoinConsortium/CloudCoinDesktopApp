@@ -209,6 +209,9 @@ public class AppCore {
             if (!createDirectory(Config.DIR_PAID_FOR_RECOVERED))
                 return false;
             
+            if (!createDirectory(Config.DIR_PARTIAL))
+                return false;
+            
             if (!createDirectory(Config.DIR_CLOUDBANK + File.separator + Config.DIR_CLOUDBANK_KEYS))
                 return false;
             
@@ -238,7 +241,6 @@ public class AppCore {
             Config.DIR_LOGS,
             Config.DIR_LOST,
             Config.DIR_MIND,
-            Config.DIR_PARTIAL,
             Config.DIR_PAYFORWARD,
             Config.DIR_PREDETECT,
             Config.DIR_RECEIPTS,
@@ -321,11 +323,17 @@ public class AppCore {
        return f.toString();
    }
    
-   static public String getTemplateDir() {
+    static public String getTemplateDir() {
        File f = new File(rootPath, Config.DIR_TEMPLATES);
        
        return f.toString();
-   }
+    }
+   
+    static public String getPartialDir() {
+       File f = new File(rootPath, Config.DIR_PARTIAL);
+       
+       return f.toString();
+    }
    
    static public String getIDDir() {
        File f = new File(rootPath, Config.DIR_ID);
@@ -2744,5 +2752,29 @@ public class AppCore {
         Random rand = new Random();
         
         return rand.nextInt(4) + 1;
+    }
+    
+    public static ArrayList<String> getPartialCoins(int sn) {
+        ArrayList<String> files = new ArrayList<String>();
+        try {
+            File rFile = new File(AppCore.getPartialDir());
+            for (File file: rFile.listFiles()) {
+                if (file.isDirectory())
+                    continue;
+            
+                if (!AppCore.hasCoinExtension(file))
+                    continue;
+                
+                if (!file.getName().startsWith(sn + "-"))
+                    continue;
+                
+                files.add(file.getAbsolutePath());
+            }         
+        } catch (Exception e) {
+           logger.error(ltag, "Failed to read directory: " + e.getMessage());
+           return files;
+        }
+        
+        return files;
     }
 }
