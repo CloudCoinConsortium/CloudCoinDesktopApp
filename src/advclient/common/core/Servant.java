@@ -55,6 +55,8 @@ public class Servant {
     protected String receiptId;
     
     protected ArrayList<Integer>[] rarr;
+    
+    protected boolean needDebug;
 
     public Servant(String name, String rootDir, GLogger logger) {
         this.name = name;
@@ -77,6 +79,8 @@ public class Servant {
 
         this.isUserBound = true;
         this.logDir = AppCore.getLogDir() + File.separator + name;
+        
+        this.needDebug = false;
         
         logger.info(ltag, "Instantiated servant " + name + " for " + this.user); 
     }
@@ -419,7 +423,7 @@ public class Servant {
             logger.error(ltag, "Illegal access exception");
             return null;
         } catch (InstantiationException e) {
-            logger.error(ltag, "Illegal instantiation");
+            logger.error(ltag, "Illegal instantiation: " + e.getMessage());
             return null;
         } catch (IllegalArgumentException e) {
             logger.error(ltag, "Illegal argument: " + e.getMessage());
@@ -506,6 +510,14 @@ public class Servant {
         cleanDir(privateLogDir);
     }
 
+    public void setNeedDebug() {
+        this.needDebug = true;
+    }
+    
+    public boolean isDebug() {
+        return this.needDebug;
+    }
+    
     protected CloudCoin getIDcc(int sn) {
         String fullDirIDPath = AppCore.getIDDir();
         CloudCoin cc = null;

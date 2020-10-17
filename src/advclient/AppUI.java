@@ -493,6 +493,119 @@ public class AppUI {
     }
     
     
+    public static JScrollPane setupHCTable(JTable table, String[] columnNames, String[][] data, 
+            DefaultTableCellRenderer r) {
+        final String[] fcolumnNames = columnNames;
+        System.out.println("d="+data.length + " d="+data[0].length);
+        DefaultTableModel model = new DefaultTableModel(data.length, data[0].length - 1) {
+            @Override
+            public String getColumnName(int col) {        
+                return fcolumnNames[col].toUpperCase();
+            }
+            
+            @Override
+            public Class<?> getColumnClass(int columnIndex) {
+                return String.class;
+            }
+            
+            public boolean isCellEditable(int row, int column){  
+               return false;  
+            }
+        };
+        
+        table.setModel(model);
+        for (int row = 0; row < model.getRowCount(); row++) {
+            for (int col = 0; col < model.getColumnCount(); col++) {
+                model.setValueAt(data[row][col], row, col);
+            }
+        }
+ 
+        table.setRowHeight(table.getRowHeight() + 18);
+        table.setDefaultRenderer(String.class, r);
+        table.setIntercellSpacing(new Dimension(0, 1));
+        table.setFocusable(false);
+        table.setRowSelectionAllowed(false);
+        table.setGridColor(brand.getTableGridColor());
+        
+        
+        JTableHeader header = table.getTableHeader();  
+        AppUI.setColor(header, brand.getTableHeaderTextColor());
+        AppUI.noOpaque(header);
+        AppUI.setCommonTableFont(table);
+        AppUI.setSemiBoldFont(header, 10);
+
+        
+        final TableCellRenderer hr = table.getTableHeader().getDefaultRenderer();
+        header.setDefaultRenderer(new TableCellRenderer() {
+            private JLabel lbl;
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                    lbl = (JLabel) hr.getTableCellRendererComponent(table, value, true, true, row, column);
+                    //lbl.setHorizontalAlignment(SwingConstants.LEFT);
+
+                    if (column == 0)
+                        lbl.setHorizontalAlignment(SwingConstants.LEFT);
+                    else
+                        lbl.setHorizontalAlignment(SwingConstants.CENTER);
+
+                    lbl.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, brand.getTableGridColor()));
+                    lbl.setBorder(BorderFactory.createCompoundBorder(lbl.getBorder(), BorderFactory.createEmptyBorder(0, 1, 1, 0)));
+                    AppUI.setSemiBoldFont(lbl, 10);
+
+                    AppUI.setBackground(lbl, brand.getPanelBackgroundColor());
+
+                    return lbl;
+            }
+        });
+        
+        
+        //This is the wallet table size 
+        JScrollPane scrollPane = new JScrollPane(table);
+        AppUI.setSize(scrollPane, 1080, 264);
+        scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(10, 0));
+        scrollPane.getVerticalScrollBar().setUI(new BasicScrollBarUI() {       
+            @Override
+            protected JButton createDecreaseButton(int orientation) {
+                TriangleButton jbutton = new TriangleButton(false);
+                AppUI.setHandCursor(jbutton);
+                jbutton.setContentAreaFilled(false);
+                jbutton.setFocusPainted(false);
+            
+                JButton b = new JButton();
+                AppUI.setSize(b, 0, 0);
+                
+                return b;
+            }
+
+            @Override    
+            protected JButton createIncreaseButton(int orientation) {
+                TriangleButton jbutton = new TriangleButton(true);
+                AppUI.setHandCursor(jbutton);
+                jbutton.setContentAreaFilled(false);
+                jbutton.setFocusPainted(false);
+            
+                JButton b = new JButton();
+                AppUI.setSize(b, 0, 0);
+                
+                return b;
+            }
+ 
+            @Override 
+            protected void configureScrollBarColors(){
+                this.trackColor = brand.getScrollbarTrackColor();
+                this.thumbColor = brand.getScrollbarThumbColor();
+            }
+        });
+        
+        scrollPane.getViewport().setOpaque(false);
+        scrollPane.setOpaque(false);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        
+        return scrollPane;
+        
+    }
+    
+    
     public static JLabel getHyperLink(String name, String url, int fontSize) {
         final String furl = url;
         

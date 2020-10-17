@@ -1112,6 +1112,10 @@ public class Brand {
         return getScaledImage(img, 45, 28);
     }
     
+    public Image scaleSkyIcon(Image img) {
+        return getScaledImage(img, 45, 28);
+    }
+    
     
     public Color colorFromHex(String colorStr) {
         return new Color(

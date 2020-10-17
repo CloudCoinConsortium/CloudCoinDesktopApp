@@ -945,6 +945,8 @@ public class FrackFixer extends Servant {
                 continue;
             } else if (ars.status.equals("allfail")) {
                 logger.debug(ltag, "allfail");
+                logger.debug(ltag, "Will mark all coins as 'f'");
+                setCoinStatus(ccs, rIdx, CloudCoin.STATUS_FAIL);
                 return false;
             } else if (ars.status.equals("mixed")) {
                 logger.debug(ltag, "mixed " + ars.message);
@@ -960,7 +962,9 @@ public class FrackFixer extends Servant {
                     if (strStatus.equals(Config.REQUEST_STATUS_PASS)) {
                         setTicket(ccs.get(j), rIdx, ars.ticket, tickets);
                     } else if (strStatus.equals(Config.REQUEST_STATUS_FAIL)) {
-                        
+                        logger.error(ltag, "Marking coin " + ccs.get(j).sn + " as 'f'");
+                        ccs.get(j).setDetectStatus(rIdx, CloudCoin.STATUS_FAIL);
+
                     } else {
 
                     }

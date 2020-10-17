@@ -464,7 +464,7 @@ public class AppCore {
             }
 
             if (!fsource.renameTo(ftarget)) {
-                logger.error(ltag, "Failed to rename file " + fileName);
+                logger.error(ltag, "Failed to rename file " + fileName + " to " + target);
                 return false;
             }
         } catch (Exception e) {
@@ -1070,7 +1070,7 @@ public class AppCore {
     }
     
     public static String getReceiptHtml(String hash, String user) {
-        if (hash.equals("dummy") || hash.equals("COUNTERFEIT") || hash.isEmpty())
+        if (hash.equals("dummy") || hash.equals("COUNTERFEIT") || hash.isEmpty() || hash.equals("AutoAdjusted"))
             return null;
         
         String receiptsFile = AppCore.getUserDir(Config.DIR_RECEIPTS, user);

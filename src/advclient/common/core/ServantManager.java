@@ -470,6 +470,11 @@ public class ServantManager {
         r.launch(sn, sns, dstFolder, amount, false, rn, cb);
     }
     
+    public void startReceiverEnvelopeService(int sn, String memo, CallbackInterface cb) {
+	Receiver r = (Receiver) sr.getServant("Receiver");
+	//r.launch(, new int[]{1,1}, new int[] {7050330, 7050331}, memo, cb);
+        r.launch(sn, memo, cb);
+    }
     
     public void startReceiverForPartialsService(int sn, ArrayList<String> files, String dir, CallbackInterface cb) {
 	Receiver r = (Receiver) sr.getServant("Receiver");

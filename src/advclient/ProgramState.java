@@ -101,6 +101,12 @@ public class ProgramState {
     final public static int SCREEN_FIX_PARTIAL = 81;
     final public static int SCREEN_FIXING_PARTIAL = 82;
     final public static int SCREEN_FIX_PARTIAL_DONE = 83;
+    final public static int SCREEN_RECEIVE_ENVELOPE = 84;
+    final public static int SCREEN_CONFIRM_WITHDRAW_ENVELOPE = 85;
+    final public static int SCREEN_WITHDRAWING_ENVELOPE = 86;
+    final public static int SCREEN_WITHDRAW_ENVELOPE_DONE = 87;
+    final public static int SCREEN_DOING_SKY_HEALTH_CHECK = 88;
+    final public static int SCREEN_SKY_HEALTH_CHECK_DONE = 89;
     
     final static int CB_STATE_INIT = 1;
     final static int CB_STATE_RUNNING = 2;
@@ -246,11 +252,22 @@ public class ProgramState {
     
     int hcValid, hcFracked, hcCounterfeit;
     
+    String selectedEnvelope;
 
-
+    String envelopeAmount;
+    int envelopeAmountInt;
+    
     int screenToGetBack;
     
     Wallet savedSrcWallet;
+    
+    
+    int[] hcDebugBalances;
+    int[] hcDebugContentBalances;
+    int hcBalanceTotal;
+    
+    HashMap<String, Integer> hcSNs;
+    
     
     public ProgramState() {
         currentScreen = SCREEN_AGREEMENT;
@@ -363,6 +380,10 @@ public class ProgramState {
         savedSrcWallet = null;
         
         screenToGetBack = 0;
+        
+        selectedEnvelope = "";
+        envelopeAmount = "";
+        envelopeAmountInt = 0;
     }
  
     public String toString() {
