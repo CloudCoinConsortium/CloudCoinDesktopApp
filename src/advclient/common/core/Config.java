@@ -270,11 +270,11 @@ public class Config {
     
     public static int MAX_NOTES_TO_FIXTRANSFER = 400;
     
-    public static int FIX_MAX_REGEXPS = 24;
+    public static int FIX_MAX_REGEXPS = 56;
     
     
-    public static int MAX_FAILED_NUM_TO_BE_COUNTERFEIT = 17;
-    public static int MIN_PASSED_NUM_TO_BE_AUTHENTIC = 17;
+    public static int MAX_FAILED_NUM_TO_BE_COUNTERFEIT = 12;
+    public static int MIN_PASSED_NUM_TO_BE_AUTHENTIC = 14;
     
     public static String SKY_EMAIL_PLACEHOLDER = "skyemailplaceholder";
 }

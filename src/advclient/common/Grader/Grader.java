@@ -186,7 +186,8 @@ public class Grader extends Servant {
 
             addCoinToReceipt(cc, "counterfeit", dst);
         } else {
-            logger.debug(ltag, "Coin " + cc.sn + " is suspect");
+            logger.debug(ltag, "Coin " + cc.sn + " is lost");
+            /*
             if (counterfeit > 0) {
                 logger.debug(ltag, "Coin has failed responses. Will try to fix it in Fracked");
                 gr.totalFracked++;
@@ -201,7 +202,7 @@ public class Grader extends Servant {
                 }
                 
                 addCoinToReceipt(cc, "fracked", dst);
-            } else {
+            } else {*/
                 logger.debug(ltag, "Coin is lost");
 
                 gr.totalLost++;
@@ -212,7 +213,7 @@ public class Grader extends Servant {
                 gr.totalLostValue += cc.getDenomination();
                 addCoinToReceipt(cc, "lost", dst);
                 includePans = true;
-            }
+            //}
 
 
         }

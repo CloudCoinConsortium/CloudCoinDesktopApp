@@ -14,6 +14,7 @@ public class FrackFixerResult {
     public int totalRAIDAProcessed;
     public int fixingRAIDA;
     public int round;
+    public int corner;
 
     public int totalCoins;
     public int totalCoinsProcessed;

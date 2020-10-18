@@ -61,7 +61,7 @@ public class FrackFixer extends Servant {
             @Override
             public void run() {
                 logger.info(ltag, "RUN (Detached) FrackFixer");
-                doFrackFix(needExtensive, email, tickets);
+                doFrackFix(email, tickets);
                 
                 raida.setReadTimeout(Config.READ_TIMEOUT);
             }
@@ -128,7 +128,63 @@ public class FrackFixer extends Servant {
                 trustedTriads[i] = new int[Config.FIX_MAX_REGEXPS][];
                 // Five raida servers. Each number is an index in trustedServers array. 
                 int j = 0;
-                
+                trustedTriads[i][j++] = new int[] { 0, 1, 2, 3, 4 };
+                trustedTriads[i][j++] = new int[] { 0, 1, 2, 3, 5 };
+                trustedTriads[i][j++] = new int[] { 0, 1, 2, 3, 6 };
+                trustedTriads[i][j++] = new int[] { 0, 1, 2, 3, 7 };
+                trustedTriads[i][j++] = new int[] { 0, 1, 2, 4, 5 };
+                trustedTriads[i][j++] = new int[] { 0, 1, 2, 4, 6 };
+                trustedTriads[i][j++] = new int[] { 0, 1, 2, 4, 7 };
+                trustedTriads[i][j++] = new int[] { 0, 1, 2, 5, 6 };
+                trustedTriads[i][j++] = new int[] { 0, 1, 2, 5, 7 };
+                trustedTriads[i][j++] = new int[] { 0, 1, 2, 6, 7 };
+                trustedTriads[i][j++] = new int[] { 0, 1, 3, 4, 5 };
+                trustedTriads[i][j++] = new int[] { 0, 1, 3, 4, 6 };
+                trustedTriads[i][j++] = new int[] { 0, 1, 3, 4, 7 };
+                trustedTriads[i][j++] = new int[] { 0, 1, 3, 5, 6 };
+                trustedTriads[i][j++] = new int[] { 0, 1, 3, 5, 7 };
+                trustedTriads[i][j++] = new int[] { 0, 1, 3, 6, 7 };
+                trustedTriads[i][j++] = new int[] { 0, 1, 4, 5, 6 };
+                trustedTriads[i][j++] = new int[] { 0, 1, 4, 5, 7 };
+                trustedTriads[i][j++] = new int[] { 0, 1, 4, 6, 7 };
+                trustedTriads[i][j++] = new int[] { 0, 1, 5, 6, 7 };
+                trustedTriads[i][j++] = new int[] { 0, 2, 3, 4, 5 };
+                trustedTriads[i][j++] = new int[] { 0, 2, 3, 4, 6 };
+                trustedTriads[i][j++] = new int[] { 0, 2, 3, 4, 7 };
+                trustedTriads[i][j++] = new int[] { 0, 2, 3, 5, 6 };
+                trustedTriads[i][j++] = new int[] { 0, 2, 3, 5, 7 };
+                trustedTriads[i][j++] = new int[] { 0, 2, 3, 6, 7 };
+                trustedTriads[i][j++] = new int[] { 0, 2, 4, 5, 6 };
+                trustedTriads[i][j++] = new int[] { 0, 2, 4, 5, 7 };
+                trustedTriads[i][j++] = new int[] { 0, 2, 4, 6, 7 };
+                trustedTriads[i][j++] = new int[] { 0, 2, 5, 6, 7 };
+                trustedTriads[i][j++] = new int[] { 0, 3, 4, 5, 6 };
+                trustedTriads[i][j++] = new int[] { 0, 3, 4, 5, 7 };
+                trustedTriads[i][j++] = new int[] { 0, 3, 4, 6, 7 };
+                trustedTriads[i][j++] = new int[] { 0, 3, 5, 6, 7 };
+                trustedTriads[i][j++] = new int[] { 0, 4, 5, 6, 7 };
+                trustedTriads[i][j++] = new int[] { 1, 2, 3, 4, 5 };
+                trustedTriads[i][j++] = new int[] { 1, 2, 3, 4, 6 };
+                trustedTriads[i][j++] = new int[] { 1, 2, 3, 4, 7 };
+                trustedTriads[i][j++] = new int[] { 1, 2, 3, 5, 6 };
+                trustedTriads[i][j++] = new int[] { 1, 2, 3, 5, 7 };
+                trustedTriads[i][j++] = new int[] { 1, 2, 3, 6, 7 };
+                trustedTriads[i][j++] = new int[] { 1, 2, 4, 5, 6 };
+                trustedTriads[i][j++] = new int[] { 1, 2, 4, 5, 7 };
+                trustedTriads[i][j++] = new int[] { 1, 2, 4, 6, 7 };
+                trustedTriads[i][j++] = new int[] { 1, 2, 5, 6, 7 };
+                trustedTriads[i][j++] = new int[] { 1, 3, 4, 5, 6 };
+                trustedTriads[i][j++] = new int[] { 1, 3, 4, 5, 7 };
+                trustedTriads[i][j++] = new int[] { 1, 3, 4, 6, 7 };
+                trustedTriads[i][j++] = new int[] { 1, 3, 5, 6, 7 };
+                trustedTriads[i][j++] = new int[] { 1, 4, 5, 6, 7 };
+                trustedTriads[i][j++] = new int[] { 2, 3, 4, 5, 6 };
+                trustedTriads[i][j++] = new int[] { 2, 3, 4, 5, 7 };
+                trustedTriads[i][j++] = new int[] { 2, 3, 4, 6, 7 };
+                trustedTriads[i][j++] = new int[] { 2, 3, 5, 6, 7 };
+                trustedTriads[i][j++] = new int[] { 2, 4, 5, 6, 7 };
+                trustedTriads[i][j++] = new int[] { 3, 4, 5, 6, 7 };
+                /*
                 // Corners
                 trustedTriads[i][j++] = new int[] { 0, 3, 5, 6, 7 };
                 trustedTriads[i][j++] = new int[] { 0, 1, 2, 3, 5 };
@@ -164,7 +220,7 @@ public class FrackFixer extends Servant {
                 trustedTriads[i][j++] = new int[] { 2, 3, 4, 5, 7 };
                 trustedTriads[i][j++] = new int[] { 0, 1, 5, 6, 7 };
                 trustedTriads[i][j++] = new int[] { 0, 2, 3, 4, 5 };
-                
+                */
                 
             }
             
@@ -189,6 +245,7 @@ public class FrackFixer extends Servant {
         nfr.fixingRAIDA = fr.fixingRAIDA;
         nfr.round = fr.round;
         nfr.pownStrings = fr.pownStrings;
+        nfr.corner = fr.corner;
     }
 
     
@@ -230,8 +287,8 @@ public class FrackFixer extends Servant {
         }   
     }
     
-    public void doFrackFix(boolean needExtensive, String email, HashMap<Integer, String[]> tickets) {  
-        int protocol = needExtensive ? 5 : 4;
+    public void doFrackFix(String email, HashMap<Integer, String[]> tickets) {  
+        int protocol = 5;
         logger.debug(ltag, "Initializing neighbourx for Protocol " + protocol);
         if (!initNeighbours(protocol)) {
             fr.status = FrackFixerResult.STATUS_ERROR;
@@ -293,10 +350,6 @@ public class FrackFixer extends Servant {
         ArrayList<CloudCoin> ccactive = new ArrayList<CloudCoin>();
         int i;
 
-        
-        
-        
-        
         // Fixing lost
         ArrayList<CloudCoin> ccactiveLost = new ArrayList<CloudCoin>();
         logger.debug(ltag, "Will try to fix lost first");
@@ -364,7 +417,7 @@ public class FrackFixer extends Servant {
                 
                 if (ccactive.size() == maxCoins) {
                     logger.info(ltag, "Doing fix. maxCoins " + maxCoins);
-                    doRealFix(i, ccactive, needExtensive, email, tickets);
+                    doRealFix(i, ccactive, email, tickets);
                     ccactive.clear();
                                 
                     //if (!needExtensive) {
@@ -382,7 +435,7 @@ public class FrackFixer extends Servant {
 
             if (ccactive.size() > 0) {
                 logger.info(ltag, "Doing rest fix.  " + ccactive.size());
-                doRealFix(i, ccactive, needExtensive, email, tickets);            
+                doRealFix(i, ccactive, email, tickets);            
                 ccactive.clear();  
             }         
         }
@@ -421,7 +474,7 @@ public class FrackFixer extends Servant {
                 
                 if (ccactive.size() == maxCoins) {
                     logger.info(ltag, "Doing fix. maxCoins " + maxCoins);
-                    doRealFix(i, ccactive, needExtensive, email, tickets);
+                    doRealFix(i, ccactive, email, tickets);
                     ccactive.clear();
                      
                     //if (!needExtensive) {
@@ -439,7 +492,7 @@ public class FrackFixer extends Servant {
 
             if (ccactive.size() > 0) {
                 logger.info(ltag, "Doing rest fix.  " + ccactive.size());
-                doRealFix(i, ccactive, needExtensive, email, tickets);            
+                doRealFix(i, ccactive, email, tickets);            
                 ccactive.clear();
             }         
         }
@@ -638,26 +691,34 @@ public class FrackFixer extends Servant {
         return;
     }
     
-    private void doRealFix(int raidaIdx, ArrayList<CloudCoin> ccs, boolean needExtensive, String email, HashMap<Integer, String[]> tickets) {
+    private void doRealFix(int raidaIdx, ArrayList<CloudCoin> ccs, String email, HashMap<Integer, String[]> tickets) {
         int corner;
         
         boolean haveTickets = tickets == null ? false : true;
         //processLossfix(ccs);   
         
-        logger.debug(ltag, "Fixing " + ccs.size() + " coins on the RAIDA" + raidaIdx + " needExtensive " + needExtensive + " have tickets " + haveTickets);
-        if (needExtensive) {
-            logger.debug(ltag, "Doing Intensive Fix");
-            for (corner = 0; corner < Config.FIX_MAX_REGEXPS; corner++) {
-                if (fixCoinsForRegexString(raidaIdx, corner, ccs, email)) {
-                    logger.debug(ltag, "Fixed successfully");
-                    syncCoinsTickets(ccs);
-                    break;
-                }
+        
+        logger.debug(ltag, "Fixing " + ccs.size() + " coins on the RAIDA" + raidaIdx + " have tickets " + haveTickets);
+
+        logger.debug(ltag, "Doing Fix");
+        for (corner = 0; corner < Config.FIX_MAX_REGEXPS; corner++) {
+            FrackFixerResult nfr = new FrackFixerResult();
+
+            fr.corner = corner;
+            fr.totalRAIDAProcessed = 0;
+            copyFromMainFr(nfr);
+            if (cb != null)
+                cb.callback(nfr);
+                          
+            if (fixCoinsForRegexString(raidaIdx, corner, ccs, email, tickets)) {
+                logger.debug(ltag, "Fixed successfully");
+                syncCoinsTickets(ccs);
+                break;
             }
-          
-            return;
+ 
         }
 
+/*
         logger.debug(ltag, "Doing fix");
         for (corner = 0; corner < 4; corner++) {
             logger.debug(ltag, "corner=" + corner);
@@ -667,10 +728,12 @@ public class FrackFixer extends Servant {
                 break;
             }
         }
+        
+        */
     }
     
     
-    
+    /*
     public boolean fixCoinInCorner(int raidaIdx, int corner, CloudCoin cc, String email) {
         int[] triad;
         int[] raidaFix;
@@ -805,6 +868,7 @@ public class FrackFixer extends Servant {
 
         return true;
     }
+    */
     
     private void setTicket(CloudCoin cc, int idx, String ticket, HashMap<Integer, String[]> tickets) {
         String[] data;
@@ -825,7 +889,7 @@ public class FrackFixer extends Servant {
             setTicket(cc, idx, ticket, tickets);
         }
     }
-    
+    /*
     public boolean fixCoinsInCorner(int raidaIdx, int corner, ArrayList<CloudCoin> ccs, String email) {
         int[] triad;
         int[] raidaFix;
@@ -985,6 +1049,7 @@ public class FrackFixer extends Servant {
         
         return rv;
     }
+    */
     
     private Character getRegexChar(int idx, int[] fivetouches) {
         for (int j = 0; j < fivetouches.length; j++) {
@@ -1042,32 +1107,10 @@ public class FrackFixer extends Servant {
         return sb.toString();
 
     }
-
-    public boolean fixCoinsForRegexString(int raidaIdx, int corner, ArrayList<CloudCoin> ccs, String email) {
-        int[] raidaFix;
+    
+    public boolean receiveTickets(int raidaIdx, ArrayList<CloudCoin> ccs, int[] fivetouches, HashMap<Integer, String[]> tickets) {
         int neighIdx;
-
-        logger.debug(ltag, "Fixing with index " + corner + " on raida " + raidaIdx);
-        if (raida.isFailed(raidaIdx)) {
-            logger.error(ltag, "RAIDA " + raidaIdx + " is failed. Skipping it");
-            return false;
-        }
-        
-        if (corner >= trustedTriads[raidaIdx].length) {
-            logger.error(ltag, "Misconfiguration. Index " + corner + " is too big");
-            return false;
-        }
-        
-        
-        int[] fivetouches = trustedTriads[raidaIdx][corner];
-        if (fivetouches == null) {
-            logger.error(ltag, "five touches in index " + corner + " have been visited already. Skipping them");
-            return false;
-        }
-
-        HashMap<Integer, String[]> tickets = new HashMap<Integer, String[]>();
-        
-        raidaFix = new int[1];
+        int[] raidaFix = new int[1];
         raidaFix[0] = raidaIdx;
 
         int msize = fivetouches.length;
@@ -1108,9 +1151,7 @@ public class FrackFixer extends Servant {
             posts[i] = sbs[i].toString();
             rlist[i] = neighIdx;
         }
-        
-        String regexString  = getRegexString(fivetouches);
-        logger.debug(ltag, "Regex string " + regexString);
+
 
         String[] results = raida.query(requests, posts, new CallbackInterface() {
             final GLogger gl = logger;
@@ -1210,8 +1251,47 @@ public class FrackFixer extends Servant {
         }
         
         logger.debug(ltag, "Multi_detect done. Tickets received");
+        return true;
+    }
 
+    public boolean fixCoinsForRegexString(int raidaIdx, int corner, ArrayList<CloudCoin> ccs, String email, HashMap<Integer, String[]> tickets) {
+        //int[] raidaFix;
+        //int neighIdx;
+
+        logger.debug(ltag, "Fixing with index " + corner + " on raida " + raidaIdx);
+        if (raida.isFailed(raidaIdx)) {
+            logger.error(ltag, "RAIDA " + raidaIdx + " is failed. Skipping it");
+            return false;
+        }
         
+        if (corner >= trustedTriads[raidaIdx].length) {
+            logger.error(ltag, "Misconfiguration. Index " + corner + " is too big");
+            return false;
+        }
+        
+        
+        int[] fivetouches = trustedTriads[raidaIdx][corner];
+        if (fivetouches == null) {
+            logger.error(ltag, "five touches in index " + corner + " have been visited already. Skipping them");
+            return false;
+        }
+
+        //HashMap<Integer, String[]> tickets = new HashMap<Integer, String[]>();
+        if (tickets == null) {
+            logger.debug(ltag, "We need tickets. Calling multi_detect");
+            tickets = new HashMap<Integer, String[]>();
+            if (!receiveTickets(raidaIdx, ccs, fivetouches, tickets)) {
+                logger.error(ltag, "Failed to get tickets");
+                return false;
+            }
+        }
+       
+        //System.out.println("x=")
+        
+        String regexString  = getRegexString(fivetouches);
+        logger.debug(ltag, "Regex string " + regexString);
+        
+        //System.out.println("rx="+regexString);
         boolean rv = fixCoinsInCornerWithTicketsAndRegex(raidaIdx, corner, ccs, email, tickets, regexString);
         
         logger.debug(ltag, "fixCoinsWith tickets rv " + rv);
@@ -1242,7 +1322,7 @@ public class FrackFixer extends Servant {
         
         int trRaidaIdx = aIdx;
 
-        logger.debug(ltag, "Fixing in index " + corner + "(" + aIdx + ", " + bIdx + ", " + cIdx + ", " + dIdx + ", " + eIdx + ")");
+        logger.debug(ltag, "Fixing in index " + corner + " (" + aIdx + ", " + bIdx + ", " + cIdx + ", " + dIdx + ", " + eIdx + ")");
         String thash;
         for (CloudCoin cc : ccs) {
             String[] thasha = tickets.get(cc.sn);
@@ -1306,7 +1386,7 @@ public class FrackFixer extends Servant {
         return result;
     }
 
-    
+    /*
     public boolean fixCoinsInCornerWithTickets(int raidaIdx, int corner, ArrayList<CloudCoin> ccs, String email, HashMap<Integer, String[]> tickets) {
       
         int[] triad;
@@ -1385,6 +1465,8 @@ public class FrackFixer extends Servant {
         return result;
     }
     
+    */
+    
     public boolean fixCoinsInCornerWithTicketsReal(int raidaIdx, int corner, ArrayList<CloudCoin> ccs, String email, String[] tickets, int progressWeight, String regex) {
         int[] raidaFix;
 
@@ -1428,8 +1510,8 @@ public class FrackFixer extends Servant {
         StringBuilder sb = new StringBuilder();
         sb.append("fix?");
         sb.append("nn=" + Config.DEFAULT_NN);
-        sb.append("&corner=");
-        sb.append(corner);
+        //sb.append("&corner=");
+        //sb.append(corner);
         sb.append("&a=");
         sb.append(tickets[0]);
         sb.append("&b=");

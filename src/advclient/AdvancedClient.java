@@ -74,7 +74,7 @@ import org.json.JSONObject;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "4.0.4";
+    public static String version = "4.0.5";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -142,10 +142,7 @@ public class AdvancedClient  {
         
         String home = System.getProperty("user.home");
         resetState();
-        
-        
 
-        
         brand = new Brand(Config.DEFAULT_BRAND_NAME, wl);
         
         initMainScreen();   
@@ -1180,7 +1177,7 @@ public class AdvancedClient  {
        // showSkyHealthCheckDoneScreen();
         //if (1==1)return;
         //ps.currentScreen = ProgramState.SCREEN_DEPOSIT;
-        showNewVersionScreen();if(1==1)return;
+       // showNewVersionScreen();if(1==1)return;
         clear();   
         if (ps.needInitWallets) {
             sm.initWallets();
@@ -1608,19 +1605,21 @@ public class AdvancedClient  {
     }
     
     
-    private void setRAIDAFixingProgressCoins(int raidaProcessed, int totalCoinsProcessed, int totalCoins, int fixingRAIDA, int round) {
+    private void setRAIDAFixingProgressCoins(int raidaProcessed, int totalCoinsProcessed, int totalCoins, int fixingRAIDA, int round, int corner) {
         pbar.setVisible(true);
         pbar.setValue(raidaProcessed);
+        
         
         String stc = AppCore.formatNumber(totalCoinsProcessed);
         String tc = AppCore.formatNumber(totalCoins);
         
         String fr = fixingRAIDA == -1 ? "" : "" + fixingRAIDA;
         
+        //System.out.println("called r " + round + " c=" + corner + " raida=" + fr + " stc="+stc + "/" + tc + " raidaProcesed="+raidaProcessed);
         if (round == 0) {
             pbarText.setText("<html><div style='text-align:center'>Checking Limbo Coins<br>" + stc + " / " + tc + " CloudCoins Checked</div></html>");
         } else {
-            pbarText.setText("<html><div style='text-align:center'>Round #" + round + " Fixing on RAIDA " + 
+            pbarText.setText("<html><div style='text-align:center'>Round #" + round + ", Index " + corner + "/" + Config.FIX_MAX_REGEXPS + ", Fixing on RAIDA " + 
                     fr + "<br>" + stc + " / " + tc + " CloudCoins Fixed</div></html>");
         }
         
@@ -1686,7 +1685,7 @@ public class AdvancedClient  {
 
                 sm.setActiveWalletObj(ps.srcWallet); 
                 
-                setRAIDAFixingProgressCoins(0, 0, 0, -1, 0);
+                setRAIDAFixingProgressCoins(0, 0, 0, -1, 0, 0);
                 sm.startFrackFixerServiceWithTickets(new FrackFixerOnPurposeCb(), ps.needExtensiveFixing, ps.srcWallet.getEmail(), ps.detectTickets);
 
             }
@@ -2558,7 +2557,7 @@ public class AdvancedClient  {
                             
                         }
     
-                        setRAIDAFixingProgressCoins(fr.totalRAIDAProcessed, fr.totalCoinsProcessed, fr.totalCoins, fr.fixingRAIDA, fr.round);
+                        setRAIDAFixingProgressCoins(fr.totalRAIDAProcessed, fr.totalCoinsProcessed, fr.totalCoins, fr.fixingRAIDA, fr.round, fr.corner);
                         return;
                     }
                 }, ps.needExtensiveFixing, email);
@@ -8545,12 +8544,13 @@ public class AdvancedClient  {
         
         passwordSrc.getTextField().setVisible(false);
         spText.setVisible(false);
-        
+        /*
         JLabel fname0 = new JLabel("Intensive fixing");
         final MyCheckBoxToggle cb1 = new MyCheckBoxToggle();
         cb1.setSelected(false);
         AppUI.getGBRow(subInnerCore, fname0, cb1.getCheckBox(), y, gridbag);
         y++;
+        */
         
         cboxfrom.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -8596,11 +8596,12 @@ public class AdvancedClient  {
                     return;
                 }
                 
-                               
+                /*             
                 if (cb1.isChecked()) 
                     ps.needExtensiveFixing = true;
                 else
                     ps.needExtensiveFixing = false;
+                */
                 
                 if (srcIdx == rv.idxs.length) {
                     ps.currentScreen = ProgramState.SCREEN_CHECKING_SKYWALLETS;
@@ -13403,7 +13404,7 @@ public class AdvancedClient  {
             if (fr.status == FrackFixerResult.STATUS_PROCESSING) {
                 wl.debug(ltag, "Processing coin");
                 //setRAIDAFixingProgress(fr.totalRAIDAProcessed, fr.totalFilesProcessed, fr.totalFiles, fr.fixingRAIDA, fr.round);
-                setRAIDAFixingProgressCoins(fr.totalRAIDAProcessed, fr.totalCoinsProcessed, fr.totalCoins, fr.fixingRAIDA, fr.round);
+                setRAIDAFixingProgressCoins(fr.totalRAIDAProcessed, fr.totalCoinsProcessed, fr.totalCoins, fr.fixingRAIDA, fr.round, fr.corner);
 		return;
             }
 
@@ -13493,7 +13494,7 @@ public class AdvancedClient  {
             }
 
             //setRAIDAFixingProgress(fr.totalRAIDAProcessed, fr.totalFilesProcessed, fr.totalFiles, fr.fixingRAIDA, fr.round);
-            setRAIDAFixingProgressCoins(fr.totalRAIDAProcessed, fr.totalCoinsProcessed, fr.totalCoins, fr.fixingRAIDA, fr.round);
+            setRAIDAFixingProgressCoins(fr.totalRAIDAProcessed, fr.totalCoinsProcessed, fr.totalCoins, fr.fixingRAIDA, fr.round, fr.corner);
         }
     }
     
