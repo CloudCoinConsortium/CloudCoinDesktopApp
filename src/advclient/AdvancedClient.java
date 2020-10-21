@@ -45,6 +45,8 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.awt.print.PrinterException;
 import java.io.File;
@@ -74,7 +76,7 @@ import org.json.JSONObject;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "4.0.5";
+    public static String version = "4.0.7";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -1636,6 +1638,43 @@ public class AdvancedClient  {
         pbarText.setText("<html><div style='text-align:center'>" + stc + " / " + tc + " CloudCoins Processed</div></html>");
         
         pbarText.repaint();
+    }
+    
+    
+    public void showCard() {
+        if (ps.cardWindowOpen)
+            return;
+        
+        JFrame frame = new JFrame("" + ps.currentWallet.getName());
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        JPanel panel = new JPanel();
+        AppUI.setBoxLayout(panel, false);
+        AppUI.noOpaque(panel);
+        AppUI.setMargin(panel, 10, 10, 0, 0);
+        Image img;
+        try {
+            img = ImageIO.read(new File(ps.currentWallet.getIDCoin().originalFile));
+        } catch (IOException e) {
+            wl.debug(ltag, "Failed to load image");
+            return;
+        }
+        //img = brand.scaleCardTemplate(img);
+        JLabel ix = new JLabel(new ImageIcon(img));
+        panel.add(ix);
+                
+        frame.getContentPane().add(BorderLayout.CENTER, panel);
+        frame.pack();
+        frame.setLocationByPlatform(true);
+        frame.setVisible(true);
+        frame.setResizable(false);
+        
+        ps.cardWindowOpen = true;
+        frame.addWindowListener(new WindowAdapter(){
+            public void windowClosing(WindowEvent e){
+                ps.cardWindowOpen = false;
+                    
+            }
+        });
     }
     
     public void showFixingfrackedScreen() {
@@ -10563,6 +10602,44 @@ public class AdvancedClient  {
                 }          
             });
         
+           
+            // Card Thumbnail
+            if (ps.currentWallet.isSkyWallet() && ps.currentWallet.getIDCoin().getType() == Config.TYPE_PNG) {
+                Image img;
+                try {
+                    img = ImageIO.read(brand.getImgSkyWalletBackgroundIcon());
+                } catch (IOException e) {
+                    wl.debug(ltag, "Failed to load image");
+                    return;
+                }
+                img = brand.scaleCardTemplate(img);
+                JLabel ix = new JLabel(new ImageIcon(img));
+            
+                JPanel wrpThumb = new JPanel();
+                AppUI.setBoxLayout(wrpThumb, false);
+                //AppUI.setSize(wrpThumb, 44, 56);
+                AppUI.setBackground(wrpThumb, brand.getTopMenuHoverColor());
+                AppUI.noOpaque(wrpThumb);
+            
+                wrpThumb.add(AppUI.vr(8));            
+                AppUI.setHandCursor(wrpThumb);                  
+                wrpThumb.add(ix);
+                wrpThumb.add(AppUI.vr(8));   
+                wrpThumb.addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mouseReleased(MouseEvent e) {
+                        showCard();
+                        //System.out.println("sssssssss");
+                    }   
+                });
+                        
+                c.insets = new Insets(0, 2, 0, 0);
+                c.anchor = GridBagConstraints.NORTH;
+                gridbag.setConstraints(wrpThumb, c);
+                wrp.add(wrpThumb);
+            }
+
+            
         }
         
         
@@ -12649,11 +12726,6 @@ public class AdvancedClient  {
                 
                 String fontfamily = labelName.getFont().getFamily();
 
-
-                //String aText = brand.getTerms();
-                //aText = aText.replaceAll("<span class=\"instructions\">.+</span>", "");
-                //tp.setContentType("text/html"); 
-                //tp.setText("<html><div style=' font-family:"+fontfamily+"; font-size: 12px'>" + aText + "</div></html>"); 
                 
                 c.insets = new Insets(0, 0, 0, 0);
                 c.gridx = GridBagConstraints.RELATIVE;
@@ -12662,9 +12734,7 @@ public class AdvancedClient  {
                 c.gridwidth = 2;
                 c.anchor = GridBagConstraints.CENTER;
                 c.gridheight = 1;
-                
-                //labelName.setText("<html><div style='text-align:center; width: 180px; font-size: 14px; font-family:' " + fontfamily+ "'>" + labelName.getText() + "</div></html>");
-                //labelName.setText("sfdsdsds.sfafafafafsas.xxx.sdsa");
+
                 JLabel l = new JLabel(labelName.getText(), JLabel.CENTER);
                 gridbag.setConstraints(l, c);
                 AppUI.setColor(l, brand.getMainTextColor());

@@ -2630,8 +2630,12 @@ public class AppCore {
         
     }
     
+    public static String getCardTemplateFileName() {
+        return AppCore.getTemplateDir() + File.separator + Config.CARD_TEMPLATE_NAME;   
+    }
+    
     public static boolean saveCard(String filename, String wallet, String data, String cardNumber, String pin, String ip) {
-        String templateFileName = AppCore.getTemplateDir() + File.separator + Config.CARD_TEMPLATE_NAME;        
+        String templateFileName = AppCore.getCardTemplateFileName();      
         byte[] bytes = AppCore.loadFileToBytes(templateFileName);
         if (bytes == null) {
             logger.error(ltag, "Failed to load template " + templateFileName);

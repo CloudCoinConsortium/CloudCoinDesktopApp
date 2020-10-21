@@ -149,6 +149,7 @@ public class ProgramState {
     
     String[] args;
 
+    boolean cardWindowOpen;
     
     String[][] trs;
     

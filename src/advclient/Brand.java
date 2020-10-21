@@ -368,7 +368,7 @@ public class Brand {
     }
     
     public String downloadFileNoSave(String purl) {
-        String url = Config.BRAND_URL + "/" + purl;
+        String url = Config.BRAND_URL + "/" + name + "/" + purl;
         DetectionAgent daFake = new DetectionAgent(RAIDA.TOTAL_RAIDA_COUNT * 10000, logger);
         daFake.setExactFullUrl(url);
 
@@ -502,7 +502,7 @@ public class Brand {
         br.text = "Checking for updates";
         cb.callback(br);
 
-        needVersion = downloadFileNoSave("versions/dark_currentversion.txt");
+        needVersion = downloadFileNoSave("dark_currentversion.txt");
         if (needVersion != null)
             needVersion = needVersion.trim().replaceAll("\r", "").replaceAll("\n", "");
         logger.debug(ltag, "Version available on the Server: " + needVersion);
@@ -1103,6 +1103,9 @@ public class Brand {
         return getScaledImage(img, 39, 42);
     }
     
+    public Image scaleCardTemplate(Image img) {
+        return getScaledImage(img, 100, 40);
+    }
     
     public Image scaleLogoText(Image img) {
         return getScaledImage(img, 135, 23);
