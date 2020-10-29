@@ -115,38 +115,18 @@ public class Grader extends Servant {
 
     public void gradeCC(CloudCoin cc, String fsource) {
         String dstFolder;
-        int untried, counterfeit, passed, error, noresponse;
+        cc.countResponses();
+        logger.debug(ltag, "cc="+cc.sn+ " u="+cc.st_untried + " c=" + cc.st_failed + " passed="+ cc.st_passed+ " e="+ cc.st_error + " n="+ cc.st_noresponse);
 
-        untried = counterfeit = passed = error = noresponse = 0;       
-        for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
-            switch (cc.getDetectStatus(i)) {
-                case CloudCoin.STATUS_NORESPONSE:
-                    noresponse++;
-                    break;
-                case CloudCoin.STATUS_ERROR:
-                    error++;
-                    break;
-                case CloudCoin.STATUS_FAIL:
-                    counterfeit++;
-                    break;
-                case CloudCoin.STATUS_UNTRIED:
-                    untried++;
-                    break;
-                case CloudCoin.STATUS_PASS:
-                    passed++;
-                    break;
-            }
-        }
-
-        logger.debug(ltag, "cc="+cc.sn+ " u="+untried+ " c=" + counterfeit + " passed="+passed+ " e="+error + " n="+ noresponse);
+        
         boolean includePans = false;
         String ccFile;
 
         String dst = "";
         
         
-        if (passed >= Config.MIN_PASSED_NUM_TO_BE_AUTHENTIC) {
-            if (counterfeit != 0) {
+        if (cc.isAuthentic()) {
+            if (cc.isFullyAuthentic()) {
                 logger.debug(ltag, "Coin " + cc.sn + " is fracked");
 
                 gr.totalFracked++;
@@ -155,7 +135,7 @@ public class Grader extends Servant {
                 if (fsource != null) 
                     dst += " from " + fsource;
                     
-                if (noresponse > 0) {
+                if (cc.hasNoResponses()) {
                     logger.debug(ltag, "Has lost. Include pans");
                     includePans = true;
                 }
@@ -175,7 +155,7 @@ public class Grader extends Servant {
 
             cc.calcExpirationDate();
             ccFile = AppCore.getUserDir(dstFolder, user) + File.separator + cc.getFileName();
-        } else if (counterfeit >= Config.MAX_FAILED_NUM_TO_BE_COUNTERFEIT) {
+        } else if (cc.isCounterfeit()) {
             logger.debug(ltag, "Coin " + cc.sn + " is counterfeit");
 
             gr.totalCounterfeit++;
@@ -187,35 +167,16 @@ public class Grader extends Servant {
             addCoinToReceipt(cc, "counterfeit", dst);
         } else {
             logger.debug(ltag, "Coin " + cc.sn + " is lost");
-            /*
-            if (counterfeit > 0) {
-                logger.debug(ltag, "Coin has failed responses. Will try to fix it in Fracked");
-                gr.totalFracked++;
-                gr.totalFrackedValue += cc.getDenomination();
-                dst = dstFolder = Config.DIR_FRACKED;
-                if (fsource != null) 
-                    dst += " from " + fsource;
-                    
-                if (noresponse > 0) {
-                    logger.debug(ltag, "Has lost. Include pans");
-                    includePans = true;
-                }
-                
-                addCoinToReceipt(cc, "fracked", dst);
-            } else {*/
-                logger.debug(ltag, "Coin is lost");
+            logger.debug(ltag, "Coin is lost");
 
-                gr.totalLost++;
-                dst = dstFolder = Config.DIR_LOST;
-                if (fsource != null) 
-                    dst += " from " + fsource;
+            gr.totalLost++;
+            dst = dstFolder = Config.DIR_LOST;
+            if (fsource != null) 
+                dst += " from " + fsource;
 
-                gr.totalLostValue += cc.getDenomination();
-                addCoinToReceipt(cc, "lost", dst);
-                includePans = true;
-            //}
-
-
+            gr.totalLostValue += cc.getDenomination();
+            addCoinToReceipt(cc, "lost", dst);
+            includePans = true;
         }
 
         ccFile = AppCore.getUserDir(dstFolder, user) + File.separator + cc.getFileName();

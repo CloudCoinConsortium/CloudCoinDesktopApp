@@ -1848,11 +1848,7 @@ public class Servant {
     
     public void fixTransferReal(ArrayList<Integer>[] rarr) {
         logger.debug(ltag, "Fixing Transfer");
-        
-
         int i;
-
-
         int cnt = 0;
         for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
             ArrayList<Integer> r = rarr[i];
@@ -1890,18 +1886,6 @@ public class Servant {
         }
         
         raida.queryNoWait(requests, rlist);      
-        /*
-        if (results == null) {
-            logger.error(ltag, "Failed to query Fix tranfer");
-            return;
-        }
-        
-        logger.debug(ltag, "Fix transfer done");
-        for (i = 0; i < rlist.length; i++) {
-            int raidaIdx = rlist[i];
-            logger.info(ltag, "i=" + raidaIdx + " r="+results[i]);
-        }
-*/
     }
     
     protected void initRarr() {

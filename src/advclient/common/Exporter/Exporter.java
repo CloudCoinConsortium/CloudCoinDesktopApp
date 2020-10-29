@@ -1,6 +1,7 @@
 package global.cloudcoin.ccbank.Exporter;
 
 
+import advclient.AppUI;
 import org.json.JSONException;
 
 import java.io.File;
@@ -13,6 +14,17 @@ import global.cloudcoin.ccbank.core.Config;
 import global.cloudcoin.ccbank.core.GLogger;
 import global.cloudcoin.ccbank.core.RAIDA;
 import global.cloudcoin.ccbank.core.Servant;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Properties;
+import javax.imageio.ImageIO;
 
 public class Exporter extends Servant {
     String ltag = "Exporter";
@@ -277,6 +289,28 @@ public class Exporter extends Servant {
                 logger.error(ltag, "Failed to load template");
                 return false;
             }
+            
+            logger.info(ltag, "writing text");
+            
+            /*
+            bytes = writeText(cc, bytes);
+            if (bytes == null) {
+                logger.error(ltag, "Failed to write text on the image");
+                return false;
+            }
+            
+           
+            
+            fileName = cc.getDenomination() + "." + cc.sn + ".CloudCoin." + tag + ".jpeg";
+            fileName = dir + File.separator + fileName;
+            if (!AppCore.saveFileFromBytes(fileName, bytes)) {
+                logger.error(ltag, "Failed to write file");
+                return false;
+            }
+            
+            if (1==1)
+                continue;
+            */
 
             logger.info(ltag, "Loaded: " + bytes.length);
 
@@ -312,6 +346,14 @@ public class Exporter extends Servant {
 
             fileName = cc.getDenomination() + "." + cc.sn + ".CloudCoin." + tag + ".jpeg";
             fileName = dir + File.separator + fileName;
+            
+            /*
+            logger.info(ltag, "writing text");
+            bytes = writeText(cc, bytes);
+            if (bytes == null) {
+                logger.error(ltag, "Failed to write text on the image");
+                return false;
+            }*/
 
             logger.info(ltag, "saving bytes " + bytes.length);
             if (!AppCore.saveFileFromBytes(fileName, bytes)) {
@@ -325,7 +367,53 @@ public class Exporter extends Servant {
 
         return true;
     }
+    
 
+
+    private byte[] writeText(CloudCoin cc, byte[] bytes) {
+        ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+        BufferedImage bi;
+        try {
+            bi = ImageIO.read(bais);
+        } catch (IOException e) {
+            logger.debug(ltag, "Failed to convert bytes to Image: " + e.getMessage());
+            return null;
+        }
+        
+        int fontSize = 20;
+        String fontFamily = "Arial Black";
+        String fontColor = "FFFFFF";
+        
+        int x, y;
+        x = 20;
+        y = 42;
+
+        logger.debug(ltag, "Font " + fontFamily + " " + fontSize + ", " + fontColor + " position: " + x + "," + y);
+        
+        
+        Color color = AppCore.hex2Rgb("#" + fontColor);
+        Font font = new Font(fontFamily, Font.PLAIN, fontSize);
+        String text = cc.sn + " of 16777216";
+       
+        Graphics graphics = bi.getGraphics();
+        //graphics.setColor(Color.LIGHT_GRAY);
+        //graphics.fillRect(0, 0, 200, 50);
+        graphics.setColor(color);
+        graphics.setFont(font);
+        Graphics2D g2d = (Graphics2D) graphics;
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        graphics.drawString(text, x, y);
+        
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try {
+            ImageIO.write(bi, "JPEG", baos);
+        } catch (IOException e) {
+            logger.debug(ltag, "Failed to convert Image to bytes: " + e.getMessage());
+            return null;
+        }
+        
+        return baos.toByteArray();
+    }
     
     private boolean exportPng(String dir, String tag) {
         StringBuilder sb = new StringBuilder();

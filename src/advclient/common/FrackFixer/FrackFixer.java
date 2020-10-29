@@ -27,6 +27,8 @@ public class FrackFixer extends Servant {
     private int[][] trustedServers;
     private int[][][] trustedTriads;
     
+    private boolean[] localFailedRaidas;
+    
     HashMap<Integer, String[]> tickets;
 
     public FrackFixer(String rootDir, GLogger logger) {
@@ -187,6 +189,15 @@ public class FrackFixer extends Servant {
                 trustedTriads[i][j++] = new int[] { 2, 3, 5, 6, 7 };
                 trustedTriads[i][j++] = new int[] { 2, 4, 5, 6, 7 };
                 trustedTriads[i][j++] = new int[] { 3, 4, 5, 6, 7 };
+                
+                /*
+                for (int e = 0; e < trustedTriads.length; e++) {
+                    for (int z=0; z<trustedTriads[])
+                }
+                
+                System.exit(1);
+                */
+                
                 /*
                 // Corners
                 trustedTriads[i][j++] = new int[] { 0, 3, 5, 6, 7 };
@@ -623,7 +634,6 @@ public class FrackFixer extends Servant {
             first = false;
         }
 
-        //for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
         for (i = 0; i < rlist.length; i++) {
             posts[i] = sbs[i].toString();
         }
@@ -722,13 +732,21 @@ public class FrackFixer extends Servant {
         return;
     }
     
+    
+    private void initLocalFailedRaidaArray() {
+        this.localFailedRaidas = new boolean[RAIDA.TOTAL_RAIDA_COUNT];
+        for (int i = 0; i < this.localFailedRaidas.length; i++) {
+            this.localFailedRaidas[i] = false;
+        }
+        
+    }
+    
     private void doRealFix(int raidaIdx, ArrayList<CloudCoin> ccs, String email) {
         int corner;
         
         boolean haveTickets = tickets == null ? false : true;
-        //processLossfix(ccs);   
-        
-        
+        initLocalFailedRaidaArray();
+                
         logger.debug(ltag, "Fixing " + ccs.size() + " coins on the RAIDA" + raidaIdx + " have tickets " + haveTickets);
         for (corner = 0; corner < Config.FIX_MAX_REGEXPS; corner++) {
             FrackFixerResult nfr = new FrackFixerResult();
@@ -1142,6 +1160,9 @@ public class FrackFixer extends Servant {
         int[] raidaFix = new int[1];
         raidaFix[0] = raidaIdx;
         
+
+        
+        
         int[] fivetouches = trustedTriads[raidaIdx][corner];
         if (fivetouches == null) {
             logger.error(ltag, "five touches in index " + corner + " have been visited already. Skipping them");
@@ -1166,6 +1187,11 @@ public class FrackFixer extends Servant {
             logger.debug(ltag, "Checking neighbour: " + neighIdx);
             if (raida.isFailed(neighIdx)) {
                 logger.error(ltag, "Neighbour " + neighIdx + " is unavailable. Skipping it");
+                return false;
+            }
+            
+            if (this.localFailedRaidas[neighIdx]) {
+                logger.debug(ltag, "We will not try to get tickets from raida " + neighIdx + " because it has already returned 'allfail' for this set of coins");
                 return false;
             }
 
@@ -1259,7 +1285,10 @@ public class FrackFixer extends Servant {
                 setTickets(ccs, rIdx, ars.ticket, tickets);
                 continue;
             } else if (ars.status.equals("allfail")) {
-                logger.debug(ltag, "allfail");
+                logger.debug(ltag, "allfail. We will mark raida " + rIdx + " as 'f' in the pownstring of all the coins in the set");
+                setCoinStatus(ccs, rIdx, CloudCoin.STATUS_FAIL);
+                logger.debug(ltag, "Will mark raida " + rIdx + " as failed for this set of coins");
+                this.localFailedRaidas[rIdx] = true;
                 return false;
             } else if (ars.status.equals("mixed")) {
                 logger.debug(ltag, "mixed " + ars.message);
@@ -1275,7 +1304,8 @@ public class FrackFixer extends Servant {
                     if (strStatus.equals(Config.REQUEST_STATUS_PASS)) {
                         setTicket(ccs.get(j), rIdx, ars.ticket, tickets);
                     } else if (strStatus.equals(Config.REQUEST_STATUS_FAIL)) {
-                        
+                        logger.debug(ltag, "Coin " + ccs.get(j).sn + " was counterfeit in the set on raida " + rIdx + ". Mark it as 'f'");
+                        ccs.get(j).setDetectStatus(rIdx, CloudCoin.STATUS_FAIL);
                     } else {
 
                     }
@@ -1306,21 +1336,21 @@ public class FrackFixer extends Servant {
             return false;
         }
         
-        if (tickets == null) {
-            logger.debug(ltag, "We need tickets. Calling multi_detect");
-            if (!receiveTickets(raidaIdx, ccs, corner)) {
-                logger.error(ltag, "Failed to get tickets");
-                return false;
-            }
-        }
-        
         int[] fivetouches = trustedTriads[raidaIdx][corner];
         if (fivetouches == null) {
             logger.error(ltag, "five touches in index " + corner + " have been visited already. Skipping them");
             return false;
         }
-
         
+        if (tickets == null) {
+            logger.debug(ltag, "We need tickets. Calling multi_detect");
+            if (!receiveTickets(raidaIdx, ccs, corner)) {
+                logger.error(ltag, "Failed to get tickets");
+                tickets = null;
+                return false;
+            }
+        }
+
         String regexString  = getRegexString(fivetouches);
         logger.debug(ltag, "Regex string " + regexString);
         
@@ -1336,6 +1366,10 @@ public class FrackFixer extends Servant {
         int cIdx = trustedServers[raidaIdx][fivetouches[2]];
         int dIdx = trustedServers[raidaIdx][fivetouches[3]];
         int eIdx = trustedServers[raidaIdx][fivetouches[4]];
+        
+        
+        //System.out.println("r= " + raidaIdx + " Fixing in index " + corner + " (" + aIdx + ", " + bIdx + ", " + cIdx + ", " + dIdx + ", " + eIdx + ")");
+        //System.exit(1);
         
         int trRaidaIdx = aIdx;
 
@@ -1364,6 +1398,7 @@ public class FrackFixer extends Servant {
         int total = mh.size();
         if (total == 0) {
             logger.debug(ltag, "Nothing to fix");
+            tickets = null;
             return true;
         }
             

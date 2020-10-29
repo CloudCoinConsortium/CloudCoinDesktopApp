@@ -76,7 +76,7 @@ import org.json.JSONObject;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "4.0.7";
+    public static String version = "4.0.9";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -875,11 +875,6 @@ public class AdvancedClient  {
                         
                     }
                     
-                        //System.out.println("w="+ps.currentWallet.getName());
-                        
-                  
-                    
-                     
                     AppCore.writeConfig();
                     
                     EventQueue.invokeLater(new Runnable() {
@@ -1161,7 +1156,7 @@ public class AdvancedClient  {
             } else {
                 setActiveWallet(getPrimaryWallet());
             }
-            //System.out.println("w="+ps.currentWallet.getName());
+
             ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
         }        
         
@@ -1176,8 +1171,8 @@ public class AdvancedClient  {
     public void showScreen() {
         wl.debug(ltag, "SCREEN " + ps.currentScreen + ": " + ps.toString());
 
-       // showSkyHealthCheckDoneScreen();
-        //if (1==1)return;
+     //   showSkyHealthCheckDoneScreen();
+       // if (1==1)return;
         //ps.currentScreen = ProgramState.SCREEN_DEPOSIT;
        // showNewVersionScreen();if(1==1)return;
         clear();   
@@ -1442,6 +1437,9 @@ public class AdvancedClient  {
             case ProgramState.SCREEN_SKY_HEALTH_CHECK_DONE:
                 showSkyHealthCheckDoneScreen();
                 break;
+            case ProgramState.SCREEN_FIX_TRANSFER:
+                showFixTransferScreen();
+                break;
                 
         }
         
@@ -1613,11 +1611,9 @@ public class AdvancedClient  {
         
         
         String stc = AppCore.formatNumber(totalCoinsProcessed);
-        String tc = AppCore.formatNumber(totalCoins);
-        
+        String tc = AppCore.formatNumber(totalCoins);        
         String fr = fixingRAIDA == -1 ? "" : "" + fixingRAIDA;
         
-        //System.out.println("called r " + round + " c=" + corner + " raida=" + fr + " stc="+stc + "/" + tc + " raidaProcesed="+raidaProcessed);
         if (round == 0) {
             pbarText.setText("<html><div style='text-align:center'>Checking Limbo Coins<br>" + stc + " / " + tc + " CloudCoins Checked</div></html>");
         } else {
@@ -2622,10 +2618,7 @@ public class AdvancedClient  {
         //JPanel subInnerCore = getPanel("Sent Coins");   
         JPanel rightPanel = getRightPanel();
         
-        JLabel xtrTitle = new JLabel("Health Check Complete");
-
-
-       
+        JLabel xtrTitle = new JLabel("Health Check Complete");       
         AppUI.alignCenter(xtrTitle);
         AppUI.alignTop(xtrTitle);
         AppUI.setFont(xtrTitle, 30);
@@ -2633,21 +2626,25 @@ public class AdvancedClient  {
  
 
         rightPanel.add(xtrTitle);
-        rightPanel.add(AppUI.hr(22));
+        rightPanel.add(AppUI.hr(18));
         
+
+        JLabel fname = new JLabel("You can click FIX to fix the Wallet. You can also click on a serial number to fix it");  
+        AppUI.setColor(fname, brand.getMainTextColor());
+        AppUI.setFont(fname, 14);     
+        AppUI.alignCenter(fname);
+        rightPanel.add(fname);
+        rightPanel.add(AppUI.hr(18));
 
 
         //GridBagLayout gridbag = new GridBagLayout();
         //subInnerCore.setLayout(gridbag);
-               
-        
-        
+
         int tsize = ps.hcSNs.size() + 2;
         
 
 
-        String[][] data = new String[tsize][RAIDA.TOTAL_RAIDA_COUNT + 3];
-        
+        String[][] data = new String[tsize][RAIDA.TOTAL_RAIDA_COUNT + 3];        
         String[] headers = new String[RAIDA.TOTAL_RAIDA_COUNT + 3];
         headers[0] = "-";
         for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT + 2; i++) 
@@ -2690,11 +2687,9 @@ public class AdvancedClient  {
             
             data[ii][0] = "#" + sn ;
             for (int j = 0; j < RAIDA.TOTAL_RAIDA_COUNT; j++) {
-                int rj = (RAIDA.TOTAL_RAIDA_COUNT - j - 1);
-                //int shift = v >> j;
+                //int rj = (RAIDA.TOTAL_RAIDA_COUNT - j - 1);
                 
-                //System.out.println("sh="+shift+ " vr=" + (v & shift) + " v="+v);
-                data[ii][j + 1] = (((v >> rj) & 1) > 0) ? "+" : "-" ;
+                data[ii][j + 1] = (((v >> j) & 1) > 0) ? "+" : "-" ;
             }
             
             boolean found = false;
@@ -2712,8 +2707,6 @@ public class AdvancedClient  {
                 data[ii][RAIDA.TOTAL_RAIDA_COUNT + 1] = "-";
             }
             
-            //System.out.println(sn + " = " + v);
-            //it.remove(); // avoids a ConcurrentModificationException
             ii++;
         }
         
@@ -2753,6 +2746,9 @@ public class AdvancedClient  {
                             AppUI.setBackground(lbl, Color.RED);
                         }                   
                     }
+                } else if (column == 0 && row >= 2) {
+
+                    
                 }
               /*  
                 AppUI.setBackground(lbl, Color.RED);
@@ -2762,6 +2758,7 @@ public class AdvancedClient  {
 
                 AppUI.setSemiBoldFont(lbl, 9);
                 AppUI.setMargin(lbl, 1);
+                 AppUI.setHandCursor(lbl);
                 if (column == 0)
                     lbl.setHorizontalAlignment(SwingConstants.LEFT);
                 else
@@ -2771,22 +2768,105 @@ public class AdvancedClient  {
             }
         };
         
-        
-        final JTable table = new JTable();
-        final JScrollPane scrollPane = AppUI.setupHCTable(table, headers, data, r);
-        AppUI.setSize(scrollPane, 920, 465);
- 
-      
-       // AppUI.getGBRow(subInnerCore, null, scrollPane, y, gridbag);
-        //y++; 
-        
-        table.getColumnModel().getColumn(0).setPreferredWidth(240);
-        //table.getColumnModel().getColumn(1).setPreferredWidth(160);
-        //table.getColumnModel().getColumn(5).setPreferredWidth(120);
-      //  table.getColumnModel().getColumn(4).setPreferredWidth(140);
-      //  table.getColumnModel().getColumn(4).setPreferredWidth(10);
+        int[] srowcol = new int[2];
+        srowcol[0] = -1;
+        srowcol[1] = -1;
 
- 
+        
+        final JTable table = new JTable() {
+            public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
+                //System.out.println("xxx="+row+","+column);
+                Component c = super.prepareRenderer(renderer, row, column);
+                Color color = brand.getPanelBackgroundColor();
+                
+                if (column != 0) {
+                    return c;
+                }
+                
+                if (row == 1 || row == 0) {                    
+                    return c;
+                }
+                
+                if (srowcol[0] == row && srowcol[1] == column) {
+                    c.setBackground(brand.getProgressbarColor());
+                } else {
+                    c.setBackground(color);
+                }
+
+                return c;
+            }
+            
+        };
+        
+        table.addMouseMotionListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseMoved(java.awt.event.MouseEvent evt) {
+                JTable table = (JTable) evt.getComponent();
+                int row = table.rowAtPoint(evt.getPoint());
+                int col = table.columnAtPoint(evt.getPoint());
+                
+
+                if (col == 0 && row >= 2) {
+                    srowcol[0] = row;
+                    srowcol[1] = col;
+                    AppUI.setHandCursor(table);
+                    table.repaint();
+                } else {
+                    AppUI.setDefaultCursor(table);
+                }
+            }
+            
+
+        });
+            
+            
+        table.addMouseListener(new java.awt.event.MouseAdapter() {    
+            @Override
+            public void mouseReleased(java.awt.event.MouseEvent evt) {
+                int row = table.rowAtPoint(evt.getPoint());
+                int col = table.columnAtPoint(evt.getPoint());
+                JTable table = (JTable) evt.getComponent();
+                if (row >= 2 && col == 0) {
+                    String sn = (String) table.getModel().getValueAt(row, col);
+                    sn = sn.substring(1);
+
+                    ps.hcSNs = new HashMap<String, Integer>();
+                    for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+                        String key = sn;
+
+                        if (!ps.hcSNs.containsKey(key)) {
+                            ps.hcSNs.put(key, 0);
+                        }
+            
+                        String v = (String) table.getModel().getValueAt(row, i + 1);
+                        if (!v.equals("+"))
+                            continue;
+                        
+                        int val = (int) ps.hcSNs.get(key);
+                        int shift = 1 << i;
+                        val |= shift;
+                        ps.hcSNs.put(key, val);
+                        
+                        System.out.println("raida " + i + ", v="+v + " val="+val);
+                    }
+                }
+                
+                ps.currentScreen = ProgramState.SCREEN_FIX_TRANSFER;
+                showScreen();
+            }
+            
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                srowcol[0] = srowcol[1] = -1;
+                table.repaint();
+            }
+        });
+        
+        
+        final JScrollPane scrollPane = AppUI.setupHCTable(table, headers, data, r);
+        AppUI.setSize(scrollPane, 920, 365);
+        table.getColumnModel().getColumn(0).setPreferredWidth(240);
+
         rightPanel.add(scrollPane);
  
         JPanel subInnerCore = new JPanel();
@@ -2799,26 +2879,17 @@ public class AdvancedClient  {
         
         int y = 0;
         
-        
-        
-        
-        
-        
         AppUI.GBPad(subInnerCore, y, gridbag);        
         y++;
         
-        AppUI.getTwoButtonPanel(subInnerCore, "", "Print", null, new ActionListener() {
+        AppUI.getTwoButtonPanel(subInnerCore, "", "Fix", null, new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                    try {
-                        table.print();
-                    } catch (PrinterException pe) {
-                        System.out.println("Failed to print");
-                    }
-                }
-            }, y, gridbag);
-             
-        resetState();
-     
+                ps.currentScreen = ProgramState.SCREEN_FIX_TRANSFER;
+                showScreen();
+
+            }
+        }, y, gridbag);
+                  
     }
     
     public void showDoingSkyHealthCheckScreen() {
@@ -3125,8 +3196,6 @@ public class AdvancedClient  {
                         }
                         
                         ps.sendType = ProgramState.SEND_TYPE_FOLDER;
-                        //sm.setActiveWalletObj(ps.srcWallet);
-                        System.out.println("go");
                         sm.startExporterService(ps.exportType, rr.files, ps.selectedEnvelope, ps.chosenFile, new ExporterCb());
                         
                     }
@@ -3879,6 +3948,59 @@ public class AdvancedClient  {
        
     }
     
+    public void showFixTransferScreen() {
+        boolean isError = !ps.errText.equals("");
+        JPanel subInnerCore;
+        
+        if (isError) {
+            showError();
+            return;
+        }
+             
+        int y = 0;
+        JLabel fname;
+
+        subInnerCore = getPanel("Fix Transfer has been started");                
+        GridBagLayout gridbag = new GridBagLayout();
+        subInnerCore.setLayout(gridbag);
+    
+        fname = AppUI.wrapDiv("This is an asynchronous process that is running in the background now. Please wait for a while and run the Health Check again");  
+        AppUI.getGBRow(subInnerCore, null, fname, y, gridbag);
+        y++;     
+                   
+        
+        AppUI.GBPad(subInnerCore, y, gridbag);        
+        y++;
+        /*
+        Iterator it = ps.hcSNs.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry)it.next();
+            String sn = (String) pair.getKey();
+            int v = (int) pair.getValue();
+            
+            System.out.println("sn="+sn+",v="+v);
+        }*/
+        
+        Thread t = new Thread(new Runnable() {
+            public void run() {   
+                sm.startFixTransferService(ps.hcSNs, null);
+            }
+        });
+        
+        t.start();
+        
+        
+        AppUI.getTwoButtonPanel(subInnerCore, "", "Continue", null, new ActionListener() {
+            public void actionPerformed(ActionEvent e) {              
+                setActiveWallet(ps.currentWallet);
+                ps.sendType = 0;
+                ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
+                showScreen();
+            }
+        }, y, gridbag); 
+        
+    }
+    
     public void showBackupKeysDone() {
         boolean isError = !ps.errText.equals("");
         JPanel subInnerCore;
@@ -4187,6 +4309,13 @@ public class AdvancedClient  {
         String totalFailedValue = AppCore.formatNumber(ps.hcCounterfeit);
         String totalFrackedValue = AppCore.formatNumber(ps.hcFracked);
 
+        String fdir = AppCore.getUserDir(Config.DIR_FRACKED, ps.currentWallet.getName());
+        CloudCoin[] ccs = AppCore.getCoinsInDir(fdir);
+        int ftotal = 0;
+        for (int i = 0; i < ccs.length; i++) 
+            ftotal += ccs[i].getDenomination();
+        
+        String totalSkippedValue = AppCore.formatNumber(ftotal);
         
         /*
         fname = AppUI.wrapDiv("Deposited <b>" +  total +  " CloudCoins</b> to <b>" + ps.dstWallet.getName() + " </b>");  
@@ -4209,6 +4338,11 @@ public class AdvancedClient  {
         AppUI.getGBRow(subInnerCore, fname, value, y, gridbag);
         y++; 
 
+        fname = new JLabel("Total Skipped Coins (already Fracked):");
+        value = new JLabel(totalSkippedValue);
+        AppUI.getGBRow(subInnerCore, fname, value, y, gridbag);
+        y++; 
+        
         AppUI.GBPad(subInnerCore, y, gridbag);        
         y++;
         
@@ -5122,7 +5256,7 @@ public class AdvancedClient  {
                     } else {
                         setActiveWallet(getPrimaryWallet());
                     }
-                    //System.out.println("w="+ps.currentWallet.getName());
+
                     ps.currentScreen = ProgramState.SCREEN_SHOW_TRANSACTIONS;
                     showScreen();     
                 }
@@ -9723,26 +9857,19 @@ public class AdvancedClient  {
         
         GridBagLayout gridbag = new GridBagLayout();
         subInnerCore.setLayout(gridbag);
-        
-        
-        
-        
-        
-        
-        
-        
+
         AppUI.GBPad(subInnerCore, y, gridbag);        
         y++;
         
         AppUI.getTwoButtonPanel(subInnerCore, "", "Print", null, new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                    try {
-                        table.print();
-                    } catch (PrinterException pe) {
-                        System.out.println("Failed to print");
-                    }
+                try {
+                    table.print();
+                } catch (PrinterException pe) {
+                    System.out.println("Failed to print");
                 }
-            }, y, gridbag);
+            }                
+        }, y, gridbag);
              
         resetState();
     }
@@ -11027,7 +11154,7 @@ public class AdvancedClient  {
                     thlabel.setText("Skywallet Contents ");
                     if (envelopes == null || envelopes.size() == 0) {
                         if (w.isUpdated()) {
-                            thlabel.setText("No Coins");
+                            thlabel.setText("No Contents");
                         } else {
                             thlabel.setText("");
                         }

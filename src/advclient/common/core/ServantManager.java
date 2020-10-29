@@ -29,6 +29,7 @@ import global.cloudcoin.ccbank.Transfer.Transfer;
 import global.cloudcoin.ccbank.Transfer.TransferResult;
 import global.cloudcoin.ccbank.Emailer.Emailer;
 import global.cloudcoin.ccbank.Emailer.EmailerResult;
+import global.cloudcoin.ccbank.FixTransfer.FixTransfer;
 import global.cloudcoin.ccbank.Recoverer.Recoverer;
 import global.cloudcoin.ccbank.ShowCoins.ShowCoins;
 import global.cloudcoin.ccbank.ShowEnvelopeCoins.ShowEnvelopeCoins;
@@ -149,7 +150,8 @@ public class ServantManager {
                 "Backupper",
                 "Transfer",
                 "Emailer",
-                "Recoverer"
+                "Recoverer",
+                "FixTransfer"
         }, AppCore.getRootPath() + File.separator + user, logger);
    
 
@@ -309,6 +311,15 @@ public class ServantManager {
         FrackFixer ff = (FrackFixer) sr.getServant("FrackFixer");
 	ff.launch(cb, needExtensive, email, null);
     }
+    
+    public void startFixTransferService(HashMap<String, Integer> hm, CallbackInterface cb) {
+        if (sr.isRunning("FixTransfer"))
+            return;
+        
+        FixTransfer ft = (FixTransfer) sr.getServant("FixTransfer");
+	ft.launch(hm, cb);
+    }
+    
     
     public void startFrackFixerServiceWithTickets(CallbackInterface cb, boolean needExtensive, String email, HashMap<Integer, String[]> tickets) {
         if (sr.isRunning("FrackFixer"))

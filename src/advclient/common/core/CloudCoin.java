@@ -38,6 +38,8 @@ public class CloudCoin {
 
     int sideSize;
     
+    public int st_passed, st_failed, st_error, st_untried, st_noresponse;
+    
     int type;
     
     public void initCommon() {
@@ -571,4 +573,45 @@ public class CloudCoin {
         this.setDetectStatusFromPownString();
     }
     
+    
+    
+    public void countResponses() {
+        for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+            switch (getDetectStatus(i)) {
+                case CloudCoin.STATUS_NORESPONSE:
+                    st_noresponse++;
+                    break;
+                case CloudCoin.STATUS_ERROR:
+                    st_error++;
+                    break;
+                case CloudCoin.STATUS_FAIL:
+                    st_failed++;
+                    break;
+                case CloudCoin.STATUS_UNTRIED:
+                    st_untried++;
+                    break;
+                case CloudCoin.STATUS_PASS:
+                    st_passed++;
+                    break;
+            }
+        } 
+        
+        
+    }
+    
+    public boolean isAuthentic() {
+        return st_passed >= Config.MIN_PASSED_NUM_TO_BE_AUTHENTIC;
+    }
+    
+    public boolean isFullyAuthentic() {  
+        return isAuthentic() && st_failed != 0;
+    }
+    
+    public boolean isCounterfeit() {
+        return st_failed >= Config.MAX_FAILED_NUM_TO_BE_COUNTERFEIT;
+    }
+    
+    public boolean hasNoResponses() {
+        return st_noresponse > 0;
+    }
 }

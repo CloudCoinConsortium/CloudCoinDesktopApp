@@ -107,6 +107,7 @@ public class ProgramState {
     final public static int SCREEN_WITHDRAW_ENVELOPE_DONE = 87;
     final public static int SCREEN_DOING_SKY_HEALTH_CHECK = 88;
     final public static int SCREEN_SKY_HEALTH_CHECK_DONE = 89;
+    final public static int SCREEN_FIX_TRANSFER = 90;
     
     final static int CB_STATE_INIT = 1;
     final static int CB_STATE_RUNNING = 2;

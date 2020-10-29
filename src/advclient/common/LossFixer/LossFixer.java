@@ -355,20 +355,12 @@ public class LossFixer extends Servant {
         for (CloudCoin cc : ccs) {
             logger.debug(ltag, "pre cc " + cc.sn + " pown " + cc.getPownString());
             cc.setPownStringFromDetectStatus();
+            cc.countResponses();
+            logger.debug(ltag, "cc="+cc.sn+ " u="+cc.st_untried + " c=" + cc.st_failed + " passed="+ cc.st_passed+ " e="+ cc.st_error + " n="+ cc.st_noresponse);
             logger.debug(ltag, "post cc " + cc.sn + " pown " + cc.getPownString());
             
-            int failed = 0;
-            for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
-                int status = cc.getDetectStatus(i);
-                
-                if (status == CloudCoin.STATUS_PASS)
-                    continue;
-                
-                failed++;
-            }
-            
-            if (cc.isSentFixable()) {
-                if (failed == 0) {
+            if (cc.isAuthentic()) {
+                if (cc.isFullyAuthentic()) {
                     moveCoin(cc);
                     logger.debug(ltag, "Moving to bank: " + cc.sn);
                     lr.recovered++;
@@ -376,26 +368,26 @@ public class LossFixer extends Servant {
                     addCoinToReceipt(cc, "bank", Config.DIR_BANK);
                     
                 } else {
-                    logger.debug(ltag, "Coin " + cc.sn + " move to fracked " + failed);
+                    logger.debug(ltag, "Coin " + cc.sn + " move to fracked ");
                     moveCoinToFracked(cc);
                     lr.recovered++;
                     lr.recoveredValue += cc.getDenomination();
-                    addCoinToReceipt(cc, "fracked", Config.DIR_FRACKED);
-                    
+                    addCoinToReceipt(cc, "fracked", Config.DIR_FRACKED);                    
                 }
+            } else if (cc.isCounterfeit()) {
+                logger.debug(ltag, "Coin " + cc.sn + " can't be restored");
+                AppCore.moveToTrash(cc.originalFile, user);
+                //addCoinToReceipt(cc, "counterfeit", Config.DIR_COUNTERFEIT);
+                lr.failed++;                 
             } else {
-                if (!cc.canbeRecoveredFromLost()) {
-                    logger.debug(ltag, "Coin " + cc.sn + " can't be restored: " + failed);
-                    //AppCore.moveToTrash(cc.originalFile, user);
-                    //addCoinToReceipt(cc, "counterfeit", Config.DIR_COUNTERFEIT);
-                    lr.failed++;                    
-                } else {
-                    logger.debug(ltag, "Coin " + cc.sn + " will stay with us for a while");
+                if (cc.hasNoResponses()) {
+                    logger.debug(ltag, "The coin has noresponses. Will give it another chance and not move it anyware");
                     continue;
                 }
-            }
-
-            
+                
+                logger.debug(ltag, "The coin is in a weird state. It is neither counterfeit nor authentic. Will leave it here");
+                continue;
+            }           
         }
     }
     
@@ -427,4 +419,6 @@ public class LossFixer extends Servant {
 
         AppCore.deleteFile(cc.originalFile);
     }
+    
+
 }
