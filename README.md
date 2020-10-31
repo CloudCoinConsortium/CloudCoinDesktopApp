@@ -1,13 +1,13 @@
 ## CloudCoin Wallet with RPC
 
-This is the code for the CloudCoin's main desktop software. 
+This is the code for the CloudCoins main desktop software. 
 
 This provides three major functions: 
 
-1. RAIDA detection and powning (password owning) of CloudCoin.
+1. RAIDA: Detection and Powning (password owning) of CloudCoin.
 
-2. SkyWallet sending and receiving
+2. Skywallet: Sending and Receiving
 
-3. CloudBank allowing remote servers and users to access local wallets and skywallets remotley. 
+3. CloudBank: Allowing remote servers and users to access local wallets and Skywallets remotely.
 
 
