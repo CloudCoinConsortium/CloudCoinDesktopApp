@@ -496,7 +496,6 @@ public class AppUI {
     public static JScrollPane setupHCTable(JTable table, String[] columnNames, String[][] data, 
             DefaultTableCellRenderer r) {
         final String[] fcolumnNames = columnNames;
-        System.out.println("d="+data.length + " d="+data[0].length);
         DefaultTableModel model = new DefaultTableModel(data.length, data[0].length - 1) {
             @Override
             public String getColumnName(int col) {        

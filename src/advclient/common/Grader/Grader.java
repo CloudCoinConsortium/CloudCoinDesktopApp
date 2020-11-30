@@ -126,7 +126,7 @@ public class Grader extends Servant {
         
         
         if (cc.isAuthentic()) {
-            if (cc.isFullyAuthentic()) {
+            if (cc.isPartlyAuthentic()) {
                 logger.debug(ltag, "Coin " + cc.sn + " is fracked");
 
                 gr.totalFracked++;

@@ -108,6 +108,7 @@ public class ProgramState {
     final public static int SCREEN_DOING_SKY_HEALTH_CHECK = 88;
     final public static int SCREEN_SKY_HEALTH_CHECK_DONE = 89;
     final public static int SCREEN_FIX_TRANSFER = 90;
+    final public static int SCREEN_FIX_TRANSFER_DONE = 91;
     
     final static int CB_STATE_INIT = 1;
     final static int CB_STATE_RUNNING = 2;
@@ -255,6 +256,7 @@ public class ProgramState {
     int hcValid, hcFracked, hcCounterfeit;
     
     String selectedEnvelope;
+    String selectedEnvelopeTech;
 
     String envelopeAmount;
     int envelopeAmountInt;

@@ -117,7 +117,7 @@ public class Config {
     public static String DEFAULT_TAG = "CC";
     public static String BACKUP_TAG = "BACKUP";
 
-    public static int DEFAULT_MAX_COINS_MULTIDETECT = 400;
+    public static int DEFAULT_MAX_COINS_MULTIDETECT = 4000;
 
 
     public static int PASS_THRESHOLD = 20;
@@ -198,7 +198,7 @@ public class Config {
     final public static int MAX_FIX_TIMEOUT = 120000;
     
     final public static int MIN_READ_TIMEOUT = 4000;
-    final public static int MAX_READ_TIMEOUT = 120000;
+    final public static int MAX_READ_TIMEOUT = 1200000;
     
     
     public static int PUBLIC_CHANGE_MAKER_ID = 2;
@@ -268,7 +268,7 @@ public class Config {
     
     public static int MS_TO_SLEEP_AFTER_FIXTRANSFER = 4000;
     
-    public static int MAX_NOTES_TO_FIXTRANSFER = 400;
+    public static int MAX_NOTES_TO_FIXTRANSFER = 800;
     
     public static int FIX_MAX_REGEXPS = 56;
     
@@ -277,4 +277,6 @@ public class Config {
     public static int MIN_PASSED_NUM_TO_BE_AUTHENTIC = 14;
     
     public static String SKY_EMAIL_PLACEHOLDER = "skyemailplaceholder";
+    
+    public static int MAX_RECEIVE_ENVELOPES_ATTEMPTS = 50;
 }

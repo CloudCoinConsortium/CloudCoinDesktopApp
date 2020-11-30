@@ -360,7 +360,7 @@ public class LossFixer extends Servant {
             logger.debug(ltag, "post cc " + cc.sn + " pown " + cc.getPownString());
             
             if (cc.isAuthentic()) {
-                if (cc.isFullyAuthentic()) {
+                if (cc.isPartlyAuthentic()) {
                     moveCoin(cc);
                     logger.debug(ltag, "Moving to bank: " + cc.sn);
                     lr.recovered++;

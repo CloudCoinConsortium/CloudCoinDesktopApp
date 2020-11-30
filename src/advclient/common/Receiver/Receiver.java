@@ -877,22 +877,40 @@ public class Receiver extends Servant {
         globalResult.totalFiles = 0;   
         globalResult.totalFilesProcessed = 0;
         globalResult.totalCoinsProcessed = 0;
-        
-        
+               
         rr = new ReceiverResult();
         copyFromGlobalResult(rr);
         if (cb != null)
             cb.callback(rr);
 
-        if (!processReceiveEnvelope(idcc, memo)) {
-            rr = new ReceiverResult();
-            globalResult.status = ReceiverResult.STATUS_ERROR;
-            copyFromGlobalResult(rr);
-            if (cb != null)
-                cb.callback(rr);
+        String pang = AppCore.generateHex().toLowerCase();        
+        logger.debug(ltag, "Generated pang " + pang);
+        HashMap hm2 = new HashMap<String, Integer>();
+        int ix = 0;
+        while (true) {
+            logger.debug(ltag, "Will call receive_evelope again. Attempt: " + ix);
+            globalResult.totalRAIDAProcessed = 0;
+            int rv = processReceiveEnvelope(hm2, pang, idcc, memo);
+            if (rv < 0 || ix > Config.MAX_RECEIVE_ENVELOPES_ATTEMPTS) {
+                rr = new ReceiverResult();
+                globalResult.status = ReceiverResult.STATUS_ERROR;
+                copyFromGlobalResult(rr);
+                if (cb != null)
+                    cb.callback(rr);
                 
-            return;
+                return;
+            }
+            
+            if (rv == 1) {
+                logger.debug(ltag, "We all done");
+                break;
+            }
+            
+            
+            ix++;
         }
+        
+        saveReceived(hm2, pang);
 
         rr = new ReceiverResult();
                 
@@ -908,7 +926,7 @@ public class Receiver extends Servant {
     } 
         
         
-    public boolean processReceiveEnvelope(CloudCoin cc, String memo)  {
+    public int processReceiveEnvelope(HashMap<String, Integer> hm2, String pang, CloudCoin cc, String memo)  {
         String[] results;
         Object o;
         CommonResponse errorResponse;
@@ -919,11 +937,6 @@ public class Receiver extends Servant {
         String[] posts;
         int i;
 
-        
-
-        String pang = AppCore.generateHex().toLowerCase();
-        
-        logger.debug(ltag, "Generated pang " + pang);
 
         sbs = new StringBuilder[RAIDA.TOTAL_RAIDA_COUNT];
         posts = new String[RAIDA.TOTAL_RAIDA_COUNT];
@@ -966,12 +979,13 @@ public class Receiver extends Servant {
         
         if (results == null) {
             logger.error(ltag, "Failed to query receive");
-            return false;
+            return -1;
         }
 
         CloudCoin fakeCC = new CloudCoin(Config.DEFAULT_NN, 1);
-        HashMap hm2 = new HashMap<String, Integer>();
+        
         rer = new ReceiverEnvelopeResponse();
+        boolean needToCallOneMore = false;
         for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
             logger.info(ltag, "i="+i+ " r="+results[i]);
             if (results[i] != null) {
@@ -1007,7 +1021,7 @@ public class Receiver extends Servant {
             
             rer = (ReceiverEnvelopeResponse) o;           
             logger.debug(ltag, "raida" + i + " status: " + rer.status);
-            if (rer.status.equals("done")) {
+            if (rer.status.equals("done") || rer.status.equals("incomplete")) {
                 logger.debug(ltag, "received: " + rer.message);
                 fakeCC.setDetectStatus(i, CloudCoin.STATUS_PASS);
                 
@@ -1021,6 +1035,10 @@ public class Receiver extends Servant {
                     int val = (int) hm2.get(idx);
                     hm2.put(idx, val + 1);
                 }
+                
+                if (rer.status.equals("incomplete")) 
+                    needToCallOneMore = true;
+                
                 continue;
             } else if (rer.status.equals("fail")) {
                 logger.debug(ltag, "fail");
@@ -1038,8 +1056,18 @@ public class Receiver extends Servant {
         logger.debug(ltag, "receive pown " + fakeCC.getPownString());
         if (!fakeCC.canbeRecoveredFromLost()) {
             logger.debug(ltag, "Too many errors from receive");
-            return false;            
+            return -1;            
         }
+        
+        if (needToCallOneMore)
+            return 0;
+        
+        return 1;
+    }
+    
+    public void saveReceived(HashMap<String, Integer> hm2, String pang) {
+        int i;
+        logger.debug(ltag, "Saving received");
 
         String dir = AppCore.getDownloadsDir();
         
@@ -1052,8 +1080,9 @@ public class Receiver extends Servant {
             keySN = (String) pair.getKey();
             max = (int) pair.getValue();
             if (max < Config.MIN_PASSED_NUM_TO_BE_AUTHENTIC) {
-                logger.debug(ltag, "SN " + keySN + " has only " + max + " passed raidas. Skipping it");
-                continue;
+                logger.debug(ltag, "SN " + keySN + " has only " + max + " passed raidas. "
+                        + "We will assume that the RAIDA server processed our request.");
+                //continue;
             }
             
             logger.debug(ltag, "sn received " + keySN);
@@ -1087,6 +1116,6 @@ public class Receiver extends Servant {
 
        
 
-        return true;
+        return;
     }
 }

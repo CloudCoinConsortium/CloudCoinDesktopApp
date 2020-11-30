@@ -603,7 +603,7 @@ public class CloudCoin {
         return st_passed >= Config.MIN_PASSED_NUM_TO_BE_AUTHENTIC;
     }
     
-    public boolean isFullyAuthentic() {  
+    public boolean isPartlyAuthentic() {  
         return isAuthentic() && st_failed != 0;
     }
     

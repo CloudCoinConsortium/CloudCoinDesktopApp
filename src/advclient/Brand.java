@@ -92,11 +92,13 @@ public class Brand {
     
     String needVersion;
 
+    boolean needUpdate;
     public Brand(String name, GLogger logger) {
         
         this.logger = logger;
 
         this.setBrand(name);
+        this.needUpdate = false;
         this.datamap = new HashMap<String, dlResult>();
        
         String[] vals = {
@@ -329,6 +331,25 @@ public class Brand {
             logger.error(ltag, "Failed to receive response from Brand Server");
             return false;
         }
+        
+        String md5local = "abc";
+        String md5remote = AppCore.getMD5(result);
+        File configFile = new File(getConfigPath());
+        if (configFile.exists()) {
+            String content = AppCore.loadFile(getConfigPath());
+            if (content != null) {
+                md5local = AppCore.getMD5(content);
+            }
+        }
+        
+        logger.debug(ltag, "local config hash " + md5local + ", remote hash " + md5remote);
+        if (!md5local.equals(md5remote)) {
+            logger.debug(ltag, "Need update");
+            configFile.delete();
+            this.needUpdate = true;
+        } else {
+            return true;
+        }
 
         if (!AppCore.saveFile(getConfigPath(), result)) {
             logger.error(ltag, "Failed to save config file");
@@ -361,8 +382,12 @@ public class Brand {
     public boolean checkFile(String file) {
         String filename = this.brandDir + File.separator + file;
         File f = new File(filename);
-        if (f.exists()) 
-            return true;
+        if (f.exists()) { 
+            if (!this.needUpdate)
+                return true;
+            
+            f.delete();
+        }
         
         return false;
     }
@@ -418,8 +443,8 @@ public class Brand {
         }
 
         File configFile = new File(getConfigPath());
-        configFile.delete();
-        if (!configFile.exists()) {
+        //configFile.delete();
+        //if (!configFile.exists()) {
             logger.debug(ltag, "Downloading config file");
             br.text = "Downloading Config File";
             cb.callback(br);
@@ -456,7 +481,7 @@ public class Brand {
                     return false;
                 }
             }
-        }
+        //}
 
         downloadFilter();
         

@@ -334,6 +334,7 @@ public class ShowEnvelopeCoins extends Servant {
             result.debugContentBalances = new int[RAIDA.TOTAL_RAIDA_COUNT];
         }
         
+        
         for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {       
             if (results[i] != null) {
                 if (results[i].equals("")) {
