@@ -198,11 +198,10 @@ public class ShowEnvelopeCoins extends Servant {
                 continue;
             }
             
-            fakeCC.setDetectStatus(i, CloudCoin.STATUS_PASS);
-                        
+            fakeCC.setDetectStatus(i, CloudCoin.STATUS_PASS);           
             logger.debug(ltag, "raida " + i + ". Returned total " + cr.total);
             String idx = "" + cr.total;
-            
+                        
             if (isDebug())
                 result.debugBalances[i] = cr.total;
             
@@ -217,7 +216,13 @@ public class ShowEnvelopeCoins extends Servant {
             
         }
         fakeCC.setPownStringFromDetectStatus();
+        fakeCC.countResponses();
         logger.debug(ltag, "ShowBalance pownstring " + fakeCC.getPownString());
+        if (!fakeCC.isAuthentic()) {
+            logger.error(ltag, "Not enough valid responses. Balance is zero");
+            result.status = ShowEnvelopeCoinsResult.STATUS_FINISHED;
+            return;
+        }
         //System.out.println("ps="+ fakeCC.getPownString());
       
         Iterator it = hm2.entrySet().iterator();

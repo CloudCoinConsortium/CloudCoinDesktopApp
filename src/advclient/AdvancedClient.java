@@ -77,7 +77,7 @@ import org.json.JSONObject;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "4.0.14";
+    public static String version = "4.0.15";
 
     JPanel headerPanel;
     JPanel mainPanel;
