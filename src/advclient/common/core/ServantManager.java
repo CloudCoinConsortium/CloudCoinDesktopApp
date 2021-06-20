@@ -242,6 +242,26 @@ public class ServantManager {
         wallets.put(wallet, wobj);    
     }
     
+    public boolean initSystemUserNoChange(String wallet) {
+        logger.debug(ltag, "Init system user " + wallet);
+        
+        try {
+            AppCore.initUserFolders(wallet);
+        } catch (Exception e) {
+            logger.error(ltag, "Error: " + e.getMessage());
+            return false;
+        }
+        /*
+        if (!writeConfig(wallet)) {
+            logger.error(ltag, "Failed to write conifg");
+            return false;
+        }*/
+              
+        initWallet(wallet, "");
+        
+        return true;
+    }
+    
     public boolean initUser(String wallet, String email, String password) {
         logger.debug(ltag, "Init user " + wallet);
                
@@ -468,14 +488,14 @@ public class ServantManager {
 	b.launch(dstDir, cb);
     }
     
-    public void startSenderService(int sn, String dstFolder, int amount, String memo, String remoteWalletName, String rn, boolean needPownAfterLocalTransfer, CallbackInterface cb) {
+    public void startSenderService(int sn, String dstFolder, int amount, String[] tags, String remoteWalletName, String rn, boolean needPownAfterLocalTransfer, CallbackInterface cb) {
 	Sender s = (Sender) sr.getServant("Sender");
-	s.launch(sn, dstFolder, null, amount, memo, remoteWalletName, rn, needPownAfterLocalTransfer, cb);
+	s.launch(sn, dstFolder, null, amount, tags, remoteWalletName, rn, needPownAfterLocalTransfer, cb);
     }
      
     
     public void startReceiverService(int sn, int sns[], 
-            String dstFolder, int amount, String memo, String rn, CallbackInterface cb) {
+            String dstFolder, int amount, String rn, CallbackInterface cb) {
 	Receiver r = (Receiver) sr.getServant("Receiver");
 	//r.launch(, new int[]{1,1}, new int[] {7050330, 7050331}, memo, cb);
         r.launch(sn, sns, dstFolder, amount, false, rn, cb);
@@ -494,9 +514,9 @@ public class ServantManager {
     }
     
 
-    public void startSenderServiceForChange(int sn, int[] values, String memo, CallbackInterface cb) {
+    public void startSenderServiceForChange(int sn, int[] values, String[] tags, CallbackInterface cb) {
         Sender s = (Sender) sr.getServant("Sender");
-	s.launch(sn, null, values, 0, memo, Config.CHANGE_SKY_DOMAIN, null, false, cb);
+	s.launch(sn, null, values, 0, tags, Config.CHANGE_SKY_DOMAIN, null, false, cb);
     }
     
     public void startChangeMakerService(int method, String email, CloudCoin cc, CallbackInterface cb) {
@@ -504,10 +524,10 @@ public class ServantManager {
         cm.launch(method, cc, email, cb);
     }
     
-    public void startTransferService(int fromsn, int tosn, int sns[], int amount, String tag, CallbackInterface cb) {
+    public void startTransferService(int fromsn, int tosn, int sns[], int amount, String[] tags, CallbackInterface cb) {
         logger.debug(ltag, "Transfer from " + fromsn + " to " + tosn + " amount " + amount);
         Transfer tr = (Transfer) sr.getServant("Transfer");
-        tr.launch(fromsn, tosn, sns, amount, tag, cb);
+        tr.launch(fromsn, tosn, sns, amount, tags, cb);
     }
     
     
@@ -537,22 +557,22 @@ public class ServantManager {
         s.cancel();
     }
     
-    public void startSenderServiceBank(Wallet w, int sn, int amount, String memo, String remoteWalletName, String rn, CallbackInterface cb) {
+    public void startSenderServiceBank(Wallet w, int sn, int amount, String[] tags, String remoteWalletName, String rn, CallbackInterface cb) {
         if (w.isEncrypted()) {
             logger.debug(ltag, "Src wallet is encrypted");
             Vaulter v = (Vaulter) sr.getServant("Vaulter");
             v.unvault(w.getPassword(), amount, null, 
-               new rVaulterCb(sn, null, amount, memo, remoteWalletName, rn, false, cb));
+               new rVaulterCb(sn, null, amount, tags, remoteWalletName, rn, false, cb));
              
             return;
         }
         
 	Sender s = (Sender) sr.getServant("Sender");
-	s.launch(sn, null, null, amount, memo, remoteWalletName, rn, false, cb);
+	s.launch(sn, null, null, amount, tags, remoteWalletName, rn, false, cb);
     }
     
     public boolean transferCoins(String srcWallet, String dstWallet, int amount, 
-            String memo, String remoteWalletName, boolean needPownAfterLocalTransfer, CallbackInterface scb, CallbackInterface rcb) {
+            String[] tags, String remoteWalletName, boolean needPownAfterLocalTransfer, CallbackInterface scb, CallbackInterface rcb) {
         
         logger.debug(ltag, "Transferring " + amount + " from " + srcWallet + " to " + dstWallet + " rn=" + remoteWalletName);
         int sn = 0;
@@ -587,7 +607,7 @@ public class ServantManager {
                 sn = srcWalletObj.getIDCoin().sn;
                 int[] sns = srcWalletObj.getSNs();
                 logger.debug(ltag, "Got SN " + sn);
-                startReceiverService(sn, sns, dstWalletObj.getName(), amount, memo, null, rcb);
+                startReceiverService(sn, sns, dstWalletObj.getName(), amount, null, rcb);
                 return true;
             }
         }
@@ -603,13 +623,13 @@ public class ServantManager {
             logger.debug(ltag, "Src wallet is encrypted");
             Vaulter v = (Vaulter) sr.getServant("Vaulter");
             v.unvault(srcWalletObj.getPassword(), amount, null, 
-               new rVaulterCb(sn, dstWallet, amount, memo, remoteWalletName, null, needPownAfterLocalTransfer, scb));
+               new rVaulterCb(sn, dstWallet, amount, tags, remoteWalletName, null, needPownAfterLocalTransfer, scb));
              
             return true;
         }
 
         logger.debug(ltag, "send to sn " + sn + " dstWallet " + dstWallet);
-        startSenderService(sn, dstWallet, amount, memo, remoteWalletName, null, needPownAfterLocalTransfer, scb);
+        startSenderService(sn, dstWallet, amount, tags, remoteWalletName, null, needPownAfterLocalTransfer, scb);
         
         return true;
         
@@ -1182,7 +1202,7 @@ public class ServantManager {
     class rVaulterCb implements CallbackInterface {
         CallbackInterface cb;
         int amount;
-        String memo;
+        String[] tags;
         String dstFolder;
         int sn;
         String remoteWalletName;
@@ -1190,10 +1210,10 @@ public class ServantManager {
         boolean needPownAfterLocalTransfer;
     
         public rVaulterCb(int sn, String dstFolder, int amount, 
-                String memo, String remoteWalletName, String rn, boolean needPownAfterLocalTransfer, CallbackInterface cb) {
+                String[] tags, String remoteWalletName, String rn, boolean needPownAfterLocalTransfer, CallbackInterface cb) {
             this.cb = cb;
             this.amount = amount;
-            this.memo = memo;
+            this.tags = tags;
             this.sn = sn;
             this.dstFolder = dstFolder;
             this.remoteWalletName = remoteWalletName;
@@ -1222,7 +1242,7 @@ public class ServantManager {
             }
             
             logger.debug(ltag, "send sn " + sn + " dstWallet " + dstFolder);
-            startSenderService(sn, dstFolder, amount, memo, remoteWalletName, rn, needPownAfterLocalTransfer, cb);
+            startSenderService(sn, dstFolder, amount, tags, remoteWalletName, rn, needPownAfterLocalTransfer, cb);
 	}
     }
     
@@ -1320,7 +1340,27 @@ public class ServantManager {
             
             if (tw.isSkyWallet()) {
                continue;
-            }           
+            }       
+            
+            if (tw.getName().equals(Config.TEMP_ID_WALLET_NAME))
+                continue;
+            
+            return tw;
+        }
+        
+        return null;
+    }
+    
+    
+    public Wallet getFirstWallet() {
+        Collection c = wallets.values();
+
+        Iterator itr = c.iterator();
+        while (itr.hasNext()) {
+            Wallet tw = (Wallet) itr.next();
+
+            if (tw.getName().equals(Config.TEMP_ID_WALLET_NAME))
+                continue;
             
             return tw;
         }
@@ -1358,6 +1398,9 @@ public class ServantManager {
                 continue;
             
             if (tw.isEncrypted())
+                continue;
+            
+            if (tw.getName().equals(Config.TEMP_ID_WALLET_NAME))
                 continue;
             
             return tw;

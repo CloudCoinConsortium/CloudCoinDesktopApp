@@ -259,7 +259,8 @@ public class ChangeMaker extends Servant {
             //logger.info(ltag, "cc="+ccs[i].sn + " v=" + ccs[i].getJson(false));
         }
 
-        AppCore.moveToFolderNoTs(cc.originalFile, Config.DIR_SENT, user, true);
+              
+        
         
         if (isError) {
             logger.error(ltag, "Error occured during making change");
@@ -267,9 +268,10 @@ public class ChangeMaker extends Servant {
             cr.status = ChangeMakerResult.STATUS_ERROR;
             return;    
         }
-
         
-
+        AppCore.moveToFolderNoTs(cc.originalFile, Config.DIR_SENT, user, true);
+  
+        
         addCoinToReceipt(cc, "authentic", "Sent to Public Change");
         saveReceipt(user, 1, 0, 0, 0, 0, 0, cc.getDenomination());
 

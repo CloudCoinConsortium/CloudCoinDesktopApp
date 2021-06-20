@@ -74,4 +74,11 @@ public class Validator {
         return m.matches();
     }
     
+    public static boolean guid(String guid) {
+        Pattern p = Pattern.compile("^[A-Fa-f0-9]{32}$", Pattern.UNICODE_CHARACTER_CLASS);
+        Matcher m = p.matcher(guid);
+        
+        return m.matches();
+    }
+    
 }

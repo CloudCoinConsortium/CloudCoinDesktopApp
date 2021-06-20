@@ -29,14 +29,14 @@ public class Transfer extends Servant {
         super("Transfer", rootDir, logger);
     }
 
-    public void launch(int fromsn, int tosn, int[] sns, int amount, String tag, CallbackInterface icb) {
+    public void launch(int fromsn, int tosn, int[] sns, int amount, String[] tags, CallbackInterface icb) {
         this.cb = icb;
 
         final int ffromsn = fromsn;
         final int ftosn = tosn;
         final int[] fsns = sns;
         final int famount = amount;
-        final String ftag = tag;
+        final String[] ftags = tags;
 
         tr = new TransferResult();
         coinsPicked = new ArrayList<CloudCoin>();
@@ -50,7 +50,7 @@ public class Transfer extends Servant {
             @Override
             public void run() {
                 logger.info(ltag, "RUN Transfer");
-                doTransfer(ffromsn, ftosn, fsns, ftag, famount);
+                doTransfer(ffromsn, ftosn, fsns, ftags, famount);
             }
         });
     }
@@ -67,7 +67,7 @@ public class Transfer extends Servant {
         trResult.step = globalResult.step;
     }
     
-    public void doTransfer(int fromsn, int tosn, int sns[], String tag, int amount) {
+    public void doTransfer(int fromsn, int tosn, int sns[], String[] tags, int amount) {
         tr = new TransferResult();
         
         if (!updateRAIDAStatus()) {
@@ -216,7 +216,7 @@ public class Transfer extends Servant {
                 logger.info(ltag, "Processing");
                 tr = new TransferResult();
                 
-                if (!processTransfer(ccs, idcc, tag, tosn)) {
+                if (!processTransfer(ccs, idcc, tags, tosn)) {
                    tr = new TransferResult();
                    globalResult.status = TransferResult.STATUS_ERROR;
                    copyFromGlobalResult(tr);
@@ -241,7 +241,7 @@ public class Transfer extends Servant {
         tr = new TransferResult();
         if (ccs.size() > 0) {
             logger.info(ltag, "adding + " + ccs.size());
-            if (!processTransfer(ccs, idcc, tag, tosn)) {
+            if (!processTransfer(ccs, idcc, tags, tosn)) {
                 tr = new TransferResult();
                 globalResult.status = TransferResult.STATUS_ERROR;
                 copyFromGlobalResult(tr);
@@ -269,7 +269,7 @@ public class Transfer extends Servant {
         }
     }
     
-    public boolean processTransfer(ArrayList<CloudCoin> ccs, CloudCoin cc, String tag, int tosn)  {       
+    public boolean processTransfer(ArrayList<CloudCoin> ccs, CloudCoin cc, String[] tags, int tosn)  {       
         String[] results;
         //Object[] o;
         Object o;
@@ -303,7 +303,7 @@ public class Transfer extends Servant {
             sbs[i].append("&to_sn=");
             sbs[i].append(tosn);
             sbs[i].append("&tag=");
-            sbs[i].append(tag);
+            sbs[i].append(tags[i]);
 
             for (CloudCoin tcc : ccs) {
                 sbs[i].append("&sns[]=");

@@ -525,7 +525,7 @@ public class CloudBank {
         final int total = rw.getTotal();
         final String frn = rn;
         final String fmemo = memo;
-        sm.startReceiverService(rw.getIDCoin().sn, rw.getSNs(), lw.getName(), total, memo, rn, new CallbackInterface() {
+        sm.startReceiverService(rw.getIDCoin().sn, rw.getSNs(), lw.getName(), total, rn, new CallbackInterface() {
             public void callback(Object result) {
                 final ReceiverResult rr = (ReceiverResult) result;
 
@@ -677,8 +677,10 @@ public class CloudBank {
         final String fto = to;
 
         sm.setActiveWalletObj(rw);
+        
+        String[] tags = AppCore.getObjectMemo(rn, memo, amount, rw.getName());
 
-        sm.startTransferService(rw.getIDCoin().sn, sn, rw.getSNs(), amount, memo, new CallbackInterface() {
+        sm.startTransferService(rw.getIDCoin().sn, sn, rw.getSNs(), amount, tags, new CallbackInterface() {
             public void callback(Object o) {
                 TransferResult tr = (TransferResult) o;
                 
@@ -779,8 +781,10 @@ public class CloudBank {
 
 
         sm.setActiveWalletObj(lw);
+        
+        String[] tags = AppCore.getObjectMemo(rn, memo, amount, rw.getName());
 
-        sm.startSenderServiceBank(lw, sn, amount, memo, to, rn, new SenderCb(lw, amount, sn, memo, rn, to, false, cb)); 
+        sm.startSenderServiceBank(lw, sn, amount, tags, to, rn, new SenderCb(lw, amount, sn, tags, rn, to, false, cb)); 
         
         return cr;
         
@@ -1059,17 +1063,17 @@ public class CloudBank {
         CallbackInterface cb;
         boolean fromChange;
         int sn;
-        String memo;
+        String[] tags;
         String to;
         
-        public SenderCb(Wallet wallet, int amount, int sn, String memo, String rn, String to, boolean fromChange, CallbackInterface cb) {
+        public SenderCb(Wallet wallet, int amount, int sn, String[] tags, String rn, String to, boolean fromChange, CallbackInterface cb) {
             this.dir = getAccountDir();
             this.wallet = wallet;
             this.amount = amount;
             this.rn = rn;
             this.cb = cb;       
             this.sn = sn;
-            this.memo = memo;
+            this.tags = tags;
             this.to = to;
             this.fromChange = fromChange;
         }
@@ -1147,6 +1151,7 @@ public class CloudBank {
                 setReceiptGeneral(wallet, total, "sent", "Coins sent successfully to " + to, a, f, c, rn);
                 
               
+                String memo = AppCore.getMemoFromObj(tags[0]);
                 wallet.appendTransaction(memo, sr.amount * -1, sr.receiptId);
                 wallet.setNotUpdated();
                 

@@ -31,12 +31,12 @@ public class Sender extends Servant {
     }
 
     public void launch(int tosn, String dstFolder, int[] values, int amount, 
-            String envelope, String remoteWalletName, String rn, boolean needPownAfterLocalTransfer, CallbackInterface icb) {
+            String[] tags, String remoteWalletName, String rn, boolean needPownAfterLocalTransfer, CallbackInterface icb) {
         this.cb = icb;
 
         final int ftosn = tosn;
         final int[] fvalues = values;
-        final String fenvelope = envelope;
+        final String[] ftags = tags;
         final int famount = amount;
         final String fdstFolder = dstFolder;
         final boolean fneedPownAfterLocalTransfer = needPownAfterLocalTransfer;
@@ -47,7 +47,7 @@ public class Sender extends Servant {
         valuesPicked = new int[AppCore.getDenominations().length];
 
         globalResult = new SenderResult();
-        globalResult.memo = envelope;
+        globalResult.memo = AppCore.getMemoFromObj(tags[0]);
         
         csb = new StringBuilder();
         
@@ -69,7 +69,7 @@ public class Sender extends Servant {
                 if (fdstFolder != null) {
                     doSendLocal(famount, fdstFolder, fneedPownAfterLocalTransfer);
                 } else {
-                    doSend(ftosn, fvalues, famount, fenvelope);
+                    doSend(ftosn, fvalues, famount, ftags);
                 }
             }
         });
@@ -205,8 +205,8 @@ public class Sender extends Servant {
         }
     }
     
-    public void doSend(int tosn, int[] values, int amount, String envelope) {
-        logger.debug(ltag, "Sending remotely " + amount + " to " + tosn + " memo=" + envelope + " values=" + values);
+    public void doSend(int tosn, int[] values, int amount, String[] tags) {
+        logger.debug(ltag, "Sending remotely " + amount + " to " + tosn + " values=" + values);
         
         SenderResult sr = new SenderResult();
         if (!updateRAIDAStatus()) {
@@ -332,7 +332,7 @@ public class Sender extends Servant {
                 logger.info(ltag, "Processing");
                 sr = new SenderResult();
                 
-                if (!processSend(ccs, tosn, envelope)) {
+                if (!processSend(ccs, tosn, tags)) {
                    sr = new SenderResult();
                    globalResult.status = SenderResult.STATUS_ERROR;
                    copyFromGlobalResult(sr);
@@ -358,7 +358,7 @@ public class Sender extends Servant {
         sr = new SenderResult();
         if (ccs.size() > 0) {
             logger.info(ltag, "adding + " + ccs.size());
-            if (!processSend(ccs, tosn, envelope)) {
+            if (!processSend(ccs, tosn, tags)) {
                 sr = new SenderResult();
                 globalResult.status = SenderResult.STATUS_ERROR;
                 copyFromGlobalResult(sr);
@@ -396,7 +396,7 @@ public class Sender extends Servant {
     }
 
 
-    public boolean processSendAgain(ArrayList<CloudCoin> ccs, int tosn, String envelope) {
+    public boolean processSendAgain(ArrayList<CloudCoin> ccs, int tosn, String[] tags) {
         String[] results;
         String[] requests;
         StringBuilder[] sbs;
@@ -433,6 +433,10 @@ public class Sender extends Servant {
             requests[i] = "sendagain";
             sbs[i] = new StringBuilder();
             sbs[i].append("b=t");
+            sbs[i].append("&to_sn=");
+            sbs[i].append(tosn);
+            sbs[i].append("&tag=");
+            sbs[i].append(URLEncoder.encode(tags[i]));
         }
 
         for (CloudCoin cc : ccs) {
@@ -440,10 +444,6 @@ public class Sender extends Servant {
 
             for (i = 0; i < rlist.length; i++) {
                 int raidaIdx = rlist[i];
-                sbs[i].append("&to_sn=");
-                sbs[i].append(tosn);
-                sbs[i].append("&tag=");
-                sbs[i].append(URLEncoder.encode(envelope));
 
                 sbs[i].append("&nns[]=");
                 sbs[i].append(cc.nn);
@@ -451,7 +451,7 @@ public class Sender extends Servant {
                 sbs[i].append("&sns[]=");
                 sbs[i].append(cc.sn);
 
-                sbs[i].append("&denomination[]=");
+                sbs[i].append("&dn[]=");
                 sbs[i].append(cc.getDenomination());
 
                 sbs[i].append("&ans[]=");
@@ -573,7 +573,7 @@ public class Sender extends Servant {
         return true;
     }
 
-    public boolean processSend(ArrayList<CloudCoin> ccs, int tosn, String envelope) {
+    public boolean processSend(ArrayList<CloudCoin> ccs, int tosn, String[] tags) {
         String[] results;
         String[] requests;
         StringBuilder[] sbs;
@@ -589,16 +589,17 @@ public class Sender extends Servant {
             requests[i] = "send";
             sbs[i] = new StringBuilder();
             sbs[i].append("b=t");
+            sbs[i].append("&to_sn=");
+            sbs[i].append(tosn);
+            sbs[i].append("&tag=");
+            sbs[i].append(URLEncoder.encode(tags[i]));
         }
 
         for (CloudCoin cc : ccs) {
             logger.debug(ltag, "Processing coin " + cc.sn);
 
             for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
-                sbs[i].append("&to_sn=");
-                sbs[i].append(tosn);
-                sbs[i].append("&tag=");
-                sbs[i].append(URLEncoder.encode(envelope));
+
 
                 sbs[i].append("&nns[]=");
                 sbs[i].append(cc.nn);
@@ -606,7 +607,7 @@ public class Sender extends Servant {
                 sbs[i].append("&sns[]=");
                 sbs[i].append(cc.sn);
 
-                sbs[i].append("&denomination[]=");
+                sbs[i].append("&dn[]=");
                 sbs[i].append(cc.getDenomination());
 
                 sbs[i].append("&ans[]=");
@@ -744,7 +745,7 @@ public class Sender extends Servant {
         
         if (againCCs.size() != 0) {
             logger.debug(ltag, "Running SendAgain");
-            if (!processSendAgain(againCCs, tosn, envelope)) {
+            if (!processSendAgain(againCCs, tosn, tags)) {
                 logger.error(ltag, "Send again failed");
                 return true;
             }

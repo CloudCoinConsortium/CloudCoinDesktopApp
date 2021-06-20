@@ -132,6 +132,8 @@ public class ProgramState {
     int currentWalletIdx;
     Wallet currentWallet;
     
+    String[] transferTags;
+    
     int[][] counters;
     int cbState;
     
@@ -154,6 +156,8 @@ public class ProgramState {
     boolean cardWindowOpen;
     
     String[][] trs;
+    
+    String[] svcTrs;
     
     int statToBankValue, statToBank, statFailed, statLost;
     int statFailedValue, statLostValue;

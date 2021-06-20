@@ -124,8 +124,12 @@ public class DNSSn {
         }
         
         CommonResponse cr = (CommonResponse) sr.getServant("FrackFixer").parseResponse(result, CommonResponse.class);
-        if (!cr.status.equals("success")) {
+        if (cr == null || cr.status == null) {
             logger.error(ltag, "Invalid response from DDNSSN Server");
+            return false;
+        }
+        if (!cr.status.equals("success")) {
+            logger.error(ltag, "Bad status response from DDNSSN Server");
             return false;
         }
         

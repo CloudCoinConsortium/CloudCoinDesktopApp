@@ -14,6 +14,8 @@ public class ShowEnvelopeCoinsResult {
     public int totalRAIDAProcessed = 0;
 
     public int status;
+    public int idCoinStatus;
+    public String idPownString;
     public int[][] counters;
     
     public int[] debugBalances;

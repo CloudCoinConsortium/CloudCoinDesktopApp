@@ -62,6 +62,8 @@ import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 import java.util.zip.ZipEntry;
@@ -2555,26 +2557,25 @@ public class AppCore {
         return parts[0];
     }
     
-    public static String extractFromTag(String metadata) {
-        String[] parts = metadata.split(Config.MEMO_METADATA_SEPARATOR);
-        if (parts.length <= 1) {
+    public static String extractFromTag(String metadata) { 
+        if (metadata == null)
             return "";
-        }
         
-        String b64 =  new String(Base64.getDecoder().decode(parts[1]));
+        String b64 =  new String(Base64.getDecoder().decode(metadata));
+        if (b64 == null)
+            return "";
 
-        b64 = "[main]\n" + b64;
         StringReader sr = new StringReader(b64);
         Map<String, Properties> data;
         try {
             data = AppCore.parseINI(sr);
         } catch (IOException e) {
-            logger.error(ltag, "Failed to parse metadata" + parts[1]);
+            logger.error(ltag, "Failed to parse metadata" + metadata);
             return "";
         }
         
         
-        Properties p = data.get("main");
+        Properties p = data.get("general");
         if (p == null)
             return "";
              
@@ -2788,4 +2789,206 @@ public class AppCore {
             Integer.valueOf( colorStr.substring( 3, 5 ), 16 ),
             Integer.valueOf( colorStr.substring( 5, 7 ), 16 ) );
     }
+    
+    public static String[][] splitMessage(String message) {
+        String[][] data = new String[RAIDA.TOTAL_RAIDA_COUNT][];
+        int pads = message.length() % RAIDA.TOTAL_RAIDA_COUNT;
+        
+        for (int i = 0; i < (RAIDA.TOTAL_RAIDA_COUNT - pads); i++)
+            message += "-";
+        
+        for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+            data[i] = new String[3];
+            data[i][Config.MSG_IDX_STRIPE] = "";
+            data[i][Config.MSG_IDX_MIRROR1] = "";
+            data[i][Config.MSG_IDX_MIRROR2] = "";
+        }
+        
+        String[] cs = message.split("");
+        for (int i = 0; i < cs.length; i++) {
+            int ridx = i % RAIDA.TOTAL_RAIDA_COUNT;
+            data[ridx][Config.MSG_IDX_STRIPE] += cs[i];   
+        }
+        
+        for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+            int cidx0 = i + 3;
+            int cidx1 = i + 6;
+            
+            if (cidx0 >= RAIDA.TOTAL_RAIDA_COUNT)
+                cidx0 -= RAIDA.TOTAL_RAIDA_COUNT;
+            
+            if (cidx1 >= RAIDA.TOTAL_RAIDA_COUNT)
+                cidx1 -= RAIDA.TOTAL_RAIDA_COUNT;
+            
+            data[i][Config.MSG_IDX_MIRROR1] += data[cidx0][Config.MSG_IDX_STRIPE];   
+            data[i][Config.MSG_IDX_MIRROR2] += data[cidx1][Config.MSG_IDX_STRIPE];  
+            
+        }
+
+        return data;        
+    }
+    
+    public static String assembleMessage(String[][] data) {
+        int chunkSize = 0;
+        
+        for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+            if (data[i] == null)
+                continue;
+            
+            chunkSize = data[i][Config.MSG_IDX_STRIPE].length();
+            break;            
+        }
+        
+        if (chunkSize == 0)
+            return null;
+        
+        String[] collected = new String[RAIDA.TOTAL_RAIDA_COUNT];
+        for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) 
+            collected[i] = "";
+        
+        int l = 0;
+        for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+            if (data[i] == null)
+                continue;
+            
+            if (data[i][Config.MSG_IDX_STRIPE] == null || data[i][Config.MSG_IDX_MIRROR1] == null 
+                    || data[i][Config.MSG_IDX_MIRROR2] == null)
+                continue;
+            
+            int cidx0 = i;
+            int cidx1 = i + 3;
+            int cidx2 = i + 6;
+            
+            if (cidx1 >= RAIDA.TOTAL_RAIDA_COUNT)
+                cidx1 -= RAIDA.TOTAL_RAIDA_COUNT;
+            
+            if (cidx2 >= RAIDA.TOTAL_RAIDA_COUNT)
+                cidx2 -= RAIDA.TOTAL_RAIDA_COUNT;
+            
+            collected[cidx0] = data[i][Config.MSG_IDX_STRIPE];
+            collected[cidx1] = data[i][Config.MSG_IDX_MIRROR1];
+            collected[cidx2] = data[i][Config.MSG_IDX_MIRROR2];   
+            
+            l = collected[cidx0].length();
+        }
+        
+        int size = (RAIDA.TOTAL_RAIDA_COUNT - 1) + (l - 1) * RAIDA.TOTAL_RAIDA_COUNT + 1;
+        String[] msgArray = new String[size];
+        
+        for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+            if (collected[i] == null) {
+                logger.debug(ltag, "Failed to assemble message. Chunk #" + i + " "
+                        + "wasn't found on stripe and mirrors");
+                return null;
+            }
+            
+            String[] totalStr = collected[i].split("");
+            for (int j = 0; j < totalStr.length; j++) {
+                int offset = i + j * RAIDA.TOTAL_RAIDA_COUNT;
+                msgArray[offset] = totalStr[j];                
+            }
+        }
+        
+        for (int i = 0; i < size; i++) {
+            if (msgArray[i] == null) {
+                logger.debug(ltag, "Failed to collect msgArray. Idx " + i + "is missing");
+                return null;
+            }
+        }
+
+        String msg = String.join("", msgArray);        
+        
+        Pattern p = Pattern.compile("-+");
+        Matcher m = p.matcher(msg);
+        msg = m.replaceAll("");
+                
+        return msg;
+    }
+    
+    public static String getGuidForKeyFromObj(String tags) {
+        String[] parts = tags.split(Pattern.quote(Config.META_ENV_SEPARATOR));
+        
+        if (parts.length != 5)
+            return tags;
+        
+        if (!Validator.guid(parts[1]))
+            return tags;
+        
+        return parts[1];
+    }
+    
+    public static String getGuidFromObj(String tags) {
+        String[] parts = tags.split(Pattern.quote(Config.META_ENV_SEPARATOR));
+        
+        if (parts.length != 5)
+            return null;
+        
+        if (!Validator.guid(parts[1]))
+            return null;
+        
+        return parts[1];
+    }
+    
+    
+    public static String[] getPartsFromObj(String tags) {
+        String[] parts = tags.split(Pattern.quote(Config.META_ENV_SEPARATOR));
+        
+        if (parts.length != 5)
+            return null;
+        
+        String[] s = new String[3];
+        
+        s[Config.MSG_IDX_STRIPE] = parts[2];
+        s[Config.MSG_IDX_MIRROR1] = parts[3];
+        s[Config.MSG_IDX_MIRROR2] = parts[4];
+
+        return s;
+    }
+    
+    public static String getMemoFromObj(String tags) {
+        String[] parts = tags.split(Pattern.quote(Config.META_ENV_SEPARATOR));
+        
+        if (parts.length != 5)
+            return tags;
+        
+        return parts[0];
+    }
+    
+    public static String[] getObjectMemo(String guid, String memo, int amount, String from) {
+        StringBuilder sb = new StringBuilder();
+                
+        if (guid == null)
+            guid = AppCore.generateHex();
+        
+        sb.append("[general]\n");
+        sb.append("date=");
+        sb.append(AppCore.getCurrentDate());
+        sb.append("\n");
+        sb.append("guid=");
+        sb.append(guid);
+        sb.append("\n");
+        sb.append("from=");
+        sb.append(from);
+        sb.append("\n");
+        sb.append("amount=");
+        sb.append("" + amount);
+        sb.append("\n");
+        sb.append("description=CloudCoin Desktop Wallet\n");
+        
+        String metaStr = sb.toString();
+        
+        String b64 =  Base64.getEncoder().encodeToString(metaStr.getBytes());
+        
+        String[][] d = AppCore.splitMessage(b64);
+        String[] data = new String[RAIDA.TOTAL_RAIDA_COUNT];
+        for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+            data[i] = memo + Config.META_ENV_SEPARATOR + guid + Config.META_ENV_SEPARATOR + d[i][Config.MSG_IDX_STRIPE] 
+                + Config.META_ENV_SEPARATOR + d[i][Config.MSG_IDX_MIRROR1] + Config.META_ENV_SEPARATOR + d[i][Config.MSG_IDX_MIRROR2];
+
+        }
+        
+        return data;       
+    }
+    
+    
 }

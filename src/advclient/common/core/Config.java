@@ -117,7 +117,7 @@ public class Config {
     public static String DEFAULT_TAG = "CC";
     public static String BACKUP_TAG = "BACKUP";
 
-    public static int DEFAULT_MAX_COINS_MULTIDETECT = 4000;
+    public static int DEFAULT_MAX_COINS_MULTIDETECT = 400;
 
 
     public static int PASS_THRESHOLD = 20;
@@ -171,7 +171,7 @@ public class Config {
     final public static String DDNS_DOMAIN = "skywallet.cc";
     
     public static String DDNSSN_SERVER = "ddns.cloudcoin.global";
-    
+   
     final public static String MAIN_LOG_FILENAME = "main.log";
     
     final public static String PICK_ERROR_MSG = "PickError";
@@ -203,6 +203,7 @@ public class Config {
     
     public static int PUBLIC_CHANGE_MAKER_ID = 2;
     
+    public static String TEMP_ID_WALLET_NAME = ".tempIDWallet";
     
     public static int SECONDS_TO_AGGREGATE_ENVELOPES = 120;
     
@@ -268,7 +269,7 @@ public class Config {
     
     public static int MS_TO_SLEEP_AFTER_FIXTRANSFER = 4000;
     
-    public static int MAX_NOTES_TO_FIXTRANSFER = 800;
+    public static int MAX_NOTES_TO_FIXTRANSFER = 300;
     
     public static int FIX_MAX_REGEXPS = 56;
     
@@ -279,4 +280,11 @@ public class Config {
     public static String SKY_EMAIL_PLACEHOLDER = "skyemailplaceholder";
     
     public static int MAX_RECEIVE_ENVELOPES_ATTEMPTS = 50;
+    
+    
+    public static int MSG_IDX_STRIPE = 0;
+    public static int MSG_IDX_MIRROR1 = 1;
+    public static int MSG_IDX_MIRROR2 = 2;
+    
+    public static String META_ENV_SEPARATOR = "*";
 }
