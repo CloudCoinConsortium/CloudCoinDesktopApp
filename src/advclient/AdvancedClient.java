@@ -2196,6 +2196,7 @@ public class AdvancedClient  {
                         showScreen();
                         return;
                     } else if (AppCore.getPassedCount(skyCC) != RAIDA.TOTAL_RAIDA_COUNT) {
+                        
                         if (AppCore.getCounterfeitCount(skyCC) > 0) {
                             //ps.currentScreen = ProgramState.SCREEN_WARN_FRACKED_TO_SEND;
                             if (!prepareToFixIDCoin()) {
@@ -2208,6 +2209,7 @@ public class AdvancedClient  {
                             showScreen();
                             return;
                         }
+                        
                     }
                     
                     ps.isCheckingSkyID = true;

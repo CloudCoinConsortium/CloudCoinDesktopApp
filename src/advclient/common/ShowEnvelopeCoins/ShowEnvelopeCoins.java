@@ -114,6 +114,7 @@ public class ShowEnvelopeCoins extends Servant {
             return;
         }
 
+
         sbs = new StringBuilder[RAIDA.TOTAL_RAIDA_COUNT];
         requests = new String[RAIDA.TOTAL_RAIDA_COUNT];
         for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
@@ -450,7 +451,7 @@ public class ShowEnvelopeCoins extends Servant {
             Map.Entry pair = (Map.Entry)it.next();
             keyTotal = (String) pair.getKey();
             max = (int) pair.getValue();
-            
+                        
             if (max < Config.MIN_PASSED_NUM_TO_BE_AUTHENTIC) {
                 logger.debug(ltag, "Envelope " + keyTotal + " has only " + max + " passed raidas. Skipping it");
                 continue;
@@ -464,7 +465,7 @@ public class ShowEnvelopeCoins extends Servant {
                     ShowEnvelopeCoinsContentsResponse seccr = (ShowEnvelopeCoinsContentsResponse) hashmaps[r].get(keyTotal);
                     
                     if (key == null) {
-                        String tkey = AppCore.getGuidForKeyFromObj(seccr.tag);       
+                        String tkey = AppCore.getGuidForKeyFromObj(seccr.tag);   
                         String memo = AppCore.getMemoFromObj(seccr.tag);
                         
                         key = seccr.created + "." + tkey;
