@@ -6,6 +6,7 @@
 package advclient;
 
 import global.cloudcoin.ccbank.core.AppCore;
+import static global.cloudcoin.ccbank.core.AppCore.logger;
 import global.cloudcoin.ccbank.core.CallbackInterface;
 import global.cloudcoin.ccbank.core.Config;
 import global.cloudcoin.ccbank.core.DetectionAgent;
@@ -25,12 +26,17 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.net.URLDecoder;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.border.Border;
@@ -406,6 +412,62 @@ public class Brand {
         return new String(bytes);
     }
     
+    public boolean copyFile(String filename) {
+        String dstFilename = this.brandDir + File.separator + filename;
+        File f = new File(dstFilename);
+        if (f.exists())
+            return true;
+
+        URL u = AppCore.class.getClassLoader().getResource("resources/" + filename);
+        if (u == null) {
+            logger.debug(ltag, "Failed to find resource " + filename);
+            return false;
+        }
+            
+        String url;
+        try {
+            url = URLDecoder.decode(u.toString(), "UTF-8");
+        }  catch (UnsupportedEncodingException e) {
+            logger.error(ltag, "Failed to decode url");
+            return false;
+        }
+
+        int bang = url.indexOf("!");
+        String JAR_URI_PREFIX = "jar:file:";
+        JarFile jf;
+                
+        logger.debug(ltag, "jurl " + url);
+        try {
+            if (url.startsWith(JAR_URI_PREFIX) && bang != -1) {
+                jf = new JarFile(url.substring(JAR_URI_PREFIX.length(), bang)) ;
+            } else if (url.startsWith("file:/")) {
+                String file = url.substring(6, url.length());
+                logger.debug(ltag, "brand file " + file);
+
+                    
+                AppCore.copyFile(file, dstFilename);
+                return true;
+            } else {
+                logger.error(ltag, "Invalid jar " + filename);
+                return false;
+            }
+                
+            for (Enumeration<JarEntry> entries = jf.entries(); entries.hasMoreElements();) {
+                JarEntry entry = entries.nextElement();
+
+                if (entry.getName().equals("resources/" + filename)) {
+                    InputStream in = jf.getInputStream(entry);                        
+                    AppCore.copyFile(in, dstFilename);
+                }
+            }
+        } catch (IOException e) {
+            logger.error(ltag, "Failed to copy file: " + e.getMessage());
+            return false;
+        }     
+        
+        return true;
+    }
+    
     public boolean downloadFile(String file) {
         String filename = this.brandDir + File.separator + file;
 
@@ -441,10 +503,27 @@ public class Brand {
             if (!AppCore.createDirectoryPath(this.brandDir))
                 return false;
         }
-
+/*
         File configFile = new File(getConfigPath());
-        //configFile.delete();
-        //if (!configFile.exists()) {
+        if (!configFile.exists()) {
+            logger.debug(ltag, "Failed to find config file");
+            br.text = "Failed to find config file";
+            br.isError = true;
+                
+            cb.callback(br);
+            return false;
+        }
+        */
+        if (!copyFile(Config.BRAND_CONFIG_NAME)) {
+            logger.debug(ltag, "Failed to find config file");
+            br.text = "Failed to find config file";
+            br.isError = true;
+                
+            cb.callback(br);
+            return false;
+        }
+        
+/*
             logger.debug(ltag, "Downloading config file");
             br.text = "Downloading Config File";
             cb.callback(br);
@@ -481,9 +560,9 @@ public class Brand {
                     return false;
                 }
             }
-        //}
+            */
 
-        downloadFilter();
+        //downloadFilter();
         
         br.text = "Parsing config file";
         cb.callback(br);
@@ -518,7 +597,8 @@ public class Brand {
             br.text = "Downloading file " + dr.name;
             cb.callback(br);
 
-            downloadFile(dr.name);            
+            //downloadFile(dr.name);   
+            copyFile(dr.name);
             i++;
         }
         

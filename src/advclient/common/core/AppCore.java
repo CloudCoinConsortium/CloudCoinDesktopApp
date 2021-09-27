@@ -908,7 +908,6 @@ public class AppCore {
     
     
     public static void copyTemplatesFromJar() {
-        int d;
         String templateDir;
 
         String[] templates = new String[] {

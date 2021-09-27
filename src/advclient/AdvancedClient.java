@@ -77,7 +77,7 @@ import org.json.JSONObject;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "4.0.20";
+    public static String version = "4.0.21";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -195,13 +195,16 @@ public class AdvancedClient  {
         if (!rv) {
             wl.error(ltag, "Failed to create folders");
             ps.errText = "Failed to init folders";
-        } else {  
+        } else { 
+            //initCore(args);
+            
             Thread t = new Thread(new Runnable() {
                 public void run(){
                     initBrand(args);
                 }
             });
             t.start();
+            
         }
     }
     
@@ -329,8 +332,7 @@ public class AdvancedClient  {
         })) {
             ps.errText = "Failed to init brand. Plese check the main.log file";
             return;
-        }
-                   
+        }                   
     } 
     
     public void initSystem() {
@@ -12055,18 +12057,15 @@ public class AdvancedClient  {
         final JFileChooser chooser = new JFileChooser();
         FileNameExtensionFilter filter = new FileNameExtensionFilter("CloudCoins", "jpg", "jpeg", "png", "stack", "json", "txt");
         chooser.setFileFilter(filter);
-        
-        /*
-        JLabel tw = AppUI.wrapDiv("The coin that you use for ID will be placed into your ID folder. "
-                + "It will not be available for spending until you close your SkyWallet");*/
+
         JLabel tw = AppUI.wrapDiv("You will need a CloudCoin to act as a key to your new Skywallet. "
                 + "Please choose a coin from your wallet. If you want to use a coin that is "
                 + "in a password protected wallet, you will first need to withdraw a coin "
-                + "so that it is unencrypted. If you have a skywallet already, you can add it "
-                + "to this wallet by dropping the ID coin here:");
+                + "so that it is unencrypted.");
         AppUI.getGBRow(subInnerCore, null, tw, y, gridbag);
         y++;
         
+        /*
         JLabel sl = AppUI.getHyperLink(AppCore.getIDDir(), "javascript:void(0); return false", 20);
         sl.addMouseListener(new MouseAdapter() {
             public void mouseReleased(MouseEvent e) {
@@ -12085,7 +12084,8 @@ public class AdvancedClient  {
         AppUI.setColor(sl, brand.getHyperlinkColor());
         AppUI.underLine(sl);
         y++;
-        
+        */
+                
         /*
         fname0 = new JLabel("Add Existing");
         final MyCheckBoxToggle cb1 = new MyCheckBoxToggle();
