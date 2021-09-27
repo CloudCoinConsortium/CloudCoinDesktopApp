@@ -285,6 +285,7 @@ public class AdvancedClient  {
         wl.debug(ltag, "Init brand");
         
         String brandName = Config.DEFAULT_BRAND_NAME;
+        /*
         try {
             String path = AdvancedClient.class.getProtectionDomain().getCodeSource().getLocation().getPath();
             wl.debug(ltag, "Filename " + path);
@@ -299,6 +300,7 @@ public class AdvancedClient  {
         } catch(Exception e) {
             wl.debug(ltag, e.toString());
         }
+        */
         
         brand = new Brand(brandName, wl);
         if (!brand.init(new CallbackInterface() {
