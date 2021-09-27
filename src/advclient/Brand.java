@@ -237,7 +237,7 @@ public class Brand {
         }
         
         if (dl.name == null) {
-            logger.debug(ltag, "Template " + name + " wasn't downloaded");
+            logger.debug(ltag, "Template " + name + " wasn't copied");
             return;
         }
         
