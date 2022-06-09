@@ -10,6 +10,7 @@ import global.cloudcoin.ccbank.core.Config;
 import global.cloudcoin.ccbank.core.GLogger;
 import global.cloudcoin.ccbank.core.RAIDA;
 import global.cloudcoin.ccbank.core.Servant;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -65,7 +66,7 @@ public class ShowEnvelopeCoins extends Servant {
             public void run() {
                 logger.info(ltag, "RUN ShowEnvelopeCoins. NeedFix");
 
-                //doShowSkyCoins(fsn, needFix);
+
                 doShowSkyCoinsWithContent(fsn);
 
                 if (cb != null)
@@ -115,6 +116,7 @@ public class ShowEnvelopeCoins extends Servant {
         }
 
 
+
         sbs = new StringBuilder[RAIDA.TOTAL_RAIDA_COUNT];
         requests = new String[RAIDA.TOTAL_RAIDA_COUNT];
         for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
@@ -146,6 +148,7 @@ public class ShowEnvelopeCoins extends Servant {
                     ShowEnvelopeCoinsResult ser = new ShowEnvelopeCoinsResult();
                     ser.totalRAIDAProcessed = globalResult.totalRAIDAProcessed;
                     ser.status = ShowEnvelopeCoinsResult.STATUS_PROCESSING;
+                    
                     myCb.callback(ser);
                 }
             }
@@ -193,10 +196,19 @@ public class ShowEnvelopeCoins extends Servant {
                 fakeCC.setDetectStatus(i, CloudCoin.STATUS_ERROR);
                 continue;
             }
+            
+            
+            if (cr.status.equals(Config.REQUEST_STATUS_FAIL)) {
+                logger.error(ltag, "Failed (counterfeit) to show env coins. RAIDA: " + i + " Result: " + cr.message);  
+                fakeCC.setDetectStatus(i, CloudCoin.STATUS_FAIL);
+                continue;
+            
+            }
+
 
             if (!cr.status.equals(Config.REQUEST_STATUS_PASS)) {
                 logger.error(ltag, "Failed to show env coins. RAIDA: " + i + " Result: " + cr.message);  
-                fakeCC.setDetectStatus(i, CloudCoin.STATUS_FAIL);
+                fakeCC.setDetectStatus(i, CloudCoin.STATUS_ERROR);
                 continue;
             }
             
@@ -221,13 +233,21 @@ public class ShowEnvelopeCoins extends Servant {
         fakeCC.countResponses();
         result.idPownString = fakeCC.getPownString();
         logger.debug(ltag, "ShowBalance pownstring " + fakeCC.getPownString());
+        
+
         if (!fakeCC.isAuthentic()) {
             logger.error(ltag, "Not enough valid responses. Balance is zero");
             //result.status = ShowEnvelopeCoinsResult.STATUS_FINISHED;
             result.status = ShowEnvelopeCoinsResult.STATUS_ERROR;
-            result.idCoinStatus = CloudCoin.STATUS_FAIL;
+            if (fakeCC.isCounterfeit()) {
+                result.idCoinStatus = CloudCoin.STATUS_FAIL;
+            } else {
+                result.idCoinStatus = CloudCoin.STATUS_ERROR;
+            }
             return;
-        }
+        } 
+        
+
         //System.out.println("ps="+ fakeCC.getPownString());
       
         int totalBalances = hm2.entrySet().size();
@@ -268,6 +288,7 @@ public class ShowEnvelopeCoins extends Servant {
         result.counters[idx][Config.IDX_100] = cr2.d100;
         result.counters[idx][Config.IDX_250] = cr2.d250;
         
+        /*
         if (totalBalances > 1 && needFix) {
             logger.debug(ltag, "Will run fix_Transfer");
             Thread t = new Thread(new Runnable() {
@@ -278,6 +299,9 @@ public class ShowEnvelopeCoins extends Servant {
             
             t.start();           
         }
+        */
+        
+        result.ccResult = fakeCC;
         
      
     }
@@ -289,16 +313,12 @@ public class ShowEnvelopeCoins extends Servant {
         StringBuilder[] sbs;
         String[] requests;
         
-        long tsBefore, tsAfter;
-        
         cc = getIDcc(sn);
         if (cc == null) {
             logger.error(ltag, "NO ID Coin found for SN: " + sn);
             result.status = ShowEnvelopeCoinsResult.STATUS_ERROR;
             return;
         }
-        
-        tsBefore = System.currentTimeMillis();
 
         sbs = new StringBuilder[RAIDA.TOTAL_RAIDA_COUNT];
         requests = new String[RAIDA.TOTAL_RAIDA_COUNT];
@@ -438,12 +458,15 @@ public class ShowEnvelopeCoins extends Servant {
             logger.error(ltag, "Not enough valid responses. Balance is zero");
             //result.status = ShowEnvelopeCoinsResult.STATUS_FINISHED;
             result.status = ShowEnvelopeCoinsResult.STATUS_ERROR;
-            result.idCoinStatus = CloudCoin.STATUS_FAIL;
+            if (fakeCC.isCounterfeit()) {
+                result.idCoinStatus = CloudCoin.STATUS_FAIL;
+            } else {
+                result.idCoinStatus = CloudCoin.STATUS_ERROR;
+            }
             return;
         }
         
-        result.idCoinStatus = CloudCoin.STATUS_PASS;
-        tsAfter = System.currentTimeMillis();      
+        result.idCoinStatus = CloudCoin.STATUS_PASS;    
         Iterator it = hm2.entrySet().iterator();
         int max = 0;
         String keyTotal = "0";
@@ -508,21 +531,13 @@ public class ShowEnvelopeCoins extends Servant {
                 
     }
     
-    public void doShowSkyCoins(int sn, boolean needFix) {
-        CloudCoin cc;
-        String[] results;
-        Object[] o;
-        StringBuilder[] sbs;
+    
+    public boolean doRAIDAShowCoinsPage(CloudCoin cc, int page, int[][] sns) {
         String[] requests;
+        StringBuilder[] sbs;
+        String[] results;
+
         
-        cc = getIDcc(sn);
-        if (cc == null) {
-            logger.error(ltag, "NO ID Coin found for SN: " + sn);
-            result.status = ShowEnvelopeCoinsResult.STATUS_ERROR;
-            return;
-        }
-
-
         sbs = new StringBuilder[RAIDA.TOTAL_RAIDA_COUNT];
         requests = new String[RAIDA.TOTAL_RAIDA_COUNT];
         for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
@@ -537,11 +552,15 @@ public class ShowEnvelopeCoins extends Servant {
             sbs[i].append(cc.ans[i]);
             sbs[i].append("&denomination=");
             sbs[i].append(cc.getDenomination());
+            sbs[i].append("&page=");
+            sbs[i].append(page);
+            
             
             requests[i] = sbs[i].toString();
         }
 
 
+        result.totalRAIDAProcessed = 0;
         results = raida.query(requests, null, new CallbackInterface() {
             final GLogger gl = logger;
             final CallbackInterface myCb = cb;
@@ -554,6 +573,7 @@ public class ShowEnvelopeCoins extends Servant {
                     ShowEnvelopeCoinsResult ser = new ShowEnvelopeCoinsResult();
                     ser.status = ShowEnvelopeCoinsResult.STATUS_PROCESSING;
                     ser.totalRAIDAProcessed = result.totalRAIDAProcessed;
+                    ser.page = page;
                     
                     myCb.callback(ser);
                 }
@@ -562,31 +582,44 @@ public class ShowEnvelopeCoins extends Servant {
         if (results == null) {
             logger.error(ltag, "Failed to query showcoinsinenvelope");
             result.status = ShowEnvelopeCoinsResult.STATUS_ERROR;
-            return;
+            return false;
         }
 
-        if (isCancelled()) {
-            result.status = ShowEnvelopeCoinsResult.STATUS_CANCELLED;
-            logger.error(ltag, "ShowCoins cancelled");
-            return;
-        }
-        
-        HashMap[] hashmaps = new HashMap[RAIDA.TOTAL_RAIDA_COUNT];
-        int[][] sns = new int[RAIDA.TOTAL_RAIDA_COUNT][];
-        for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
-            hashmaps[i] = new HashMap<String, ShowEnvelopeCoinsResponse>();
-        }
-         
-        int max = 0;
         for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
             sns[i] = new int[0];         
             if (results[i] != null) {
-                if (results[i].equals("")) {
-                    logger.error(ltag, "Skipped raida" + i);
+                if (results[i].equals("") || results[i].equals("E")) {
+                    logger.error(ltag, "Skipped raida or error raida" + i);
                     continue;
                 }
             }
+
+            if (results[i] == null) {
+                logger.error(ltag, "Skipped raida due to zero response: " + i);
+                continue;
+            }
             
+            String rsns[] = results[i].split(",");
+            sns[i] = new int[rsns.length];
+            for (int s =0; s < rsns.length; s++) {
+                try {
+                    int sn = Integer.parseInt(rsns[s]);
+                    sns[i][s] = sn;
+                                       
+                } catch (NumberFormatException e) {
+                    sns[i] = new int[0];
+                    System.out.println("bad " + i);
+                    logger.error(ltag, "invalid response from raida " + i + ": failed to parse CSV SNs");
+                    continue;
+                    
+                }
+                
+               
+                
+            
+            }
+            
+            /*
             CommonResponse cr = (CommonResponse) parseResponse(results[i], CommonResponse.class);
             if (cr == null) {
                 logger.error(ltag, "Failed to get response coin. RAIDA: " + i);
@@ -605,20 +638,86 @@ public class ShowEnvelopeCoins extends Servant {
             }
             
             logger.debug(ltag, "Returned length " + o.length);
+*/
 
-            ShowEnvelopeCoinsResponse[] er = new ShowEnvelopeCoinsResponse[o.length];
-            sns[i] = new int[o.length];
+        }
+    
+        return true;
+    }
+    
+    public void doShowSkyCoins(int sn, boolean needFix) {
+        CloudCoin cc;
+                
+        cc = getIDcc(sn);
+        if (cc == null) {
+            logger.error(ltag, "NO ID Coin found for SN: " + sn);
+            result.status = ShowEnvelopeCoinsResult.STATUS_ERROR;
+            return;
+        }
+
+
+        
+
+
+        
+        //HashMap[] hashmaps = new HashMap[RAIDA.TOTAL_RAIDA_COUNT];
+        int[][] sns = new int[RAIDA.TOTAL_RAIDA_COUNT][];
+        for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+            sns[i] = new int[0]; 
+        }
+        //for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+        //    hashmaps[i] = new HashMap<String, ShowEnvelopeCoinsResponse>();
+        //}
+        
+        // hardcoded in raida
+        int pageSize = 4000;
+        int page = 0;
+        for (;;) {
+            boolean brv;
+            int[][] lsns = new int[RAIDA.TOTAL_RAIDA_COUNT][];
+            for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+               lsns[i] = new int[0]; 
+            }
+            brv = doRAIDAShowCoinsPage(cc, page, lsns);
+            if (!brv) {
+                logger.error(ltag, "Failed to show result for page ");
+                return;        
+            }
             
-            if (max < o.length)
-                max = o.length;
+        
+            for (int l = 0; l < RAIDA.TOTAL_RAIDA_COUNT; l++) {
+                int[] both = Arrays.copyOf(sns[l], sns[l].length + lsns[l].length);
+                System.arraycopy(lsns[l], 0, both, sns[l].length, lsns[l].length);
+                
+                sns[l] = both;
+
+            }
             
-            for (int j = 0; j < o.length; j++) {
-                er[j] = (ShowEnvelopeCoinsResponse) o[j];
+            int counts=0;
 
-                hashmaps[i].put("" + er[j].sn, er[j]);
-                sns[i][j] = er[j].sn;
+            for (int p = 0; p < lsns.length; p++) {
+                if (lsns[p].length == pageSize) {
+                    counts++;
+                }
+            
+            }
+            logger.debug(ltag, "counts " + counts);
+            System.out.println("counts="+counts);
+            if (counts < 13) {
+                break;
+            }
+            
+            page++;
+            
+            
+            // 
+            
+        }
 
-            }  
+        if (isCancelled()) {
+            result.status = ShowEnvelopeCoinsResult.STATUS_CANCELLED;
+            logger.error(ltag, "ShowCoins cancelled");
+            return;
         }
         
         if (isDebug()) {
@@ -653,11 +752,7 @@ public class ShowEnvelopeCoins extends Servant {
             logger.error(ltag, "Failed to get coins");
             return;
         }
-         
-        
-        
-        
-        
+   
         if (needFix) {
             logger.info(ltag, "Calculating fix_transfer set of coins");
             initRarr();
@@ -708,14 +803,17 @@ public class ShowEnvelopeCoins extends Servant {
         result.coins = new int[vsns.length];
         result.tags = new String[vsns.length];
         
-        String key;
-        ShowEnvelopeCoinsResponse er;
+
         for (int j = 0; j < vsns.length; j++) {
+            CloudCoin rcc;
+            int rsn = vsns[j];
+            result.coins[j] = rsn;
+            /*
             String tag;
             int rsn;
             int ts;
             int ats;
-            CloudCoin rcc;
+            
  
             rsn = vsns[j];
             String rsnKey = "" + rsn;
@@ -740,8 +838,9 @@ public class ShowEnvelopeCoins extends Servant {
             ts = er.created;
 
             ats = ts / Config.SECONDS_TO_AGGREGATE_ENVELOPES;
-
+*/
             rcc = new CloudCoin(cc.nn, rsn);
+            
             int idx = Config.IDX_FOLDER_BANK;
             switch (rcc.getDenomination()) {
                 case 1:
@@ -760,7 +859,7 @@ public class ShowEnvelopeCoins extends Servant {
                     result.counters[idx][Config.IDX_250]++;
                     break;
             }    
-            
+            /*
             result.coins[j] = rsn;
             result.tags[j] = tag;
             key = ats + "." + tag;
@@ -789,12 +888,17 @@ public class ShowEnvelopeCoins extends Servant {
                 result.envelopes.put(key, accum);
             }
             
+            */
+            
         }
 
         result.status = ShowEnvelopeCoinsResult.STATUS_FINISHED;
 
-        logger.info(ltag, "us=" + user + " sn=" +sn + " r="+results[0]);
+        logger.info(ltag, "us=" + user + " sn=" +sn + " ");
                 
-    }
+        System.out.println("done");
 
+    }
+    
+    
 }

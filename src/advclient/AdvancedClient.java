@@ -77,7 +77,7 @@ import org.json.JSONObject;
  * 
  */
 public class AdvancedClient  {
-    public static String version = "4.0.21";
+    public static String version = "4.0.26";
 
     JPanel headerPanel;
     JPanel mainPanel;
@@ -963,7 +963,7 @@ public class AdvancedClient  {
         
         
         items[0] = items[1] = items[4] = items[5] = null;
-        
+                
         if (!isAdvancedMode()) {
             items[0] = items[1] = items[2] = items[3] = items[4] = items[5] = items[7] = items[8] 
                     = items[9] = items[10] = null;
@@ -1203,10 +1203,6 @@ public class AdvancedClient  {
     public void showScreen() {
         wl.debug(ltag, "SCREEN " + ps.currentScreen + ": " + ps.toString());
 
-     //   showSkyHealthCheckDoneScreen();
-       // if (1==1)return;
-        //ps.currentScreen = ProgramState.SCREEN_DEPOSIT;
-       // showNewVersionScreen();if(1==1)return;
         clear();   
         if (ps.needInitWallets) {
             sm.initWallets();
@@ -1526,6 +1522,14 @@ public class AdvancedClient  {
         String total = AppCore.formatNumber(totalEmails);
 
         pbarText.setText("Emails sent: " + sent + " / " + total + "");
+        pbarText.repaint();
+    }
+    
+    private void setRAIDAProgressCoinsShowCoins(int raidaProcessed, int page) {
+        pbar.setVisible(true);
+        pbar.setValue(raidaProcessed);
+        
+        pbarText.setText("Doing ShowCoins. Page " + page);
         pbarText.repaint();
     }
 
@@ -2231,14 +2235,17 @@ public class AdvancedClient  {
  
                             wl.debug(ltag, "sec finished: " + scresult.status);
                             if (scresult.status == ShowEnvelopeCoinsResult.STATUS_PROCESSING) {
-                                setRAIDAProgressCoins(scresult.totalRAIDAProcessed, 0, 0);
+                                //setRAIDAProgressCoins(scresult.totalRAIDAProcessed, 0, 0);
+                                setRAIDAProgressCoinsShowCoins(scresult.totalRAIDAProcessed, scresult.page);
                                 return;
                             }
 
                             ps.srcWallet.setSNs(scresult.coins);
                             ps.srcWallet.setEnvelopes(scresult.envelopes);
                                 
-                            int[][] counters = scresult.counters;                        
+                            int[][] counters = scresult.counters;         
+                            
+                             System.out.println("l="+scresult.coins.length+ " x="+scresult.counters.length);
                             int totalCnt = AppCore.getTotal(counters[Config.IDX_FOLDER_BANK]) +
                             AppCore.getTotal(counters[Config.IDX_FOLDER_FRACKED]) +
                             AppCore.getTotal(counters[Config.IDX_FOLDER_VAULT]);
@@ -2254,12 +2261,13 @@ public class AdvancedClient  {
                     });
                     
                     
+                    
                     while (ps.isCheckingSkyID) {
                         try {
                             Thread.sleep(300);
                         } catch (InterruptedException e) {}
                     }
-                                  
+                                       
                 }
 
                 String dstName =  (ps.foundSN == 0) ? ps.dstWallet.getName() : "" + ps.foundSN;
@@ -2757,17 +2765,30 @@ public class AdvancedClient  {
                 continue;
             }
         */    
+
+        int nsize = 2;
         for (int e = 0; e < isns.length; e++) {
             int d = isns[e];
             int v = ps.hcSNs.get("" + d);
             CloudCoin cc = new CloudCoin(Config.DEFAULT_NN, d);
             
             data[ii][0] = "#" + d ;
+            int present = 0;
             for (int j = 0; j < RAIDA.TOTAL_RAIDA_COUNT; j++) {
                 //int rj = (RAIDA.TOTAL_RAIDA_COUNT - j - 1);
                 
                 data[ii][j + 1] = (((v >> j) & 1) > 0) ? "+" : "-" ;
+                if (data[ii][j + 1] == "+") {
+                    present++;
+                }
             }
+            /*
+            if (present == RAIDA.TOTAL_RAIDA_COUNT) {
+                data[ii] = null;
+                ii++;
+                continue;
+                
+            }*/
             
             boolean found = false;
             for (int i = 0; i < sns.length; i++) {
@@ -2784,12 +2805,53 @@ public class AdvancedClient  {
                 data[ii][RAIDA.TOTAL_RAIDA_COUNT + 1] = "-";
             }
             
+            nsize++;
             ii++;
         }
+        
+
         
         //for (int i = 0; i <)
 
         data[1][RAIDA.TOTAL_RAIDA_COUNT + 1] = "" + cctotal;
+        
+        
+        java.util.Arrays.sort(data, new java.util.Comparator<String[]>() {
+            public int compare(String[] o1, String[] o2) {
+                int pluses0 = 0;
+                int pluses1 = 0;
+                
+                for (int i = 0; i < o1.length; i++) {
+                    if (o1[i] == "+") {
+                        pluses0++;
+                    }
+                    if (o2[i] == "+") {
+                        pluses1++;
+                    }
+                    
+                }
+                if (pluses0 == pluses1)
+                    return 0;
+        // Intentional: Reverse order for this demo
+                return pluses0 < pluses1 ? -1 : 0;
+            }
+        });
+        
+        
+        
+        
+        
+        
+        
+        String[][] ndata = new String[nsize][RAIDA.TOTAL_RAIDA_COUNT + 3]; 
+        int j = 0;
+        for (int i = 0; i < data.length; i++) {
+            if (data[i] == null)
+                continue;
+            
+            ndata[j] = data[i];
+            j++;
+        }
         
         final int total = ps.hcBalanceTotal;
         final int fcctotal = cctotal;
@@ -3064,7 +3126,8 @@ public class AdvancedClient  {
  
                         wl.debug(ltag, "sec finished: " + scresult.status);
                         if (scresult.status == ShowEnvelopeCoinsResult.STATUS_PROCESSING) {
-                            setRAIDAProgress(scresult.totalRAIDAProcessed, "Doing Show Call...");
+                            //setRAIDAProgress(scresult.totalRAIDAProcessed, "Doing Show Call...");
+                            setRAIDAProgressCoinsShowCoins(scresult.totalRAIDAProcessed, scresult.page);
                             return;
                         }
 
@@ -3410,10 +3473,12 @@ public class AdvancedClient  {
  
                             wl.debug(ltag, "sec finished: " + scresult.status);
                             if (scresult.status == ShowEnvelopeCoinsResult.STATUS_PROCESSING) {
-                                setRAIDAProgressCoins(scresult.totalRAIDAProcessed, 0, 0);
+                                //setRAIDAProgressCoins(scresult.totalRAIDAProcessed, 0, 0);
+                                setRAIDAProgressCoinsShowCoins(scresult.totalRAIDAProcessed, scresult.page);
                                 return;
                             }
 
+                           
                             ps.srcWallet.setSNs(scresult.coins);
                             ps.srcWallet.setEnvelopes(scresult.envelopes);
                                 
@@ -6708,6 +6773,9 @@ public class AdvancedClient  {
                                 txt = "Error";
                             }
                             
+                            
+                            
+                            
                             JLabel cntLabel = (JLabel) w.getuiRef();
                             if (cntLabel == null)
                                 return;
@@ -6729,8 +6797,70 @@ public class AdvancedClient  {
 
                         w.setCounters(counters);
                         
+
                         walletSetTotal(w, totalCnt);
                         setTotalCoins();
+                        
+                        System.out.println("scresult="+scresult.ccResult.getPownString());
+                        if (scresult.ccResult != null && scresult.ccResult.isPartlyAuthentic() && !ps.fixingInBg) {
+                            ps.fixingInBg = true;
+                            wl.debug(ltag, "Fixing fracked " + w.getName() + ": " + scresult.ccResult.getPownString() + " p=" + ps.fixingInBg) ;
+                            System.out.println("st="+scresult.ccResult.isPartlyAuthentic() + " p="+scresult.ccResult.getPownString());
+                            
+                            JLabel cntLabel = (JLabel) w.getuiRef();
+                            if (cntLabel == null)
+                                return;
+                            
+                            cntLabel.setText("Fixing");
+                            cntLabel.invalidate();
+                            cntLabel.repaint();
+                            
+                            CloudCoin fcc = w.getIDCoin();
+                            for (int i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+                                fcc.setDetectStatus(i, scresult.ccResult.getDetectStatus(i));
+                            
+                            }
+                                    
+                        
+                            System.out.println("fixxx");
+                            Thread t = new Thread(new Runnable() {
+                                public void run() {
+                                    
+                                    sm.startFrackFixerServiceBg(new CallbackInterface(){
+                                        public void callback(Object result) {
+                                            FrackFixerResult fr = (FrackFixerResult) result;   
+                                            
+                                            System.out.println("finished " + fr.status + " x="+fr.round + " c="+fr.corner);
+                                            wl.debug(ltag, "Finished fixing " + fr.status);
+                                            if (fr.status == FrackFixerResult.STATUS_PROCESSING) {
+                                                EventQueue.invokeLater(new Runnable() {         
+                                                    public void run() {
+                                                        cntLabel.setText("FixR" + fr.fixingRAIDA);
+                                                        cntLabel.invalidate();
+                                                        cntLabel.repaint();
+                                                    }
+                                                });
+                                                return;
+                                            }
+
+                                            ps.fixingInBg = false;
+                                            EventQueue.invokeLater(new Runnable() {         
+                                                public void run() {
+                                                    walletSetTotal(w, totalCnt);
+                                                    setTotalCoins();
+                                                }
+                                            });
+                                        }
+                                    }, w.getIDCoin());
+                                    
+                                   System.out.println("fff");
+                                }
+                            });
+            
+                            t.start(); 
+                        }
+                        
+                        
                     }
                 });
             } else {              
@@ -7388,68 +7518,6 @@ public class AdvancedClient  {
         passwordDst.getTextField().setVisible(false);
         dpText.setVisible(false);
         
-        /*
-        optRv rv = new optRv();
-        rv.options = new String[0];
-        rv.idxs = new int[0];
-        String[] skyWalletNames = AppCore.getSentSkyWallets();
-        if (skyWalletNames != null) {
-            int len = skyWalletNames.length;
-            rv.options = new String[len];
-            rv.idxs = new int[len];
-            
-            for (int i = 0; i < len; i++) {
-                //rv.options[i] = "Send to " + skyWalletNames[i];
-                rv.options[i] = skyWalletNames[i];
-                rv.idxs[i] = i;         
-            }       
-        }
-
-        final JLabel rwText = new JLabel("To SkyWallet*");
-        final RoundedCornerComboBox remoteWalledId = new RoundedCornerComboBox(brand.getPanelBackgroundColor(), "JohnDoe.SkyWallet.cc", rv.options);
-        remoteWalledId.setEditable();
-        if (!ps.typedRemoteWallet.isEmpty())
-            remoteWalledId.setData("" + ps.typedRemoteWallet);
-        AppUI.getGBRow(subInnerCore, rwText, remoteWalledId.getComboBox(), y, gridbag);
-        remoteWalledId.getComboBox().setVisible(false);
-        rwText.setVisible(false);
-        y++; 
-        
-
-        if (ps.chosenFile.isEmpty()) 
-            ps.chosenFile = Config.DEFAULT_EXPORT_DIR;
-        
-        final JLabel lfText = new JLabel("Local folder*");
-        final JFileChooser chooser = new JFileChooser();
-        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        chooser.setAcceptAllFileFilterUsed(false);
-        
-     
-        final MyTextField localFolder = new MyTextField("Select Folder", false, true);
-        localFolder.setData(new File(ps.chosenFile).getName());
-        localFolder.setFilepickerListener(new MouseAdapter() {
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                if (!Config.DEFAULT_EXPORT_DIR.isEmpty())
-                    chooser.setCurrentDirectory(new File(Config.DEFAULT_EXPORT_DIR));
-
-                int returnVal = chooser.showOpenDialog(null);
-                if (returnVal == JFileChooser.APPROVE_OPTION) {       
-                    ps.chosenFile = chooser.getSelectedFile().getAbsolutePath();
-                    localFolder.setData(chooser.getSelectedFile().getName());
-                    Config.DEFAULT_EXPORT_DIR = ps.chosenFile;
-                    AppCore.writeConfig();
-                }
-            }
-        });
-        AppUI.getGBRow(subInnerCore, lfText, localFolder.getTextField(), y, gridbag);
-        y++;
-        
-        
-        localFolder.getTextField().setVisible(false);
-        lfText.setVisible(false);
-        */
-        
         fname = new JLabel("Amount*");
         final MyTextField amount = new MyTextField("0 CC", false);
         if (ps.typedAmount > 0)
@@ -7665,137 +7733,47 @@ public class AdvancedClient  {
                 }
                       
                 /*
-                if (dstIdx == rvTo.idxs.length) {
-                    // Remote User
-                    if (remoteWalledId.getCustomValue().isEmpty()) {
-                        ps.errText = "Remote Wallet is empty";
-                        showScreen();
-                        return;
-                    }
 
-                    String dstName = remoteWalledId.getCustomValue().trim();
-                    if (ps.srcWallet.isSkyWallet() && ps.srcWallet.getName().equals(dstName)) {
-                        ps.errText = "Wallets cannot be the same";
+                */
+                dstIdx = rvTo.idxs[dstIdx];
+          
+                // Wallet
+                Wallet dstWallet = wallets[dstIdx];
+                if (dstWallet.isEncrypted()) {
+                    if (passwordDst.getText().isEmpty()) {
+                        ps.errText = "Password is empty";
                         showScreen();
                         return;
                     }
                     
+                    String wHash = dstWallet.getPasswordHash();
+                    String providedHash = AppCore.getMD5(passwordDst.getText());
+                    if (wHash == null) {
+                        ps.errText = "To Wallet is corrupted";
+                        showScreen();
+                        return;
+                    }
+                    
+                    if (!wHash.equals(providedHash)) {
+                        ps.errText = "To Password is incorrect";
+                        showScreen();
+                        return;
+                    } 
+                        
+                    ps.typedDstPassword = passwordDst.getText();
+                }
+   
+                if (dstWallet.isSkyWallet()) {
                     if (ps.typedMemo.isEmpty()) {
                         ps.errText = "Memo must not be empty";
                         showScreen();
-                        return; 
-                    }     
-                    
-                    
-                    ps.dstWallet = null;
-                    ps.typedRemoteWallet = dstName;
-                    ps.sendType = ProgramState.SEND_TYPE_REMOTE;
-                    
-                    
-                    if (!Validator.domain(ps.typedRemoteWallet)) {
-                        ps.errText = "Invalid SkyWallet Address";
-                        showScreen();
                         return;
-                    }
-
-                    
-                    DNSSn d = new DNSSn(ps.typedRemoteWallet, null, wl);
-                    if (!d.recordExists()) {
-                        ps.errText = "Sky Wallet " + ps.typedRemoteWallet + " doesn't exist. If it is a newly created wallet please wait and try again later";
-                        showScreen();
-                        return;
-                    }   
-                    
-                    AppCore.appendSentSkyWallet(ps.typedRemoteWallet, skyWalletNames);
-                } else if (dstIdx == rvTo.idxs.length + 1) {
-                    if (ps.typedMemo.isEmpty()) {
-                        ps.errText = "Memo cannot be empty";
-                        showScreen();
-                        return;
-                    }
-                    if (!Validator.memo(ps.typedMemo)) {
-                        ps.errText = "Memo: special characters not allowed! Use numbers and letters only";
-                        showScreen();
-                        return;
-                    }
-                    
-                    ps.typedMemo = ps.typedMemo.trim();
-                    
-                    // Local folder
-                    if (ps.chosenFile.isEmpty()) {
-                        ps.errText = "Folder is not chosen";
-                        showScreen();
-                        return;
-                    }
-                    
-                    if (ps.srcWallet.isSkyWallet()) {
-                        ps.errText = "Transfer from Sky Wallet to Local Folder is not supported";
-                        showScreen();
-                        return;
-                    }
-                    
-                    if (ps.typedMemo.isEmpty())
-                        ps.typedMemo = "Export";
-                    
-                    String filename = ps.chosenFile + File.separator + ps.typedAmount + ".CloudCoin." + ps.typedMemo + ".stack";
-                    File f = new File(filename);
-                    if (f.exists()) {
-                        ps.errText = "File with the same Memo already exists in "
-                                + ps.chosenFile + " folder. Use different Memo or change folder for your transfer";
-                        showScreen();
-                        return;
-                    }
-
+                    }          
+                }
                     
                     
-                    ps.sendType = ProgramState.SEND_TYPE_FOLDER;    
-                    
-                    setActiveWallet(ps.srcWallet);
-                    ps.currentScreen = ProgramState.SCREEN_CONFIRM_TRANSFER;
-                    showScreen();
-                    
-                    return;                    
-                } else {
-                */
-                    dstIdx = rvTo.idxs[dstIdx];
-          
-                    // Wallet
-                    Wallet dstWallet = wallets[dstIdx];
-                    if (dstWallet.isEncrypted()) {
-                        if (passwordDst.getText().isEmpty()) {
-                            ps.errText = "Password is empty";
-                            showScreen();
-                            return;
-                        }
-                    
-                        String wHash = dstWallet.getPasswordHash();
-                        String providedHash = AppCore.getMD5(passwordDst.getText());
-                        if (wHash == null) {
-                            ps.errText = "To Wallet is corrupted";
-                            showScreen();
-                            return;
-                        }
-                    
-                        if (!wHash.equals(providedHash)) {
-                            ps.errText = "To Password is incorrect";
-                            showScreen();
-                            return;
-                        } 
-                        
-                        ps.typedDstPassword = passwordDst.getText();
-                    }
-   
-                    if (dstWallet.isSkyWallet()) {
-                        if (ps.typedMemo.isEmpty()) {
-                            ps.errText = "Memo must not be empty";
-                            showScreen();
-                            return;
-                        }          
-                    }
-                    
-                    
-                    ps.dstWallet = dstWallet;
-                    ps.sendType = ProgramState.SEND_TYPE_WALLET;
+                ps.dstWallet = dstWallet;
+                ps.sendType = ProgramState.SEND_TYPE_WALLET;
                 //}
                 
                 if (ps.typedMemo.isEmpty())
@@ -12690,7 +12668,7 @@ public class AdvancedClient  {
         walletName.requestFocus();        
         AppUI.getGBRow(subInnerCore, fname, walletName.getTextField(), y, gridbag);
         y++;     
-        
+        /*
         fname = new JLabel("Password Protected Wallet");
         MyCheckBoxToggle cb0 = new MyCheckBoxToggle();
         AppUI.getGBRow(subInnerCore, fname, cb0.getCheckBox(), y, gridbag);
@@ -12700,6 +12678,7 @@ public class AdvancedClient  {
         MyCheckBoxToggle cb1 = new MyCheckBoxToggle();
         AppUI.getGBRow(subInnerCore, fname, cb1.getCheckBox(), y, gridbag);
         y++; 
+        */
         
         AppUI.GBPad(subInnerCore, y, gridbag);        
         y++;

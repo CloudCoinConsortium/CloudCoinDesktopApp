@@ -277,6 +277,8 @@ public class ProgramState {
     HashMap<String, Integer> hcSNs;
     
     
+    boolean fixingInBg;
+    
     public ProgramState() {
         currentScreen = SCREEN_AGREEMENT;
         cwalletRecoveryRequested = cwalletPasswordRequested = false;
@@ -329,6 +331,8 @@ public class ProgramState {
         skyVaultDomain = "";
         
         isShowingCoins = false;
+        
+        fixingInBg = false;
         
         selectedFromIdx = selectedToIdx = -1;
         

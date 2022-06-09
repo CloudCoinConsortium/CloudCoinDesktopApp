@@ -2,7 +2,6 @@ package global.cloudcoin.ccbank.FrackFixer;
 
 import global.cloudcoin.ccbank.Authenticator.AuthenticatorResponse;
 import global.cloudcoin.ccbank.LossFixer.LossFixerResponse;
-import global.cloudcoin.ccbank.LossFixer.LossFixerResult;
 import org.json.JSONException;
 
 import java.io.File;
@@ -29,12 +28,32 @@ public class FrackFixer extends Servant {
     
     private boolean[] localFailedRaidas;
     
+    CloudCoin pcc;
+    
     HashMap<Integer, String[]> tickets;
 
     public FrackFixer(String rootDir, GLogger logger) {
         super("FrackFixer", rootDir, logger);
     }
 
+    public void launch(CallbackInterface icb, CloudCoin icc) {
+        this.cb = icb;
+        this.pcc = icc;
+        
+        raida.flushStatuses();   
+        fr = new FrackFixerResult();
+        launchDetachedThread(new Runnable() {
+            @Override
+            public void run() {
+                logger.info(ltag, "RUN (BgDetached) FrackFixer");
+                doFrackFixBg(pcc);
+                
+                raida.setReadTimeout(Config.READ_TIMEOUT);
+            }
+        });
+    }
+    
+    
     public void launch(CallbackInterface icb, boolean needExtensive, String email, HashMap<Integer, String[]> ltickets) {
         this.cb = icb;
 
@@ -60,8 +79,7 @@ public class FrackFixer extends Servant {
             return;
         }
 
-        raida.flushStatuses();
-        
+        raida.flushStatuses();        
         launchDetachedThread(new Runnable() {
             @Override
             public void run() {
@@ -314,6 +332,128 @@ public class FrackFixer extends Servant {
         
         return true;
     }
+    
+    
+    
+    
+     public void doFrackFixBg(CloudCoin cc) {  
+        int protocol = 5;
+        logger.debug(ltag, "Initializing neighbourx for Protocol " + protocol);
+        if (!initNeighbours(protocol)) {
+            fr.status = FrackFixerResult.STATUS_ERROR;
+            if (cb != null)
+                cb.callback(fr);
+
+            return;
+        }
+        
+        System.out.println("lets go fixin " + cc.getDenomination());
+
+        raida.setDefaultUrls();
+        raida.setReadTimeout(Config.FIX_FRACKED_TIMEOUT);
+
+        ArrayList<CloudCoin> ccall = new ArrayList<CloudCoin>();
+
+
+        ccall.add(cc);
+
+        fr.totalCoins += cc.getDenomination();
+        fr.totalFiles = 1;
+        
+        FrackFixerResult nfr = new FrackFixerResult();
+        copyFromMainFr(nfr);
+        //if (cb != null)
+        //    cb.callback(nfr);
+        
+        int maxCoins = getIntConfigValue("max-coins-to-multi-detect");
+        if (maxCoins == -1)
+            maxCoins = Config.DEFAULT_MAX_COINS_MULTIDETECT;
+     
+        logger.debug(ltag, "maxcoins " + maxCoins);
+
+        ArrayList<CloudCoin> ccactive = new ArrayList<CloudCoin>();
+        int i;
+
+
+        logger.debug(ltag, "Will try to fix lost first");
+        fr.round = 0;
+        fr.totalCoinsProcessed = 0;
+
+        
+        
+        logger.debug(ltag, "Fixing Round1");
+        
+        // Round 1
+        for (i = 0; i < RAIDA.TOTAL_RAIDA_COUNT; i++) {
+            fr.round = 1;
+            fr.fixingRAIDA = i;
+
+            System.out.println("rf " + i + " ds="+cc.getDetectStatus(i));
+            if (cc.getDetectStatus(i) == CloudCoin.STATUS_PASS)
+                continue;
+
+            nfr = new FrackFixerResult();                
+            if (!canBeFixed(i, cc))
+                continue;
+
+            ccactive.add(cc);
+
+            doRealFixLocal(i, ccactive);
+            ccactive.clear();
+                                
+            nfr = new FrackFixerResult();
+            copyFromMainFr(nfr);
+            if (cb != null)
+                cb.callback(nfr);                 
+        }
+        
+        logger.debug(ltag, "Round2");
+        ccactive = new ArrayList<CloudCoin>();
+        
+        // Round 2
+        for (i = RAIDA.TOTAL_RAIDA_COUNT - 1; i >= 0; i--) {
+            fr.round = 2;
+            fr.fixingRAIDA = i;
+
+            if (cc.getDetectStatus(i) == CloudCoin.STATUS_PASS)
+                continue;
+                         
+            if (!canBeFixed(i, cc))
+                continue;
+                
+            ccactive.add(cc);
+            doRealFixLocal(i, ccactive);
+            ccactive.clear();
+                     
+             //if (!needExtensive) {
+            nfr = new FrackFixerResult();
+            copyFromMainFr(nfr);
+            if (cb != null)
+                cb.callback(nfr);   
+       
+        }
+
+        nfr = new FrackFixerResult();
+        fr.failed = AppCore.getFilesCount(Config.DIR_FRACKED, user);
+        fr.status = FrackFixerResult.STATUS_FINISHED;
+        copyFromMainFr(nfr);
+        if (cb != null)
+            cb.callback(nfr);
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     
     public void doFrackFix(String email) {  
@@ -760,7 +900,30 @@ public class FrackFixer extends Servant {
 
     }
     
-    
+    private void doRealFixLocal(int raidaIdx, ArrayList<CloudCoin> ccs) {
+        int corner;
+        
+        boolean haveTickets = tickets == null ? false : true;
+        initLocalFailedRaidaArray();
+                
+        logger.debug(ltag, "Fixing " + ccs.size() + " coins on the RAIDA" + raidaIdx + " have tickets " + haveTickets);
+        for (corner = 0; corner < Config.FIX_MAX_REGEXPS; corner++) {
+            FrackFixerResult nfr = new FrackFixerResult();
+
+            fr.corner = corner;
+            fr.totalRAIDAProcessed = 0;
+            copyFromMainFr(nfr);
+            if (cb != null)
+                cb.callback(nfr);
+                   
+            if (fixCoinsForRegexString(raidaIdx, corner, ccs, "dummyemail")) {
+                logger.debug(ltag, "Fixed successfully");
+                break;
+            }
+
+        }
+
+    }
     
     private void setTicket(CloudCoin cc, int idx, String ticket, HashMap<Integer, String[]> tickets) {
         String[] data;

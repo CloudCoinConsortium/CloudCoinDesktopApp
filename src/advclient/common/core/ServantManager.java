@@ -332,6 +332,17 @@ public class ServantManager {
 	ff.launch(cb, needExtensive, email, null);
     }
     
+    public void startFrackFixerServiceBg(CallbackInterface cb, CloudCoin cc) {
+        System.out.println("f="+cc.getFileName());
+        if (sr.isRunning("FrackFixer"))
+            return;
+        
+        FrackFixer ff = (FrackFixer) sr.getServant("FrackFixer");
+	ff.launch(cb, cc);
+    }
+    
+    
+    
     public void startFixTransferService(HashMap<String, Integer> hm, CallbackInterface cb) {
         if (sr.isRunning("FixTransfer"))
             return;

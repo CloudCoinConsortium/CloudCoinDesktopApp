@@ -1,5 +1,6 @@
 package global.cloudcoin.ccbank.ShowEnvelopeCoins;
 
+import global.cloudcoin.ccbank.core.CloudCoin;
 import java.util.HashMap;
 import java.util.Hashtable;
 
@@ -17,9 +18,12 @@ public class ShowEnvelopeCoinsResult {
     public int idCoinStatus;
     public String idPownString;
     public int[][] counters;
+    public int page;
     
     public int[] debugBalances;
     public HashMap<String, Integer> debugSNs;
     public int[] debugContentBalances;
     public Hashtable<String, String[]> envelopes;
+    
+    public CloudCoin ccResult;
 }
