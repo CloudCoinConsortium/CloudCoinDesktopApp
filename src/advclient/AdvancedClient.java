@@ -12683,8 +12683,8 @@ public class AdvancedClient  {
         AppUI.GBPad(subInnerCore, y, gridbag);        
         y++;
         
-        final MyCheckBoxToggle fcb0 = cb0;
-        final MyCheckBoxToggle fcb1 = cb1;
+       // final MyCheckBoxToggle fcb0 = cb0;
+       // final MyCheckBoxToggle fcb1 = cb1;
         final MyTextField fwalletName = walletName;
         AppUI.getTwoButtonPanel(subInnerCore, "Cancel", "Continue", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -12693,8 +12693,10 @@ public class AdvancedClient  {
             }
         }, new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                ps.cwalletPasswordRequested = fcb0.isChecked();
-                ps.cwalletRecoveryRequested = fcb1.isChecked();
+               // ps.cwalletPasswordRequested = fcb0.isChecked();
+               // ps.cwalletRecoveryRequested = fcb1.isChecked();
+                ps.cwalletPasswordRequested = false;
+                ps.cwalletRecoveryRequested = false;
                 
                 if (!Validator.walletName(fwalletName.getText())) {
                     ps.errText = "Wallet name is incorrect";
